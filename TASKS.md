@@ -68,7 +68,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-004 — `spec:sync`** · M · Spec: GOV-04, GOV-05, GOV-06, TEC-11 · Dep: T-002 · Feito: 2026-09-23
   - Parser das tabelas `<!-- dados:NOME -->` do `SPEC.md` → `src/sim/data/generated/NOME.json` + `types.ts`. Tabelas com o mesmo nome são concatenadas.
   - Aceite: gera um arquivo para cada nome de tabela `dados:*`; converte `0,5` → 0.5, `—` → null, `sim`/`nao` → booleanos; células com `+` viram listas só quando todas as partes são IDs snake_case ou números (`solo+ar` vira lista, `Ctrl+1..9` continua texto); duas execuções seguidas produzem saída idêntica.
-- [ ] **T-005 — `spec:check`** · M · Spec: TEC-11 · Dep: T-004
+- [x] **T-005 — `spec:check`** · M · Spec: TEC-11 · Dep: T-004 · Feito: 2026-09-23
   - Validações: gerados atualizados; `vr` = Σ receita × VR; pesos de cada personalidade somam 100; IDs e chaves de parâmetro únicos; referências válidas (armas das tabelas de unidades, `produzido_por`, cenários e `libera` das missões); citações em crase com formato de chave (snake_case, sem espaço, barra ou ponto) existem como chave de parâmetro, coluna ou ID de alguma tabela; curingas `*` casam com ao menos uma chave.
   - Aceite: cada validação tem teste com uma cópia quebrada do SPEC e mensagem que aponta tabela e linha; o SPEC atual passa.
 - [ ] **T-006 — Núcleo da simulação** · G · Spec: TEC-04 – TEC-09, REG-20 · Dep: T-003, T-004

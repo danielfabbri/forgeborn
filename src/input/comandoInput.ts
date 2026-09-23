@@ -15,10 +15,25 @@ import {
 } from '../game/selecao';
 import { centrarEm, type EstadoCameraRts } from '../render/cameraRts';
 import { pontoNoTerreno } from '../render/picking';
+import type { JazidaDesenhada } from '../render/jazidas';
 import type { CorpoDesenhado } from '../render/unidades';
 import { type EntityId, getComponent, isAlive, type NacaoId, type Sim } from '../sim';
 import { normalizar, type Vec3 } from '../sim/map/esfera';
 import type { Heightmap } from '../sim/map/heightmap';
+
+/** Corpo ou jazida que pode ser apontado na tela. */
+interface Projetavel {
+  id: EntityId;
+  tipo: string;
+  nacao: string | null;
+  movel: boolean;
+  x: number;
+  y: number;
+  z: number;
+  cima: [number, number, number];
+  raio: number;
+  altura: number;
+}
 
 /** Distância (px) a partir da qual o arrasto vira caixa de seleção. */
 const LIMIAR_ARRASTO_PX = 6;
@@ -41,6 +56,8 @@ export interface OpcoesEntradaComandos {
   sim: Sim;
   jogador: NacaoId;
   corpos: () => readonly CorpoDesenhado[];
+  /** Jazidas desenhadas (alvo do clique direito de coleta, CTL-07). */
+  jazidas?: () => readonly JazidaDesenhada[];
   aoMudarSelecao?: (ids: readonly EntityId[]) => void;
 }
 
@@ -69,10 +86,20 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   };
 
   const v = new Vector3();
-  const naTela = (): CorpoNaTela[] => {
+  const naTela = (): CorpoNaTela[] => projetar(o.corpos());
+  const jazidasNaTela = (): CorpoNaTela[] =>
+    projetar(
+      (o.jazidas?.() ?? []).map((j) => ({
+        ...j,
+        tipo: 'jazida',
+        nacao: null,
+        movel: false,
+      })),
+    );
+  const projetar = (lista: readonly Projetavel[]): CorpoNaTela[] => {
     const r = viewport.getBoundingClientRect();
     const escala = r.height / (2 * Math.tan((o.camera.fov * Math.PI) / 360));
-    return o.corpos().map((c) => {
+    return lista.map((c) => {
       // Centro do corpo: meia altura acima da base, pela vertical local.
       v.set(
         c.x + (c.cima[0] * c.altura) / 2,
@@ -113,8 +140,28 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         getComponent(sim.state, id, componente) !== undefined,
     );
 
-  /** CTL-07 (parcial): terreno → mover; com só produtores selecionados → ponto de encontro. */
+  /** Hovers de exploração selecionados (os que coletam). */
+  const coletores = () =>
+    minhas('unit').filter((id) => getComponent(sim.state, id, 'coleta') !== undefined);
+
+  /**
+   * CTL-07 (parcial): jazida → coletar (hovers de exploração; os demais se movem até lá);
+   * terreno → mover; com só produtores selecionados → ponto de encontro.
+   */
   const ordemNoPonto = (px: number, py: number, tipo: 'mover' | 'patrulhar') => {
+    if (tipo === 'mover') {
+      const jazida = corpoNoPonto(jazidasNaTela(), px, py);
+      const hovers = coletores();
+      if (jazida && hovers.length > 0) {
+        enviar('coletar', { ids: hovers, jazida: jazida.id });
+        const outros = minhas('unit').filter((id) => !hovers.includes(id));
+        const alvo = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
+        if (outros.length > 0 && alvo) {
+          enviar('mover', { ids: outros, x: alvo[0], y: alvo[1], z: alvo[2] });
+        }
+        return;
+      }
+    }
     const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
     if (!ponto) return;
     // O comando leva a direção do ponto (a simulação normaliza).
@@ -228,6 +275,19 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       case 'Escape':
         definirModo('normal');
         break;
+      // §12.4 (Silo Móvel): T ancora ou desancora; G descarrega agora.
+      case 'KeyT': {
+        const silos = minhas('unit').filter((id) => getComponent(sim.state, id, 'silo'));
+        if (silos.length === 0) return;
+        enviar('ancorar_silo', { ids: silos });
+        break;
+      }
+      case 'KeyG': {
+        const silos = minhas('unit').filter((id) => getComponent(sim.state, id, 'silo'));
+        if (silos.length === 0) return;
+        enviar('descarregar_silo', { ids: silos });
+        break;
+      }
       default:
         return;
     }

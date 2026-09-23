@@ -7,6 +7,7 @@ import { ligarEntradaComandos } from './input/comandoInput';
 import { AneisDeSelecao } from './render/aneis';
 import { alturaMaxima, criarEstadoCamera, poseDaCamera, rumoDaCamera } from './render/cameraRts';
 import { PositionHistory } from './render/interpolation';
+import { JazidasRender } from './render/jazidas';
 import { pontoNoTerreno } from './render/picking';
 import { criarCeu } from './render/sky';
 import { criarTerreno } from './render/terrain';
@@ -14,6 +15,7 @@ import { UnidadesRender } from './render/unidades';
 import { createView } from './render/view';
 import { createSim, type EntityId, getComponent, type NacaoId } from './sim';
 import { DEBUG_CRIAR_COMMAND, debugCriarHandlers } from './sim/debug/criar';
+import { emTransito, estoque, SEMEAR_JAZIDAS_COMMAND } from './sim/economia';
 import { avancar, norteEm, type Vec3 } from './sim/map/esfera';
 import { alturaEm } from './sim/map/heightmap';
 import { PRESETS_DE_MAPA } from './sim/map/presets';
@@ -38,6 +40,10 @@ declare global {
       encontro?: (id: EntityId) => Vec3 | null;
       /** O raio sob o ponto de tela (px) toca o chão do planeta? */
       chaoNaTela?: (x: number, y: number) => boolean;
+      coleta?: (id: EntityId) => { estado: string; jazida: EntityId | null } | null;
+      silo?: (id: EntityId) => string | null;
+      /** Jazidas desenhadas visíveis na tela (px), para os testes clicarem nelas. */
+      jazidasNaTela?: () => Array<{ id: EntityId; recurso: string; x: number; y: number }>;
     };
   }
 }
@@ -98,8 +104,19 @@ sim.enqueue({
   tipo: DEBUG_CRIAR_COMMAND,
   dados: [patrulheiro(jogador, zonaDe(0), R)] as never,
 });
+// Jazidas da distribuição (CEN-10), logo depois do patrulheiro e antes das bases.
+sim.enqueue({
+  tick: 0,
+  nacao: jogador,
+  tipo: SEMEAR_JAZIDAS_COMMAND,
+  dados: pronto.jazidas.jazidas.map((j) => ({
+    recurso: j.recurso,
+    quantidade: j.quantidade,
+    d: j.d,
+  })) as never,
+});
 nacoes.forEach((nacao, k) => {
-  const extras = estresse > 0 ? Math.ceil(estresse / nacoes.length) - 11 - (k === 0 ? 1 : 0) : 0;
+  const extras = estresse > 0 ? Math.ceil(estresse / nacoes.length) - 15 - (k === 0 ? 1 : 0) : 0;
   sim.enqueue({
     tick: 0,
     nacao,
@@ -118,6 +135,7 @@ sim.enqueue({
 
 const history = new PositionHistory();
 const unidades = new UnidadesRender(view.scene);
+const jazidas = new JazidasRender(view.scene);
 const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
 const comandos =
   modoCamera === 'rts'
@@ -130,6 +148,7 @@ const comandos =
         sim,
         jogador,
         corpos: () => unidades.corpos,
+        jazidas: () => jazidas.desenhadas,
       })
     : null;
 let tickTotalMs = 0;
@@ -146,6 +165,7 @@ const loop = createFixedLoop({
   },
   render: (alpha) => {
     unidades.sync(sim.state, history, alpha);
+    jazidas.sync(sim.state);
     aneis.sync(comandos ? comandos.selecionadosDesenhados() : [], jogador);
     view.render();
   },
@@ -185,6 +205,30 @@ if (sonda) {
   sonda.nacao = (id) => getComponent(sim.state, id, 'owner')?.nacao ?? null;
   sonda.encontro = (id) => getComponent(sim.state, id, 'producer')?.pontoDeEncontro ?? null;
   sonda.chaoNaTela = (x, y) => pontoNoTerreno(view.camera, viewport, x, y, pronto.mapa) !== null;
+  sonda.coleta = (id) => {
+    const c = getComponent(sim.state, id, 'coleta');
+    return c ? { estado: c.estado, jazida: c.jazida } : null;
+  };
+  sonda.silo = (id) => getComponent(sim.state, id, 'silo')?.estado ?? null;
+  sonda.jazidasNaTela = () => {
+    const r = viewport.getBoundingClientRect();
+    const olho = view.camera.position;
+    return jazidas.desenhadas
+      .filter(
+        (j) =>
+          (olho.x - j.x) * j.cima[0] + (olho.y - j.y) * j.cima[1] + (olho.z - j.z) * j.cima[2] > 0,
+      )
+      .map((j) => {
+        ponto.set(j.x, j.y, j.z).project(view.camera);
+        return {
+          id: j.id,
+          recurso: j.recurso,
+          x: r.left + ((ponto.x + 1) / 2) * r.width,
+          y: r.top + ((1 - ponto.y) / 2) * r.height,
+        };
+      })
+      .filter((p) => p.x > 20 && p.y > 20 && p.x < r.width - 20 && p.y < r.height - 20);
+  };
   Object.defineProperty(sonda, 'selecao', { get: () => comandos?.selecao ?? [] });
 }
 
@@ -252,6 +296,8 @@ const frame = (agora: number): void => {
       tick: sim.state.tick,
       drawCalls: view.renderer.info.render.calls,
       triangulos: view.renderer.info.render.triangles,
+      estoque: estoque(sim.state, jogador),
+      transito: emTransito(sim.state, jogador),
     };
     quadros = 0;
     inicioJanela = agora;

@@ -1,5 +1,5 @@
 import { useEffect } from 'preact/hooks';
-import { t } from '../i18n';
+import { t, type TextKey } from '../i18n';
 import { debugStats, debugVisible } from './debugStats';
 
 /** TEC-26: overlay de depuração, alternado com Ctrl+Shift+D. */
@@ -37,6 +37,16 @@ export function DebugOverlay() {
       </div>
       <div>
         {t('debug.triangulos')}: <span data-testid="debug-triangulos">{stats.triangulos}</span>
+      </div>
+      <div data-testid="debug-estoque">
+        {t('debug.estoque')}:{' '}
+        {Object.entries(stats.estoque)
+          .map(([r, u]) => `${t(`recurso.${r}` as TextKey)} ${Math.floor(u)}`)
+          .join(' · ')}
+      </div>
+      <div data-testid="debug-transito">
+        {t('debug.transito')}: +
+        {Math.floor(Object.values(stats.transito).reduce((s, u) => s + u, 0))}
       </div>
     </div>
   );

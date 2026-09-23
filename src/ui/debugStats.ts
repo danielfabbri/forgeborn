@@ -9,6 +9,9 @@ export interface DebugStats {
   /** Chamadas de desenho do último quadro (orçamento da TEC-16). */
   drawCalls: number;
   triangulos: number;
+  /** ECO-14/ECO-15: estoque e material em trânsito do jogador, por recurso. */
+  estoque: Record<string, number>;
+  transito: Record<string, number>;
 }
 
 export const debugStats = signal<DebugStats>({
@@ -18,5 +21,7 @@ export const debugStats = signal<DebugStats>({
   tick: 0,
   drawCalls: 0,
   triangulos: 0,
+  estoque: {},
+  transito: {},
 });
 export const debugVisible = signal(false);

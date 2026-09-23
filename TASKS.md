@@ -123,18 +123,18 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M3 — Economia
 
-- [ ] **T-030 — Jazidas** · M · Spec: ECO-04 – ECO-06 · Dep: T-011
+- [x] **T-030 — Jazidas** · M · Spec: ECO-04 – ECO-06 · Dep: T-011 · Feito: 2026-09-23
   - Aceite: hover além de `slots_por_jazida` procura outra jazida a até `raio_busca_jazida_m`, ou espera; jazida some em 0 e emite AL-07; tamanho visual proporcional à quantidade.
   - Aceite: jazida é obstáculo rígido (MOV-04) com o raio de ECO-05 (D-27), que encolhe com a quantidade; unidades não a atravessam; a navegação só é refeita quando as células bloqueadas mudam.
-- [ ] **T-031 — Ciclo de coleta** · M · Spec: ECO-09 – ECO-12 · Dep: T-030, T-023
+- [x] **T-031 — Ciclo de coleta** · M · Spec: ECO-09 – ECO-12 · Dep: T-030, T-023 · Feito: 2026-09-23
   - Aceite: minera só a até `distancia_mineracao_m` da borda da jazida; taxa por recurso = `taxa_mineracao_u_s`; descarga em `tempo_descarga_hover_s`; escolha do ponto de entrega mais próximo pelo caminho; INV-01 verde.
-- [ ] **T-032 — Estoque e contabilização** · M · Spec: ECO-14 – ECO-17 · Dep: T-031
+- [x] **T-032 — Estoque e contabilização** · M · Spec: ECO-14 – ECO-17 · Dep: T-031 · Feito: 2026-09-23
   - Aceite: carga em hover não pode ser gasta; descarregar na Nave ou num Armazém incrementa o estoque; o valor "em trânsito" é publicado para o HUD.
-- [ ] **T-033 — Diretiva de Coleta** · M · Spec: ECO-18 – ECO-21 · Dep: T-031
+- [x] **T-033 — Diretiva de Coleta** · M · Spec: ECO-18 – ECO-21 · Dep: T-031 · Feito: 2026-09-23
   - Aceite: 20 hovers ociosos com todas as jazidas conhecidas se distribuem conforme `diretiva_*_pct`, com erro ≤ 1 hover por recurso; recurso sem jazida elegível é ignorado e sinalizado; ordem manual prevalece.
 - [ ] **T-034 — Fuga de hovers** · P · Spec: ECO-13 · Dep: T-031, T-060
   - Aceite: hover atingido foge para a estrutura armada mais próxima e retoma após `fuga_hover_retorno_s` sem dano; a chave nas Diretivas desliga o comportamento.
-- [ ] **T-035 — Silo Móvel** · M · Spec: ECO-22 – ECO-26 · Dep: T-032
+- [x] **T-035 — Silo Móvel** · M · Spec: ECO-22 – ECO-26 · Dep: T-032 · Feito: 2026-09-23 (a ECO-26, carga no destroço, fica com a T-036)
   - Aceite: só recebe descargas ancorado; ciclo automático no `limiar_ciclo_silo_pct`; a carga só conta depois de descarregar num depósito; hovers se redirecionam enquanto o silo está fora.
 - [ ] **T-036 — Destroços e reciclagem** · M · Spec: ECO-27 – ECO-29 · Dep: T-032, T-060
   - Aceite: destroço = piso(receita × `rendimento_destroco_pct`%) por recurso; some no prazo; a sucata vira os recursos certos ao ser descarregada; o destroço do silo inclui `rendimento_carga_silo_pct`% da carga.

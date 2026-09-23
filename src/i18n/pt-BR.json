@@ -9,5 +9,13 @@
   "debug.triangulos": "Triângulos",
   "mapa.mare_imbrium": "Mare Imbrium",
   "mapa.mare_tranquillitatis": "Mare Tranquillitatis",
-  "mapa.oceanus_procellarum": "Oceanus Procellarum"
+  "mapa.oceanus_procellarum": "Oceanus Procellarum",
+  "debug.estoque": "Estoque",
+  "debug.transito": "Em trânsito",
+  "recurso.fe": "Fe",
+  "recurso.si": "Si",
+  "recurso.cu": "Cu",
+  "recurso.li": "Li",
+  "recurso.ti": "Ti",
+  "recurso.u": "U"
 }

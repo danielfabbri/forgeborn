@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.2.0 — rascunho para aprovação |
+| Versão do SPEC | 0.2.1 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -294,7 +294,7 @@ flowchart LR
 - **ECO-05** — O tamanho visual da jazida é proporcional à quantidade restante. Em 0 ela desaparece e dispara AL-07.
 - **ECO-06** — Hover sem vaga livre procura outra jazida do mesmo tipo a até `raio_busca_jazida_m`. Se não houver, espera na fila da jazida.
 - **ECO-07** — A distribuição de jazidas por zona segue `dados:jazidas`. As quantidades são valores-base, multiplicados pelo perfil do cenário (§14.1).
-- **ECO-08** — Zonas contestadas e centrais ficam nos pontos médios entre zonas de pouso (CEN-07). **N = 2:** no equador entre as duas zonas, as 2 zonas contestadas ficam nos flancos (a 90° de cada lado) e os 2 pontos centrais nos outros dois pontos do equador. **N = 4:** dos 6 pontos médios entre pares de zonas, 4 são contestados, de modo que cada zona tem 2 contestadas vizinhas, e os 2 restantes são centrais, cada um compartilhado por um par de zonas. As jazidas `por_mapa` da zona central se dividem igualmente entre os 2 pontos centrais.
+- **ECO-08** — Zonas contestadas e centrais ficam nos pontos médios entre zonas de pouso (CEN-07). **N = 2:** no equador entre as duas zonas, as 2 zonas contestadas ficam nos flancos (a 90° de cada lado) e os 2 pontos centrais nos outros dois pontos do equador. **N = 4:** dos 6 pontos médios entre pares de zonas, 4 são contestados, de modo que cada zona tem 2 contestadas vizinhas, e os 2 restantes são centrais, cada um compartilhado por um par de zonas. As jazidas `por_mapa` da zona central se dividem igualmente entre os 2 pontos centrais. Num ponto médio que a simetria leva nele mesmo (trocando as duas zonas vizinhas), as jazidas vêm em pares espelhados: um recurso com número ímpar de jazidas ali ganha uma jazida a mais, e a quantidade do recurso se divide igualmente entre elas (ex.: 1 × 1200 u vira 2 × 600 u).
 
 <!-- dados:jazidas -->
 | zona | recurso | jazidas | quantidade_u | dist_min_m | dist_max_m | escopo |
@@ -1286,7 +1286,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 ### 20.4 Mundo, grades e navegação
 
-- **TEC-13** — Terreno por heightmap nas 6 faces da cubo-esfera (CEN-14, ~1 m por texel), em chunks de até 64 m com LOD. Grades derivadas, nas mesmas 6 faces: navegação (`celula_navegacao_m`, passável conforme inclinação), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`). Pela projeção equiangular, o tamanho real das células varia até ±15% em torno do nominal.
+- **TEC-13** — Terreno por heightmap nas 6 faces da cubo-esfera (CEN-14, ~1 m por texel), em chunks de até 64 m com LOD. Grades derivadas, nas mesmas 6 faces: navegação (`celula_navegacao_m`, passável conforme inclinação), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`). Pela projeção equiangular, a distância entre centros de células vizinhas vai de ~0,77 a ~1,09 do nominal.
 - **TEC-14** — Pathfinding: A* na grade de navegação (8 direções atravessando as arestas do cubo, sem cortar quinas, custo pelo arco entre centros de célula, rota suavizada por linha de visada) para unidades isoladas; flow field (Dijkstra na grade) para grupos; separação local tipo boids/RVO simplificado. Orçamento: < 5 ms por ordem no mapa M. Se o A* passar do orçamento no mapa G, ganha hierarquia (clusters de 32 m).
 
 ### 20.5 Renderização e performance
@@ -1438,7 +1438,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-22 | Mapas gerados por seed com simetria rotacional, mais presets curados. | Justiça entre zonas de pouso e rejogabilidade sem custo de level design. | Proposta |
 | D-23 | Zona contestada a no mínimo 120 m de cada zona de pouso vizinha (era 180 m). | Com 180 m, o mapa M com 3–4 jogadores não tem ponto válido entre bases vizinhas, que ficam a 260 m uma da outra. A zona fica no ponto equidistante (130 m de cada no mapa M). | Aprovada |
 | D-24 | O mapa é um planeta esférico sem borda (cubo-esfera), no lugar do quadrado plano, com raios de mesma área que os quadrados antigos. | Pedido do produto: a borda quebrava a ilusão e o visual de "pequeno mundo" (referência: Planetary Annihilation). Área igual preserva tempos de deslocamento e o balanceamento. | Aprovada |
-| D-25 | Zonas de pouso em pontos antípodas (N = 2) ou num tetraedro regular (N = 4); zonas contestadas e centrais nos pontos médios entre zonas, com as mesmas quantidades totais de antes. | A simetria deixa todas as zonas equivalentes, cada uma com 2 contestadas e 1 central vizinhas, como no mapa quadrado (2 vizinhas e 1 oposta). | Proposta |
+| D-25 | Zonas de pouso em pontos antípodas (N = 2) ou num tetraedro regular (N = 4); zonas contestadas e centrais nos pontos médios entre zonas, com as mesmas quantidades totais de antes; recursos ímpares num ponto médio simétrico viram pares espelhados. | A simetria deixa todas as zonas equivalentes, cada uma com 2 contestadas e 1 central vizinhas, como no mapa quadrado (2 vizinhas e 1 oposta). | Proposta |
 | D-26 | Zoom contínuo até a visão planetária (planeta inteiro na tela) e sol que acompanha o foco (sem noite). | O planeta pequeno fica legível de relance, e nenhuma base fica no escuro. | Proposta |
 
 ---
@@ -1499,3 +1499,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.1.4 | 2026-09-23 | Q-06: raio de colisão da jazida em aberto. |
 | 0.1.5 | 2026-09-23 | Q-07: conflito de Ctrl+1..9 com atalhos do navegador. |
 | 0.2.0 | 2026-09-23 | Planeta esférico (D-24 a D-26): `dados:tamanhos_mapa` troca o lado do quadrado por `raio_m`; CEN-06 a CEN-09, CEN-13, ECO-08, PRD-10, MOV-01, MOV-02, CTL-01 a CTL-03, VIS-07, TEC-13 e TEC-14 reescritas; novas CEN-14, CEN-15, CTL-16 e ART-11. |
+| 0.2.1 | 2026-09-23 | ECO-08: pares espelhados nos pontos médios simétricos (a única forma de todas as zonas verem as mesmas distâncias); TEC-13: variação real do tamanho das células. |

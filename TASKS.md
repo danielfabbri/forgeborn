@@ -71,7 +71,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-005 — `spec:check`** · M · Spec: TEC-11 · Dep: T-004 · Feito: 2026-09-23
   - Validações: gerados atualizados; `vr` = Σ receita × VR; pesos de cada personalidade somam 100; IDs e chaves de parâmetro únicos; referências válidas (armas das tabelas de unidades, `produzido_por`, cenários e `libera` das missões); citações em crase com formato de chave (snake_case, sem espaço, barra ou ponto) existem como chave de parâmetro, coluna ou ID de alguma tabela; curingas `*` casam com ao menos uma chave.
   - Aceite: cada validação tem teste com uma cópia quebrada do SPEC e mensagem que aponta tabela e linha; o SPEC atual passa.
-- [ ] **T-006 — Núcleo da simulação** · G · Spec: TEC-04 – TEC-09, REG-20 · Dep: T-003, T-004
+- [x] **T-006 — Núcleo da simulação** · G · Spec: TEC-04 – TEC-09, REG-20 · Dep: T-003, T-004 · Feito: 2026-09-23
   - Loop de passo fixo, RNG seedado, entidades e componentes, ordem de sistemas de TEC-06, comandos serializáveis, barramento de eventos, snapshot JSON.
   - Aceite: mesma seed + mesmos comandos ⇒ hash de estado idêntico após 10.000 ticks; snapshot → restauração → mesmo hash.
 - [ ] **T-007 — Runner headless** · P · Spec: TEC-25 · Dep: T-006

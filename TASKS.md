@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.1.3 |
+| Derivado de | `SPEC.md` v0.1.4 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -107,7 +107,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [ ] **T-021 — Seleção e grupos** · M · Spec: CTL-04 – CTL-06 · Dep: T-020
   - Aceite: clique, caixa, Shift, duplo clique, Ctrl+clique e grupos Ctrl+1..9 funcionam conforme o SPEC; caixa prefere unidades móveis a estruturas.
 - [ ] **T-022 — Movimento de solo** · M · Spec: MOV-01, MOV-03, MOV-04 · Dep: T-013
-  - Aceite: aceleração e giro conforme as tabelas; unidades não atravessam estruturas nem jazidas; 50 unidades paradas juntas se separam sem tremer.
+  - Aceite: aceleração e giro conforme as tabelas; unidades não atravessam estruturas; 50 unidades paradas juntas se separam sem tremer. (Colisão com jazidas passou para T-030, por causa de Q-06.)
 - [ ] **T-023 — Pathfinding e formação** · G · Spec: MOV-05, MOV-06, TEC-14 · Dep: T-022
   - Aceite: 100 unidades cruzam o mapa M sem ficar presas (headless, 10 seeds); cálculo por ordem < 5 ms; o grupo chega em formação na velocidade do mais lento.
 - [ ] **T-024 — Camada aérea e pouso de drones** · M · Spec: MOV-02, MOV-07, ENE-09 · Dep: T-022
@@ -122,6 +122,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [ ] **T-030 — Jazidas** · M · Spec: ECO-04 – ECO-06 · Dep: T-011
   - Aceite: hover além de `slots_por_jazida` procura outra jazida a até `raio_busca_jazida_m`, ou espera; jazida some em 0 e emite AL-07; tamanho visual proporcional à quantidade.
+  - Aceite: jazida é obstáculo rígido (MOV-04) com o raio decidido em Q-06; unidades não a atravessam.
 - [ ] **T-031 — Ciclo de coleta** · M · Spec: ECO-09 – ECO-12 · Dep: T-030, T-023
   - Aceite: taxa por recurso = `taxa_mineracao_u_s`; descarga em `tempo_descarga_hover_s`; escolha do ponto de entrega mais próximo pelo caminho; INV-01 verde.
 - [ ] **T-032 — Estoque e contabilização** · M · Spec: ECO-14 – ECO-17 · Dep: T-031

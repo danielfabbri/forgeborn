@@ -6,8 +6,9 @@ import { createEntity, entitiesWith, getComponent, setComponent } from '../core/
 import type { SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId } from '../core/types';
 import { type EstruturasId, type MoveisId, param } from '../data';
-import { alturaEm } from '../map/heightmap';
+import { norteEm, type Vec3 } from '../map/esfera';
 import { ALTURA_HOVER_M, altitudeDrone, ehAerea, statsEstrutura } from './stats';
+import { chaoEm, type Posicao, posicionar } from './superficie';
 
 export type Limite = 'limite_corpos' | 'limite_bases_lancamento' | 'limite_minas_ativas';
 
@@ -33,16 +34,17 @@ export function dentroDoLimite(ctx: SystemContext, nacao: NacaoId, limite: Limit
   return false;
 }
 
-function chao(ctx: SystemContext, x: number, z: number): number {
-  return ctx.mundo ? alturaEm(ctx.mundo.mapa, x, z) : 0;
+function posicao(ctx: SystemContext, d: Vec3, altura: number): Posicao {
+  const pos = { x: 0, y: 0, z: 0 };
+  posicionar(ctx, pos, d, altura);
+  return pos;
 }
 
 export function criarUnidade(
   ctx: SystemContext,
   nacao: NacaoId,
   tipo: MoveisId,
-  x: number,
-  z: number,
+  d: Vec3,
 ): EntityId | null {
   if (!dentroDoLimite(ctx, nacao, 'limite_corpos')) return null;
   const { state } = ctx;
@@ -50,13 +52,15 @@ export function criarUnidade(
   const aerea = ehAerea(tipo);
   setComponent(state, id, 'owner', { nacao });
   setComponent(state, id, 'unit', { tipo });
-  setComponent(state, id, 'position', {
-    x,
-    y: aerea ? altitudeDrone() : chao(ctx, x, z) + ALTURA_HOVER_M,
-    z,
-  });
+  setComponent(
+    state,
+    id,
+    'position',
+    posicao(ctx, d, aerea ? altitudeDrone() : chaoEm(ctx, d) + ALTURA_HOVER_M),
+  );
   setComponent(state, id, 'locomotion', {
-    heading: 0,
+    // Nasce olhando para o norte local (CEN-15).
+    rumo: norteEm(d),
     speed: 0,
     rota: [],
     destino: null,
@@ -64,6 +68,7 @@ export function criarUnidade(
     limiteVel: null,
     ocioso_s: 0,
     travado_s: 0,
+    ancora: null,
   });
   setComponent(state, id, 'order', { tipo: 'nenhuma', patrulha: null });
   if (aerea) setComponent(state, id, 'air', { estado: 'voando', timer_s: 0 });
@@ -75,8 +80,7 @@ export function criarEstrutura(
   ctx: SystemContext,
   nacao: NacaoId,
   tipo: EstruturasId,
-  x: number,
-  z: number,
+  d: Vec3,
 ): EntityId | null {
   if (tipo === 'satellite_uplink' && !dentroDoLimite(ctx, nacao, 'limite_bases_lancamento')) {
     return null;
@@ -85,7 +89,7 @@ export function criarEstrutura(
   const id = createEntity(state);
   setComponent(state, id, 'owner', { nacao });
   setComponent(state, id, 'structure', { tipo });
-  setComponent(state, id, 'position', { x, y: chao(ctx, x, z), z });
+  setComponent(state, id, 'position', posicao(ctx, d, chaoEm(ctx, d)));
   // Círculo que cobre a pegada quadrada (MOV-04).
   setComponent(state, id, 'obstacle', { raio: (statsEstrutura(tipo).pegada_m / 2) * Math.SQRT2 });
   if (tipo === 'ship') setComponent(state, id, 'producer', { pontoDeEncontro: null });
@@ -93,17 +97,12 @@ export function criarEstrutura(
   return id;
 }
 
-export function criarMina(
-  ctx: SystemContext,
-  nacao: NacaoId,
-  x: number,
-  z: number,
-): EntityId | null {
+export function criarMina(ctx: SystemContext, nacao: NacaoId, d: Vec3): EntityId | null {
   if (!dentroDoLimite(ctx, nacao, 'limite_minas_ativas')) return null;
   const { state } = ctx;
   const id = createEntity(state);
   setComponent(state, id, 'owner', { nacao });
   setComponent(state, id, 'mine', { armada: false });
-  setComponent(state, id, 'position', { x, y: chao(ctx, x, z), z });
+  setComponent(state, id, 'position', posicao(ctx, d, chaoEm(ctx, d)));
   return id;
 }

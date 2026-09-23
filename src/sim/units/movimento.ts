@@ -1,17 +1,29 @@
 /**
- * Sistema de movimento (MOV-01 a MOV-07): passo de cada unidade, separação entre corpos,
- * obstáculos rígidos, pouso e decolagem de drones e altura final (solo ou voo).
+ * Sistema de movimento (MOV-01 a MOV-07) na superfície do planeta (CEN-14): passo de cada
+ * unidade pelo grande círculo, separação entre corpos, obstáculos rígidos, pouso e decolagem de
+ * drones e altura final (solo ou voo).
  */
 import type { ComponentMap, Ponto } from '../core/components';
 import { entitiesWith, getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import type { EntityId } from '../core/types';
 import { param } from '../data';
+import {
+  arco,
+  avancar,
+  girar,
+  normalizar,
+  norteEm,
+  produtoEscalar,
+  produtoVetorial,
+  tangente,
+  type Vec3,
+} from '../map/esfera';
 import { celulaDe } from '../map/grids';
-import { alturaEm } from '../map/heightmap';
 import { aEstrela, linhaLivre, livre, type Navegavel, passoDoFluxo } from '../map/pathfinding';
 import { fluxoPara, navegavel } from './navegacao';
 import { ALTURA_HOVER_M, altitudeDrone, statsMovel } from './stats';
+import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from './superficie';
 
 type Locomocao = ComponentMap['locomotion'];
 
@@ -23,31 +35,25 @@ const CHEGADA_M = 0.4;
 /** Distância a partir da qual um grupo em campo de fluxo segue direto para o seu lugar. */
 const APROXIMACAO_FLUXO_M = 30;
 const TEMPO_TRAVADO_S = 2;
+/** Deslocamento líquido abaixo do qual a unidade conta como travada. */
+const DESLOCAMENTO_MINIMO_M = 0.5;
+/** Tamanho (m) dos baldes espaciais da separação. */
+const BALDE_M = 4;
 
-function diferencaAngular(a: number, b: number): number {
-  let d = (a - b) % TAU;
-  if (d > Math.PI) d -= TAU;
-  if (d < -Math.PI) d += TAU;
-  return d;
+function livreEm(g: Navegavel | null, d: Vec3): boolean {
+  return !g || livre(g, celulaDe(g.nav, d));
 }
 
-function livreEm(g: Navegavel | null, x: number, z: number): boolean {
-  if (!g) return true;
-  const c = celulaDe(g.nav, x, z);
-  return c !== null && livre(g, c[1] * g.nav.colunas + c[0]);
+/** Ângulo com sinal (rad) de `de` para `para`, ambos tangentes em p, em torno da vertical p. */
+function anguloNoPlano(p: Vec3, de: Vec3, para: Vec3): number {
+  return Math.atan2(produtoEscalar(p, produtoVetorial(de, para)), produtoEscalar(de, para));
 }
 
-/** Traça a rota (A*) até o destino da unidade; em linha reta para drones ou sem mapa. */
-export function tracarRota(
-  g: Navegavel | null,
-  loc: Locomocao,
-  x: number,
-  z: number,
-  aerea: boolean,
-): void {
+/** Traça a rota (A*) até o destino da unidade; pelo grande círculo para drones ou sem mapa. */
+export function tracarRota(g: Navegavel | null, loc: Locomocao, d: Vec3, aerea: boolean): void {
   if (!loc.destino) return;
   loc.fluxo = null;
-  loc.rota = aerea || !g ? [loc.destino] : (aEstrela(g, [x, z], loc.destino) ?? []);
+  loc.rota = aerea || !g ? [loc.destino] : ((aEstrela(g, d, loc.destino) as Ponto[] | null) ?? []);
   if (!aerea && g && loc.rota.length > 0) loc.destino = loc.rota[loc.rota.length - 1]!;
 }
 
@@ -57,14 +63,14 @@ function ehAereaId(ctx: SystemContext, id: EntityId): boolean {
 
 function chegou(ctx: SystemContext, g: Navegavel | null, id: EntityId, loc: Locomocao): void {
   const ordem = getComponent(ctx.state, id, 'order')!;
-  const pos = getComponent(ctx.state, id, 'position')!;
+  const d = direcaoDe(getComponent(ctx.state, id, 'position')!);
   loc.rota = [];
   loc.fluxo = null;
   if (ordem.tipo === 'patrulhar' && ordem.patrulha) {
     const [a, b] = ordem.patrulha;
     ordem.patrulha = [b, a];
     loc.destino = a;
-    tracarRota(g, loc, pos.x, pos.z, ehAereaId(ctx, id));
+    tracarRota(g, loc, d, ehAereaId(ctx, id));
     return;
   }
   loc.destino = null;
@@ -77,13 +83,12 @@ function proximoAlvo(
   g: Navegavel | null,
   id: EntityId,
   loc: Locomocao,
-  x: number,
-  z: number,
-): Ponto | null {
+  d: Vec3,
+): Vec3 | null {
   while (loc.rota.length > 0) {
     const w = loc.rota[0]!;
     const ultimo = loc.rota.length === 1 && !loc.fluxo;
-    if (Math.hypot(w[0] - x, w[1] - z) > (ultimo ? CHEGADA_M : PASSAGEM_M)) return w;
+    if (distanciaM(ctx, w, d) > (ultimo ? CHEGADA_M : PASSAGEM_M)) return w;
     loc.rota.shift();
     if (ultimo) {
       chegou(ctx, g, id, loc);
@@ -91,10 +96,10 @@ function proximoAlvo(
     }
   }
   if (loc.fluxo && loc.destino && g) {
-    const perto = Math.hypot(loc.destino[0] - x, loc.destino[1] - z) < APROXIMACAO_FLUXO_M;
+    const perto = distanciaM(ctx, loc.destino, d) < APROXIMACAO_FLUXO_M;
     const campo = fluxoPara(ctx, loc.fluxo);
-    const passo = campo ? passoDoFluxo(g, campo, x, z) : null;
-    if ((perto && linhaLivre(g, [x, z], loc.destino)) || !passo) {
+    const passo = campo ? passoDoFluxo(g, campo, d) : null;
+    if ((perto && linhaLivre(g, d, loc.destino)) || !passo) {
       loc.fluxo = null;
       loc.rota = [loc.destino];
       return loc.destino;
@@ -108,12 +113,11 @@ function proximoAlvo(
 function inimigoVisivel(ctx: SystemContext, id: EntityId): boolean {
   const { state } = ctx;
   const dono = getComponent(state, id, 'owner')!.nacao;
-  const p = getComponent(state, id, 'position')!;
+  const d = direcaoDe(getComponent(state, id, 'position')!);
   const visao = statsMovel(getComponent(state, id, 'unit')!.tipo).visao_m;
   return entitiesWith(state, 'owner', 'position').some((outro) => {
     if (getComponent(state, outro, 'owner')!.nacao === dono) return false;
-    const q = getComponent(state, outro, 'position')!;
-    return Math.hypot(q.x - p.x, q.z - p.z) <= visao;
+    return distanciaM(ctx, d, direcaoDe(getComponent(state, outro, 'position')!)) <= visao;
   });
 }
 
@@ -149,13 +153,6 @@ function atualizarAr(ctx: SystemContext, id: EntityId, loc: Locomocao, dt: numbe
   }
 }
 
-function limitarAoMapa(ctx: SystemContext, pos: { x: number; z: number }): void {
-  if (!ctx.mundo) return;
-  const limite = ctx.mundo.mapa.lado_m / 2 - 1;
-  pos.x = Math.max(-limite, Math.min(limite, pos.x));
-  pos.z = Math.max(-limite, Math.min(limite, pos.z));
-}
-
 function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number): void {
   const { state } = ctx;
   const s = statsMovel(getComponent(state, id, 'unit')!.tipo);
@@ -163,28 +160,33 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
   const loc = getComponent(state, id, 'locomotion')!;
   const pos = getComponent(state, id, 'position')!;
   const ordem = getComponent(state, id, 'order')!;
+  const R = raioDoMundo(ctx);
+  const d = direcaoDe(pos);
+  // O rumo é mantido tangente (a separação e o arredondamento podem desviá-lo um pouco).
+  let rumo: Vec3 = tangente(d, loc.rumo) ?? norteEm(d);
 
   if (aerea && !atualizarAr(ctx, id, loc, dt)) {
     loc.speed = 0;
+    loc.rumo = rumo;
     return;
   }
 
-  const alvo = ordem.tipo === 'manter' ? null : proximoAlvo(ctx, g, id, loc, pos.x, pos.z);
+  const alvo = ordem.tipo === 'manter' ? null : proximoAlvo(ctx, g, id, loc, d);
   const velMax = Math.min(s.vel_m_s, loc.limiteVel ?? Infinity);
   // MOV-03: da parada à velocidade máxima em aceleracao_*_s.
   const aceleracao = s.vel_m_s / param(aerea ? 'aceleracao_ar_s' : 'aceleracao_solo_s');
   let velAlvo = 0;
   if (alvo) {
-    const dx = alvo[0] - pos.x;
-    const dz = alvo[1] - pos.z;
-    const desejado = Math.atan2(dz, dx);
-    const giro = ((s.giro_graus_s * Math.PI) / 180) * dt;
-    const delta = diferencaAngular(desejado, loc.heading);
-    loc.heading += Math.max(-giro, Math.min(giro, delta));
-    const desalinhado = Math.abs(diferencaAngular(desejado, loc.heading)) > Math.PI / 4;
-    velAlvo = desalinhado ? velMax * 0.25 : velMax;
+    const desejado = tangente(d, alvo);
+    if (desejado) {
+      const giro = ((s.giro_graus_s * Math.PI) / 180) * dt;
+      const delta = anguloNoPlano(d, rumo, desejado);
+      rumo = normalizar(girar(rumo, d, Math.max(-giro, Math.min(giro, delta))));
+      const desalinhado = Math.abs(anguloNoPlano(d, rumo, desejado)) > Math.PI / 4;
+      velAlvo = desalinhado ? velMax * 0.25 : velMax;
+    }
     if (loc.rota.length === 1 && !loc.fluxo) {
-      velAlvo = Math.min(velAlvo, Math.sqrt(2 * aceleracao * Math.hypot(dx, dz)));
+      velAlvo = Math.min(velAlvo, Math.sqrt(2 * aceleracao * distanciaM(ctx, d, alvo)));
     }
     loc.ocioso_s = 0;
   } else if (ordem.tipo !== 'patrulhar') {
@@ -194,31 +196,41 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
   loc.speed =
     loc.speed < velAlvo ? Math.min(velAlvo, loc.speed + dv) : Math.max(velAlvo, loc.speed - dv);
 
-  const nx = pos.x + Math.cos(loc.heading) * loc.speed * dt;
-  const nz = pos.z + Math.sin(loc.heading) * loc.speed * dt;
-  const [x0, z0] = [pos.x, pos.z];
-  // MOV-01: terreno intransponível barra hovers; eles deslizam pela borda quando dá.
-  if (aerea || livreEm(g, nx, nz)) {
-    pos.x = nx;
-    pos.z = nz;
-  } else if (livreEm(g, nx, pos.z)) {
-    pos.x = nx;
-  } else if (livreEm(g, pos.x, nz)) {
-    pos.z = nz;
-  } else {
-    loc.speed = 0;
+  const angulo = (loc.speed * dt) / R;
+  let novo = d;
+  if (angulo > 0) {
+    const cheio = avancar(d, rumo, angulo);
+    // MOV-01: terreno intransponível barra hovers; eles deslizam pela borda quando dá.
+    if (aerea || livreEm(g, cheio.p)) {
+      novo = cheio.p;
+      rumo = cheio.rumo;
+    } else {
+      const lateral = [Math.PI / 4, -Math.PI / 4]
+        .map((a) => avancar(d, normalizar(girar(rumo, d, a)), angulo * Math.SQRT1_2))
+        .find((t) => livreEm(g, t.p));
+      if (lateral) novo = lateral.p;
+      else loc.speed = 0;
+    }
   }
-  limitarAoMapa(ctx, pos);
+  posicionar(ctx, pos, novo, 0);
+  loc.rumo = tangente(novo, rumo) ?? rumo;
 
-  // Unidade presa (aglomeração ou quina): refaz a rota depois de um tempo.
-  if (alvo && Math.hypot(pos.x - x0, pos.z - z0) < 0.2 * velMax * dt) {
+  // Unidade presa (aglomeração, funil ou quina): se em TEMPO_TRAVADO_S não se afastou
+  // DESLOCAMENTO_MINIMO_M da âncora, contando o efeito da separação, refaz a rota por A*.
+  // A posição de início do tick já inclui a separação do tick anterior.
+  if (!alvo) {
+    loc.travado_s = 0;
+    loc.ancora = null;
+  } else if (!loc.ancora || distanciaM(ctx, loc.ancora, d) >= DESLOCAMENTO_MINIMO_M) {
+    loc.travado_s = 0;
+    loc.ancora = d;
+  } else {
     loc.travado_s += dt;
     if (loc.travado_s >= TEMPO_TRAVADO_S) {
       loc.travado_s = 0;
-      tracarRota(g, loc, pos.x, pos.z, aerea);
+      loc.ancora = d;
+      tracarRota(g, loc, novo, aerea);
     }
-  } else {
-    loc.travado_s = 0;
   }
 }
 
@@ -228,18 +240,27 @@ function noSolo(ctx: SystemContext, id: EntityId): boolean {
   return !ar || ar.estado === 'pousado';
 }
 
+/** Desloca a direção d por um vetor tangente (m) e devolve a nova direção. */
+function deslocar(d: Vec3, v: Vec3, R: number): Vec3 {
+  return normalizar([d[0] + v[0] / R, d[1] + v[1] / R, d[2] + v[2] / R]);
+}
+
 /**
  * MOV-04: separação suave por correção de posição (sem velocidade, sem tremer).
  * Hovers entre si e drones em voo entre si; quem mantém posição não é empurrado.
+ * As posições são tratadas na esfera de raio `raio_m` (a altura é refeita depois).
  */
 function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void {
   const { state } = ctx;
-  const TAM = 4;
+  const R = raioDoMundo(ctx);
+  const dirs = new Map<EntityId, Vec3>(
+    ids.map((id) => [id, direcaoDe(getComponent(state, id, 'position')!)]),
+  );
   const baldes = new Map<string, EntityId[]>();
-  const chave = (solo: boolean, cx: number, cz: number) => `${solo ? 's' : 'a'}:${cx}:${cz}`;
+  const celula = (d: Vec3) => d.map((v) => Math.floor((v * R) / BALDE_M)) as Vec3;
+  const chave = (solo: boolean, c: Vec3) => `${solo ? 's' : 'a'}:${c[0]}:${c[1]}:${c[2]}`;
   for (const id of ids) {
-    const p = getComponent(state, id, 'position')!;
-    const k = chave(noSolo(ctx, id), Math.floor(p.x / TAM), Math.floor(p.z / TAM));
+    const k = chave(noSolo(ctx, id), celula(dirs.get(id)!));
     const lista = baldes.get(k);
     if (lista) lista.push(id);
     else baldes.set(k, [id]);
@@ -247,82 +268,83 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
   const peso = (id: EntityId) => (getComponent(state, id, 'order')!.tipo === 'manter' ? 0 : 1);
   for (const id of ids) {
     const solo = noSolo(ctx, id);
-    const p = getComponent(state, id, 'position')!;
     const ra = statsMovel(getComponent(state, id, 'unit')!.tipo).raio_m;
-    const cx = Math.floor(p.x / TAM);
-    const cz = Math.floor(p.z / TAM);
-    for (let dz = -1; dz <= 1; dz++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        for (const outro of baldes.get(chave(solo, cx + dx, cz + dz)) ?? []) {
-          if (outro <= id) continue;
-          const q = getComponent(state, outro, 'position')!;
-          const rb = statsMovel(getComponent(state, outro, 'unit')!.tipo).raio_m;
-          let ex = q.x - p.x;
-          let ez = q.z - p.z;
-          let d = Math.hypot(ex, ez);
-          const sobreposicao = ra + rb - d;
-          if (sobreposicao <= 0.01) continue;
-          if (d < 1e-6) {
-            // Mesma posição: direção determinística pelo par de IDs.
-            const a = (id * 2.399963 + outro * 0.618034) % TAU;
-            ex = Math.cos(a);
-            ez = Math.sin(a);
-            d = 1;
-          }
-          const [pa, pb] = [peso(id), peso(outro)];
-          const [wa, wb] = pa + pb === 0 ? [0.5, 0.5] : [pa / (pa + pb), pb / (pa + pb)];
-          const ux = ex / d;
-          const uz = ez / d;
-          if (!solo || livreEm(g, p.x - ux * sobreposicao * wa, p.z - uz * sobreposicao * wa)) {
-            p.x -= ux * sobreposicao * wa;
-            p.z -= uz * sobreposicao * wa;
-          }
-          if (!solo || livreEm(g, q.x + ux * sobreposicao * wb, q.z + uz * sobreposicao * wb)) {
-            q.x += ux * sobreposicao * wb;
-            q.z += uz * sobreposicao * wb;
+    const c = celula(dirs.get(id)!);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          for (const outro of baldes.get(chave(solo, [c[0] + dx, c[1] + dy, c[2] + dz])) ?? []) {
+            if (outro <= id) continue;
+            const p = dirs.get(id)!;
+            const q = dirs.get(outro)!;
+            const rb = statsMovel(getComponent(state, outro, 'unit')!.tipo).raio_m;
+            const dist = R * arco(p, q);
+            const sobreposicao = ra + rb - dist;
+            if (sobreposicao <= 0.01) continue;
+            let u = tangente(p, q);
+            if (!u || dist < 1e-6) {
+              // Mesma posição: direção determinística pelo par de IDs.
+              u = normalizar(girar(norteEm(p), p, (id * 2.399963 + outro * 0.618034) % TAU));
+            }
+            const [pa, pb] = [peso(id), peso(outro)];
+            const [wa, wb] = pa + pb === 0 ? [0.5, 0.5] : [pa / (pa + pb), pb / (pa + pb)];
+            const novoP = deslocar(
+              p,
+              [-u[0] * sobreposicao * wa, -u[1] * sobreposicao * wa, -u[2] * sobreposicao * wa],
+              R,
+            );
+            const novoQ = deslocar(
+              q,
+              [u[0] * sobreposicao * wb, u[1] * sobreposicao * wb, u[2] * sobreposicao * wb],
+              R,
+            );
+            if (!solo || livreEm(g, novoP)) dirs.set(id, novoP);
+            if (!solo || livreEm(g, novoQ)) dirs.set(outro, novoQ);
           }
         }
       }
     }
   }
   // Obstáculos rígidos empurram unidades de solo para fora.
-  const obstaculos = entitiesWith(state, 'obstacle', 'position');
+  const obstaculos = entitiesWith(state, 'obstacle', 'position').map((o) => ({
+    d: direcaoDe(getComponent(state, o, 'position')!),
+    raio: getComponent(state, o, 'obstacle')!.raio,
+  }));
   for (const id of ids) {
     if (!noSolo(ctx, id)) continue;
-    const p = getComponent(state, id, 'position')!;
     const r = statsMovel(getComponent(state, id, 'unit')!.tipo).raio_m;
     for (const o of obstaculos) {
-      const q = getComponent(state, o, 'position')!;
-      const raio = getComponent(state, o, 'obstacle')!.raio + r;
-      const ex = p.x - q.x;
-      const ez = p.z - q.z;
-      const d = Math.hypot(ex, ez);
-      if (d >= raio) continue;
-      const [ux, uz] = d < 1e-6 ? [1, 0] : [ex / d, ez / d];
-      p.x = q.x + ux * raio;
-      p.z = q.z + uz * raio;
+      const p = dirs.get(id)!;
+      const raio = o.raio + r;
+      const dist = R * arco(p, o.d);
+      if (dist >= raio) continue;
+      const fora = tangente(o.d, p) ?? norteEm(o.d);
+      dirs.set(id, avancar(o.d, fora, raio / R).p);
     }
   }
+  for (const id of ids) posicionar(ctx, getComponent(state, id, 'position')!, dirs.get(id)!, 0);
 }
 
 function ajustarAltura(ctx: SystemContext, ids: EntityId[]): void {
-  const { state, mundo } = ctx;
+  const { state } = ctx;
   for (const id of ids) {
-    const p = getComponent(state, id, 'position')!;
-    const chao = (mundo ? alturaEm(mundo.mapa, p.x, p.z) : 0) + ALTURA_HOVER_M;
+    const pos = getComponent(state, id, 'position')!;
+    const d = direcaoDe(pos);
+    const chao = chaoEm(ctx, d) + ALTURA_HOVER_M;
     const ar = getComponent(state, id, 'air');
-    if (!ar || ar.estado === 'pousado') {
-      p.y = chao;
-      continue;
+    let altura = chao;
+    if (ar && ar.estado !== 'pousado') {
+      // MOV-02: altitude radial acima da esfera de raio `raio_m`.
+      const alto = altitudeDrone();
+      if (ar.estado === 'voando') {
+        altura = alto;
+      } else {
+        const total = param(ar.estado === 'pousando' ? 'tempo_pouso_s' : 'tempo_decolagem_s');
+        const t = Math.max(0, Math.min(1, ar.timer_s / total));
+        altura = ar.estado === 'pousando' ? chao + (alto - chao) * t : alto + (chao - alto) * t;
+      }
     }
-    const alto = altitudeDrone();
-    if (ar.estado === 'voando') {
-      p.y = alto;
-      continue;
-    }
-    const total = param(ar.estado === 'pousando' ? 'tempo_pouso_s' : 'tempo_decolagem_s');
-    const t = Math.max(0, Math.min(1, ar.timer_s / total));
-    p.y = ar.estado === 'pousando' ? chao + (alto - chao) * t : alto + (chao - alto) * t;
+    posicionar(ctx, pos, d, altura);
   }
 }
 

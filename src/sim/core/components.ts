@@ -1,14 +1,15 @@
 import type { EstruturasId, MoveisId } from '../data';
 import type { NacaoId } from './types';
 
-export type Ponto = [number, number];
+/** Direção unitária a partir do centro do planeta (CEN-14): um ponto da superfície. */
+export type Ponto = [number, number, number];
 
 /**
  * Componentes conhecidos da simulação (ECS leve, TEC-06): dados simples e serializáveis.
  * Outros módulos PODEM acrescentar componentes por declaration merging nesta interface.
  */
 export interface ComponentMap {
-  /** Posição no mundo, em metros; y é a altura. */
+  /** Posição no mundo, em metros, com o centro do planeta na origem (CEN-14). */
   position: { x: number; y: number; z: number };
   /** Nação dona do corpo. */
   owner: { nacao: NacaoId };
@@ -20,10 +21,10 @@ export interface ComponentMap {
   obstacle: { raio: number };
   /** Estado de deslocamento de uma unidade móvel. */
   locomotion: {
-    /** Direção (rad; 0 = +x, π/2 = +z). */
-    heading: number;
+    /** Rumo: vetor unitário tangente à superfície na posição atual (CEN-14). */
+    rumo: [number, number, number];
     speed: number;
-    /** Pontos de passagem restantes (mundo). */
+    /** Pontos de passagem restantes (direções). */
     rota: Ponto[];
     /** Posição final da ordem atual (o lugar da unidade na formação). */
     destino: Ponto | null;
@@ -33,8 +34,10 @@ export interface ComponentMap {
     limiteVel: number | null;
     /** Segundos sem ordem de deslocamento. */
     ocioso_s: number;
-    /** Segundos tentando andar sem sair do lugar (dispara nova rota). */
+    /** Segundos tentando andar sem se afastar da âncora (dispara nova rota). */
     travado_s: number;
+    /** Onde a unidade estava quando começou a contar o travamento. */
+    ancora: Ponto | null;
   };
   /** Ordem corrente de movimento (CTL-07, CMB-13). */
   order: { tipo: 'nenhuma' | 'mover' | 'patrulhar' | 'manter'; patrulha: [Ponto, Ponto] | null };

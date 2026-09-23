@@ -6,7 +6,9 @@ import type { Ponto } from '../core/components';
 import { entitiesWith, getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import type { SimState } from '../core/state';
+import { celulasNoRaio } from '../map/conectividade';
 import { campoDeFluxo, type Navegavel } from '../map/pathfinding';
+import { direcaoDe } from './superficie';
 
 interface Cache {
   versao: number;
@@ -28,23 +30,11 @@ export function navegavel(ctx: SystemContext): Navegavel | null {
     return atual.navegavel;
   }
   const nav = ctx.mundo.grades.navegacao;
-  const bloqueado = new Uint8Array(nav.colunas * nav.linhas);
+  const bloqueado = new Uint8Array(nav.esfera.celulas);
   for (const id of entitiesWith(state, 'obstacle', 'position')) {
     const { raio } = getComponent(state, id, 'obstacle')!;
-    const p = getComponent(state, id, 'position')!;
-    const alcance = Math.ceil(raio / nav.celula_m) + 1;
-    const ci = Math.floor((p.x + nav.meio_m) / nav.celula_m);
-    const cj = Math.floor((p.z + nav.meio_m) / nav.celula_m);
-    for (let dj = -alcance; dj <= alcance; dj++) {
-      for (let di = -alcance; di <= alcance; di++) {
-        const i = ci + di;
-        const j = cj + dj;
-        if (i < 0 || j < 0 || i >= nav.colunas || j >= nav.linhas) continue;
-        const cx = -nav.meio_m + (i + 0.5) * nav.celula_m;
-        const cz = -nav.meio_m + (j + 0.5) * nav.celula_m;
-        if (Math.hypot(cx - p.x, cz - p.z) <= raio) bloqueado[j * nav.colunas + i] = 1;
-      }
-    }
+    const d = direcaoDe(getComponent(state, id, 'position')!);
+    for (const c of celulasNoRaio(nav, d, raio)) bloqueado[c] = 1;
   }
   const novo: Cache = {
     versao: state.versaoObstaculos,
@@ -60,7 +50,7 @@ export function fluxoPara(ctx: SystemContext, alvo: Ponto): Int32Array | null {
   const g = navegavel(ctx);
   if (!g) return null;
   const cache = caches.get(ctx.state)!;
-  const chave = `${alvo[0]},${alvo[1]}`;
+  const chave = alvo.join(',');
   let campo = cache.fluxos.get(chave);
   if (!campo) {
     if (cache.fluxos.size >= 32) cache.fluxos.clear();

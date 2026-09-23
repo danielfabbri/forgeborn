@@ -7,15 +7,28 @@ import { getComponent, isAlive } from '../core/entities';
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId, QueuedCommand } from '../core/types';
 import { param } from '../data';
+import {
+  arco,
+  avancar,
+  normalizar,
+  norteEm,
+  produtoEscalar,
+  produtoVetorial,
+  tangente,
+  type Vec3,
+} from '../map/esfera';
 import { celulaDe } from '../map/grids';
 import { celulaLivreProxima, centroDoIndice, livre, type Navegavel } from '../map/pathfinding';
 import { tracarRota } from './movimento';
 import { navegavel } from './navegacao';
 import { statsMovel } from './stats';
+import { direcaoDe, direcaoDoComando, raioDoMundo } from './superficie';
 
 interface DadosAlvo {
   ids: number[];
+  /** Direção do ponto clicado (normalizada aqui). */
   x: number;
+  y: number;
   z: number;
   /** MOV-06: "mover livre" desliga a velocidade de grupo. */
   livre?: boolean;
@@ -42,12 +55,15 @@ function daNacao(
     .sort((a, b) => a - b);
 }
 
-function livreEm(g: Navegavel, x: number, z: number): boolean {
-  const c = celulaDe(g.nav, x, z);
-  return c !== null && livre(g, c[1] * g.nav.colunas + c[0]);
+function livreEm(g: Navegavel, d: Vec3): boolean {
+  return livre(g, celulaDe(g.nav, d));
 }
 
-/** Lugar de cada unidade no destino, mantendo a disposição relativa do grupo (MOV-06). */
+/**
+ * Lugar de cada unidade no destino, mantendo a disposição relativa do grupo (MOV-06). Os
+ * desvios são medidos no plano tangente ao centro do grupo, numa base que acompanha o rumo da
+ * viagem, e reaplicados no destino com a base transportada pelo grande círculo.
+ */
 export function formacao(
   ctx: SystemContext,
   g: Navegavel | null,
@@ -55,19 +71,39 @@ export function formacao(
   alvo: Ponto,
 ): Ponto[] {
   const { state } = ctx;
-  const posicoes = ids.map((id) => getComponent(state, id, 'position')!);
-  const cx = posicoes.reduce((s, p) => s + p.x, 0) / ids.length;
-  const cz = posicoes.reduce((s, p) => s + p.z, 0) / ids.length;
-  const desvios = posicoes.map((p) => [p.x - cx, p.z - cz] as Ponto);
-  const maior = Math.max(...desvios.map(([x, z]) => Math.hypot(x, z)));
+  const R = raioDoMundo(ctx);
+  const dirs = ids.map((id) => direcaoDe(getComponent(state, id, 'position')!));
+  const centro = normalizar(
+    dirs.reduce<Vec3>((s, d) => [s[0] + d[0], s[1] + d[1], s[2] + d[2]], [0, 0, 0]),
+  );
+  const e1 = tangente(centro, alvo) ?? norteEm(centro);
+  const e2 = produtoVetorial(centro, e1);
+  const desvios = dirs.map((d) => {
+    const t = tangente(centro, d);
+    const dist = R * arco(centro, d);
+    return t
+      ? ([dist * produtoEscalar(t, e1), dist * produtoEscalar(t, e2)] as const)
+      : ([0, 0] as const);
+  });
+  const maior = Math.max(...desvios.map(([x, y]) => Math.hypot(x, y)));
   const raioMax = 4 + 3 * Math.sqrt(ids.length);
   const escala = maior > raioMax ? raioMax / maior : 1;
+  const viagem = avancar(centro, e1, arco(centro, alvo));
+  const f1 = tangente(alvo, viagem.rumo) ?? norteEm(alvo);
+  const f2 = produtoVetorial(alvo, f1);
   return ids.map((id, k) => {
-    const [dx, dz] = desvios[k]!;
-    const slot: Ponto = [alvo[0] + dx * escala, alvo[1] + dz * escala];
+    const [x, y] = desvios[k]!;
+    const deslocamento: Vec3 = [
+      (f1[0] * x + f2[0] * y) * escala,
+      (f1[1] * x + f2[1] * y) * escala,
+      (f1[2] * x + f2[2] * y) * escala,
+    ];
+    const comprimento = Math.hypot(...deslocamento);
+    const slot: Ponto =
+      comprimento < 1e-9 ? alvo : avancar(alvo, normalizar(deslocamento), comprimento / R).p;
     const aerea = statsMovel(getComponent(state, id, 'unit')!.tipo).camada === 'ar';
-    if (!g || aerea || livreEm(g, slot[0], slot[1])) return slot;
-    const celula = celulaLivreProxima(g, slot[0], slot[1]);
+    if (!g || aerea || livreEm(g, slot)) return slot;
+    const celula = celulaLivreProxima(g, slot);
     return celula >= 0 ? centroDoIndice(g.nav, celula) : slot;
   });
 }
@@ -92,7 +128,7 @@ function mandarMover(
   const alvoFluxo =
     g && deSolo.length >= param('flow_field_min_unidades')
       ? (() => {
-          const c = celulaLivreProxima(g, alvo[0], alvo[1]);
+          const c = celulaLivreProxima(g, alvo);
           return c >= 0 ? centroDoIndice(g.nav, c) : null;
         })()
       : null;
@@ -100,18 +136,19 @@ function mandarMover(
   ids.forEach((id, k) => {
     const loc = getComponent(state, id, 'locomotion')!;
     const ordem = getComponent(state, id, 'order')!;
-    const pos = getComponent(state, id, 'position')!;
+    const d = direcaoDe(getComponent(state, id, 'position')!);
     const lugar = lugares[k]!;
     ordem.tipo = patrulha ? 'patrulhar' : 'mover';
-    ordem.patrulha = patrulha ? [[pos.x, pos.z], lugar] : null;
+    ordem.patrulha = patrulha ? [d, lugar] : null;
     loc.destino = lugar;
     loc.limiteVel = limite;
     loc.travado_s = 0;
+    loc.ancora = null;
     if (!aerea(id) && alvoFluxo) {
       loc.fluxo = alvoFluxo;
       loc.rota = [];
     } else {
-      tracarRota(g, loc, pos.x, pos.z, aerea(id));
+      tracarRota(g, loc, d, aerea(id));
     }
   });
 }
@@ -132,25 +169,15 @@ function parar(ctx: SystemContext, ids: EntityId[], manter: boolean): void {
 export const comandosDeMovimento: Record<string, CommandHandler> = {
   mover: (ctx, comando) => {
     const d = dadosDe(comando);
-    if (typeof d.x !== 'number' || typeof d.z !== 'number') return;
-    mandarMover(
-      ctx,
-      daNacao(ctx, comando.nacao, d.ids, 'unit'),
-      [d.x, d.z],
-      d.livre === true,
-      false,
-    );
+    const alvo = direcaoDoComando(d);
+    if (!alvo) return;
+    mandarMover(ctx, daNacao(ctx, comando.nacao, d.ids, 'unit'), alvo, d.livre === true, false);
   },
   patrulhar: (ctx, comando) => {
     const d = dadosDe(comando);
-    if (typeof d.x !== 'number' || typeof d.z !== 'number') return;
-    mandarMover(
-      ctx,
-      daNacao(ctx, comando.nacao, d.ids, 'unit'),
-      [d.x, d.z],
-      d.livre === true,
-      true,
-    );
+    const alvo = direcaoDoComando(d);
+    if (!alvo) return;
+    mandarMover(ctx, daNacao(ctx, comando.nacao, d.ids, 'unit'), alvo, d.livre === true, true);
   },
   parar: (ctx, comando) =>
     parar(ctx, daNacao(ctx, comando.nacao, dadosDe(comando).ids, 'unit'), false),
@@ -158,9 +185,10 @@ export const comandosDeMovimento: Record<string, CommandHandler> = {
     parar(ctx, daNacao(ctx, comando.nacao, dadosDe(comando).ids, 'unit'), true),
   ponto_de_encontro: (ctx, comando) => {
     const d = dadosDe(comando);
-    if (typeof d.x !== 'number' || typeof d.z !== 'number') return;
+    const alvo = direcaoDoComando(d);
+    if (!alvo) return;
     for (const id of daNacao(ctx, comando.nacao, d.ids, 'producer')) {
-      getComponent(ctx.state, id, 'producer')!.pontoDeEncontro = [d.x, d.z];
+      getComponent(ctx.state, id, 'producer')!.pontoDeEncontro = alvo;
     }
   },
 };

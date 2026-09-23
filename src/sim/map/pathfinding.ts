@@ -268,6 +268,8 @@ export function campoDeFluxo(g: Navegavel, destino: Vec3): Int32Array {
   fila[0] = fim;
   topos[0] = 1;
   let pendentes = 1;
+  const livreC = (v: number) =>
+    v >= 0 && passavel[v] === 1 && (bloqueado === null || bloqueado[v] !== 1);
   for (let custoAtual = 0; pendentes > 0; custoAtual++) {
     const b = custoAtual % BALDES;
     const base = b * n;
@@ -276,16 +278,19 @@ export function campoDeFluxo(g: Navegavel, destino: Vec3): Int32Array {
       pendentes--;
       if (dist[atual] !== custoAtual) continue;
       const o = atual * 8;
+      // Vizinhas de lado (0..3) primeiro; as diagonais (4..7) só valem com os dois lados livres.
+      const l0 = livreC(vizinhos[o]!);
+      const l1 = livreC(vizinhos[o + 1]!);
+      const l2 = livreC(vizinhos[o + 2]!);
+      const l3 = livreC(vizinhos[o + 3]!);
       for (let d = 0; d < 8; d++) {
+        if (d === 0 ? !l0 : d === 1 ? !l1 : d === 2 ? !l2 : d === 3 ? !l3 : false) continue;
+        if (d === 4 && !(l0 && l2)) continue;
+        if (d === 5 && !(l0 && l3)) continue;
+        if (d === 6 && !(l1 && l2)) continue;
+        if (d === 7 && !(l1 && l3)) continue;
         const v = vizinhos[o + d]!;
-        if (v < 0 || passavel[v] !== 1 || (bloqueado !== null && bloqueado[v] === 1)) continue;
-        if (d >= 4) {
-          const l = LADOS_DA_DIAGONAL[d - 4]!;
-          const a = vizinhos[o + l[0]]!;
-          const c = vizinhos[o + l[1]]!;
-          if (a < 0 || c < 0 || passavel[a] !== 1 || passavel[c] !== 1) continue;
-          if (bloqueado !== null && (bloqueado[a] === 1 || bloqueado[c] === 1)) continue;
-        }
+        if (d >= 4 && !livreC(v)) continue;
         const custo = custoAtual + custos[o + d]!;
         const dv = dist[v]!;
         if (dv === -1 || custo < dv) {

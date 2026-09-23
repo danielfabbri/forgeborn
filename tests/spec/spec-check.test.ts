@@ -149,10 +149,10 @@ describe('TEC-11: spec:check', () => {
   });
 
   it('acusa erro de estrutura de tabela com a linha', () => {
-    const texto = quebrar('| p | 384 | 2 | 2 | 1v1 rápido |', '| p | 384 | 2 | 1v1 rápido |');
+    const texto = quebrar('| p | 108 | 2 | 2 | 1v1 rápido |', '| p | 108 | 2 | 1v1 rápido |');
     // O parser falha antes de qualquer geração, então os gerados não importam aqui.
     expect(checkSpec(texto, new Map())).toEqual([
-      expect.objectContaining({ tipo: 'parser', linha: linhaDe(texto, '| p | 384 | 2 | 1v1') }),
+      expect.objectContaining({ tipo: 'parser', linha: linhaDe(texto, '| p | 108 | 2 | 1v1') }),
     ]);
   });
 });

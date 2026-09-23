@@ -4,5 +4,8 @@
   "debug.fps": "FPS",
   "debug.tick_ms": "Tick (ms)",
   "debug.entidades": "Entidades",
-  "debug.tick": "Tick"
+  "debug.tick": "Tick",
+  "mapa.mare_imbrium": "Mare Imbrium",
+  "mapa.mare_tranquillitatis": "Mare Tranquillitatis",
+  "mapa.oceanus_procellarum": "Oceanus Procellarum"
 }

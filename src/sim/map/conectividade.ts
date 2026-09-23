@@ -13,23 +13,18 @@ export function componenteConectado(nav: GradeNavegacao, ci: number, cj: number)
   let fim = 0;
   marcado[cj * colunas + ci] = 1;
   fila[fim++] = cj * colunas + ci;
+  const visitar = (v: number) => {
+    if (marcado[v] === 1 || nav.passavel[v] !== 1) return;
+    marcado[v] = 1;
+    fila[fim++] = v;
+  };
   while (inicio < fim) {
     const indice = fila[inicio++]!;
     const x = indice % colunas;
-    const y = (indice - x) / colunas;
-    const vizinhas: Array<[number, number]> = [
-      [x + 1, y],
-      [x - 1, y],
-      [x, y + 1],
-      [x, y - 1],
-    ];
-    for (const [vx, vy] of vizinhas) {
-      if (vx < 0 || vy < 0 || vx >= colunas || vy >= linhas) continue;
-      const v = vy * colunas + vx;
-      if (marcado[v] === 1 || !ehPassavel(nav, vx, vy)) continue;
-      marcado[v] = 1;
-      fila[fim++] = v;
-    }
+    if (x + 1 < colunas) visitar(indice + 1);
+    if (x > 0) visitar(indice - 1);
+    if (indice + colunas < colunas * linhas) visitar(indice + colunas);
+    if (indice >= colunas) visitar(indice - colunas);
   }
   return marcado;
 }

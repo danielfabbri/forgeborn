@@ -26,7 +26,8 @@ export const GERADOR_LUA = {
   comprimentoRampa: 32,
   faixaBorda: FAIXA_BORDA_M, // CEN-09
   alturaBorda: 30,
-  raioLivreCentro: 40,
+  /** Centro livre para a zona central: 40 m + a queda externa máxima de uma borda (16 m). */
+  raioLivreCentro: 56,
   crateraBordaMax: 8, // CEN-09
   /**
    * CEN-09: raios entre 10 e 60 m. Densidade em crateras por 10.000 m².

@@ -88,7 +88,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: mesma seed ⇒ mesmo hash; teste de simetria (altura em p e em p rotacionado iguais, ± 1 cm); platôs com inclinação < 5°.
 - [x] **T-011 — Distribuição de jazidas** · M · Spec: ECO-07, ECO-08, CEN-10 · Dep: T-010 · Feito: 2026-09-23
   - Aceite: contagens e quantidades = `dados:jazidas` × perfil do cenário; distâncias dentro das faixas; número de zonas contestadas conforme o número de jogadores.
-- [ ] **T-012 — Validação do gerador e presets** · M · Spec: CEN-11, CEN-12, §14.4 · Dep: T-011, T-013
+- [x] **T-012 — Validação do gerador e presets** · M · Spec: CEN-11, CEN-12, §14.4 · Dep: T-011, T-013 · Feito: 2026-09-23
   - Aceite: 100 seeds testadas, inválidas rejeitadas com o motivo; presets Mare Imbrium (P), Mare Tranquillitatis (M) e Oceanus Procellarum (G) fixados.
 - [x] **T-013 — Grades derivadas** · M · Spec: TEC-13, MOV-01, PRD-10 · Dep: T-010 · Feito: 2026-09-23
   - Navegação (`celula_navegacao_m`), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`).

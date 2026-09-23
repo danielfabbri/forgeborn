@@ -36,12 +36,14 @@ export interface DistribuicaoDeJazidas {
 export const DISTRIBUICAO = {
   espacamento_m: 8,
   folgaPenhasco_m: 6, // CEN-11
-  raioCentral_m: 22,
   arcoInicial_graus: 70,
   distanciasExpansao_m: [112, 106, 118],
   passoAngularExpansao_graus: 7.5,
   distanciaEntreExpansoes_m: 80,
   raiosDoGrupo_m: [8, 11, 14, 17],
+  deslocamentosContestada_m: [0, 10, -10, 20, -20, 30, -30, 40, -40],
+  desviosLateraisContestada_m: [0, 12, -12, 24, -24],
+  raiosCentrais_m: [22, 26, 18, 30, 14],
   passoAngularGrupo_graus: 15,
 } as const;
 
@@ -173,14 +175,23 @@ export function distribuirJazidas(
     });
   let posicoesContestadas: Array<[number, number]> | null = null;
   const direcaoBissetriz = Math.atan2(contestada0.z, contestada0.x);
-  for (const deslocamento of [0, 10, -10, 20, -20, 30, -30]) {
-    const cx = contestada0.x + Math.cos(direcaoBissetriz) * deslocamento;
-    const cz = contestada0.z + Math.sin(direcaoBissetriz) * deslocamento;
-    posicoesContestadas = agrupar(cx, cz, linhasContestadas, longeDasVizinhas, ocupadas());
-    if (posicoesContestadas) {
-      contestada0.x = cx;
-      contestada0.z = cz;
-      break;
+  // Primeiro ao longo da bissetriz; só então com desvio lateral (a simetria mantém a justiça).
+  busca: for (const lateral of D.desviosLateraisContestada_m) {
+    for (const deslocamento of D.deslocamentosContestada_m) {
+      const cx =
+        contestada0.x +
+        Math.cos(direcaoBissetriz) * deslocamento -
+        Math.sin(direcaoBissetriz) * lateral;
+      const cz =
+        contestada0.z +
+        Math.sin(direcaoBissetriz) * deslocamento +
+        Math.cos(direcaoBissetriz) * lateral;
+      posicoesContestadas = agrupar(cx, cz, linhasContestadas, longeDasVizinhas, ocupadas());
+      if (posicoesContestadas) {
+        contestada0.x = cx;
+        contestada0.z = cz;
+        break busca;
+      }
     }
   }
   if (!posicoesContestadas) throw new Error(`Seed ${mapa.seed}: zona contestada sem lugar`);
@@ -253,7 +264,7 @@ export function distribuirJazidas(
     porRecurso.set(linha.recurso, [...(porRecurso.get(linha.recurso) ?? []), linha]);
   const [grupoA = [], grupoB = []] = [...porRecurso.values()];
   const cruz = [grupoA[0], grupoB[0], grupoA[1], grupoB[1]];
-  for (const raio of [D.raioCentral_m, D.raioCentral_m + 4, D.raioCentral_m - 4]) {
+  for (const raio of D.raiosCentrais_m) {
     const posicoes = cruz.map(
       (_, k) =>
         [Math.cos((k * Math.PI) / 2) * raio, Math.sin((k * Math.PI) / 2) * raio] as [

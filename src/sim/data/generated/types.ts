@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.1.5.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.2.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -470,7 +470,7 @@ export type TamanhosMapaId =
 
 export interface TamanhosMapaRow {
   id: TamanhosMapaId;
-  lado_m: number;
+  raio_m: number;
   min_jogadores: number;
   max_jogadores: number;
   uso: string;

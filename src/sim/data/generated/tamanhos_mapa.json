@@ -1,21 +1,21 @@
 [
   {
     "id": "p",
-    "lado_m": 384,
+    "raio_m": 108,
     "min_jogadores": 2,
     "max_jogadores": 2,
     "uso": "1v1 rápido"
   },
   {
     "id": "m",
-    "lado_m": 512,
+    "raio_m": 144,
     "min_jogadores": 2,
     "max_jogadores": 4,
     "uso": "Padrão"
   },
   {
     "id": "g",
-    "lado_m": 640,
+    "raio_m": 180,
     "min_jogadores": 3,
     "max_jogadores": 4,
     "uso": "1v2, 1v3 e campanha tardia"

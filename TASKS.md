@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.1.5 |
+| Derivado de | `SPEC.md` v0.2.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -27,7 +27,7 @@
 | Marco | Tarefas | Resultado verificável |
 |---|---|---|
 | M0 Fundação | T-000 – T-008 | Projeto roda; dados gerados do SPEC; simulação headless determinística |
-| M1 Mundo | T-010 – T-015 | Mapa lunar gerado por seed, grades, câmera RTS |
+| M1 Mundo | T-010 – T-016 | Planeta lunar gerado por seed, grades, câmera RTS |
 | M2 Entidades e movimento | T-020 – T-026 | Selecionar e mover unidades placeholder com pathfinding |
 | M3 Economia | T-030 – T-036 | Coleta → entrega → estoque, com diretiva, silo e reciclagem |
 | M4 Energia | T-040 – T-046 | Rede, baterias, recarga, usinas e Bateria Móvel |
@@ -45,7 +45,7 @@
 
 ## Caminho crítico até o MVP
 
-T-001 → T-002 → T-004 → T-006 → T-010 → T-013 → T-022 → T-023 → T-030 → T-031 → T-032 → T-040 → T-041 → T-050 → T-053 → T-056 → T-060 → T-061 → T-063 → T-070 → T-090 → T-093 → T-104 → T-106
+T-001 → T-002 → T-004 → T-006 → T-016 → T-010 → T-013 → T-022 → T-023 → T-030 → T-031 → T-032 → T-040 → T-041 → T-050 → T-053 → T-056 → T-060 → T-061 → T-063 → T-070 → T-090 → T-093 → T-104 → T-106
 
 Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-014, T-015, T-020), telas (T-100 – T-103) e HUD (M8), assim que suas dependências fecharem.
 
@@ -54,8 +54,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 ## M0 — Fundação
 
 - [ ] **T-000 — Aprovar o SPEC v0.1** · produto · Spec: §23, §24 · Dep: —
-  - Revisar as decisões D-01 a D-22 (a D-23 já foi aprovada) e responder Q-01 a Q-05.
-  - Aceite: cada decisão marcada como "Aprovada" ou alterada com entrada no Changelog; SPEC sobe para 0.2.0.
+  - Revisar as decisões D-01 a D-22, D-25 e D-26 (D-23 e D-24 já foram aprovadas) e responder Q-01 a Q-05.
+  - Aceite: cada decisão marcada como "Aprovada" ou alterada com entrada no Changelog; SPEC sobe de versão MINOR.
 - [x] **T-001 — Repositório** · P · Spec: GOV-02 · Dep: — · Feito: 2026-09-23
   - `git init`, `.gitignore` (node_modules, dist, coverage), README curto apontando para `SPEC.md`, `TASKS.md`, `CLAUDE.md` e `doc.txt`.
   - Aceite: primeiro commit contém os quatro documentos.
@@ -83,36 +83,39 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M1 — Mundo
 
-- [x] **T-010 — Gerador de mapas lunares** · G · Spec: CEN-06 – CEN-09, CEN-13 · Dep: T-006 · Feito: 2026-09-23
-  - Heightmap de 16 bits por seed: crateras, colinas, sulcos, borda intransponível, platôs de pouso com rampas, simetria rotacional N = 2 ou 4.
-  - Aceite: mesma seed ⇒ mesmo hash; teste de simetria (altura em p e em p rotacionado iguais, ± 1 cm); platôs com inclinação < 5°.
-- [x] **T-011 — Distribuição de jazidas** · M · Spec: ECO-07, ECO-08, CEN-10 · Dep: T-010 · Feito: 2026-09-23
-  - Aceite: contagens e quantidades = `dados:jazidas` × perfil do cenário; distâncias dentro das faixas; número de zonas contestadas conforme o número de jogadores.
-- [x] **T-012 — Validação do gerador e presets** · M · Spec: CEN-11, CEN-12, §14.4 · Dep: T-011, T-013 · Feito: 2026-09-23
-  - Aceite: 100 seeds testadas, inválidas rejeitadas com o motivo; presets Mare Imbrium (P), Mare Tranquillitatis (M) e Oceanus Procellarum (G) fixados.
-- [x] **T-013 — Grades derivadas** · M · Spec: TEC-13, MOV-01, PRD-10 · Dep: T-010 · Feito: 2026-09-23
-  - Navegação (`celula_navegacao_m`), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`).
-  - Aceite: com heightmap sintético, células acima de `inclinacao_max_hover_graus` são intransponíveis e acima de `inclinacao_max_construcao_graus` não aceitam construção.
-- [~] **T-014 — Renderização do terreno** · G · Spec: TEC-13, ART-08, §14.4 · Dep: T-010, T-008 · Falta: aprovação das capturas em `docs/referencia/`
-  - Chunks de 64 m com LOD, material de regolito, sol direcional com sombras, céu estrelado com a Terra escura.
-  - Aceite: mapa M a ≥ 60 fps no preset Médio no hardware-alvo (TEC-15); captura de referência aprovada pelo produto.
-- [x] **T-015 — Câmera RTS** · M · Spec: CTL-01 – CTL-03 · Dep: T-014 · Feito: 2026-09-23
-  - Aceite: pan por setas e bordas; zoom de 15 a 120 m com inclinação dinâmica; rotação pelo botão do meio; Home; a câmera não sai do mapa.
+- [ ] **T-016 — Geometria da esfera** · M · Spec: CEN-14, CEN-15 · Dep: T-006
+  - Cubo-esfera equiangular: ponto ↔ (face, u, v) ↔ célula, vizinhança de 8 atravessando arestas (7 nos vértices do cubo), arco de grande círculo, passo ao longo do arco com transporte do rumo, norte local.
+  - Aceite: ida e volta ponto → célula → centro a menos de meia célula; vizinhança simétrica (se B é vizinha de A, A é vizinha de B); soma das áreas das células = 4π·raio² ± 0,1%; as rotações de CEN-06 levam célula em célula; andar 2π·raio pelo equador volta ao ponto de partida.
+- [ ] **T-010 — Gerador de mapas lunares** · G · Spec: CEN-06 – CEN-09, CEN-13 · Dep: T-016 · Reaberta em 0.2.0 (planeta, D-24)
+  - Heightmap de 16 bits nas 6 faces: crateras, colinas, sulcos, platôs de pouso com rampas, simetria rotacional N = 2 ou 4, sem borda.
+  - Aceite: mesma seed ⇒ mesmo hash; teste de simetria (altura em p e em g·p iguais, ± 1 cm, para cada rotação g do grupo); platôs com inclinação < 5° em relação à vertical local; zonas nos pontos de CEN-07.
+- [ ] **T-011 — Distribuição de jazidas** · M · Spec: ECO-07, ECO-08, CEN-10 · Dep: T-010 · Reaberta em 0.2.0 (planeta, D-24)
+  - Aceite: contagens e quantidades = `dados:jazidas` × perfil do cenário; distâncias (arcos) dentro das faixas; contestadas e centrais nos pontos médios de ECO-08, com as jazidas centrais divididas entre os 2 pontos.
+- [ ] **T-012 — Validação do gerador e presets** · M · Spec: CEN-11, CEN-12, §14.4 · Dep: T-011, T-013 · Reaberta em 0.2.0 (planeta, D-24)
+  - Aceite: 100 seeds testadas, inválidas rejeitadas com o motivo; presets Mare Imbrium (P), Mare Tranquillitatis (M) e Oceanus Procellarum (G) fixados de novo.
+- [ ] **T-013 — Grades derivadas** · M · Spec: TEC-13, MOV-01, PRD-10 · Dep: T-010 · Reaberta em 0.2.0 (planeta, D-24)
+  - Navegação (`celula_navegacao_m`), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`), nas 6 faces.
+  - Aceite: com heightmap sintético, células acima de `inclinacao_max_hover_graus` (vertical local) são intransponíveis e acima de `inclinacao_max_construcao_graus` não aceitam construção, inclusive nas arestas do cubo.
+- [~] **T-014 — Renderização do terreno** · G · Spec: TEC-13, ART-08, ART-11, §14.4 · Dep: T-010, T-008 · Reaberta em 0.2.0 (planeta, D-24) · Falta: refazer como planeta e aprovar as capturas em `docs/referencia/`
+  - Chunks por face com LOD e emendas sem fresta nas arestas, material de regolito, sol que acompanha o foco (ART-11) com sombras, céu estrelado com a Terra escura. Sem entorno: o planeta é o mundo inteiro.
+  - Aceite: planeta M a ≥ 60 fps no preset Médio no hardware-alvo (TEC-15); nenhuma fresta visível nas arestas do cubo; captura de referência aprovada pelo produto.
+- [ ] **T-015 — Câmera RTS** · M · Spec: CTL-01 – CTL-03, CTL-16 · Dep: T-014 · Reaberta em 0.2.0 (planeta, D-24)
+  - Aceite: pan por setas e bordas dando a volta no planeta sem a câmera girar sozinha; zoom de 15 a 120 m com inclinação dinâmica e visão planetária até 3,5 × `raio_m`; rotação pelo botão do meio; Home aponta para o norte.
 
 ## M2 — Entidades, seleção e movimento
 
-- [~] **T-020 — Modelos placeholder e identidade de nação** · M · Spec: ART-02, ART-03, TEC-16, TEC-18 · Dep: T-014 · Falta: aprovação das capturas `docs/referencia/t020-*.png`
+- [~] **T-020 — Modelos placeholder e identidade de nação** · M · Spec: ART-02, ART-03, TEC-16, TEC-18 · Dep: T-014 · Reaberta em 0.2.0 (planeta, D-24) · Falta: orientar pela vertical local e aprovar as capturas `docs/referencia/t020-*.png`
   - Modelos procedurais com as silhuetas das fichas (§8.5); tarja e olho emissivos com a cor da nação por instância.
   - Aceite: as 10 unidades móveis e as 6 estruturas são distinguíveis a 60 m de altura; 400 unidades instanciadas em ≤ 300 draw calls.
-- [x] **T-021 — Seleção e grupos** · M · Spec: CTL-04 – CTL-06 · Dep: T-020 · Feito: 2026-09-23
+- [ ] **T-021 — Seleção e grupos** · M · Spec: CTL-04 – CTL-06 · Dep: T-020 · Reaberta em 0.2.0 (planeta, D-24)
   - Aceite: clique, caixa, Shift, duplo clique, Ctrl+clique e grupos Ctrl+1..9 funcionam conforme o SPEC; caixa prefere unidades móveis a estruturas.
-- [x] **T-022 — Movimento de solo** · M · Spec: MOV-01, MOV-03, MOV-04 · Dep: T-013 · Feito: 2026-09-23
+- [ ] **T-022 — Movimento de solo** · M · Spec: MOV-01, MOV-03, MOV-04, CEN-14 · Dep: T-013 · Reaberta em 0.2.0 (planeta, D-24)
   - Aceite: aceleração e giro conforme as tabelas; unidades não atravessam estruturas; 50 unidades paradas juntas se separam sem tremer. (Colisão com jazidas passou para T-030, por causa de Q-06.)
-- [x] **T-023 — Pathfinding e formação** · G · Spec: MOV-05, MOV-06, TEC-14 · Dep: T-022 · Feito: 2026-09-23
-  - Aceite: 100 unidades cruzam o mapa M sem ficar presas (headless, 10 seeds); cálculo por ordem < 5 ms; o grupo chega em formação na velocidade do mais lento.
-- [x] **T-024 — Camada aérea e pouso de drones** · M · Spec: MOV-02, MOV-07, ENE-09 · Dep: T-022 · Feito: 2026-09-23
+- [ ] **T-023 — Pathfinding e formação** · G · Spec: MOV-05, MOV-06, TEC-14 · Dep: T-022 · Reaberta em 0.2.0 (planeta, D-24)
+  - Aceite: 100 unidades vão de uma zona de pouso à mais distante sem ficar presas (headless, 10 seeds), inclusive passando por arestas e vértices do cubo; cálculo por ordem < 5 ms; o grupo chega em formação na velocidade do mais lento.
+- [ ] **T-024 — Camada aérea e pouso de drones** · M · Spec: MOV-02, MOV-07, ENE-09 · Dep: T-022 · Reaberta em 0.2.0 (planeta, D-24)
   - Aceite: drones voam a `altitude_drone_m` ignorando relevo; pousam após `pouso_automatico_s` ociosos; decolam por ordem ou com inimigo visível.
-- [x] **T-025 — Comandos básicos e clique direito** · M · Spec: CTL-07 (parcial), CMB-13, PRD-08 · Dep: T-021, T-023 · Feito: 2026-09-23
+- [ ] **T-025 — Comandos básicos e clique direito** · M · Spec: CTL-07 (parcial), CMB-13, PRD-08 · Dep: T-021, T-023 · Reaberta em 0.2.0 (planeta, D-24)
   - Mover, parar, manter posição, patrulhar e ponto de encontro.
   - Aceite: cada comando testado por comando serializado (TEC-07) e pela interface.
 - [x] **T-026 — Limites da nação** · P · Spec: REG-16 – REG-19 · Dep: T-006 · Feito: 2026-09-23

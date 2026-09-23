@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.1.5 — rascunho para aprovação |
+| Versão do SPEC | 0.2.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -294,7 +294,7 @@ flowchart LR
 - **ECO-05** — O tamanho visual da jazida é proporcional à quantidade restante. Em 0 ela desaparece e dispara AL-07.
 - **ECO-06** — Hover sem vaga livre procura outra jazida do mesmo tipo a até `raio_busca_jazida_m`. Se não houver, espera na fila da jazida.
 - **ECO-07** — A distribuição de jazidas por zona segue `dados:jazidas`. As quantidades são valores-base, multiplicados pelo perfil do cenário (§14.1).
-- **ECO-08** — Mapas de 2 jogadores têm 2 zonas contestadas (uma em cada flanco). Mapas de 3–4 jogadores têm uma zona contestada entre cada par de zonas de pouso vizinhas. A zona central existe em todos os mapas.
+- **ECO-08** — Zonas contestadas e centrais ficam nos pontos médios entre zonas de pouso (CEN-07). **N = 2:** no equador entre as duas zonas, as 2 zonas contestadas ficam nos flancos (a 90° de cada lado) e os 2 pontos centrais nos outros dois pontos do equador. **N = 4:** dos 6 pontos médios entre pares de zonas, 4 são contestados, de modo que cada zona tem 2 contestadas vizinhas, e os 2 restantes são centrais, cada um compartilhado por um par de zonas. As jazidas `por_mapa` da zona central se dividem igualmente entre os 2 pontos centrais.
 
 <!-- dados:jazidas -->
 | zona | recurso | jazidas | quantidade_u | dist_min_m | dist_max_m | escopo |
@@ -508,7 +508,7 @@ flowchart LR
 
 ### 7.4 Construção de estruturas
 
-- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas e jazidas (com folga de `distancia_min_jazida_m`); dentro do mapa. Unidades próprias dentro da pegada são empurradas para fora quando a obra começa.
+- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas e jazidas (com folga de `distancia_min_jazida_m`). A pegada é um quadrado no plano tangente, alinhado ao norte local (CEN-15). Unidades próprias dentro da pegada são empurradas para fora quando a obra começa.
 - **PRD-11** — A Impressora vai até o local, instala o **canteiro** e imprime a estrutura em camadas. O canteiro nasce com `hp_inicial_canteiro_pct`% do HP e ganha HP proporcional ao progresso. Dano sofrido durante a obra é descontado do HP final.
 - **PRD-12** — Estrutura em construção não funciona (não gera energia, não dispara, não recebe descargas) até chegar a 100%.
 - **PRD-13** — Canteiro abandonado não se degrada e pode ser retomado por qualquer Impressora ou Hover de Exploração próprio.
@@ -835,7 +835,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **VIS-04** — Fantasmas de estruturas inimigas mostram tipo e HP da última observação. Somem quando a área volta a ser vista e a estrutura não existe mais.
 - **VIS-05** — **Detecção:** unidades com `deteccao_m` > 0 revelam furtivos (minas e Sentinelas camuflados) nesse raio, desde que o ponto esteja visível.
 - **VIS-06** — **Radar do Sentinela:** no raio `sentinela_radar_m`, unidades inimigas fora da visão aparecem como **sinais** (marcadores vermelhos pulsantes, sem tipo), atualizados a cada `radar_atualizacao_s`, no mundo e no minimapa.
-- **VIS-07** — **Alerta direcional (AL-03):** quando inimigos entram no radar de um Sentinela, a voz da IA anuncia a contagem e a direção, em 8 rumos (norte, nordeste, leste, sudeste, sul, sudoeste, oeste, noroeste), a partir do sentinela. Espaço leva a câmera ao ponto. Norte é o topo do minimapa.
+- **VIS-07** — **Alerta direcional (AL-03):** quando inimigos entram no radar de um Sentinela, a voz da IA anuncia a contagem e a direção, em 8 rumos (norte, nordeste, leste, sudeste, sul, sudoeste, oeste, noroeste), a partir do sentinela. Espaço leva a câmera ao ponto. Os rumos seguem o norte do planeta (CEN-15).
 - **VIS-08** — **Satélite:** visão persistente circular de `satelite_visao_m` num ponto escolhido pelo jogador; reposiciona em linha reta a `satelite_vel_m_s`. **Varredura Orbital:** revela um raio de `varredura_raio_m` por `varredura_duracao_s`, custa `varredura_custo_en` do banco e recarrega em `varredura_recarga_s` (por satélite).
 - **VIS-09** — O minimapa reproduz os três estados, unidades visíveis, fantasmas, sinais de radar, círculos de satélite e o campo de visão da câmera.
 
@@ -863,8 +863,8 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ## 11. Movimento
 
-- **MOV-01** — Camada de solo: hovers flutuam ~0,6 m acima do terreno e transpõem inclinações até `inclinacao_max_hover_graus`. Acima disso o terreno é intransponível (paredões, bordas de cratera).
-- **MOV-02** — Camada aérea: drones voam a `altitude_drone_m` e ignoram relevo e obstáculos de solo.
+- **MOV-01** — Camada de solo: hovers flutuam ~0,6 m acima do terreno e transpõem inclinações (em relação à vertical local, CEN-14) até `inclinacao_max_hover_graus`. Acima disso o terreno é intransponível (paredões, bordas de cratera).
+- **MOV-02** — Camada aérea: drones voam a `altitude_drone_m` acima da esfera de raio `raio_m` (altura radial) e ignoram relevo e obstáculos de solo. "Em linha reta" quer dizer pelo arco de grande círculo.
 - **MOV-03** — Aceleração até a velocidade máxima em `aceleracao_solo_s` (solo) ou `aceleracao_ar_s` (ar). Giro a `giro_graus_s`.
 - **MOV-04** — Colisão: unidades de solo são círculos (`raio_m`) com separação suave entre si; estruturas e jazidas são obstáculos rígidos. Drones só se separam de outros drones.
 - **MOV-05** — Pathfinding em grade de `celula_navegacao_m`: A* para unidades isoladas e **flow field** para grupos com `flow_field_min_unidades` ou mais. Minas inimigas reveladas e zonas de radiação têm custo alto (são evitadas).
@@ -891,9 +891,11 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ### 12.1 Câmera RTS (visão padrão)
 
-- **CTL-01** — Visão de cima, estilo Age of Empires: câmera em perspectiva com inclinação padrão de 55°. O zoom (roda do mouse) vai de 15 m a 120 m de altura. Perto do solo a inclinação cai suavemente até ~35°, para uma vista cinematográfica.
-- **CTL-02** — Pan pelas setas do teclado e pelas bordas da tela (desligável). Arrastar com o botão do meio gira em torno do ponto focal. Home volta ao norte.
-- **CTL-03** — Clique no minimapa move a câmera; clique direito no minimapa dá ordem de movimento.
+- **CTL-01** — Visão de cima, estilo Age of Empires: câmera em perspectiva sobre um ponto focal na superfície, com "cima" na vertical local e inclinação padrão de 55°. O zoom (roda do mouse) vai de 15 m a 120 m de altura. Perto do solo a inclinação cai suavemente até ~35°, para uma vista cinematográfica. Acima de 120 m, vale CTL-16.
+- **CTL-02** — Pan pelas setas do teclado e pelas bordas da tela (desligável): o ponto focal anda pela superfície e a câmera vai junto, sem girar sozinha. Arrastar com o botão do meio gira em torno do ponto focal. Home volta ao norte (CEN-15).
+- **CTL-03** — O minimapa é um globo pequeno, com o norte para cima, que gira para mostrar o lado do ponto focal. Clique no minimapa move a câmera; clique direito no minimapa dá ordem de movimento.
+
+- **CTL-16** — **Visão planetária** (D-26): o zoom continua além de 120 m até mostrar o planeta inteiro, a 3,5 × `raio_m` do centro. Nessa faixa a inclinação vai a 90° (olhando para o centro do planeta) e o pan gira o globo. Seleção e ordens continuam valendo.
 
 ### 12.2 Seleção
 
@@ -1066,26 +1068,30 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 ### 14.2 Tamanhos de mapa
 
 <!-- dados:tamanhos_mapa -->
-| id | lado_m | min_jogadores | max_jogadores | uso |
+| id | raio_m | min_jogadores | max_jogadores | uso |
 |---|---|---|---|---|
-| p | 384 | 2 | 2 | 1v1 rápido |
-| m | 512 | 2 | 4 | Padrão |
-| g | 640 | 3 | 4 | 1v2, 1v3 e campanha tardia |
+| p | 108 | 2 | 2 | 1v1 rápido |
+| m | 144 | 2 | 4 | Padrão |
+| g | 180 | 3 | 4 | 1v2, 1v3 e campanha tardia |
+
+`raio_m` = raio do planeta. A área de cada tamanho equivale à dos antigos mapas quadrados de 384, 512 e 640 m de lado (D-24).
 
 ### 14.3 Gerador de mapas (por seed)
 
-- **CEN-06** — Mapas são gerados por seed com **simetria rotacional** de ordem N (N = 2 ou 4 zonas de pouso). Partidas de 3 jogadores usam o mapa de 4 com uma zona vazia.
-- **CEN-07** — As zonas de pouso ficam a 36% do lado do mapa a partir do centro, em ângulos igualmente espaçados (45°, 135°, 225° e 315° para 4 zonas).
-- **CEN-08** — Cada zona de pouso é um platô plano (inclinação < 5°) de raio 50 m, com 2–3 saídas (rampas de pelo menos 12 m de largura).
-- **CEN-09** — Relevo: crateras (raio 10–60 m, borda até 8 m de altura, bordas acima de 30° intransponíveis salvo brechas), colinas suaves e sulcos. Uma faixa de 16 m na borda do mapa é intransponível (serras).
+- **CEN-06** — O mapa é um **planeta esférico** de raio `raio_m` (§14.2), sem borda: dá para dar a volta nele (D-24). É gerado por seed com **simetria rotacional** entre as zonas de pouso (N = 2 ou 4). Com N = 2, a simetria é a meia-volta em torno de um eixo perpendicular ao eixo das zonas. Com N = 4, é o grupo das 4 rotações (a identidade e as meias-voltas em torno dos 3 eixos da grade, CEN-14) que leva qualquer zona a qualquer outra. Partidas de 3 jogadores usam o mapa de 4 com uma zona vazia.
+- **CEN-07** — Zonas de pouso: com N = 2, em pontos antípodas; com N = 4, nos vértices de um tetraedro regular inscrito, todas à mesma distância umas das outras. Os pontos médios dos arcos entre pares de zonas recebem as zonas contestadas e as centrais (ECO-08).
+- **CEN-08** — Cada zona de pouso é um platô plano (inclinação < 5° em relação à vertical local) de raio 50 m, com 2–3 saídas (rampas de pelo menos 12 m de largura). "Plano" numa esfera é altura radial constante: o platô acompanha a curvatura.
+- **CEN-09** — Relevo: crateras (raio 10–60 m, borda até 8 m de altura, bordas acima de 30° intransponíveis salvo brechas), colinas suaves e sulcos, cobrindo o planeta inteiro. Não há borda de mapa.
 - **CEN-10** — As jazidas seguem `dados:jazidas` × perfil do cenário, respeitando as distâncias.
 - **CEN-11** — Validação obrigatória: há caminho de solo entre todas as zonas de pouso; entre zonas vizinhas há pelo menos 2 rotas distintas; toda jazida é alcançável por solo; nenhuma jazida fica a menos de 6 m de um paredão. Seed inválida → tenta a próxima.
 - **CEN-12** — Cada cenário publica 3 seeds curadas (presets) mais a opção "Aleatória".
-- **CEN-13** — Formato de mapa: JSON (metadados, zonas de pouso, jazidas, adereços) + heightmap de 16 bits (1 texel = 1 m) + máscara de materiais.
+- **CEN-13** — Formato de mapa: JSON (metadados, zonas de pouso, jazidas, adereços) + heightmap de 16 bits nas 6 faces da cubo-esfera (CEN-14, ~1 m por texel) + máscara de materiais.
+- **CEN-14** — **Geometria do planeta.** Posições são pontos da esfera de raio `raio_m` mais uma altura radial. "Para cima" é a vertical local (do centro para o ponto). Distâncias horizontais (alcance, visão, raios de busca, pegadas) são **arcos de grande círculo** sobre a esfera de raio `raio_m`. A superfície é dividida numa **cubo-esfera equiangular**: 6 faces com a mesma grade, alinhadas aos eixos x, y e z. As zonas de pouso ficam em 4 vértices alternados do cubo (N = 4) ou nos centros das faces ±z (N = 2). Nas arestas do cubo as grades se emendam; nos 8 vértices do cubo cada célula tem 7 vizinhas em vez de 8.
+- **CEN-15** — **Norte** é a direção do polo norte (+y) ao longo da superfície. Os 8 rumos (VIS-07), o "norte" da câmera (CTL-02) e a orientação das pegadas (PRD-10) seguem essa referência. Nos polos, a menos de 1 m do eixo, vale o norte do ponto de onde o observador veio.
 
 ### 14.4 Lua (cenário do MVP)
 
-- **Ambientação:** regolito cinza, crateras, sol duro e rasante, sombras longas e negras, céu preto estrelado e **a Terra no céu, escura, sem luzes de cidades** (o plano-assinatura do jogo).
+- **Ambientação:** uma lua pequena, com a curvatura visível e o horizonte próximo; regolito cinza, crateras, sol duro e rasante, sombras longas e negras, céu preto estrelado e **a Terra no céu, escura, sem luzes de cidades** (o plano-assinatura do jogo).
 - **Presets:** *Mare Imbrium* (P, 2 jogadores), *Mare Tranquillitatis* (M, até 4), *Oceanus Procellarum* (G, 3–4).
 - **Eventos:** nenhum.
 
@@ -1222,6 +1228,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **ART-08** — Iluminação e pós-processamento: tone mapping ACES, bloom, sombras em cascata do sol, SSAO a partir do preset Alto, grão de filme sutil.
 - **ART-09** — Visão do Universo: planetas estilizados com atmosfera em rim light, órbitas finas e rótulos limpos.
 - **ART-10** — Interface com estética de "HUD de máquina": linhas finas, números em fonte monoespaçada e cor de destaque igual à da nação do jogador.
+- **ART-11** — **Sem noite** (D-26): o sol acompanha o ponto focal da câmera e incide nele sempre com a mesma elevação rasante; a Terra no céu também se posiciona em relação ao ponto focal. O lado do planeta que o jogador olha está sempre iluminado, com sombras longas.
 
 ### 18.2 Ambientação por cenário
 
@@ -1279,8 +1286,8 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 ### 20.4 Mundo, grades e navegação
 
-- **TEC-13** — Terreno por heightmap (1 texel = 1 m) em chunks de 64 m com LOD. Grades derivadas: navegação (`celula_navegacao_m`, passável conforme inclinação), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`).
-- **TEC-14** — Pathfinding: A* na grade de navegação (8 direções, sem cortar quinas, rota suavizada por linha de visada) para unidades isoladas; flow field (Dijkstra na grade) para grupos; separação local tipo boids/RVO simplificado. Orçamento: < 5 ms por ordem no mapa M. Se o A* passar do orçamento no mapa G, ganha hierarquia (clusters de 32 m).
+- **TEC-13** — Terreno por heightmap nas 6 faces da cubo-esfera (CEN-14, ~1 m por texel), em chunks de até 64 m com LOD. Grades derivadas, nas mesmas 6 faces: navegação (`celula_navegacao_m`, passável conforme inclinação), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`). Pela projeção equiangular, o tamanho real das células varia até ±15% em torno do nominal.
+- **TEC-14** — Pathfinding: A* na grade de navegação (8 direções atravessando as arestas do cubo, sem cortar quinas, custo pelo arco entre centros de célula, rota suavizada por linha de visada) para unidades isoladas; flow field (Dijkstra na grade) para grupos; separação local tipo boids/RVO simplificado. Orçamento: < 5 ms por ordem no mapa M. Se o A* passar do orçamento no mapa G, ganha hierarquia (clusters de 32 m).
 
 ### 20.5 Renderização e performance
 
@@ -1430,6 +1437,9 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-21 | Estoque global sem teto. | O Armazém já se justifica pela distância; um teto só criaria atrito. | Proposta |
 | D-22 | Mapas gerados por seed com simetria rotacional, mais presets curados. | Justiça entre zonas de pouso e rejogabilidade sem custo de level design. | Proposta |
 | D-23 | Zona contestada a no mínimo 120 m de cada zona de pouso vizinha (era 180 m). | Com 180 m, o mapa M com 3–4 jogadores não tem ponto válido entre bases vizinhas, que ficam a 260 m uma da outra. A zona fica no ponto equidistante (130 m de cada no mapa M). | Aprovada |
+| D-24 | O mapa é um planeta esférico sem borda (cubo-esfera), no lugar do quadrado plano, com raios de mesma área que os quadrados antigos. | Pedido do produto: a borda quebrava a ilusão e o visual de "pequeno mundo" (referência: Planetary Annihilation). Área igual preserva tempos de deslocamento e o balanceamento. | Aprovada |
+| D-25 | Zonas de pouso em pontos antípodas (N = 2) ou num tetraedro regular (N = 4); zonas contestadas e centrais nos pontos médios entre zonas, com as mesmas quantidades totais de antes. | A simetria deixa todas as zonas equivalentes, cada uma com 2 contestadas e 1 central vizinhas, como no mapa quadrado (2 vizinhas e 1 oposta). | Proposta |
+| D-26 | Zoom contínuo até a visão planetária (planeta inteiro na tela) e sol que acompanha o foco (sem noite). | O planeta pequeno fica legível de relance, e nenhuma base fica no escuro. | Proposta |
 
 ---
 
@@ -1488,3 +1498,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.1.3 | 2026-09-23 | TEC-14: A* direto na grade (0,4 ms no mapa G, medido em T-023); hierarquia só se o orçamento estourar. |
 | 0.1.4 | 2026-09-23 | Q-06: raio de colisão da jazida em aberto. |
 | 0.1.5 | 2026-09-23 | Q-07: conflito de Ctrl+1..9 com atalhos do navegador. |
+| 0.2.0 | 2026-09-23 | Planeta esférico (D-24 a D-26): `dados:tamanhos_mapa` troca o lado do quadrado por `raio_m`; CEN-06 a CEN-09, CEN-13, ECO-08, PRD-10, MOV-01, MOV-02, CTL-01 a CTL-03, VIS-07, TEC-13 e TEC-14 reescritas; novas CEN-14, CEN-15, CTL-16 e ART-11. |

@@ -1,0 +1,112 @@
+[
+  {
+    "opcao": "nacao_jogador",
+    "valores": [
+      "usa",
+      "chn",
+      "rus",
+      "bra",
+      "aleatoria"
+    ],
+    "padrao": "bra"
+  },
+  {
+    "opcao": "num_oponentes",
+    "valores": [
+      1,
+      2,
+      3
+    ],
+    "padrao": 1
+  },
+  {
+    "opcao": "nacao_oponente",
+    "valores": "aleatoria+nações restantes",
+    "padrao": "aleatoria"
+  },
+  {
+    "opcao": "dificuldade_oponente",
+    "valores": [
+      "facil",
+      "normal",
+      "dificil",
+      "brutal"
+    ],
+    "padrao": "normal"
+  },
+  {
+    "opcao": "cenario",
+    "valores": "cenários implementados",
+    "padrao": "lua"
+  },
+  {
+    "opcao": "tamanho_mapa",
+    "valores": [
+      "p",
+      "m",
+      "g"
+    ],
+    "padrao": "m"
+  },
+  {
+    "opcao": "mapa",
+    "valores": [
+      "presets",
+      "aleatoria"
+    ],
+    "padrao": "preset do tamanho"
+  },
+  {
+    "opcao": "zona_pouso",
+    "valores": [
+      "aleatoria",
+      "escolher"
+    ],
+    "padrao": "aleatoria"
+  },
+  {
+    "opcao": "recursos_iniciais",
+    "valores": [
+      "padrao",
+      "alto"
+    ],
+    "padrao": "padrao"
+  },
+  {
+    "opcao": "nevoa",
+    "valores": [
+      "normal",
+      "explorado",
+      "revelado"
+    ],
+    "padrao": "normal"
+  },
+  {
+    "opcao": "condicao_vitoria",
+    "valores": [
+      "eliminacao",
+      "tempo_limite"
+    ],
+    "padrao": "eliminacao"
+  },
+  {
+    "opcao": "tempo_limite_min",
+    "valores": [
+      20,
+      30,
+      45,
+      60
+    ],
+    "padrao": 30
+  },
+  {
+    "opcao": "velocidade",
+    "valores": [
+      0.75,
+      1,
+      1.25,
+      1.5
+    ],
+    "padrao": 1
+  }
+]

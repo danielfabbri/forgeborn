@@ -1,0 +1,23 @@
+{
+  "versao_spec": "0.1.0",
+  "tabelas": [
+    "alertas",
+    "armas",
+    "atalhos",
+    "cenarios",
+    "custos",
+    "dificuldade",
+    "estoque_inicial",
+    "estruturas",
+    "free_battle",
+    "jazidas",
+    "missoes",
+    "moveis",
+    "multiplicadores",
+    "nacoes",
+    "parametros",
+    "personalidades",
+    "recursos",
+    "tamanhos_mapa"
+  ]
+}

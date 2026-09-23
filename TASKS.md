@@ -65,7 +65,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-003 — Fronteira da simulação** · P · Spec: TEC-03, TEC-05 · Dep: T-002 · Feito: 2026-09-23
   - Regra de lint: `src/sim/**` não importa `three`, `preact` nem APIs de DOM; `Math.random` e `Date.now` proibidos ali.
   - Aceite: um arquivo-fixture com import proibido faz o lint falhar; o código real passa.
-- [ ] **T-004 — `spec:sync`** · M · Spec: GOV-04, GOV-05, GOV-06, TEC-11 · Dep: T-002
+- [x] **T-004 — `spec:sync`** · M · Spec: GOV-04, GOV-05, GOV-06, TEC-11 · Dep: T-002 · Feito: 2026-09-23
   - Parser das tabelas `<!-- dados:NOME -->` do `SPEC.md` → `src/sim/data/generated/NOME.json` + `types.ts`. Tabelas com o mesmo nome são concatenadas.
   - Aceite: gera um arquivo para cada nome de tabela `dados:*`; converte `0,5` → 0.5, `—` → null, `sim`/`nao` → booleanos; células com `+` viram listas só quando todas as partes são IDs snake_case ou números (`solo+ar` vira lista, `Ctrl+1..9` continua texto); duas execuções seguidas produzem saída idêntica.
 - [ ] **T-005 — `spec:check`** · M · Spec: TEC-11 · Dep: T-004

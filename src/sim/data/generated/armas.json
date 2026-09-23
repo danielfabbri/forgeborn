@@ -1,0 +1,125 @@
+[
+  {
+    "id": "ex1_laser",
+    "tipo_dano": "laser",
+    "dano": 14,
+    "recarga_s": 1,
+    "alcance_m": 10,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "solo",
+      "ar"
+    ],
+    "en_disparo": 1.5,
+    "fonte_en": "bateria",
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
+    "id": "opq_torpedo",
+    "tipo_dano": "explosivo",
+    "dano": 30,
+    "recarga_s": 2.5,
+    "alcance_m": 18,
+    "alcance_min_m": 3,
+    "splash_m": 2.5,
+    "splash_borda_pct": 50,
+    "alvos": [
+      "solo"
+    ],
+    "en_disparo": 5,
+    "fonte_en": "bateria",
+    "projetil": "guiado",
+    "vel_projetil_m_s": 18
+  },
+  {
+    "id": "drone_laser_gun",
+    "tipo_dano": "laser",
+    "dano": 11,
+    "recarga_s": 0.6,
+    "alcance_m": 9,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "solo",
+      "ar"
+    ],
+    "en_disparo": 1,
+    "fonte_en": "bateria",
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
+    "id": "bomb",
+    "tipo_dano": "explosivo",
+    "dano": 60,
+    "recarga_s": 3,
+    "alcance_m": 3,
+    "alcance_min_m": 0,
+    "splash_m": 3.5,
+    "splash_borda_pct": 50,
+    "alvos": [
+      "solo"
+    ],
+    "en_disparo": 8,
+    "fonte_en": "bateria",
+    "projetil": "balistico",
+    "vel_projetil_m_s": null
+  },
+  {
+    "id": "tower_laser",
+    "tipo_dano": "laser",
+    "dano": 15,
+    "recarga_s": 1,
+    "alcance_m": 13,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "solo",
+      "ar"
+    ],
+    "en_disparo": 2,
+    "fonte_en": "rede",
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
+    "id": "ship_pd",
+    "tipo_dano": "laser",
+    "dano": 10,
+    "recarga_s": 1,
+    "alcance_m": 14,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "solo",
+      "ar"
+    ],
+    "en_disparo": 1,
+    "fonte_en": "rede",
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
+    "id": "mine_blast",
+    "tipo_dano": "explosivo",
+    "dano": 150,
+    "recarga_s": null,
+    "alcance_m": 2,
+    "alcance_min_m": 0,
+    "splash_m": 4,
+    "splash_borda_pct": 40,
+    "alvos": [
+      "solo"
+    ],
+    "en_disparo": 0,
+    "fonte_en": null,
+    "projetil": "gatilho",
+    "vel_projetil_m_s": null
+  }
+]

@@ -1,0 +1,824 @@
+[
+  {
+    "chave": "tick_hz",
+    "valor": 20,
+    "unidade": "Hz",
+    "descricao": "Frequência da simulação"
+  },
+  {
+    "chave": "duracao_pouso_s",
+    "valor": 8,
+    "unidade": "s",
+    "descricao": "Cinemática de pouso (fora do relógio)"
+  },
+  {
+    "chave": "raio_explorado_inicial_m",
+    "valor": 60,
+    "unidade": "m",
+    "descricao": "Área explorada ao pousar"
+  },
+  {
+    "chave": "limite_corpos",
+    "valor": 100,
+    "unidade": "unidades",
+    "descricao": "Unidades móveis por nação"
+  },
+  {
+    "chave": "limite_bases_lancamento",
+    "valor": 2,
+    "unidade": "estruturas",
+    "descricao": "Bases de Lançamento por nação"
+  },
+  {
+    "chave": "limite_minas_ativas",
+    "valor": 30,
+    "unidade": "minas",
+    "descricao": "Minas plantadas simultâneas por nação"
+  },
+  {
+    "chave": "pontos_por_vr_coletado",
+    "valor": 1,
+    "unidade": "pts/VR",
+    "descricao": "Pontuação econômica"
+  },
+  {
+    "chave": "pontos_por_vr_destruido",
+    "valor": 1.5,
+    "unidade": "pts/VR",
+    "descricao": "Pontuação militar"
+  },
+  {
+    "chave": "pontos_estruturas_vivas_pct",
+    "valor": 50,
+    "unidade": "%",
+    "descricao": "Fração do VR das estruturas vivas no fim"
+  },
+  {
+    "chave": "bonus_nave_destruida",
+    "valor": 3000,
+    "unidade": "pts",
+    "descricao": "Por Nave inimiga destruída"
+  },
+  {
+    "chave": "bonus_vitoria",
+    "valor": 2000,
+    "unidade": "pts",
+    "descricao": "Bônus de vitória"
+  },
+  {
+    "chave": "valor_x_vr",
+    "valor": 10,
+    "unidade": "VR",
+    "descricao": "Equivalência de 1x do briefing"
+  },
+  {
+    "chave": "carga_hover_u",
+    "valor": 10,
+    "unidade": "u",
+    "descricao": "Carga máxima do Hover de Exploração"
+  },
+  {
+    "chave": "tempo_descarga_hover_s",
+    "valor": 1,
+    "unidade": "s",
+    "descricao": "Tempo para descarregar"
+  },
+  {
+    "chave": "raio_deposito_m",
+    "valor": 3,
+    "unidade": "m",
+    "descricao": "Distância máxima da borda do ponto de entrega"
+  },
+  {
+    "chave": "slots_por_jazida",
+    "valor": 3,
+    "unidade": "hovers",
+    "descricao": "Vagas simultâneas por jazida"
+  },
+  {
+    "chave": "raio_busca_jazida_m",
+    "valor": 40,
+    "unidade": "m",
+    "descricao": "Busca de jazida alternativa do mesmo tipo"
+  },
+  {
+    "chave": "raio_diretiva_m",
+    "valor": 150,
+    "unidade": "m",
+    "descricao": "Distância máxima jazida–ponto de entrega para a diretiva"
+  },
+  {
+    "chave": "fuga_hover_retorno_s",
+    "valor": 10,
+    "unidade": "s",
+    "descricao": "Tempo sem dano para retomar a tarefa após fuga"
+  },
+  {
+    "chave": "hover_ocioso_alerta_s",
+    "valor": 10,
+    "unidade": "s",
+    "descricao": "Tempo parado para ser considerado ocioso"
+  },
+  {
+    "chave": "diretiva_fe_pct",
+    "valor": 35,
+    "unidade": "%",
+    "descricao": "Diretiva padrão: Ferro"
+  },
+  {
+    "chave": "diretiva_si_pct",
+    "valor": 20,
+    "unidade": "%",
+    "descricao": "Diretiva padrão: Silício"
+  },
+  {
+    "chave": "diretiva_cu_pct",
+    "valor": 20,
+    "unidade": "%",
+    "descricao": "Diretiva padrão: Cobre"
+  },
+  {
+    "chave": "diretiva_li_pct",
+    "valor": 12,
+    "unidade": "%",
+    "descricao": "Diretiva padrão: Lítio"
+  },
+  {
+    "chave": "diretiva_ti_pct",
+    "valor": 10,
+    "unidade": "%",
+    "descricao": "Diretiva padrão: Titânio"
+  },
+  {
+    "chave": "diretiva_u_pct",
+    "valor": 3,
+    "unidade": "%",
+    "descricao": "Diretiva padrão: Urânio"
+  },
+  {
+    "chave": "capacidade_silo_u",
+    "valor": 200,
+    "unidade": "u",
+    "descricao": "Capacidade do Silo Móvel"
+  },
+  {
+    "chave": "taxa_descarga_silo_u_s",
+    "valor": 20,
+    "unidade": "u/s",
+    "descricao": "Descarga do silo no depósito"
+  },
+  {
+    "chave": "tempo_ancorar_silo_s",
+    "valor": 2,
+    "unidade": "s",
+    "descricao": "Ancorar"
+  },
+  {
+    "chave": "tempo_desancorar_silo_s",
+    "valor": 1,
+    "unidade": "s",
+    "descricao": "Desancorar"
+  },
+  {
+    "chave": "limiar_ciclo_silo_pct",
+    "valor": 100,
+    "unidade": "%",
+    "descricao": "Ocupação que dispara o ciclo automático"
+  },
+  {
+    "chave": "rendimento_destroco_pct",
+    "valor": 25,
+    "unidade": "%",
+    "descricao": "Fração da receita no destroço"
+  },
+  {
+    "chave": "rendimento_carga_silo_pct",
+    "valor": 50,
+    "unidade": "%",
+    "descricao": "Fração da carga do silo no destroço"
+  },
+  {
+    "chave": "duracao_destroco_unidade_s",
+    "valor": 120,
+    "unidade": "s",
+    "descricao": "Vida do destroço de unidade"
+  },
+  {
+    "chave": "duracao_destroco_estrutura_s",
+    "valor": 180,
+    "unidade": "s",
+    "descricao": "Vida do destroço de estrutura"
+  },
+  {
+    "chave": "taxa_reciclagem_u_s",
+    "valor": 1,
+    "unidade": "u/s",
+    "descricao": "Velocidade de reciclagem"
+  },
+  {
+    "chave": "destroco_nave_fe",
+    "valor": 400,
+    "unidade": "u",
+    "descricao": "Destroço da Nave: Ferro"
+  },
+  {
+    "chave": "destroco_nave_si",
+    "valor": 200,
+    "unidade": "u",
+    "descricao": "Destroço da Nave: Silício"
+  },
+  {
+    "chave": "destroco_nave_cu",
+    "valor": 150,
+    "unidade": "u",
+    "descricao": "Destroço da Nave: Cobre"
+  },
+  {
+    "chave": "destroco_nave_li",
+    "valor": 100,
+    "unidade": "u",
+    "descricao": "Destroço da Nave: Lítio"
+  },
+  {
+    "chave": "destroco_nave_ti",
+    "valor": 100,
+    "unidade": "u",
+    "descricao": "Destroço da Nave: Titânio"
+  },
+  {
+    "chave": "limiar_bateria_baixa_pct",
+    "valor": 20,
+    "unidade": "%",
+    "descricao": "Abaixo disso a bateria está Baixa"
+  },
+  {
+    "chave": "modo_reserva_vel_pct",
+    "valor": 30,
+    "unidade": "%",
+    "descricao": "Velocidade em Modo Reserva"
+  },
+  {
+    "chave": "auto_recarga_trabalhador_pct",
+    "valor": 20,
+    "unidade": "%",
+    "descricao": "Hover de Exploração, Observação, Plantio, Silo"
+  },
+  {
+    "chave": "auto_recarga_impressora_pct",
+    "valor": 10,
+    "unidade": "%",
+    "descricao": "Impressora 3D"
+  },
+  {
+    "chave": "auto_recarga_militar_pct",
+    "valor": 15,
+    "unidade": "%",
+    "descricao": "EX1 e OPQ, fora de combate"
+  },
+  {
+    "chave": "auto_recarga_drone_pct",
+    "valor": 25,
+    "unidade": "%",
+    "descricao": "Drones, fora de combate"
+  },
+  {
+    "chave": "recarga_forcada_drone_pct",
+    "valor": 10,
+    "unidade": "%",
+    "descricao": "Drones recarregam mesmo em combate"
+  },
+  {
+    "chave": "auto_recarga_bateria_movel_pct",
+    "valor": 10,
+    "unidade": "%",
+    "descricao": "Bateria Móvel volta para recarregar"
+  },
+  {
+    "chave": "en_minerar_s",
+    "valor": 0.8,
+    "unidade": "EN/s",
+    "descricao": "Minerar"
+  },
+  {
+    "chave": "en_reciclar_s",
+    "valor": 0.8,
+    "unidade": "EN/s",
+    "descricao": "Reciclar destroço"
+  },
+  {
+    "chave": "en_reparo_hover_s",
+    "valor": 1.2,
+    "unidade": "EN/s",
+    "descricao": "Reparo pelo Hover de Exploração"
+  },
+  {
+    "chave": "en_reparo_impressora_s",
+    "valor": 2,
+    "unidade": "EN/s",
+    "descricao": "Reparo pela Impressora"
+  },
+  {
+    "chave": "en_sentinela_s",
+    "valor": 0.15,
+    "unidade": "EN/s",
+    "descricao": "Modo Sentinela"
+  },
+  {
+    "chave": "impulso_mult_en",
+    "valor": 3,
+    "unidade": "×",
+    "descricao": "Multiplicador de gasto de movimento no Impulso"
+  },
+  {
+    "chave": "bateria_movel_raio_m",
+    "valor": 10,
+    "unidade": "m",
+    "descricao": "Raio do modo suporte"
+  },
+  {
+    "chave": "bateria_movel_max_alvos",
+    "valor": 4,
+    "unidade": "unidades",
+    "descricao": "Alvos simultâneos do suporte"
+  },
+  {
+    "chave": "bateria_movel_taxa_por_alvo_en_s",
+    "valor": 5,
+    "unidade": "EN/s",
+    "descricao": "Transferência por alvo"
+  },
+  {
+    "chave": "bateria_movel_limiar_alvo_pct",
+    "valor": 90,
+    "unidade": "%",
+    "descricao": "Só atende unidades abaixo disso"
+  },
+  {
+    "chave": "bateria_movel_carga_inicial_pct",
+    "valor": 25,
+    "unidade": "%",
+    "descricao": "Carga ao sair da impressão"
+  },
+  {
+    "chave": "nuclear_consumo_u",
+    "valor": 1,
+    "unidade": "u",
+    "descricao": "Urânio consumido por ciclo"
+  },
+  {
+    "chave": "nuclear_intervalo_s",
+    "valor": 20,
+    "unidade": "s",
+    "descricao": "Duração de um ciclo de combustível"
+  },
+  {
+    "chave": "nuclear_religar_s",
+    "valor": 3,
+    "unidade": "s",
+    "descricao": "Tempo para religar a usina"
+  },
+  {
+    "chave": "fila_max_nave",
+    "valor": 5,
+    "unidade": "itens",
+    "descricao": "Fila de impressão da Nave"
+  },
+  {
+    "chave": "fila_max_impressora",
+    "valor": 8,
+    "unidade": "ordens",
+    "descricao": "Fila única da Impressora"
+  },
+  {
+    "chave": "reembolso_cancelamento_pct",
+    "valor": 100,
+    "unidade": "%",
+    "descricao": "Recursos devolvidos ao cancelar"
+  },
+  {
+    "chave": "pi_impressora",
+    "valor": 1,
+    "unidade": "PI",
+    "descricao": "Poder de Impressão da Impressora"
+  },
+  {
+    "chave": "pi_hover",
+    "valor": 0.5,
+    "unidade": "PI",
+    "descricao": "Poder de Impressão do Hover de Exploração"
+  },
+  {
+    "chave": "max_assistentes",
+    "valor": 4,
+    "unidade": "unidades",
+    "descricao": "Assistentes além do construtor principal"
+  },
+  {
+    "chave": "hp_inicial_canteiro_pct",
+    "valor": 10,
+    "unidade": "%",
+    "descricao": "HP do canteiro recém-instalado"
+  },
+  {
+    "chave": "inclinacao_max_construcao_graus",
+    "valor": 12,
+    "unidade": "°",
+    "descricao": "Inclinação máxima para construir"
+  },
+  {
+    "chave": "distancia_min_jazida_m",
+    "valor": 2,
+    "unidade": "m",
+    "descricao": "Folga entre estrutura e jazida"
+  },
+  {
+    "chave": "reparo_hover_estrutura_hp_s",
+    "valor": 6,
+    "unidade": "HP/s",
+    "descricao": "Hover reparando estrutura"
+  },
+  {
+    "chave": "reparo_hover_unidade_hp_s",
+    "valor": 4,
+    "unidade": "HP/s",
+    "descricao": "Hover reparando unidade"
+  },
+  {
+    "chave": "reparo_impressora_estrutura_hp_s",
+    "valor": 10,
+    "unidade": "HP/s",
+    "descricao": "Impressora reparando estrutura"
+  },
+  {
+    "chave": "reparo_impressora_unidade_hp_s",
+    "valor": 6,
+    "unidade": "HP/s",
+    "descricao": "Impressora reparando unidade"
+  },
+  {
+    "chave": "max_reparadores",
+    "valor": 4,
+    "unidade": "unidades",
+    "descricao": "Reparadores simultâneos por alvo"
+  },
+  {
+    "chave": "raio_reparo_auto_m",
+    "valor": 20,
+    "unidade": "m",
+    "descricao": "Raio do reparo automático da Impressora"
+  },
+  {
+    "chave": "estado_combate_s",
+    "valor": 5,
+    "unidade": "s",
+    "descricao": "Tempo sem causar/sofrer dano para sair do combate"
+  },
+  {
+    "chave": "nucleo_splash_pct",
+    "valor": 40,
+    "unidade": "%",
+    "descricao": "Fração do raio com dano cheio"
+  },
+  {
+    "chave": "leash_agressivo_m",
+    "valor": 20,
+    "unidade": "m",
+    "descricao": "Perseguição máxima na postura Agressiva"
+  },
+  {
+    "chave": "leash_defensivo_m",
+    "valor": 8,
+    "unidade": "m",
+    "descricao": "Perseguição máxima na postura Defensiva"
+  },
+  {
+    "chave": "torpedo_tempo_max_voo_s",
+    "valor": 2,
+    "unidade": "s",
+    "descricao": "Autodestruição do torpedo"
+  },
+  {
+    "chave": "bomba_tempo_queda_s",
+    "valor": 0.6,
+    "unidade": "s",
+    "descricao": "Queda da bomba"
+  },
+  {
+    "chave": "mina_hp",
+    "valor": 20,
+    "unidade": "HP",
+    "descricao": "HP de mina revelada"
+  },
+  {
+    "chave": "tempo_plantar_mina_s",
+    "valor": 1.5,
+    "unidade": "s",
+    "descricao": "Plantar uma mina"
+  },
+  {
+    "chave": "tempo_armar_mina_s",
+    "valor": 3,
+    "unidade": "s",
+    "descricao": "Mina fica ativa após o plantio"
+  },
+  {
+    "chave": "magazine_minas",
+    "valor": 4,
+    "unidade": "minas",
+    "descricao": "Carregador do Hover de Plantio"
+  },
+  {
+    "chave": "campo_minado_espacamento_m",
+    "valor": 5,
+    "unidade": "m",
+    "descricao": "Espaço entre minas no Campo minado"
+  },
+  {
+    "chave": "explosao_bateria_dano",
+    "valor": 60,
+    "unidade": "dano",
+    "descricao": "Explosão da Bateria Móvel"
+  },
+  {
+    "chave": "explosao_bateria_raio_m",
+    "valor": 4,
+    "unidade": "m",
+    "descricao": "Raio da explosão da Bateria Móvel"
+  },
+  {
+    "chave": "explosao_nuclear_dano",
+    "valor": 200,
+    "unidade": "dano",
+    "descricao": "Explosão da Usina Nuclear"
+  },
+  {
+    "chave": "explosao_nuclear_raio_m",
+    "valor": 10,
+    "unidade": "m",
+    "descricao": "Raio da explosão nuclear"
+  },
+  {
+    "chave": "radiacao_raio_m",
+    "valor": 12,
+    "unidade": "m",
+    "descricao": "Raio da zona de radiação"
+  },
+  {
+    "chave": "radiacao_dano_hp_s",
+    "valor": 3,
+    "unidade": "HP/s",
+    "descricao": "Dano da radiação"
+  },
+  {
+    "chave": "radiacao_duracao_s",
+    "valor": 60,
+    "unidade": "s",
+    "descricao": "Duração da zona de radiação"
+  },
+  {
+    "chave": "explosao_nave_dano",
+    "valor": 300,
+    "unidade": "dano",
+    "descricao": "Explosão da Nave Inicial"
+  },
+  {
+    "chave": "explosao_nave_raio_m",
+    "valor": 14,
+    "unidade": "m",
+    "descricao": "Raio da explosão da Nave"
+  },
+  {
+    "chave": "celula_nevoa_m",
+    "valor": 2,
+    "unidade": "m",
+    "descricao": "Resolução da grade de névoa"
+  },
+  {
+    "chave": "nevoa_atualizacao_hz",
+    "valor": 5,
+    "unidade": "Hz",
+    "descricao": "Atualização da visibilidade"
+  },
+  {
+    "chave": "sentinela_visao_m",
+    "valor": 36,
+    "unidade": "m",
+    "descricao": "Visão em Modo Sentinela"
+  },
+  {
+    "chave": "sentinela_deteccao_m",
+    "valor": 20,
+    "unidade": "m",
+    "descricao": "Detecção em Modo Sentinela"
+  },
+  {
+    "chave": "sentinela_radar_m",
+    "valor": 60,
+    "unidade": "m",
+    "descricao": "Radar de sinais"
+  },
+  {
+    "chave": "sentinela_camuflagem_m",
+    "valor": 12,
+    "unidade": "m",
+    "descricao": "Distância além da qual o Sentinela é invisível"
+  },
+  {
+    "chave": "tempo_implantar_sentinela_s",
+    "valor": 2,
+    "unidade": "s",
+    "descricao": "Entrar em Sentinela"
+  },
+  {
+    "chave": "tempo_recolher_sentinela_s",
+    "valor": 1,
+    "unidade": "s",
+    "descricao": "Sair de Sentinela"
+  },
+  {
+    "chave": "radar_atualizacao_s",
+    "valor": 1,
+    "unidade": "s",
+    "descricao": "Atualização dos sinais"
+  },
+  {
+    "chave": "satelite_visao_m",
+    "valor": 60,
+    "unidade": "m",
+    "descricao": "Visão persistente do satélite"
+  },
+  {
+    "chave": "satelite_vel_m_s",
+    "valor": 25,
+    "unidade": "m/s",
+    "descricao": "Reposicionamento do satélite"
+  },
+  {
+    "chave": "tempo_lancamento_satelite_s",
+    "valor": 20,
+    "unidade": "s",
+    "descricao": "Lançamento após a obra"
+  },
+  {
+    "chave": "varredura_raio_m",
+    "valor": 120,
+    "unidade": "m",
+    "descricao": "Raio da Varredura Orbital"
+  },
+  {
+    "chave": "varredura_duracao_s",
+    "valor": 6,
+    "unidade": "s",
+    "descricao": "Duração da Varredura"
+  },
+  {
+    "chave": "varredura_recarga_s",
+    "valor": 120,
+    "unidade": "s",
+    "descricao": "Recarga da Varredura"
+  },
+  {
+    "chave": "varredura_custo_en",
+    "valor": 150,
+    "unidade": "EN",
+    "descricao": "Custo da Varredura (banco)"
+  },
+  {
+    "chave": "inclinacao_max_hover_graus",
+    "valor": 30,
+    "unidade": "°",
+    "descricao": "Inclinação máxima transponível"
+  },
+  {
+    "chave": "altitude_drone_m",
+    "valor": 12,
+    "unidade": "m",
+    "descricao": "Altitude de voo"
+  },
+  {
+    "chave": "aceleracao_solo_s",
+    "valor": 0.5,
+    "unidade": "s",
+    "descricao": "Tempo até a velocidade máxima (solo)"
+  },
+  {
+    "chave": "aceleracao_ar_s",
+    "valor": 0.3,
+    "unidade": "s",
+    "descricao": "Tempo até a velocidade máxima (ar)"
+  },
+  {
+    "chave": "celula_navegacao_m",
+    "valor": 2,
+    "unidade": "m",
+    "descricao": "Resolução da grade de navegação"
+  },
+  {
+    "chave": "celula_construcao_m",
+    "valor": 1,
+    "unidade": "m",
+    "descricao": "Resolução da grade de construção"
+  },
+  {
+    "chave": "flow_field_min_unidades",
+    "valor": 6,
+    "unidade": "unidades",
+    "descricao": "Tamanho de grupo que usa flow field"
+  },
+  {
+    "chave": "pouso_automatico_s",
+    "valor": 5,
+    "unidade": "s",
+    "descricao": "Tempo ocioso até o drone pousar"
+  },
+  {
+    "chave": "tempo_decolagem_s",
+    "valor": 1,
+    "unidade": "s",
+    "descricao": "Decolagem"
+  },
+  {
+    "chave": "tempo_pouso_s",
+    "valor": 1,
+    "unidade": "s",
+    "descricao": "Pouso"
+  },
+  {
+    "chave": "controle_direto_bonus_dano_pct",
+    "valor": 10,
+    "unidade": "%",
+    "descricao": "Sincronia: bônus de dano"
+  },
+  {
+    "chave": "controle_direto_bonus_vel_pct",
+    "valor": 10,
+    "unidade": "%",
+    "descricao": "Sincronia: bônus de velocidade"
+  },
+  {
+    "chave": "impulso_bonus_vel_pct",
+    "valor": 30,
+    "unidade": "%",
+    "descricao": "Impulso: bônus de velocidade"
+  },
+  {
+    "chave": "trava_torpedo_s",
+    "valor": 0.5,
+    "unidade": "s",
+    "descricao": "Tempo de mira para travar o torpedo"
+  },
+  {
+    "chave": "ia_intervalo_estrategista_s",
+    "valor": 5,
+    "unidade": "s",
+    "descricao": "Período de decisão do Estrategista"
+  },
+  {
+    "chave": "ia_margem_energia_pct",
+    "valor": 20,
+    "unidade": "%",
+    "descricao": "Folga de geração sobre o consumo mantida pela IA"
+  },
+  {
+    "chave": "ia_recuo_vr_pct",
+    "valor": 40,
+    "unidade": "%",
+    "descricao": "Fração do VR inicial da onda abaixo da qual ela recua"
+  },
+  {
+    "chave": "tempestade_intervalo_min_s",
+    "valor": 360,
+    "unidade": "s",
+    "descricao": "Intervalo mínimo entre tempestades"
+  },
+  {
+    "chave": "tempestade_intervalo_max_s",
+    "valor": 480,
+    "unidade": "s",
+    "descricao": "Intervalo máximo entre tempestades"
+  },
+  {
+    "chave": "tempestade_duracao_s",
+    "valor": 60,
+    "unidade": "s",
+    "descricao": "Duração da tempestade"
+  },
+  {
+    "chave": "tempestade_mult_visao",
+    "valor": 0.6,
+    "unidade": "×",
+    "descricao": "Visão durante a tempestade"
+  },
+  {
+    "chave": "tempestade_mult_solar",
+    "valor": 0.5,
+    "unidade": "×",
+    "descricao": "Geração solar durante a tempestade"
+  },
+  {
+    "chave": "tempestade_aviso_s",
+    "valor": 20,
+    "unidade": "s",
+    "descricao": "Antecedência do aviso AL-15"
+  }
+]

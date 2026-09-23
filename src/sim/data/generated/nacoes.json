@@ -1,0 +1,34 @@
+[
+  {
+    "id": "usa",
+    "nome": "EUA",
+    "ia": "COLUMBIA",
+    "cor": "#3D7BFF",
+    "emblema": "estrela",
+    "personalidade": "aerea"
+  },
+  {
+    "id": "chn",
+    "nome": "China",
+    "ia": "TIANXIA",
+    "cor": "#FF3B30",
+    "emblema": "circulo",
+    "personalidade": "mare"
+  },
+  {
+    "id": "rus",
+    "nome": "Rússia",
+    "ia": "ZARYA",
+    "cor": "#F2F4F8",
+    "emblema": "triangulo",
+    "personalidade": "muralha"
+  },
+  {
+    "id": "bra",
+    "nome": "Brasil",
+    "ia": "IARA",
+    "cor": "#1FBF5B",
+    "emblema": "losango",
+    "personalidade": "guerrilha"
+  }
+]

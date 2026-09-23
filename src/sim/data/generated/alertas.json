@@ -1,0 +1,128 @@
+[
+  {
+    "id": "AL-01",
+    "texto": "Um de meus corpos está sob ataque.",
+    "gatilho": "Unidade própria sofre dano fora da tela",
+    "prioridade": "alta",
+    "cooldown_s": 10
+  },
+  {
+    "id": "AL-02",
+    "texto": "Minha estrutura está sob ataque.",
+    "gatilho": "Estrutura própria sofre dano fora da tela",
+    "prioridade": "alta",
+    "cooldown_s": 10
+  },
+  {
+    "id": "AL-03",
+    "texto": "Contato: {n} sinais a {direcao}.",
+    "gatilho": "Inimigos entram no radar de um Sentinela",
+    "prioridade": "alta",
+    "cooldown_s": 15
+  },
+  {
+    "id": "AL-04",
+    "texto": "Minha rede está em déficit.",
+    "gatilho": "Racionamento ativo (ENE-04)",
+    "prioridade": "alta",
+    "cooldown_s": 20
+  },
+  {
+    "id": "AL-05",
+    "texto": "Impressão concluída: {item}.",
+    "gatilho": "Item de fila concluído",
+    "prioridade": "baixa",
+    "cooldown_s": 0
+  },
+  {
+    "id": "AL-06",
+    "texto": "Recursos insuficientes: faltam {lista}.",
+    "gatilho": "Ordem recusada por recursos (PRD-04)",
+    "prioridade": "media",
+    "cooldown_s": 2
+  },
+  {
+    "id": "AL-07",
+    "texto": "Jazida de {recurso} esgotada.",
+    "gatilho": "Jazida chega a 0",
+    "prioridade": "baixa",
+    "cooldown_s": 0
+  },
+  {
+    "id": "AL-08",
+    "texto": "{n} corpos sem energia.",
+    "gatilho": "Unidades entram em Modo Reserva",
+    "prioridade": "media",
+    "cooldown_s": 30
+  },
+  {
+    "id": "AL-09",
+    "texto": "Tenho hovers ociosos.",
+    "gatilho": "Hover ocioso (ECO-19)",
+    "prioridade": "baixa",
+    "cooldown_s": 30
+  },
+  {
+    "id": "AL-10",
+    "texto": "Usina nuclear sem combustível.",
+    "gatilho": "Nuclear ligada sem Urânio (ENE-06)",
+    "prioridade": "alta",
+    "cooldown_s": 30
+  },
+  {
+    "id": "AL-11",
+    "texto": "Limite atingido: {limite}.",
+    "gatilho": "Ordem recusada por limite (REG-19)",
+    "prioridade": "media",
+    "cooldown_s": 10
+  },
+  {
+    "id": "AL-12",
+    "texto": "Satélite em órbita.",
+    "gatilho": "Lançamento concluído (UNI-04)",
+    "prioridade": "media",
+    "cooldown_s": 0
+  },
+  {
+    "id": "AL-13",
+    "texto": "Nação {nacao} eliminada.",
+    "gatilho": "Eliminação (REG-09)",
+    "prioridade": "alta",
+    "cooldown_s": 0
+  },
+  {
+    "id": "AL-14",
+    "texto": "Minha Nave está sob ataque!",
+    "gatilho": "Nave Inicial sofre dano",
+    "prioridade": "critica",
+    "cooldown_s": 8
+  },
+  {
+    "id": "AL-15",
+    "texto": "Tempestade de poeira se aproximando.",
+    "gatilho": "Evento de cenário (CEN-03)",
+    "prioridade": "media",
+    "cooldown_s": 0
+  },
+  {
+    "id": "AL-16",
+    "texto": "Mina detonada.",
+    "gatilho": "Mina própria detona",
+    "prioridade": "baixa",
+    "cooldown_s": 5
+  },
+  {
+    "id": "AL-17",
+    "texto": "Satélite offline.",
+    "gatilho": "Satélite sem energia (ENE-04)",
+    "prioridade": "alta",
+    "cooldown_s": 20
+  },
+  {
+    "id": "AL-18",
+    "texto": "Perdi um corpo: {unidade}.",
+    "gatilho": "Unidade própria destruída",
+    "prioridade": "media",
+    "cooldown_s": 3
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "nacao": "usa",
+    "estilo": "Supremacia aérea",
+    "ex1": 25,
+    "opq": 10,
+    "minas": 0,
+    "obs": 5,
+    "bomb": 25,
+    "dlaser": 30,
+    "torres": 5,
+    "tracos": "Satélite cedo; ataques aéreos às linhas de coleta"
+  },
+  {
+    "nacao": "chn",
+    "estilo": "Maré",
+    "ex1": 50,
+    "opq": 20,
+    "minas": 0,
+    "obs": 5,
+    "bomb": 10,
+    "dlaser": 10,
+    "torres": 5,
+    "tracos": "Meta de hovers +15%; expande cedo; ondas grandes"
+  },
+  {
+    "nacao": "rus",
+    "estilo": "Muralha e martelo",
+    "ex1": 20,
+    "opq": 40,
+    "minas": 15,
+    "obs": 5,
+    "bomb": 10,
+    "dlaser": 0,
+    "torres": 10,
+    "tracos": "Nuclear cedo; Torres e minas nas entradas; avanços lentos com OPQ"
+  },
+  {
+    "nacao": "bra",
+    "estilo": "Guerrilha logística",
+    "ex1": 25,
+    "opq": 15,
+    "minas": 15,
+    "obs": 10,
+    "bomb": 5,
+    "dlaser": 25,
+    "torres": 5,
+    "tracos": "Sentinelas nas rotas; silos e baterias; assédio à mineração; ataca quem já está em combate"
+  }
+]

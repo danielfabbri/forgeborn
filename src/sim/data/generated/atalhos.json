@@ -1,0 +1,202 @@
+[
+  {
+    "contexto": "global",
+    "tecla": "Esc",
+    "acao": "Menu de pausa ou cancelar o modo atual"
+  },
+  {
+    "contexto": "global",
+    "tecla": "Pause",
+    "acao": "Pausar ou retomar"
+  },
+  {
+    "contexto": "global",
+    "tecla": "F1",
+    "acao": "Selecionar hover ocioso (em ciclo)"
+  },
+  {
+    "contexto": "global",
+    "tecla": "F2",
+    "acao": "Selecionar todas as unidades militares"
+  },
+  {
+    "contexto": "global",
+    "tecla": "F3",
+    "acao": "Centralizar na Nave Inicial"
+  },
+  {
+    "contexto": "global",
+    "tecla": "Espaço",
+    "acao": "Ir ao último alerta"
+  },
+  {
+    "contexto": "global",
+    "tecla": "Tab",
+    "acao": "Barras de vida: automático ou sempre"
+  },
+  {
+    "contexto": "global",
+    "tecla": "Ctrl+1..9",
+    "acao": "Definir grupo"
+  },
+  {
+    "contexto": "global",
+    "tecla": "1..9",
+    "acao": "Selecionar grupo (toque duplo centraliza)"
+  },
+  {
+    "contexto": "global",
+    "tecla": "V",
+    "acao": "Controle direto; de novo alterna 1ª e 3ª pessoa"
+  },
+  {
+    "contexto": "unidades",
+    "tecla": "A",
+    "acao": "Ataque-movimento"
+  },
+  {
+    "contexto": "unidades",
+    "tecla": "M",
+    "acao": "Mover ignorando inimigos"
+  },
+  {
+    "contexto": "unidades",
+    "tecla": "S",
+    "acao": "Parar"
+  },
+  {
+    "contexto": "unidades",
+    "tecla": "H",
+    "acao": "Manter posição"
+  },
+  {
+    "contexto": "unidades",
+    "tecla": "P",
+    "acao": "Patrulhar"
+  },
+  {
+    "contexto": "unidades",
+    "tecla": "X",
+    "acao": "Alternar postura"
+  },
+  {
+    "contexto": "unidades",
+    "tecla": "R",
+    "acao": "Recarregar agora"
+  },
+  {
+    "contexto": "ship",
+    "tecla": "E",
+    "acao": "Imprimir Hover de Exploração"
+  },
+  {
+    "contexto": "ship",
+    "tecla": "I",
+    "acao": "Imprimir Impressora 3D"
+  },
+  {
+    "contexto": "printer",
+    "tecla": "B",
+    "acao": "Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento"
+  },
+  {
+    "contexto": "printer",
+    "tecla": "U",
+    "acao": "Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, B Bombardeiro, L Drone Laser, V Silo, C Bateria"
+  },
+  {
+    "contexto": "hover_explorer",
+    "tecla": "C",
+    "acao": "Coletar"
+  },
+  {
+    "contexto": "hover_explorer",
+    "tecla": "G",
+    "acao": "Reparar"
+  },
+  {
+    "contexto": "hover_explorer",
+    "tecla": "F",
+    "acao": "Reciclar"
+  },
+  {
+    "contexto": "hover_scout",
+    "tecla": "T",
+    "acao": "Modo Sentinela liga/desliga"
+  },
+  {
+    "contexto": "hover_minelayer",
+    "tecla": "T",
+    "acao": "Plantar mina"
+  },
+  {
+    "contexto": "hover_minelayer",
+    "tecla": "G",
+    "acao": "Campo minado"
+  },
+  {
+    "contexto": "drones",
+    "tecla": "L",
+    "acao": "Pousar ou decolar"
+  },
+  {
+    "contexto": "mobile_silo",
+    "tecla": "T",
+    "acao": "Ancorar ou desancorar"
+  },
+  {
+    "contexto": "mobile_silo",
+    "tecla": "G",
+    "acao": "Descarregar agora"
+  },
+  {
+    "contexto": "mobile_battery",
+    "tecla": "T",
+    "acao": "Modo suporte liga/desliga"
+  },
+  {
+    "contexto": "satellite_uplink",
+    "tecla": "T",
+    "acao": "Reposicionar satélite"
+  },
+  {
+    "contexto": "satellite_uplink",
+    "tecla": "G",
+    "acao": "Varredura Orbital"
+  },
+  {
+    "contexto": "nuclear_plant",
+    "tecla": "T",
+    "acao": "Ligar ou desligar"
+  },
+  {
+    "contexto": "controle_direto",
+    "tecla": "W A S D",
+    "acao": "Mover e deslocar lateralmente"
+  },
+  {
+    "contexto": "controle_direto",
+    "tecla": "Mouse",
+    "acao": "Mirar e orientar"
+  },
+  {
+    "contexto": "controle_direto",
+    "tecla": "Clique esquerdo",
+    "acao": "Arma principal (ou minerar)"
+  },
+  {
+    "contexto": "controle_direto",
+    "tecla": "Clique direito",
+    "acao": "Habilidade da unidade"
+  },
+  {
+    "contexto": "controle_direto",
+    "tecla": "Shift",
+    "acao": "Impulso"
+  },
+  {
+    "contexto": "controle_direto",
+    "tecla": "Esc",
+    "acao": "Voltar à visão RTS"
+  }
+]

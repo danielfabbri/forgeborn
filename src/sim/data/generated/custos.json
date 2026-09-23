@@ -1,0 +1,291 @@
+[
+  {
+    "id": "hover_explorer",
+    "nome": "Hover de Exploração",
+    "categoria": "movel",
+    "produzido_por": [
+      "ship",
+      "printer"
+    ],
+    "fe": 15,
+    "si": 10,
+    "cu": 4,
+    "li": 0,
+    "ti": 0,
+    "u": 0,
+    "vr": 31,
+    "ref_x": 3,
+    "en_impressao": 20,
+    "tempo_s": 12
+  },
+  {
+    "id": "printer",
+    "nome": "Impressora 3D Móvel",
+    "categoria": "movel",
+    "produzido_por": [
+      "ship"
+    ],
+    "fe": 15,
+    "si": 10,
+    "cu": 6,
+    "li": 3,
+    "ti": 0,
+    "u": 0,
+    "vr": 40,
+    "ref_x": 4,
+    "en_impressao": 25,
+    "tempo_s": 20
+  },
+  {
+    "id": "hover_ex1",
+    "nome": "Hover de Defesa EX1",
+    "categoria": "movel",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 30,
+    "si": 10,
+    "cu": 16,
+    "li": 8,
+    "ti": 0,
+    "u": 0,
+    "vr": 80,
+    "ref_x": 8,
+    "en_impressao": 50,
+    "tempo_s": 18
+  },
+  {
+    "id": "hover_opq",
+    "nome": "Hover de Defesa OPQ",
+    "categoria": "movel",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 35,
+    "si": 10,
+    "cu": 12,
+    "li": 6,
+    "ti": 15,
+    "u": 0,
+    "vr": 120,
+    "ref_x": 12,
+    "en_impressao": 70,
+    "tempo_s": 25
+  },
+  {
+    "id": "hover_minelayer",
+    "nome": "Hover de Plantio de Minas",
+    "categoria": "movel",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 30,
+    "si": 15,
+    "cu": 10,
+    "li": 10,
+    "ti": 10,
+    "u": 0,
+    "vr": 110,
+    "ref_x": 11,
+    "en_impressao": 65,
+    "tempo_s": 22
+  },
+  {
+    "id": "hover_scout",
+    "nome": "Hover de Observação",
+    "categoria": "movel",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 10,
+    "si": 15,
+    "cu": 6,
+    "li": 3,
+    "ti": 0,
+    "u": 0,
+    "vr": 40,
+    "ref_x": 4,
+    "en_impressao": 25,
+    "tempo_s": 12
+  },
+  {
+    "id": "drone_bomber",
+    "nome": "Drone Bombardeiro",
+    "categoria": "movel",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 20,
+    "si": 16,
+    "cu": 16,
+    "li": 15,
+    "ti": 20,
+    "u": 0,
+    "vr": 150,
+    "ref_x": 15,
+    "en_impressao": 90,
+    "tempo_s": 30
+  },
+  {
+    "id": "drone_laser",
+    "nome": "Drone Laser",
+    "categoria": "movel",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 15,
+    "si": 15,
+    "cu": 20,
+    "li": 12,
+    "ti": 12,
+    "u": 0,
+    "vr": 120,
+    "ref_x": 12,
+    "en_impressao": 70,
+    "tempo_s": 25
+  },
+  {
+    "id": "mobile_silo",
+    "nome": "Silo Móvel",
+    "categoria": "movel",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 50,
+    "si": 15,
+    "cu": 14,
+    "li": 7,
+    "ti": 0,
+    "u": 0,
+    "vr": 100,
+    "ref_x": null,
+    "en_impressao": 60,
+    "tempo_s": 20
+  },
+  {
+    "id": "mobile_battery",
+    "nome": "Bateria Móvel",
+    "categoria": "movel",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 30,
+    "si": 10,
+    "cu": 20,
+    "li": 35,
+    "ti": 0,
+    "u": 0,
+    "vr": 140,
+    "ref_x": 14,
+    "en_impressao": 80,
+    "tempo_s": 25
+  },
+  {
+    "id": "laser_tower",
+    "nome": "Torre de Defesa",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 35,
+    "si": 10,
+    "cu": 18,
+    "li": 4,
+    "ti": 0,
+    "u": 0,
+    "vr": 80,
+    "ref_x": 8,
+    "en_impressao": 50,
+    "tempo_s": 20
+  },
+  {
+    "id": "storage",
+    "nome": "Armazém",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 110,
+    "si": 40,
+    "cu": 20,
+    "li": 0,
+    "ti": 0,
+    "u": 0,
+    "vr": 180,
+    "ref_x": 18,
+    "en_impressao": 100,
+    "tempo_s": 35
+  },
+  {
+    "id": "solar_plant",
+    "nome": "Usina Solar Pequena",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 30,
+    "si": 60,
+    "cu": 20,
+    "li": 15,
+    "ti": 0,
+    "u": 0,
+    "vr": 150,
+    "ref_x": 15,
+    "en_impressao": 80,
+    "tempo_s": 30
+  },
+  {
+    "id": "nuclear_plant",
+    "nome": "Usina Nuclear",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 60,
+    "si": 20,
+    "cu": 30,
+    "li": 10,
+    "ti": 15,
+    "u": 8,
+    "vr": 230,
+    "ref_x": 23,
+    "en_impressao": 140,
+    "tempo_s": 50
+  },
+  {
+    "id": "satellite_uplink",
+    "nome": "Base de Lançamento + Satélite",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 100,
+    "si": 80,
+    "cu": 40,
+    "li": 30,
+    "ti": 40,
+    "u": 6,
+    "vr": 450,
+    "ref_x": 45,
+    "en_impressao": 270,
+    "tempo_s": 75
+  },
+  {
+    "id": "mine",
+    "nome": "Mina",
+    "categoria": "municao",
+    "produzido_por": [
+      "hover_minelayer"
+    ],
+    "fe": 6,
+    "si": 0,
+    "cu": 2,
+    "li": 1,
+    "ti": 0,
+    "u": 0,
+    "vr": 11,
+    "ref_x": null,
+    "en_impressao": 20,
+    "tempo_s": 6
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "tipo_dano": "laser",
+    "leve": 1,
+    "blindada": 0.75,
+    "estrutura": 0.5
+  },
+  {
+    "tipo_dano": "explosivo",
+    "leve": 0.75,
+    "blindada": 1.25,
+    "estrutura": 1.5
+  },
+  {
+    "tipo_dano": "ambiental",
+    "leve": 1,
+    "blindada": 1,
+    "estrutura": 1
+  }
+]

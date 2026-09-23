@@ -7,6 +7,7 @@ import type { SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId } from '../core/types';
 import { type EstruturasId, type MoveisId, param } from '../data';
 import { norteEm, type Vec3 } from '../map/esfera';
+import { bateriaInicial } from '../energia/bateria';
 import { ALTURA_HOVER_M, altitudeDrone, ehAerea, statsEstrutura } from './stats';
 import { chaoEm, type Posicao, posicionar } from './superficie';
 
@@ -71,6 +72,19 @@ export function criarUnidade(
     ancora: null,
   });
   setComponent(state, id, 'order', { tipo: 'nenhuma', patrulha: null });
+  // ENE-08: sai da impressão com a bateria cheia (a Bateria Móvel, com parte).
+  setComponent(state, id, 'bateria', {
+    ...bateriaInicial(tipo),
+    autoRecarga: true,
+    recebendo: false,
+  });
+  setComponent(state, id, 'recarga', {
+    estado: 'nenhuma',
+    estrutura: null,
+    retorno: null,
+    automatica: false,
+  });
+  if (tipo === 'mobile_battery') setComponent(state, id, 'suporte', { ligado: true, alvos: [] });
   if (aerea) setComponent(state, id, 'air', { estado: 'voando', timer_s: 0 });
   if (tipo === 'printer') setComponent(state, id, 'producer', { pontoDeEncontro: null });
   if (tipo === 'hover_explorer') {
@@ -118,6 +132,23 @@ export function criarEstrutura(
   // Círculo que cobre a pegada quadrada (MOV-04).
   setComponent(state, id, 'obstacle', { raio: (statsEstrutura(tipo).pegada_m / 2) * Math.SQRT2 });
   if (tipo === 'ship') setComponent(state, id, 'producer', { pontoDeEncontro: null });
+  // ENE-12: portas de recarga (Nave e usinas).
+  const portas = statsEstrutura(tipo).portas;
+  if (portas > 0) {
+    setComponent(state, id, 'portas', {
+      ocupantes: Array.from({ length: portas }, () => null),
+      fila: [],
+    });
+  }
+  // ENE-06: a Usina Nuclear nasce ligada e se abastece no primeiro tick.
+  if (tipo === 'nuclear_plant') {
+    setComponent(state, id, 'reator', {
+      ligado: true,
+      ciclo_s: 0,
+      religando_s: 0,
+      semUranio: false,
+    });
+  }
   state.versaoObstaculos++;
   return id;
 }

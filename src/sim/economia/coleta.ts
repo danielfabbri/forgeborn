@@ -15,6 +15,7 @@ import { tracarRota } from '../units/movimento';
 import { navegavel } from '../units/navegacao';
 import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
+import { emReserva, gastar } from '../energia/bateria';
 import { cargaDoSilo, creditar, entregaMaisProxima, vivo } from './estoque';
 import { atualizarRaio, esgotar, jazidaViva, todasAsJazidas, vagasLivres } from './jazidas';
 
@@ -238,6 +239,9 @@ function passo(ctx: SystemContext, hover: EntityId, dt: number): void {
     }
     return;
   }
+  // Indo recarregar (ENE-15): a coleta espera; a recarga retoma depois (retomarColeta).
+  const recarga = getComponent(state, hover, 'recarga');
+  if (recarga && recarga.estado !== 'nenhuma') return;
   const loc = getComponent(state, hover, 'locomotion')!;
   const dh = direcaoDe(getComponent(state, hover, 'position')!);
   switch (coleta.estado) {
@@ -285,7 +289,9 @@ function passo(ctx: SystemContext, hover: EntityId, dt: number): void {
         return;
       }
       const jazida = getComponent(state, coleta.jazida!, 'jazida')!;
-      const taxa = TAXA[jazida.recurso];
+      // ENE-10/ENE-11: minerar gasta `en_minerar_s`; no Modo Reserva o hover não minera.
+      if (emReserva(ctx, hover)) return;
+      const taxa = TAXA[jazida.recurso] * gastar(ctx, hover, param('en_minerar_s') * dt);
       const u = Math.min(taxa * dt, param('carga_hover_u') - coleta.carga, jazida.quantidade);
       coleta.carga += u;
       coleta.cargaRecurso = jazida.recurso;
@@ -340,6 +346,18 @@ function passo(ctx: SystemContext, hover: EntityId, dt: number): void {
       return;
     }
   }
+}
+
+/** D-28: depois da recarga, o hover volta à coleta (entrega a carga ou volta à jazida). */
+export function retomarColeta(ctx: SystemContext, hover: EntityId): void {
+  const coleta = getComponent(ctx.state, hover, 'coleta')!;
+  getComponent(ctx.state, hover, 'order')!.tipo = 'tarefa';
+  if (coleta.carga > 0) {
+    iniciarEntrega(ctx, hover);
+    return;
+  }
+  const perto = direcaoDe(getComponent(ctx.state, hover, 'position')!);
+  voltarAoTrabalho(ctx, hover, perto);
 }
 
 export function passoColeta(ctx: SystemContext): void {

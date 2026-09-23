@@ -33,6 +33,8 @@ export function ociosos(ctx: SystemContext, nacao: NacaoId): EntityId[] {
   return hoversDa(ctx, nacao).filter((id) => {
     const coleta = getComponent(ctx.state, id, 'coleta')!;
     if (coleta.estado !== 'ocioso') return false;
+    const recarga = getComponent(ctx.state, id, 'recarga');
+    if (recarga && recarga.estado !== 'nenhuma') return false;
     const ordem = getComponent(ctx.state, id, 'order')!.tipo;
     if (ordem === 'tarefa') return true;
     return ordem === 'nenhuma' && getComponent(ctx.state, id, 'locomotion')!.ocioso_s >= alerta;

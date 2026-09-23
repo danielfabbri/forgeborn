@@ -141,17 +141,17 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M4 — Energia
 
-- [ ] **T-040 — Rede de energia** · M · Spec: ENE-01 – ENE-05 · Dep: T-006
+- [x] **T-040 — Rede de energia** · M · Spec: ENE-01 – ENE-05 · Dep: T-006 · Feito: 2026-09-23
   - Aceite: testes de geração, capacidade, excedente perdido e de cada nível de prioridade do racionamento, incluindo satélite offline.
-- [ ] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022
+- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Mover, pairar, minerar, Reserva e pouso do drone (D-28) prontos; os demais custos de §6.3 entram com as mecânicas (M5, M6)
   - Aceite: custo de cada tarefa da tabela §6.3 verificado; unidade parada no solo gasta 0; Modo Reserva anda a `modo_reserva_vel_pct`% e não executa tarefas.
-- [ ] **T-042 — Portas de recarga** · M · Spec: ENE-12 – ENE-14 · Dep: T-041
+- [x] **T-042 — Portas de recarga** · M · Spec: ENE-12 – ENE-14 · Dep: T-041 · Feito: 2026-09-23
   - Aceite: 1 unidade por porta; fila por ordem de chegada; escolha pelo menor tempo estimado; a recarga retira energia do banco.
-- [ ] **T-043 — Auto-recarga** · M · Spec: ENE-15, ENE-16 · Dep: T-042
+- [~] **T-043 — Auto-recarga** · M · Spec: ENE-15, ENE-16 · Dep: T-042 · Limiares, retorno (D-28) e volta à coleta prontos; combate espera a M6 e a Impressora, a M5
   - Aceite: limiares `auto_recarga_*` por papel; militares não saem em combate; drones saem em `recarga_forcada_drone_pct` mesmo em combate; a Impressora pausa a impressão, recarrega e retoma.
-- [ ] **T-044 — Usinas** · M · Spec: ENE-06, ENE-07 · Dep: T-040, T-053
+- [x] **T-044 — Usinas** · M · Spec: ENE-06, ENE-07 · Dep: T-040, T-053 · Feito: 2026-09-23 (usinas criadas por comando de depuração até a T-053)
   - Aceite: solar gera `geracao_en_s` × `fator_solar`; nuclear consome `nuclear_consumo_u` a cada `nuclear_intervalo_s`, gera 0 sem Urânio (AL-10) e religa em `nuclear_religar_s`.
-- [ ] **T-045 — Bateria Móvel** · M · Spec: ENE-17 – ENE-21 · Dep: T-042
+- [x] **T-045 — Bateria Móvel** · M · Spec: ENE-17 – ENE-21 · Dep: T-042 · Feito: 2026-09-23 (a ENE-21, explosão, fica com a CMB-23)
   - Aceite: atende até `bateria_movel_max_alvos` alvos a `bateria_movel_taxa_por_alvo_en_s` cada, começando pela menor %; volta para recarregar em `auto_recarga_bateria_movel_pct`; alvos não procuram porta enquanto recebem energia.
 - [ ] **T-046 — Invariantes de energia** · P · Spec: INV-09, INV-10 · Dep: T-043, T-061
   - Aceite: INV-09 e INV-10 verdes em `tests/balance/`.

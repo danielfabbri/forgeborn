@@ -98,7 +98,7 @@ describe('CEN-11: validação do mapa', () => {
       { seed: 24, problemas: [{ motivo: 'rotas_insuficientes', detalhe: 'teste' }] },
     ]);
     expect(validarMapa(recuo.mapa, recuo.grades, recuo.jazidas)).toEqual([]);
-  });
+  }, 30_000); // gera dois mapas; sob a suíte inteira em paralelo passa de 5 s
 });
 
 describe('CEN-12 / §14.4: presets da Lua', () => {

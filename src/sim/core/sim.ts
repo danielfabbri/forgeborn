@@ -1,4 +1,4 @@
-import { param } from '../data';
+import { type CenariosId, param } from '../data';
 import { EventBus } from './events';
 import { hashValue } from './hash';
 import {
@@ -21,6 +21,8 @@ export interface SimOptions {
   commandHandlers?: Record<string, CommandHandler>;
   /** Mapa e grades da partida. */
   mundo?: Mundo;
+  /** Cenário da partida (modificadores de §14.1); padrão: Lua. */
+  cenario?: CenariosId;
 }
 
 export interface Sim {
@@ -41,7 +43,7 @@ export interface Sim {
 }
 
 export function createSim(seed: number, nacoes: NacaoId[], options: SimOptions = {}): Sim {
-  return buildSim(createInitialState(seed, nacoes), options);
+  return buildSim(createInitialState(seed, nacoes, options.cenario), options);
 }
 
 export function restoreSim(snapshot: string, options: SimOptions = {}): Sim {

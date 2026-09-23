@@ -22,6 +22,7 @@ import {
 import { celulaDe } from '../map/grids';
 import { aEstrela, linhaLivre, livre, type Navegavel, passoDoFluxo } from '../map/pathfinding';
 import { siloImovel } from '../economia/silo';
+import { emReserva, gastar } from '../energia/bateria';
 import { fluxoPara, navegavel } from './navegacao';
 import { ALTURA_HOVER_M, altitudeDrone, statsMovel } from './stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from './superficie';
@@ -125,7 +126,9 @@ function inimigoVisivel(ctx: SystemContext, id: EntityId): boolean {
 /** MOV-07: pouso automático e decolagem. Devolve se o drone pode se deslocar agora. */
 function atualizarAr(ctx: SystemContext, id: EntityId, loc: Locomocao, dt: number): boolean {
   const ar = getComponent(ctx.state, id, 'air')!;
-  const temOrdem = loc.destino !== null;
+  const semEnergia = emReserva(ctx, id);
+  // D-28: sem energia, o drone não decola (e a ordem não o tira do chão).
+  const temOrdem = loc.destino !== null && !semEnergia;
   const decolar = () => {
     ar.estado = 'decolando';
     ar.timer_s = param('tempo_decolagem_s');
@@ -133,7 +136,8 @@ function atualizarAr(ctx: SystemContext, id: EntityId, loc: Locomocao, dt: numbe
   };
   switch (ar.estado) {
     case 'voando':
-      if (!temOrdem && loc.ocioso_s >= param('pouso_automatico_s')) {
+      // D-28: drone em voo sem energia pousa onde está.
+      if (semEnergia || (!temOrdem && loc.ocioso_s >= param('pouso_automatico_s'))) {
         ar.estado = 'pousando';
         ar.timer_s = param('tempo_pouso_s');
         return false;
@@ -141,11 +145,11 @@ function atualizarAr(ctx: SystemContext, id: EntityId, loc: Locomocao, dt: numbe
       return true;
     case 'pousando':
       ar.timer_s -= dt;
-      if (temOrdem || inimigoVisivel(ctx, id)) decolar();
+      if (!semEnergia && (temOrdem || inimigoVisivel(ctx, id))) decolar();
       else if (ar.timer_s <= 0) ar.estado = 'pousado';
       return false;
     case 'pousado':
-      if (temOrdem || inimigoVisivel(ctx, id)) decolar();
+      if (!semEnergia && (temOrdem || inimigoVisivel(ctx, id))) decolar();
       return false;
     case 'decolando':
       ar.timer_s -= dt;
@@ -180,7 +184,9 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
   }
 
   const alvo = ordem.tipo === 'manter' ? null : proximoAlvo(ctx, g, id, loc, d);
-  const velMax = Math.min(s.vel_m_s, loc.limiteVel ?? Infinity);
+  // ENE-11: no Modo Reserva anda a `modo_reserva_vel_pct`% da velocidade.
+  const reserva = emReserva(ctx, id) ? param('modo_reserva_vel_pct') / 100 : 1;
+  const velMax = Math.min(s.vel_m_s * reserva, loc.limiteVel ?? Infinity);
   // MOV-03: da parada à velocidade máxima em aceleracao_*_s.
   const aceleracao = s.vel_m_s / param(aerea ? 'aceleracao_ar_s' : 'aceleracao_solo_s');
   let velAlvo = 0;
@@ -220,8 +226,12 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
       else loc.speed = 0;
     }
   }
+  const avancou = R * arco(d, novo);
   posicionar(ctx, pos, novo, 0);
   loc.rumo = tangente(novo, rumo) ?? rumo;
+  // ENE-10: mover gasta `mov_en_s` por segundo em movimento; drone parado no ar paga o pairar.
+  if (avancou > 1e-9) gastar(ctx, id, s.mov_en_s * dt);
+  else if (aerea) gastar(ctx, id, s.pairar_en_s * dt);
 
   // Unidade presa (aglomeração, funil ou quina): se em TEMPO_TRAVADO_S não se afastou
   // DESLOCAMENTO_MINIMO_M da âncora, contando o efeito da separação, refaz a rota por A*.

@@ -1,4 +1,4 @@
-import { dados, param, type RecursosId } from '../data';
+import { type CenariosId, dados, param, type RecursosId } from '../data';
 import type { ComponentMap, ComponentName } from './components';
 import { type RngState, seedRng } from './rng';
 import type { EntityId, NacaoId, QueuedCommand } from './types';
@@ -25,6 +25,24 @@ export interface SimState {
   estoques: Record<NacaoId, Record<RecursosId, number>>;
   /** ECO-18: Diretiva de Coleta de cada nação (% de hovers por recurso). */
   diretivas: Record<NacaoId, Record<RecursosId, number>>;
+  /** Cenário da partida (§14.1). */
+  cenario: CenariosId;
+  /** §6.2: rede de energia de cada nação. */
+  energia: Record<NacaoId, EstadoDaRede>;
+}
+
+export interface EstadoDaRede {
+  /** EN no banco. */
+  banco: number;
+  /** ENE-22: consumo (EN) de cada um dos últimos 10 segundos completos. */
+  consumoPorSegundo: number[];
+  /** Consumo acumulado no segundo corrente e quantos ticks ele já tem. */
+  consumoNoSegundo: number;
+  ticksNoSegundo: number;
+  /** Geração (EN/s) no último tick. */
+  geracao: number;
+  /** ENE-04: racionamento ativo no último tick. */
+  racionamento: boolean;
 }
 
 function porRecurso(valor: (recurso: RecursosId) => number): Record<RecursosId, number> {
@@ -34,7 +52,11 @@ function porRecurso(valor: (recurso: RecursosId) => number): Record<RecursosId, 
   >;
 }
 
-export function createInitialState(seed: number, nacoes: NacaoId[]): SimState {
+export function createInitialState(
+  seed: number,
+  nacoes: NacaoId[],
+  cenario: CenariosId = 'lua',
+): SimState {
   if (nacoes.length === 0) throw new Error('A partida precisa de ao menos uma nação');
   if (new Set(nacoes).size !== nacoes.length) throw new Error('Nação repetida na partida');
   return {
@@ -51,6 +73,20 @@ export function createInitialState(seed: number, nacoes: NacaoId[]): SimState {
     estoques: Object.fromEntries(
       nacoes.map((n) => [n, porRecurso(() => 0)]),
     ) as SimState['estoques'],
+    cenario,
+    energia: Object.fromEntries(
+      nacoes.map((n): [NacaoId, EstadoDaRede] => [
+        n,
+        {
+          banco: 0,
+          consumoPorSegundo: [] as number[],
+          consumoNoSegundo: 0,
+          ticksNoSegundo: 0,
+          geracao: 0,
+          racionamento: false,
+        },
+      ]),
+    ) as SimState['energia'],
     diretivas: Object.fromEntries(
       nacoes.map((n) => [n, porRecurso((r) => param(`diretiva_${r}_pct` as never))]),
     ) as SimState['diretivas'],

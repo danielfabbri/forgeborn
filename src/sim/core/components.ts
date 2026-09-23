@@ -78,6 +78,49 @@ export interface ComponentMap {
     /** ECO-20: designado pelo jogador (fica na jazida até esgotar). */
     manual: boolean;
   };
+  /** ENE-08 a ENE-11: bateria de uma unidade móvel. */
+  bateria: {
+    en: number;
+    max: number;
+    /** ENE-15: auto-recarga ligada. */
+    autoRecarga: boolean;
+    /** ENE-20: recebeu energia de uma Bateria Móvel neste tick. */
+    recebendo: boolean;
+  };
+  /** Ida à recarga (ENE-12 a ENE-16). */
+  recarga: {
+    estado: 'nenhuma' | 'indo' | 'fila' | 'acoplada';
+    /** Estrutura com portas escolhida. */
+    estrutura: EntityId | null;
+    /** D-28: para onde voltar depois (posição e patrulha), se não for hover nem Impressora. */
+    retorno: { ponto: Ponto; patrulha: [Ponto, Ponto] | null } | null;
+    /** Saiu sozinha (auto-recarga) ou por ordem (R). */
+    automatica: boolean;
+  };
+  /** ENE-12: portas de recarga de uma estrutura (posições fixas, com a unidade acoplada ou null). */
+  portas: { ocupantes: Array<EntityId | null>; fila: EntityId[] };
+  /** ENE-03/ENE-04: consumidor da rede (defesas, satélites, impressão na Nave). */
+  consumidor: {
+    /** 1 defesas, 2 satélites, 3 impressão na Nave (as portas são o nível 4). */
+    prioridade: 1 | 2 | 3;
+    demanda_en_s: number;
+    /** Fração atendida no último tick (0..1). */
+    atendido: number;
+    /** ENE-04: satélite não atendido por inteiro fica offline. */
+    offline: boolean;
+  };
+  /** ENE-06: Usina Nuclear. */
+  reator: {
+    ligado: boolean;
+    /** Segundos restantes do ciclo de combustível atual (0 = precisa de Urânio). */
+    ciclo_s: number;
+    /** Tempo para religar (ENE-06). */
+    religando_s: number;
+    /** Sem Urânio (AL-10 já emitido). */
+    semUranio: boolean;
+  };
+  /** ENE-18: modo suporte da Bateria Móvel. */
+  suporte: { ligado: boolean; alvos: EntityId[] };
   /** Silo Móvel (ECO-22 a ECO-25). */
   silo: {
     estado:

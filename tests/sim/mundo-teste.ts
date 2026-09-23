@@ -8,7 +8,7 @@
 import { createSim, type EntityId, getComponent, type NacaoId, type Sim } from '../../src/sim';
 import { dados } from '../../src/sim/data';
 import { DEBUG_CRIAR_COMMAND, debugCriarHandlers } from '../../src/sim/debug/criar';
-import type { EstruturasId, MoveisId, RecursosId } from '../../src/sim/data';
+import type { CenariosId, EstruturasId, MoveisId, RecursosId } from '../../src/sim/data';
 import { SEMEAR_JAZIDAS_COMMAND } from '../../src/sim/economia';
 import {
   arco,
@@ -108,9 +108,14 @@ export type Criacao = ({ unidade: MoveisId } | { estrutura: EstruturasId } | { m
 } & ({ x: number; z: number } | { d: Vec3 });
 
 /** Partida com os sistemas do jogo e o comando de depuração que cria corpos. */
-export function partida(mundo: Mundo | undefined, nacoes: NacaoId[] = ['bra', 'usa']): Sim {
+export function partida(
+  mundo: Mundo | undefined,
+  nacoes: NacaoId[] = ['bra', 'usa'],
+  cenario: CenariosId = 'lua',
+): Sim {
   return createSim(1, nacoes, {
     mundo,
+    cenario,
     systems: sistemasDoJogo,
     commandHandlers: { ...comandosDoJogo, ...debugCriarHandlers },
   });

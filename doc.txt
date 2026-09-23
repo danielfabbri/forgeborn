@@ -1,0 +1,60 @@
+O jogo forgeborn é um jogo de exploração espacial.
+
+Temos a tela de abertura do jogo, depois a tela de seleção de modo de jogo (free battle ou campaign).
+
+O jogo se passa em 2035, quando a AI dominou a Terra, após a expansão espacial. 4 países da Terra lideram essa disputa. Foram criadas máquinas que conseguem fazer viagens de anos luz em questão de minutos. Isso vai fazer com que frotas de naves + drones de diversos tipos comecem a disputar a colonização dos planetas pelo universo a fora.
+Quero montar um modelo de jogo 3d, onde o jogador irá fazer a gestão de recursos capturados naquele planeta, podendo controlar os hovers para coletar minérios e construir unidades fixas ou móveis com diferentes finalidades.
+
+Os humanos foram extintos pela AI, e só ficaram as máquinas que se procriam sozinhas. O único resquício humano foram as necessidades de eliminar as diferentes organizações e reinar absolutamente sozinho. No jogo, o jogador é uma inteligência singular que opera os hovers e unidades. Tudo é autonomo. Os "nascidos da forja" são, no fundo, um ser só com diferentes corpos.
+
+
+Unidades móveis:
+	- Hover de exploração - peão coletor e construtor [custo 3x]
+	- Impressora 3d móvel - unidade que cria outras unidades ou construções. [custo 4x]
+	- Hover de defesa EX1 - unidade móvel militar com disparo de lasers de curto alcance [custo 8x]
+	- Hover de defesa OPQ - unidade móvel militar com disparo de torpedos de médio alcance [custo 12x]
+	- Hover de plantio de minas - unidade móvel fraca, mas planta minas fortes pelo cenário [custo 11x]
+	- Hover de observação - unidade móvel fraca mas que avisa caso venha alguma unidade daquela direção [custo 4x]
+	- Drone bombardeiro - drone a jato leve e fraco que dispara bombas. [custo 15x]
+	- Drone laser - drone com disparo de laser de curto alcance [custo 12x]
+	- Unidade móvel de armazenamento de materiais - unidade móvel que armazena para reduzir distância de mineração, mas coleta só conta quando ela chega na base.
+	- Unidade de baterias móveis - unidades que abastecem unidades móveis com energia vindas das usinas. [custo 14x]
+
+Unidades fixas:
+	- Nave inicial - Jogo começa com nave posando e 1 hover de exploração saindo de dentro dela pra iniciar o jogo. A nave inicial pode produzir novos hovers de exploração conforme soma recursos. [custo 1000x]
+	- Unidade de defesa - pequena torre de disparo de laser para defender o território [custo 8x]
+	- Unidade fixa de armazenamento - onde os hovers de exploração podem depositar as coletas [custo 18x]
+	- Usina de geração de energia solar pequena - eleva o nível de energia [custo 15x]
+	- Usina de geração de energia nuclear - eleva o nível de energia [custo 23x]
+	- Satélite de visualização com base de lançamento. [custo 45x]
+
+Recursos:
+	- Silício (sensores, computadores, comunicação)
+	- Ferro (chassis, blindagem, estruturas, rodas / esteiras)
+	- Cobre (motores, energia, cabos, lasers)
+	- Lítio (baterias, capacitores, sistemas de energia)
+	- Titâneo (blindagem leve, armas, componentes de alta resistência)
+	- Urânio (elemento raro gerador de energia)
+
+Capacidade transversal:
+	- Energia (Unidades precisam de energia. Podemos estrair energia de centrais de energia solar ou radioativas a partir de uránio.
+
+Regras:
+	- O jogo começa com uma Nave inicial, que aterrisa em um ponto do cenário e abre a porta e sai um hover de exploração de lá. Esse hover começa tendo que coletar os primeiros materiais para que possa construir uma impressora 3d móvel.
+	- Os hovers de exploração coletam materiais pelo solo e devem trazê-los até uma unidade móvel de armazenamento de materiais, que acumulam materiais e descarregam nas unidades fixas de armazenamento ou na nave inicial.
+	- Todo material só é contabilizado como recurso quando é depositado na Nave inicial ou em uma unidade fixa de armazenamento.
+	- A Nave inicial só consegue criar hover de exploração e impressora 3d móvel.
+	- O cenário também está sendo colonizado por outras nações (EUA, China, Russia e Brasil)
+	- O objetivo do jogo é competir por recursos e destruir as outras nações.
+	- A visibilidade do mapa se expande conforme as unidades se espalham pelo mapa, seguindo o modelo de escuro absoluto, "fog" (área desbravada, mas desatualizada) e área visível (a partir de raio de unidades)
+	- As unidades tem vida e pontos de energia que vão se acabando conforme elas desempenham tarefas. Elas podem abastecer suas energias nas usinas (mediante a capacidade) ou unidades móveis de abastecimento de energia.
+
+Cenários:
+A primeira fase é na lua. As demais fases são em outros planetas, como Marte, Venus, Luas, Asteróides, etc. Para selecionar o cenário, você navega por uma visão de universo.
+
+Visual do jogo:
+3d, cenas vislumbrantes.
+O jogador normalmente joga com a visão de cima, estilo age of empires, mas ele pode controlar uma unidade específica, podendo escolher entre 1ª pessoa ou 3ª pessoa.
+Os objetos, drones, hovers, unidades, etc podem ser basicamente iguais com uma tarja colorida indicando a nacionalidade. Depois pensamos em unidades específicas de cada nacionalidade.
+
+Estamos falando de um jogo 3d que rodará inteiramente no browser.

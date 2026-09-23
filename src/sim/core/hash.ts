@@ -12,10 +12,19 @@ export function canonicalJson(value: unknown): string {
 
 /** Hash não criptográfico de 64 bits (cyrb53 estendido) em hexadecimal. */
 export function hashString(text: string): string {
+  return hashCodigos(text.length, (i) => text.charCodeAt(i));
+}
+
+/** Mesmo hash, sobre uma sequência de inteiros (ex.: um heightmap `Uint16Array`). */
+export function hashNumeros(valores: ArrayLike<number>): string {
+  return hashCodigos(valores.length, (i) => valores[i]!);
+}
+
+function hashCodigos(tamanho: number, codigo: (i: number) => number): string {
   let h1 = 0xdeadbeef;
   let h2 = 0x41c6ce57;
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
+  for (let i = 0; i < tamanho; i++) {
+    const code = codigo(i);
     h1 = Math.imul(h1 ^ code, 2654435761);
     h2 = Math.imul(h2 ^ code, 1597334677);
   }

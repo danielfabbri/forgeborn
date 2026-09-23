@@ -1,20 +1,35 @@
 /**
- * Câmera RTS (CTL-01, CTL-02): estado e matemática puros, sem DOM nem Three.js.
- * O foco é o ponto do chão para onde a câmera olha; a altura é medida acima do chão do foco.
- * Norte é −z (topo do minimapa); yaw 0 olha para o norte.
+ * Câmera RTS no planeta (CTL-01, CTL-02, CTL-16): estado e matemática puros, sem DOM nem
+ * Three.js. O foco é a direção do ponto da superfície para onde a câmera olha; a altura é medida
+ * acima do chão do foco; `frente` é o rumo tangente para onde a câmera olha, transportado junto
+ * com o foco no pan (a câmera não gira sozinha). Norte: CEN-15.
  */
+import {
+  arco,
+  girar,
+  normalizar,
+  norteEm,
+  produtoVetorial,
+  tangente,
+  type Vec3,
+} from '../sim/map/esfera';
 
 /** Números de apresentação da câmera (GOV-04). */
 export const CAMERA_RTS = {
   alturaMin_m: 15, // CTL-01
-  alturaMax_m: 120, // CTL-01
+  alturaMaxRts_m: 120, // CTL-01
+  /** CTL-16: a visão planetária vai até 3,5 × raio a partir do centro. */
+  distanciaPlanetaria_raios: 3.5,
   alturaInicial_m: 75,
   inclinacaoLonge_graus: 55, // CTL-01
   inclinacaoPerto_graus: 35, // CTL-01
+  inclinacaoPlanetaria_graus: 90, // CTL-16
   /** Faixa de altura em que a inclinação passa de 35° para 55°. */
   transicaoInclinacao_m: [15, 50] as const,
   /** Velocidade do pan em múltiplos da altura por segundo (mesma velocidade na tela em qualquer zoom). */
   panPorAltura: 1.3,
+  /** Acima desta altura o pan não acelera mais (na visão planetária ele gira o globo). */
+  alturaMaxPan_m: 120,
   fatorZoom: 1.12,
   suavizacaoZoom: 10,
   rotacaoPorPixel_rad: 0.006,
@@ -24,26 +39,30 @@ export const CAMERA_RTS = {
 const C = CAMERA_RTS;
 
 export interface EstadoCameraRts {
-  focoX: number;
-  focoZ: number;
+  /** Direção unitária do ponto focal. */
+  foco: Vec3;
+  /** Rumo tangente em `foco` para onde a câmera olha. */
+  frente: Vec3;
   altura: number;
   alturaAlvo: number;
-  yaw: number;
-  /** Metade do lado da área em que o foco pode ficar. */
-  limite: number;
+  /** Raio do planeta (m). */
+  raio: number;
 }
 
-export function criarEstadoCamera(focoX: number, focoZ: number, limite: number): EstadoCameraRts {
-  const estado = {
-    focoX,
-    focoZ,
+export function criarEstadoCamera(foco: Vec3, raio: number): EstadoCameraRts {
+  const d = normalizar(foco);
+  return {
+    foco: d,
+    frente: norteEm(d),
     altura: C.alturaInicial_m,
     alturaAlvo: C.alturaInicial_m,
-    yaw: 0,
-    limite,
+    raio,
   };
-  limitarFoco(estado);
-  return estado;
+}
+
+/** CTL-16: altura máxima do zoom (visão planetária). */
+export function alturaMaxima(estado: { raio: number }): number {
+  return (C.distanciaPlanetaria_raios - 1) * estado.raio;
 }
 
 function suave(a: number, b: number, x: number): number {
@@ -51,26 +70,31 @@ function suave(a: number, b: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
-/** CTL-01: inclinação (rad) abaixo do horizonte para a altura dada. */
-export function inclinacao(altura: number): number {
+/** CTL-01/CTL-16: inclinação (rad) abaixo do horizonte para a altura dada. */
+export function inclinacao(altura: number, raio = Infinity): number {
   const [perto, longe] = C.transicaoInclinacao_m;
-  const graus =
+  let graus =
     C.inclinacaoPerto_graus +
     (C.inclinacaoLonge_graus - C.inclinacaoPerto_graus) * suave(perto, longe, altura);
+  if (Number.isFinite(raio)) {
+    const planetaria = suave(C.alturaMaxRts_m, alturaMaxima({ raio }), altura);
+    graus += (C.inclinacaoPlanetaria_graus - graus) * planetaria;
+  }
   return (graus * Math.PI) / 180;
 }
 
-/** Vetores horizontais de frente e de direita da câmera. */
-export function eixos(yaw: number): { frente: [number, number]; direita: [number, number] } {
-  return {
-    frente: [Math.sin(yaw), -Math.cos(yaw)],
-    direita: [Math.cos(yaw), Math.sin(yaw)],
-  };
+/** Vetor tangente à direita da câmera. */
+export function direita(estado: EstadoCameraRts): Vec3 {
+  return normalizar(produtoVetorial(estado.frente, estado.foco));
 }
 
-export function limitarFoco(estado: EstadoCameraRts): void {
-  estado.focoX = Math.min(Math.max(estado.focoX, -estado.limite), estado.limite);
-  estado.focoZ = Math.min(Math.max(estado.focoZ, -estado.limite), estado.limite);
+/** Anda `metros` a partir do foco no rumo tangente `rumo`, levando a frente junto. */
+function andar(estado: EstadoCameraRts, rumo: Vec3, metros: number): void {
+  const angulo = metros / estado.raio;
+  if (angulo === 0) return;
+  const eixo = normalizar(produtoVetorial(estado.foco, rumo));
+  estado.foco = normalizar(girar(estado.foco, eixo, angulo));
+  estado.frente = tangente(estado.foco, girar(estado.frente, eixo, angulo)) ?? norteEm(estado.foco);
 }
 
 /** Pan relativo à tela: `frente` e `lado` em −1..1 (setas ou bordas). */
@@ -81,34 +105,50 @@ export function aplicarPan(
   dt: number,
 ): void {
   if (frente === 0 && lado === 0) return;
-  const { frente: f, direita: d } = eixos(estado.yaw);
-  const distancia = C.panPorAltura * estado.altura * dt;
-  const norma = Math.hypot(frente, lado);
-  estado.focoX += ((f[0] * frente + d[0] * lado) / norma) * distancia;
-  estado.focoZ += ((f[1] * frente + d[1] * lado) / norma) * distancia;
-  limitarFoco(estado);
+  const d = direita(estado);
+  const rumo = normalizar([
+    estado.frente[0] * frente + d[0] * lado,
+    estado.frente[1] * frente + d[1] * lado,
+    estado.frente[2] * frente + d[2] * lado,
+  ]);
+  andar(estado, rumo, C.panPorAltura * Math.min(estado.altura, C.alturaMaxPan_m) * dt);
 }
 
-/** Roda do mouse: passos positivos afastam, negativos aproximam (CTL-01). */
+/** Roda do mouse: passos positivos afastam, negativos aproximam (CTL-01, CTL-16). */
 export function aplicarZoom(estado: EstadoCameraRts, passos: number): void {
   const alvo = estado.alturaAlvo * C.fatorZoom ** passos;
-  estado.alturaAlvo = Math.min(Math.max(alvo, C.alturaMin_m), C.alturaMax_m);
+  estado.alturaAlvo = Math.min(Math.max(alvo, C.alturaMin_m), alturaMaxima(estado));
 }
 
 export function rotacionar(estado: EstadoCameraRts, dxPixels: number): void {
-  estado.yaw += dxPixels * C.rotacaoPorPixel_rad;
+  estado.frente = normalizar(girar(estado.frente, estado.foco, -dxPixels * C.rotacaoPorPixel_rad));
 }
 
-/** CTL-02: Home volta a olhar para o norte. */
+/** CTL-02: Home volta a olhar para o norte (CEN-15). */
 export function voltarAoNorte(estado: EstadoCameraRts): void {
-  estado.yaw = 0;
+  estado.frente = norteEm(estado.foco, estado.frente);
 }
 
-/** CTL-03: centraliza o foco num ponto (usado pelo minimapa). */
-export function centrarEm(estado: EstadoCameraRts, x: number, z: number): void {
-  estado.focoX = x;
-  estado.focoZ = z;
-  limitarFoco(estado);
+/** Ângulo (rad) da frente em relação ao norte local; 0 = olhando para o norte. */
+export function rumoDaCamera(estado: EstadoCameraRts): number {
+  const norte = norteEm(estado.foco, estado.frente);
+  const leste = normalizar(produtoVetorial(norte, estado.foco));
+  return Math.atan2(
+    estado.frente[0] * leste[0] + estado.frente[1] * leste[1] + estado.frente[2] * leste[2],
+    estado.frente[0] * norte[0] + estado.frente[1] * norte[1] + estado.frente[2] * norte[2],
+  );
+}
+
+/** CTL-03: centraliza o foco numa direção (minimapa, grupos); a frente é transportada. */
+export function centrarEm(estado: EstadoCameraRts, d: Vec3): void {
+  const alvo = normalizar(d);
+  const eixo = produtoVetorial(estado.foco, alvo);
+  const frente =
+    Math.hypot(...eixo) < 1e-12
+      ? estado.frente
+      : girar(estado.frente, normalizar(eixo), arco(estado.foco, alvo));
+  estado.foco = alvo;
+  estado.frente = tangente(alvo, frente) ?? norteEm(alvo);
 }
 
 /** Aproxima a altura da altura-alvo de forma suave, independente do FPS. */
@@ -117,19 +157,29 @@ export function atualizarCamera(estado: EstadoCameraRts, dt: number): void {
   estado.altura += (estado.alturaAlvo - estado.altura) * t;
 }
 
-/** Posição da câmera e ponto observado, dado o chão sob o foco. */
+/**
+ * Posição da câmera, ponto observado e vetor "cima" da tela, dado o chão sob o foco. O olho
+ * fica atrás do foco (contra a frente) e acima dele, na inclinação da altura atual.
+ */
 export function poseDaCamera(
   estado: EstadoCameraRts,
   chaoNoFoco: number,
-): { olho: [number, number, number]; alvo: [number, number, number] } {
-  const recuo = estado.altura / Math.tan(inclinacao(estado.altura));
-  const { frente } = eixos(estado.yaw);
-  return {
-    olho: [
-      estado.focoX - frente[0] * recuo,
-      chaoNoFoco + estado.altura,
-      estado.focoZ - frente[1] * recuo,
-    ],
-    alvo: [estado.focoX, chaoNoFoco, estado.focoZ],
-  };
+): { olho: Vec3; alvo: Vec3; cima: Vec3 } {
+  const { foco, frente, altura, raio } = estado;
+  const angulo = inclinacao(altura, raio);
+  const recuo = angulo >= Math.PI / 2 - 1e-9 ? 0 : altura / Math.tan(angulo);
+  const r = raio + chaoNoFoco;
+  const alvo: Vec3 = [foco[0] * r, foco[1] * r, foco[2] * r];
+  const olho: Vec3 = [
+    alvo[0] + foco[0] * altura - frente[0] * recuo,
+    alvo[1] + foco[1] * altura - frente[1] * recuo,
+    alvo[2] + foco[2] * altura - frente[2] * recuo,
+  ];
+  // "Cima" da tela: perpendicular à linha de visada, inclinado para a frente.
+  const cima = normalizar([
+    foco[0] * Math.cos(angulo) + frente[0] * Math.sin(angulo),
+    foco[1] * Math.cos(angulo) + frente[1] * Math.sin(angulo),
+    foco[2] * Math.cos(angulo) + frente[2] * Math.sin(angulo),
+  ]);
+  return { olho, alvo, cima };
 }

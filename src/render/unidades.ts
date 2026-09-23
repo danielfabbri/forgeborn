@@ -10,12 +10,12 @@ import {
   InstancedMesh,
   Matrix4,
   MeshStandardMaterial,
-  Quaternion,
   type Scene,
   Vector3,
 } from 'three';
 import { dados, type EntityId, entitiesWith, getComponent, type SimState } from '../sim';
 import type { PositionHistory, Vec3 } from './interpolation';
+import { norteEm } from '../sim/map/esfera';
 import { geometriaDoModelo, type TipoDeModelo } from './modelos';
 
 /** Corpo desenhado neste quadro, na posição interpolada; usado também pela seleção. */
@@ -27,6 +27,8 @@ export interface CorpoDesenhado {
   x: number;
   y: number;
   z: number;
+  /** Vertical local (unitária). */
+  cima: [number, number, number];
   /** Raio para seleção e anel (m). */
   raio: number;
   /** Altura aproximada do modelo (m), para o centro de clique. */
@@ -125,11 +127,11 @@ export class UnidadesRender {
   private readonly lotes = new Map<TipoDeModelo, Lote>();
   private readonly corDaNacao = new Map<string, Color>();
   private readonly scratch: Vec3 = { x: 0, y: 0, z: 0 };
+  private readonly scratchRumo: Vec3 = { x: 0, y: 0, z: 0 };
   private readonly matriz = new Matrix4();
-  private readonly quat = new Quaternion();
-  private readonly eixoY = new Vector3(0, 1, 0);
-  private readonly pos = new Vector3();
-  private readonly escala = new Vector3(1, 1, 1);
+  private readonly frente = new Vector3();
+  private readonly cima = new Vector3();
+  private readonly lado = new Vector3();
   /** Corpos desenhados no último quadro, em ordem de ID. */
   readonly corpos: CorpoDesenhado[] = [];
   private readonly porId = new Map<EntityId, CorpoDesenhado>();
@@ -139,7 +141,7 @@ export class UnidadesRender {
   sync(state: SimState, history: PositionHistory, alpha: number): void {
     this.corpos.length = 0;
     this.porId.clear();
-    const porTipo = new Map<TipoDeModelo, Array<{ corpo: CorpoDesenhado; heading: number }>>();
+    const porTipo = new Map<TipoDeModelo, Array<{ corpo: CorpoDesenhado; frente: Vec3 | null }>>();
     for (const id of entitiesWith(state, 'position')) {
       const unidade = getComponent(state, id, 'unit');
       const estrutura = getComponent(state, id, 'structure');
@@ -154,7 +156,10 @@ export class UnidadesRender {
       if (!tipo) continue;
       const p = history.interpolate(id, getComponent(state, id, 'position')!, alpha, this.scratch);
       const loc = getComponent(state, id, 'locomotion');
-      const heading = loc ? history.interpolateHeading(id, loc.heading, alpha) : 0;
+      const frente = loc
+        ? { ...history.interpolateRumo(id, loc.rumo, alpha, this.scratchRumo) }
+        : null;
+      const r = Math.hypot(p.x, p.y, p.z) || 1;
       const corpo: CorpoDesenhado = {
         id,
         tipo,
@@ -163,6 +168,7 @@ export class UnidadesRender {
         x: p.x,
         y: p.y,
         z: p.z,
+        cima: [p.x / r, p.y / r, p.z / r],
         raio: raioDe(tipo),
         altura: alturaDe(tipo),
       };
@@ -170,18 +176,25 @@ export class UnidadesRender {
       this.porId.set(id, corpo);
       let lista = porTipo.get(tipo);
       if (!lista) porTipo.set(tipo, (lista = []));
-      lista.push({ corpo, heading });
+      lista.push({ corpo, frente });
     }
 
     for (const lote of this.lotes.values()) lote.usados = 0;
     for (const [tipo, lista] of porTipo) {
       const lote = this.lote(tipo);
       lote.garantir(lista.length);
-      lista.forEach(({ corpo, heading }, k) => {
-        // Heading 0 aponta para +x; em three, girar θ em y leva +x para (cos θ, −sin θ).
-        this.quat.setFromAxisAngle(this.eixoY, -heading);
-        this.pos.set(corpo.x, corpo.y, corpo.z);
-        this.matriz.compose(this.pos, this.quat, this.escala);
+      lista.forEach(({ corpo, frente }, k) => {
+        // Base do modelo: +x = frente (rumo, ou o norte local para estruturas e minas, PRD-10),
+        // +y = vertical local, +z = x × y.
+        this.cima.set(...corpo.cima);
+        const norte = norteEm(corpo.cima);
+        if (frente) this.frente.set(frente.x, frente.y, frente.z);
+        else this.frente.set(...norte);
+        // Garante a frente tangente (a interpolação pode tirá-la um pouco do plano).
+        this.frente.addScaledVector(this.cima, -this.frente.dot(this.cima)).normalize();
+        this.lado.crossVectors(this.frente, this.cima);
+        this.matriz.makeBasis(this.frente, this.cima, this.lado);
+        this.matriz.setPosition(corpo.x, corpo.y, corpo.z);
         lote.malha.setMatrixAt(k, this.matriz);
         this.cor(corpo.nacao).toArray(lote.cores.array, k * 3);
       });

@@ -6,20 +6,20 @@ export interface Vec3 {
   z: number;
 }
 
-/** Guarda posições e rumos do tick anterior para o render interpolar até o tick atual (TEC-04). */
+/** Guarda posições e rumos (vetores tangentes) do tick anterior para o render interpolar (TEC-04). */
 export class PositionHistory {
   private readonly previous = new Map<EntityId, Vec3>();
-  private readonly headings = new Map<EntityId, number>();
+  private readonly rumos = new Map<EntityId, [number, number, number]>();
 
   /** Chame logo antes de cada tick da simulação. */
   capture(state: SimState): void {
     this.previous.clear();
-    this.headings.clear();
+    this.rumos.clear();
     for (const id of entitiesWith(state, 'position')) {
       const p = getComponent(state, id, 'position')!;
       this.previous.set(id, { x: p.x, y: p.y, z: p.z });
       const loc = getComponent(state, id, 'locomotion');
-      if (loc) this.headings.set(id, loc.heading);
+      if (loc) this.rumos.set(id, [loc.rumo[0], loc.rumo[1], loc.rumo[2]]);
     }
   }
 
@@ -32,12 +32,21 @@ export class PositionHistory {
     return out;
   }
 
-  /** Rumo entre o tick anterior e o atual, pelo menor arco. */
-  interpolateHeading(id: EntityId, current: number, alpha: number): number {
-    const before = this.headings.get(id) ?? current;
-    let delta = (current - before) % (2 * Math.PI);
-    if (delta > Math.PI) delta -= 2 * Math.PI;
-    if (delta < -Math.PI) delta += 2 * Math.PI;
-    return before + delta * alpha;
+  /** Rumo entre o tick anterior e o atual (interpolação normalizada dos vetores). */
+  interpolateRumo(
+    id: EntityId,
+    current: readonly [number, number, number],
+    alpha: number,
+    out: Vec3,
+  ): Vec3 {
+    const before = this.rumos.get(id) ?? current;
+    const x = before[0] + (current[0] - before[0]) * alpha;
+    const y = before[1] + (current[1] - before[1]) * alpha;
+    const z = before[2] + (current[2] - before[2]) * alpha;
+    const len = Math.hypot(x, y, z) || 1;
+    out.x = x / len;
+    out.y = y / len;
+    out.z = z / len;
+    return out;
   }
 }

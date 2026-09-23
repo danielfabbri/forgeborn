@@ -7,7 +7,9 @@ import {
   MeshBasicMaterial,
   RingGeometry,
   type Scene,
+  Vector3,
 } from 'three';
+import { norteEm } from '../sim/map/esfera';
 import type { CorpoDesenhado } from './unidades';
 
 const COR_PROPRIA = new Color('#e6f2ff');
@@ -16,10 +18,15 @@ const COR_INIMIGA = new Color('#ff4a3d');
 export class AneisDeSelecao {
   private malha: InstancedMesh;
   private readonly matriz = new Matrix4();
+  private readonly frente = new Vector3();
+  private readonly cima = new Vector3();
+  private readonly lado = new Vector3();
 
   constructor(
     private readonly scene: Scene,
-    private readonly chao: (x: number, z: number) => number,
+    /** Altura do chão (m, radial) na direção unitária dada. */
+    private readonly chao: (d: [number, number, number]) => number,
+    private readonly raio: number,
     capacidade = 64,
   ) {
     this.malha = this.criar(capacidade);
@@ -54,8 +61,14 @@ export class AneisDeSelecao {
     selecionados.forEach((c, k) => {
       const escala = c.raio * 1.3;
       // No chão sob a unidade; sob um drone em voo, logo abaixo do casco.
-      const y = Math.max(this.chao(c.x, c.z) + 0.15, c.y - 0.45);
-      this.matriz.makeScale(escala, 1, escala).setPosition(c.x, y, c.z);
+      const altura = Math.hypot(c.x, c.y, c.z) - this.raio;
+      const r = this.raio + Math.max(this.chao(c.cima) + 0.15, altura - 0.45);
+      this.cima.set(...c.cima);
+      this.frente.set(...norteEm(c.cima));
+      this.lado.crossVectors(this.frente, this.cima);
+      this.matriz
+        .makeBasis(this.frente.multiplyScalar(escala), this.cima, this.lado.multiplyScalar(escala))
+        .setPosition(c.cima[0] * r, c.cima[1] * r, c.cima[2] * r);
       this.malha.setMatrixAt(k, this.matriz);
       this.malha.setColorAt(k, c.nacao === jogador ? COR_PROPRIA : COR_INIMIGA);
     });

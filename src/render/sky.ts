@@ -1,7 +1,10 @@
 /**
- * Céu lunar (§14.4, ART-08): estrelas e a Terra escura, sem luzes de cidades.
+ * Céu lunar (§14.4, ART-08, ART-11): estrelas e a Terra escura, sem luzes de cidades.
  * A Terra fica perto do Sol no céu, então quase toda a face visível está na noite:
  * só um crescente fino e o halo azul da atmosfera.
+ *
+ * ART-11 (sem noite): Sol e Terra são definidos no referencial local do ponto focal (norte,
+ * leste e vertical), então acompanham a câmera ao redor do planeta.
  */
 import {
   BufferAttribute,
@@ -14,6 +17,7 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three';
+import type { Vec3 } from '../sim/map/esfera';
 
 function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
   const el = (elevacaoGraus * Math.PI) / 180;
@@ -21,10 +25,24 @@ function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
   return new Vector3(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az));
 }
 
-/** Direção para o Sol: baixo no horizonte, luz rasante e sombras longas. */
+/**
+ * Direções no referencial local (x = leste, y = cima, z = sul), como no mapa plano:
+ * Sol baixo no horizonte (luz rasante, sombras longas) e a Terra perto dele (fase escura).
+ */
 export const DIRECAO_SOL = direcao(24, -35);
-/** Direção para a Terra: perto do Sol no céu (fase escura). */
 export const DIRECAO_TERRA = direcao(13, 12);
+
+/** Leva uma direção do referencial local do foco (leste, cima, sul) para o mundo. */
+export function paraOMundo(local: Vector3, foco: Vec3, norte: Vec3): Vector3 {
+  const cima = new Vector3(...foco);
+  const n = new Vector3(...norte);
+  const leste = n.clone().cross(cima).normalize();
+  return leste
+    .multiplyScalar(local.x)
+    .addScaledVector(cima, local.y)
+    .addScaledVector(n, -local.z)
+    .normalize();
+}
 
 const DISTANCIA_CEU = 4000;
 
@@ -65,7 +83,7 @@ function estrelas(): Points {
   return new Points(geometria, material);
 }
 
-function terra(): Mesh {
+function terra(): Mesh<SphereGeometry, ShaderMaterial> {
   const material = new ShaderMaterial({
     uniforms: { uSol: { value: DIRECAO_SOL.clone() } },
     vertexShader: /* glsl */ `
@@ -100,9 +118,31 @@ function terra(): Mesh {
   return malha;
 }
 
-export function criarCeu(): Group {
-  const ceu = new Group();
-  ceu.name = 'ceu';
-  ceu.add(estrelas(), terra());
+export interface Ceu {
+  objeto: Group;
+  /** Direção (mundo) para o Sol no ponto focal atual. */
+  sol: Vector3;
+  /** Direção (mundo) para a Terra no ponto focal atual. */
+  terra: Vector3;
+  /** ART-11: reposiciona Sol e Terra para o ponto focal (direção) e o norte dele. */
+  atualizar(foco: Vec3, norte: Vec3, pontoFocal: Vector3): void;
+}
+
+export function criarCeu(): Ceu {
+  const objeto = new Group();
+  objeto.name = 'ceu';
+  const astro = terra();
+  objeto.add(estrelas(), astro);
+  const ceu: Ceu = {
+    objeto,
+    sol: DIRECAO_SOL.clone(),
+    terra: DIRECAO_TERRA.clone(),
+    atualizar(foco, norte, pontoFocal) {
+      ceu.sol.copy(paraOMundo(DIRECAO_SOL, foco, norte));
+      ceu.terra.copy(paraOMundo(DIRECAO_TERRA, foco, norte));
+      astro.position.copy(pontoFocal).addScaledVector(ceu.terra, DISTANCIA_CEU * 0.9);
+      astro.material.uniforms.uSol!.value.copy(ceu.sol);
+    },
+  };
   return ceu;
 }

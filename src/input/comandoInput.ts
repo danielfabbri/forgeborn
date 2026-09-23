@@ -13,10 +13,11 @@ import {
   selecionarCaixa,
   ToqueDuplo,
 } from '../game/selecao';
-import type { EstadoCameraRts } from '../render/cameraRts';
+import { centrarEm, type EstadoCameraRts } from '../render/cameraRts';
 import { pontoNoTerreno } from '../render/picking';
 import type { CorpoDesenhado } from '../render/unidades';
 import { type EntityId, getComponent, isAlive, type NacaoId, type Sim } from '../sim';
+import { normalizar, type Vec3 } from '../sim/map/esfera';
 import type { Heightmap } from '../sim/map/heightmap';
 
 /** Distância (px) a partir da qual o arrasto vira caixa de seleção. */
@@ -72,10 +73,22 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     const r = viewport.getBoundingClientRect();
     const escala = r.height / (2 * Math.tan((o.camera.fov * Math.PI) / 360));
     return o.corpos().map((c) => {
-      v.set(c.x, c.y + c.altura / 2, c.z);
+      // Centro do corpo: meia altura acima da base, pela vertical local.
+      v.set(
+        c.x + (c.cima[0] * c.altura) / 2,
+        c.y + (c.cima[1] * c.altura) / 2,
+        c.z + (c.cima[2] * c.altura) / 2,
+      );
       const distancia = o.camera.position.distanceTo(v);
+      // Atrás do planeta não conta: a câmera precisa estar acima do plano tangente do corpo.
+      const doLadoVisivel =
+        (o.camera.position.x - c.x) * c.cima[0] +
+          (o.camera.position.y - c.y) * c.cima[1] +
+          (o.camera.position.z - c.z) * c.cima[2] >
+        0;
       v.project(o.camera);
-      const visivel = v.z > -1 && v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
+      const visivel =
+        doLadoVisivel && v.z > -1 && v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
       return {
         id: c.id,
         tipo: c.tipo,
@@ -104,15 +117,17 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   const ordemNoPonto = (px: number, py: number, tipo: 'mover' | 'patrulhar') => {
     const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
     if (!ponto) return;
-    const [x, z] = ponto;
+    // O comando leva a direção do ponto (a simulação normaliza).
+    const [x, y, z] = ponto;
     const unidades = minhas('unit');
     if (unidades.length > 0) {
-      enviar(tipo, { ids: unidades, x, z });
+      enviar(tipo, { ids: unidades, x, y, z });
       return;
     }
     const produtores = minhas('producer');
-    if (produtores.length > 0 && tipo === 'mover')
-      enviar('ponto_de_encontro', { ids: produtores, x, z });
+    if (produtores.length > 0 && tipo === 'mover') {
+      enviar('ponto_de_encontro', { ids: produtores, x, y, z });
+    }
   };
 
   const mostrarCaixa = (c: Caixa) => {
@@ -177,8 +192,8 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       .map((id) => getComponent(sim.state, id, 'position'))
       .filter((p) => p !== undefined);
     if (pontos.length === 0) return;
-    o.estadoCamera.focoX = pontos.reduce((s, p) => s + p.x, 0) / pontos.length;
-    o.estadoCamera.focoZ = pontos.reduce((s, p) => s + p.z, 0) / pontos.length;
+    const soma = pontos.reduce<Vec3>((s, p) => [s[0] + p.x, s[1] + p.y, s[2] + p.z], [0, 0, 0]);
+    centrarEm(o.estadoCamera, normalizar(soma));
   };
 
   const tecla = (e: KeyboardEvent) => {

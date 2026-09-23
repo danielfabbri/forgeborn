@@ -1,7 +1,7 @@
 import preact from '@preact/preset-vite';
 import { defineConfig } from 'vitest/config';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [preact()],
   server: {
     // Porta própria, longe da 5173 padrão do Vite (usada por outros projetos na máquina).
@@ -12,7 +12,11 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500,
   },
   test: {
-    include: ['tests/**/*.test.ts'],
+    // Orçamentos de tempo (tests/perf) rodam à parte, sem outros arquivos disputando a CPU:
+    // npm run test:perf usa --mode perf.
+    include: mode === 'perf' ? ['tests/perf/**/*.test.ts'] : ['tests/**/*.test.ts'],
+    exclude: mode === 'perf' ? ['node_modules/**'] : ['tests/perf/**', 'node_modules/**'],
+    fileParallelism: mode !== 'perf',
     environment: 'node',
   },
-});
+}));

@@ -106,16 +106,16 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: as 10 unidades móveis e as 6 estruturas são distinguíveis a 60 m de altura; 400 unidades instanciadas em ≤ 300 draw calls.
 - [ ] **T-021 — Seleção e grupos** · M · Spec: CTL-04 – CTL-06 · Dep: T-020
   - Aceite: clique, caixa, Shift, duplo clique, Ctrl+clique e grupos Ctrl+1..9 funcionam conforme o SPEC; caixa prefere unidades móveis a estruturas.
-- [ ] **T-022 — Movimento de solo** · M · Spec: MOV-01, MOV-03, MOV-04 · Dep: T-013
+- [x] **T-022 — Movimento de solo** · M · Spec: MOV-01, MOV-03, MOV-04 · Dep: T-013 · Feito: 2026-09-23
   - Aceite: aceleração e giro conforme as tabelas; unidades não atravessam estruturas; 50 unidades paradas juntas se separam sem tremer. (Colisão com jazidas passou para T-030, por causa de Q-06.)
-- [ ] **T-023 — Pathfinding e formação** · G · Spec: MOV-05, MOV-06, TEC-14 · Dep: T-022
+- [x] **T-023 — Pathfinding e formação** · G · Spec: MOV-05, MOV-06, TEC-14 · Dep: T-022 · Feito: 2026-09-23
   - Aceite: 100 unidades cruzam o mapa M sem ficar presas (headless, 10 seeds); cálculo por ordem < 5 ms; o grupo chega em formação na velocidade do mais lento.
-- [ ] **T-024 — Camada aérea e pouso de drones** · M · Spec: MOV-02, MOV-07, ENE-09 · Dep: T-022
+- [x] **T-024 — Camada aérea e pouso de drones** · M · Spec: MOV-02, MOV-07, ENE-09 · Dep: T-022 · Feito: 2026-09-23
   - Aceite: drones voam a `altitude_drone_m` ignorando relevo; pousam após `pouso_automatico_s` ociosos; decolam por ordem ou com inimigo visível.
 - [ ] **T-025 — Comandos básicos e clique direito** · M · Spec: CTL-07 (parcial), CMB-13, PRD-08 · Dep: T-021, T-023
   - Mover, parar, manter posição, patrulhar e ponto de encontro.
   - Aceite: cada comando testado por comando serializado (TEC-07) e pela interface.
-- [ ] **T-026 — Limites da nação** · P · Spec: REG-16 – REG-19 · Dep: T-006
+- [x] **T-026 — Limites da nação** · P · Spec: REG-16 – REG-19 · Dep: T-006 · Feito: 2026-09-23
   - Aceite: uma ordem que excede `limite_corpos`, `limite_bases_lancamento` ou `limite_minas_ativas` é recusada e emite AL-11.
 
 ## M3 — Economia

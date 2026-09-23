@@ -18,6 +18,8 @@ export interface SimState {
   components: ComponentStores;
   commandQueue: QueuedCommand[];
   nextCommandSeq: number;
+  /** Sobe quando um obstáculo rígido surge ou some; invalida caches de navegação. */
+  versaoObstaculos: number;
 }
 
 export function createInitialState(seed: number, nacoes: NacaoId[]): SimState {
@@ -33,5 +35,6 @@ export function createInitialState(seed: number, nacoes: NacaoId[]): SimState {
     components: {},
     commandQueue: [],
     nextCommandSeq: 0,
+    versaoObstaculos: 0,
   };
 }

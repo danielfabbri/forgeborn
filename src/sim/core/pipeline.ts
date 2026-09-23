@@ -1,3 +1,4 @@
+import type { Mundo } from '../map/mundo';
 import type { SimState } from './state';
 import type { JsonValue, QueuedCommand } from './types';
 
@@ -30,6 +31,8 @@ export interface SystemContext {
   readonly dt: number;
   /** Comandos deste tick, já na ordem de execução. */
   readonly commands: readonly QueuedCommand[];
+  /** Mapa e grades da partida (derivados da seed; fora do snapshot). Null em testes sem mapa. */
+  readonly mundo: Mundo | null;
   emit(tipo: string, dados: JsonValue): void;
 }
 

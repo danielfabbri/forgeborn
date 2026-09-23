@@ -8,6 +8,7 @@ import {
   type SystemContext,
   type SystemFn,
 } from './pipeline';
+import type { Mundo } from '../map/mundo';
 import { createInitialState, type SimState } from './state';
 import type { Command, JsonValue, NacaoId, QueuedCommand, SimEvent } from './types';
 
@@ -18,6 +19,8 @@ export interface SimOptions {
   systems?: Partial<Record<GameSystemId, SystemFn>>;
   /** Tratadores de Comando por `tipo`. */
   commandHandlers?: Record<string, CommandHandler>;
+  /** Mapa e grades da partida. */
+  mundo?: Mundo;
 }
 
 export interface Sim {
@@ -92,6 +95,7 @@ function buildSim(state: SimState, options: SimOptions): Sim {
       tick,
       dt,
       commands,
+      mundo: options.mundo ?? null,
       emit: (tipo, dados) => {
         events.push({ tick, tipo, dados });
       },

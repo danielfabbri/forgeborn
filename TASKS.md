@@ -59,7 +59,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-001 — Repositório** · P · Spec: GOV-02 · Dep: — · Feito: 2026-09-23
   - `git init`, `.gitignore` (node_modules, dist, coverage), README curto apontando para `SPEC.md`, `TASKS.md`, `CLAUDE.md` e `doc.txt`.
   - Aceite: primeiro commit contém os quatro documentos.
-- [ ] **T-002 — Scaffold do projeto** · M · Spec: TEC-01, TEC-03 · Dep: T-001
+- [x] **T-002 — Scaffold do projeto** · M · Spec: TEC-01, TEC-03 · Dep: T-001 · Feito: 2026-09-23
   - Vite + TypeScript strict + Three.js + Preact/Signals + Vitest + Playwright + ESLint/Prettier; pastas de TEC-03; scripts `dev`, `build`, `test`, `lint`, `spec:sync`, `spec:check`, `sim:match`, `balance:report` (os três últimos podem começar como stubs).
   - Aceite: `npm run dev` mostra uma cena Three.js vazia; `npm test`, `npm run lint` e `npm run build` verdes.
 - [ ] **T-003 — Fronteira da simulação** · P · Spec: TEC-03, TEC-05 · Dep: T-002

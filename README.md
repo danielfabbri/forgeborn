@@ -13,4 +13,24 @@ O projeto segue **Spec Driven Development**:
 
 ## Como rodar
 
-Os comandos passam a existir com a T-002 (scaffold do projeto).
+Requer Node.js 22 ou mais recente.
+
+```bash
+npm install
+npm run dev
+```
+
+| Comando | Uso |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Typecheck e build de produção em `dist/` |
+| `npm test` | `spec:check` e testes (Vitest) |
+| `npm run test:e2e` | Testes E2E (Playwright; no Windows usa o Edge instalado) |
+| `npm run lint` | ESLint e Prettier |
+| `npm run typecheck` | TypeScript: app, simulação sem DOM e ferramentas |
+| `npm run spec:sync` | Gera os dados de jogo a partir do SPEC |
+| `npm run spec:check` | Valida o SPEC e os dados gerados |
+| `npm run sim:match` | Partida headless IA × IA |
+| `npm run balance:report` | Relatório de balanceamento |
+
+O TypeScript está fixado na 6.0.x porque o typescript-eslint ainda não suporta a 7.x.

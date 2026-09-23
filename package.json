@@ -1,0 +1,46 @@
+{
+  "name": "forgeborn",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Forgeborn — Nascidos da Forja: RTS 3D de exploração espacial no navegador.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sim.json && tsc -p tsconfig.node.json",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "npm run spec:check && vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "spec:sync": "tsx tools/spec-sync.ts",
+    "spec:check": "tsx tools/spec-check.ts",
+    "sim:match": "tsx tools/sim-match.ts",
+    "balance:report": "tsx tools/balance-report.ts"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.11.2",
+    "preact": "^10.29.8",
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^22.20.4",
+    "@types/three": "^0.186.0",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}

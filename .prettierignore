@@ -1,0 +1,9 @@
+dist
+coverage
+node_modules
+test-results
+playwright-report
+src/sim/data/generated
+package-lock.json
+*.md
+doc.txt

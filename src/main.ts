@@ -1,18 +1,23 @@
 import './styles.css';
+import { cenaDaNacao, patrulheiro } from './game/cenaDemo';
 import { createFixedLoop } from './game/loop';
 import { ligarEntradaCamera } from './input/cameraInput';
+import { ligarEntradaComandos } from './input/comandoInput';
+import { AneisDeSelecao } from './render/aneis';
 import { criarEstadoCamera, poseDaCamera } from './render/cameraRts';
-import { EntityMeshes } from './render/entityMeshes';
 import { PositionHistory } from './render/interpolation';
 import { criarCeu, DIRECAO_TERRA } from './render/sky';
 import { criarTerreno } from './render/terrain';
+import { UnidadesRender } from './render/unidades';
 import { createView } from './render/view';
-import { createSim } from './sim';
-import { DEBUG_ORBIT_COMMAND, debugOrbitHandlers, debugOrbitSystem } from './sim/debug/orbit';
+import { Vector3 } from 'three';
+import { createSim, type EntityId, getComponent, type NacaoId } from './sim';
+import { DEBUG_CRIAR_COMMAND, debugCriarHandlers } from './sim/debug/criar';
 import { FAIXA_BORDA_M } from './sim/map/grids';
 import { alturaEm } from './sim/map/heightmap';
 import { PRESETS_DE_MAPA } from './sim/map/presets';
 import { gerarMapaValido } from './sim/map/validacao';
+import { comandosDoJogo, sistemasDoJogo } from './sim/units';
 import { debugStats } from './ui/debugStats';
 import { mountUi } from './ui/mount';
 
@@ -22,6 +27,14 @@ declare global {
     __forgeborn?: {
       amostras: Array<{ t: number; tick: number; x: number }>;
       camera?: { x: number; z: number; altura: number; yaw: number };
+      selecao?: readonly EntityId[];
+      /** Posição de tela (px) de um corpo, para os testes clicarem nele. */
+      naTela?: (id: EntityId) => { x: number; y: number } | null;
+      posicao?: (id: EntityId) => { x: number; z: number } | null;
+      tipo?: (id: EntityId) => string | null;
+      ordem?: (id: EntityId) => string | null;
+      nacao?: (id: EntityId) => string | null;
+      encontro?: (id: EntityId) => [number, number] | null;
     };
   }
 }
@@ -67,20 +80,59 @@ if (modoCamera === 'cinematica') {
 
 // A seed vem de fora da simulação; aqui o relógio real é permitido (TEC-05 vale para src/sim).
 const seed = Date.now() % 2_147_483_647;
-const sim = createSim(seed, ['bra'], {
-  systems: { movimento: debugOrbitSystem },
-  commandHandlers: debugOrbitHandlers,
+const jogador: NacaoId = 'bra';
+// `?estresse=N`: N unidades divididas entre 4 nações (teste de carga de TEC-16).
+const estresse = Math.max(0, Number(parametros.get('estresse') ?? 0) || 0);
+const nacoes: NacaoId[] = estresse > 0 ? ['bra', 'usa', 'chn', 'rus'] : ['bra', 'usa'];
+const sim = createSim(seed, nacoes, {
+  mundo: pronto,
+  systems: sistemasDoJogo,
+  commandHandlers: { ...comandosDoJogo, ...debugCriarHandlers },
 });
-// T-008: entidade de teste em órbita, até existir o início de partida (T-056).
+
+// Cena de demonstração do M2, até existir o início de partida (T-056). O patrulheiro do
+// jogador é o primeiro corpo (ID 1) e a sonda E2E acompanha a sua posição desenhada.
+const zonas = pronto.mapa.zonasDePouso;
+const zonaDe = (k: number) => zonas[(k * zonas.length) / nacoes.length]!;
 sim.enqueue({
   tick: 0,
-  nacao: 'bra',
-  tipo: DEBUG_ORBIT_COMMAND,
-  dados: { cx: 0, cz: 0, raio: 20, periodo_s: 8 },
+  nacao: jogador,
+  tipo: DEBUG_CRIAR_COMMAND,
+  dados: [patrulheiro(jogador, zonaDe(0))] as never,
+});
+nacoes.forEach((nacao, k) => {
+  const extras = estresse > 0 ? Math.ceil(estresse / nacoes.length) - 11 - (k === 0 ? 1 : 0) : 0;
+  sim.enqueue({
+    tick: 0,
+    nacao,
+    tipo: DEBUG_CRIAR_COMMAND,
+    dados: cenaDaNacao(nacao, zonaDe(k), Math.max(0, extras)) as never,
+  });
+});
+const ID_PATRULHEIRO = 1;
+sim.enqueue({
+  tick: 1,
+  nacao: jogador,
+  tipo: 'patrulhar',
+  dados: { ids: [ID_PATRULHEIRO], x: zonaDe(0).x - 18, z: zonaDe(0).z + 14 },
 });
 
 const history = new PositionHistory();
-const meshes = new EntityMeshes(view.scene, (x, z) => alturaEm(pronto.mapa, x, z));
+const unidades = new UnidadesRender(view.scene);
+const aneis = new AneisDeSelecao(view.scene, (x, z) => alturaEm(pronto.mapa, x, z));
+const comandos =
+  modoCamera === 'rts'
+    ? ligarEntradaComandos({
+        viewport,
+        camadaUi: uiRoot,
+        camera: view.camera,
+        estadoCamera: camera,
+        mapa: pronto.mapa,
+        sim,
+        jogador,
+        corpos: () => unidades.corpos,
+      })
+    : null;
 let tickTotalMs = 0;
 let tickCount = 0;
 
@@ -94,13 +146,36 @@ const loop = createFixedLoop({
     tickCount++;
   },
   render: (alpha) => {
-    meshes.sync(sim.state, history, alpha);
+    unidades.sync(sim.state, history, alpha);
+    aneis.sync(comandos ? comandos.selecionadosDesenhados() : [], jogador);
     view.render();
   },
 });
 
 const sonda: Window['__forgeborn'] = parametros.has('e2e') ? { amostras: [] } : undefined;
 window.__forgeborn = sonda;
+if (sonda) {
+  const ponto = new Vector3();
+  sonda.naTela = (id) => {
+    const c = unidades.get(id);
+    if (!c) return null;
+    ponto.set(c.x, c.y + c.altura / 2, c.z).project(view.camera);
+    const r = viewport.getBoundingClientRect();
+    return { x: r.left + ((ponto.x + 1) / 2) * r.width, y: r.top + ((1 - ponto.y) / 2) * r.height };
+  };
+  sonda.posicao = (id) => {
+    const p = getComponent(sim.state, id, 'position');
+    return p ? { x: p.x, z: p.z } : null;
+  };
+  sonda.tipo = (id) =>
+    getComponent(sim.state, id, 'unit')?.tipo ??
+    getComponent(sim.state, id, 'structure')?.tipo ??
+    null;
+  sonda.ordem = (id) => getComponent(sim.state, id, 'order')?.tipo ?? null;
+  sonda.nacao = (id) => getComponent(sim.state, id, 'owner')?.nacao ?? null;
+  sonda.encontro = (id) => getComponent(sim.state, id, 'producer')?.pontoDeEncontro ?? null;
+  Object.defineProperty(sonda, 'selecao', { get: () => comandos?.selecao ?? [] });
+}
 
 let ultimoQuadro = 0;
 let quadros = 0;
@@ -115,6 +190,7 @@ const posicionarCamera = (dt: number): void => {
   const { olho, alvo } = poseDaCamera(camera, chaoSuave);
   view.camera.position.set(...olho);
   view.camera.lookAt(...alvo);
+  view.camera.updateMatrixWorld();
   view.focarSombras(camera.focoX, camera.focoZ);
   if (sonda) {
     sonda.camera = { x: camera.focoX, z: camera.focoZ, altura: camera.altura, yaw: camera.yaw };
@@ -142,10 +218,12 @@ const frame = (agora: number): void => {
     tickCount = 0;
   }
 
-  const alvo = meshes.get(1);
-  if (sonda && alvo) {
-    sonda.amostras.push({ t: agora, tick: sim.state.tick, x: alvo.position.x });
-    if (sonda.amostras.length > 600) sonda.amostras.shift();
+  if (sonda) {
+    const alvo = unidades.get(ID_PATRULHEIRO);
+    if (alvo) {
+      sonda.amostras.push({ t: agora, tick: sim.state.tick, x: alvo.x });
+      if (sonda.amostras.length > 600) sonda.amostras.shift();
+    }
   }
   requestAnimationFrame(frame);
 };

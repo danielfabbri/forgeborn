@@ -1,18 +1,12 @@
 /** Mundos e partidas de teste para os sistemas de unidades. */
 import { createSim, type EntityId, type NacaoId, type Sim } from '../../src/sim';
-import type { EstruturasId, MoveisId } from '../../src/sim/data';
+import { type Criacao, DEBUG_CRIAR_COMMAND, debugCriarHandlers } from '../../src/sim/debug/criar';
 import { derivarGrades } from '../../src/sim/map/grids';
 import { codificarAltura, type Heightmap } from '../../src/sim/map/heightmap';
 import type { Mundo } from '../../src/sim/map/mundo';
 import { PRESETS_DE_MAPA } from '../../src/sim/map/presets';
 import { gerarMapaValido } from '../../src/sim/map/validacao';
-import {
-  comandosDoJogo,
-  criarEstrutura,
-  criarMina,
-  criarUnidade,
-  sistemasDoJogo,
-} from '../../src/sim/units';
+import { comandosDoJogo, sistemasDoJogo } from '../../src/sim/units';
 
 /** Terreno plano de `lado` m; `parede(x, z)` levanta um paredão de 20 m onde for true. */
 export function mundoPlano(lado = 128, parede?: (x: number, z: number) => boolean): Mundo {
@@ -38,34 +32,21 @@ export function mundoLua(seed?: number): ReturnType<typeof gerarMapaValido> {
   return lua;
 }
 
-export type Criacao =
-  | { unidade: MoveisId; nacao?: NacaoId; x: number; z: number }
-  | { estrutura: EstruturasId; nacao?: NacaoId; x: number; z: number }
-  | { mina: true; nacao?: NacaoId; x: number; z: number };
+export type { Criacao };
 
-/** Partida com os sistemas do jogo e um comando de teste `teste_criar`. */
+/** Partida com os sistemas do jogo e o comando de depuração que cria corpos. */
 export function partida(mundo: Mundo | undefined, nacoes: NacaoId[] = ['bra', 'usa']): Sim {
   return createSim(1, nacoes, {
     mundo,
     systems: sistemasDoJogo,
-    commandHandlers: {
-      ...comandosDoJogo,
-      teste_criar: (ctx, comando) => {
-        for (const c of comando.dados as unknown as Criacao[]) {
-          const nacao = c.nacao ?? comando.nacao;
-          if ('unidade' in c) criarUnidade(ctx, nacao, c.unidade, c.x, c.z);
-          else if ('estrutura' in c) criarEstrutura(ctx, nacao, c.estrutura, c.x, c.z);
-          else criarMina(ctx, nacao, c.x, c.z);
-        }
-      },
-    },
+    commandHandlers: { ...comandosDoJogo, ...debugCriarHandlers },
   });
 }
 
 /** Cria corpos no próximo tick e devolve os IDs novos. */
 export function criar(sim: Sim, criacoes: Criacao[], nacao: NacaoId = 'bra'): EntityId[] {
   const antes = sim.state.nextEntityId;
-  sim.enqueue({ tick: sim.state.tick, nacao, tipo: 'teste_criar', dados: criacoes as never });
+  sim.enqueue({ tick: sim.state.tick, nacao, tipo: DEBUG_CRIAR_COMMAND, dados: criacoes as never });
   sim.step();
   return Array.from({ length: sim.state.nextEntityId - antes }, (_, k) => antes + k);
 }

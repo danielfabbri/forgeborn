@@ -29,7 +29,7 @@ test('T-008: entidade de teste se move suavemente e o overlay mostra FPS, tick e
   const entidades = Number(await page.getByTestId('debug-entidades').textContent());
   const tickMs = Number(await page.getByTestId('debug-tick-ms').textContent());
   expect(fps).toBeGreaterThanOrEqual(55);
-  expect(entidades).toBe(1);
+  expect(entidades).toBeGreaterThan(1);
   expect(tickMs).toBeGreaterThanOrEqual(0);
 
   const amostras = await page.evaluate(

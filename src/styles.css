@@ -38,3 +38,9 @@ body {
   border: 1px solid rgba(120, 160, 220, 0.35);
   border-radius: 4px;
 }
+
+.caixa-selecao {
+  position: absolute;
+  border: 1px solid rgba(220, 240, 255, 0.9);
+  background: rgba(160, 200, 255, 0.12);
+}

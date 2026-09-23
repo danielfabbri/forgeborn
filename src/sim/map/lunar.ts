@@ -7,6 +7,7 @@
  */
 import { nextFloat, nextU32, type RngState, seedRng } from '../core/rng';
 import { dados, type TamanhosMapaId } from '../data';
+import { FAIXA_BORDA_M } from './grids';
 import { codificarAltura, type Heightmap } from './heightmap';
 import { fbm } from './noise';
 
@@ -23,7 +24,7 @@ export const GERADOR_LUA = {
   larguraRampa: 16, // CEN-08: ≥ 12 m
   ombroRampa: 4,
   comprimentoRampa: 32,
-  faixaBorda: 16, // CEN-09
+  faixaBorda: FAIXA_BORDA_M, // CEN-09
   alturaBorda: 30,
   raioLivreCentro: 40,
   crateraBordaMax: 8, // CEN-09

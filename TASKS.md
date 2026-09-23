@@ -90,7 +90,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: contagens e quantidades = `dados:jazidas` × perfil do cenário; distâncias dentro das faixas; número de zonas contestadas conforme o número de jogadores.
 - [ ] **T-012 — Validação do gerador e presets** · M · Spec: CEN-11, CEN-12, §14.4 · Dep: T-011, T-013
   - Aceite: 100 seeds testadas, inválidas rejeitadas com o motivo; presets Mare Imbrium (P), Mare Tranquillitatis (M) e Oceanus Procellarum (G) fixados.
-- [ ] **T-013 — Grades derivadas** · M · Spec: TEC-13, MOV-01, PRD-10 · Dep: T-010
+- [x] **T-013 — Grades derivadas** · M · Spec: TEC-13, MOV-01, PRD-10 · Dep: T-010 · Feito: 2026-09-23
   - Navegação (`celula_navegacao_m`), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`).
   - Aceite: com heightmap sintético, células acima de `inclinacao_max_hover_graus` são intransponíveis e acima de `inclinacao_max_construcao_graus` não aceitam construção.
 - [ ] **T-014 — Renderização do terreno** · G · Spec: TEC-13, ART-08, §14.4 · Dep: T-010, T-008

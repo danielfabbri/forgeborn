@@ -85,7 +85,7 @@
     "recurso": "ti",
     "jazidas": 2,
     "quantidade_u": 1000,
-    "dist_min_m": 180,
+    "dist_min_m": 120,
     "dist_max_m": null,
     "escopo": "por_zona"
   },
@@ -94,7 +94,7 @@
     "recurso": "li",
     "jazidas": 1,
     "quantidade_u": 1200,
-    "dist_min_m": 180,
+    "dist_min_m": 120,
     "dist_max_m": null,
     "escopo": "por_zona"
   },
@@ -103,7 +103,7 @@
     "recurso": "u",
     "jazidas": 1,
     "quantidade_u": 300,
-    "dist_min_m": 180,
+    "dist_min_m": 120,
     "dist_max_m": null,
     "escopo": "por_zona"
   },

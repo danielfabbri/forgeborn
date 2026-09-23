@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.1.0 |
+| Derivado de | `SPEC.md` v0.1.1 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -53,8 +53,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M0 — Fundação
 
-- [ ] **T-000 — Aprovar o SPEC v0.1.0** · produto · Spec: §23, §24 · Dep: —
-  - Revisar as decisões D-01 a D-22 e responder Q-01 a Q-05.
+- [ ] **T-000 — Aprovar o SPEC v0.1** · produto · Spec: §23, §24 · Dep: —
+  - Revisar as decisões D-01 a D-22 (a D-23 já foi aprovada) e responder Q-01 a Q-05.
   - Aceite: cada decisão marcada como "Aprovada" ou alterada com entrada no Changelog; SPEC sobe para 0.2.0.
 - [x] **T-001 — Repositório** · P · Spec: GOV-02 · Dep: — · Feito: 2026-09-23
   - `git init`, `.gitignore` (node_modules, dist, coverage), README curto apontando para `SPEC.md`, `TASKS.md`, `CLAUDE.md` e `doc.txt`.

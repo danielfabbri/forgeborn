@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.1.0 — rascunho para aprovação |
+| Versão do SPEC | 0.1.1 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -308,9 +308,9 @@ flowchart LR
 | expansao | cu | 1 | 1000 | 90 | 130 | por_jogador |
 | expansao | li | 1 | 800 | 90 | 130 | por_jogador |
 | expansao | ti | 1 | 800 | 100 | 130 | por_jogador |
-| contestada | ti | 2 | 1000 | 180 | — | por_zona |
-| contestada | li | 1 | 1200 | 180 | — | por_zona |
-| contestada | u | 1 | 300 | 180 | — | por_zona |
+| contestada | ti | 2 | 1000 | 120 | — | por_zona |
+| contestada | li | 1 | 1200 | 120 | — | por_zona |
+| contestada | u | 1 | 300 | 120 | — | por_zona |
 | central | ti | 2 | 1200 | — | — | por_mapa |
 | central | u | 2 | 500 | — | — | por_mapa |
 
@@ -1429,6 +1429,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-20 | Pagamento ao enfileirar, com reembolso integral ao cancelar. | Padrão de RTS; evita recursos presos. | Proposta |
 | D-21 | Estoque global sem teto. | O Armazém já se justifica pela distância; um teto só criaria atrito. | Proposta |
 | D-22 | Mapas gerados por seed com simetria rotacional, mais presets curados. | Justiça entre zonas de pouso e rejogabilidade sem custo de level design. | Proposta |
+| D-23 | Zona contestada a no mínimo 120 m de cada zona de pouso vizinha (era 180 m). | Com 180 m, o mapa M com 3–4 jogadores não tem ponto válido entre bases vizinhas, que ficam a 260 m uma da outra. A zona fica no ponto equidistante (130 m de cada no mapa M). | Aprovada |
 
 ---
 
@@ -1480,3 +1481,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | Versão | Data | Mudança |
 |---|---|---|
 | 0.1.0 | 2026-09-23 | Primeira versão completa, a partir do `doc.txt`. Números validados por simulação de balanceamento (§21). |
+| 0.1.1 | 2026-09-23 | `dist_min_m` da zona contestada: 180 → 120 m (D-23), para caber no mapa M com 3–4 jogadores. |

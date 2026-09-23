@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.1.2 — rascunho para aprovação |
+| Versão do SPEC | 0.1.3 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1280,7 +1280,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 ### 20.4 Mundo, grades e navegação
 
 - **TEC-13** — Terreno por heightmap (1 texel = 1 m) em chunks de 64 m com LOD. Grades derivadas: navegação (`celula_navegacao_m`, passável conforme inclinação), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`).
-- **TEC-14** — Pathfinding: A* hierárquico (clusters de 32 m) para unidades isoladas; flow field (Dijkstra na grade) para grupos; separação local tipo boids/RVO simplificado.
+- **TEC-14** — Pathfinding: A* na grade de navegação (8 direções, sem cortar quinas, rota suavizada por linha de visada) para unidades isoladas; flow field (Dijkstra na grade) para grupos; separação local tipo boids/RVO simplificado. Orçamento: < 5 ms por ordem no mapa M. Se o A* passar do orçamento no mapa G, ganha hierarquia (clusters de 32 m).
 
 ### 20.5 Renderização e performance
 
@@ -1483,3 +1483,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.1.0 | 2026-09-23 | Primeira versão completa, a partir do `doc.txt`. Números validados por simulação de balanceamento (§21). |
 | 0.1.1 | 2026-09-23 | `dist_min_m` da zona contestada: 180 → 120 m (D-23), para caber no mapa M com 3–4 jogadores. |
 | 0.1.2 | 2026-09-23 | TEC-03: pasta `tests/render/` para testes unitários de render e câmera. |
+| 0.1.3 | 2026-09-23 | TEC-14: A* direto na grade (0,4 ms no mapa G, medido em T-023); hierarquia só se o orçamento estourar. |

@@ -20,6 +20,8 @@ npm install
 npm run dev
 ```
 
+O jogo abre em http://localhost:5180 (Ctrl+Shift+D mostra o overlay de depuração).
+
 | Comando | Uso |
 |---|---|
 | `npm run dev` | Servidor de desenvolvimento |

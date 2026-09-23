@@ -21,6 +21,7 @@ import {
 } from '../map/esfera';
 import { celulaDe } from '../map/grids';
 import { aEstrela, linhaLivre, livre, type Navegavel, passoDoFluxo } from '../map/pathfinding';
+import { siloImovel } from '../economia/silo';
 import { fluxoPara, navegavel } from './navegacao';
 import { ALTURA_HOVER_M, altitudeDrone, statsMovel } from './stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from './superficie';
@@ -165,6 +166,13 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
   // O rumo é mantido tangente (a separação e o arredondamento podem desviá-lo um pouco).
   let rumo: Vec3 = tangente(d, loc.rumo) ?? norteEm(d);
 
+  // ECO-22: silo ancorado (ou ancorando, desancorando, descarregando) não anda.
+  if (siloImovel(getComponent(state, id, 'silo'))) {
+    loc.speed = 0;
+    loc.rumo = rumo;
+    return;
+  }
+
   if (aerea && !atualizarAr(ctx, id, loc, dt)) {
     loc.speed = 0;
     loc.rumo = rumo;
@@ -265,7 +273,12 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
     if (lista) lista.push(id);
     else baldes.set(k, [id]);
   }
-  const peso = (id: EntityId) => (getComponent(state, id, 'order')!.tipo === 'manter' ? 0 : 1);
+  // Quem mantém posição (CMB-13) e o silo ancorado não são empurrados.
+  const peso = (id: EntityId) =>
+    getComponent(state, id, 'order')!.tipo === 'manter' ||
+    siloImovel(getComponent(state, id, 'silo'))
+      ? 0
+      : 1;
   for (const id of ids) {
     const solo = noSolo(ctx, id);
     const ra = statsMovel(getComponent(state, id, 'unit')!.tipo).raio_m;

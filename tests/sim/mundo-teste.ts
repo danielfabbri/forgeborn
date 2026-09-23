@@ -8,7 +8,8 @@
 import { createSim, type EntityId, getComponent, type NacaoId, type Sim } from '../../src/sim';
 import { dados } from '../../src/sim/data';
 import { DEBUG_CRIAR_COMMAND, debugCriarHandlers } from '../../src/sim/debug/criar';
-import type { EstruturasId, MoveisId } from '../../src/sim/data';
+import type { EstruturasId, MoveisId, RecursosId } from '../../src/sim/data';
+import { SEMEAR_JAZIDAS_COMMAND } from '../../src/sim/economia';
 import {
   arco,
   avancar,
@@ -140,4 +141,24 @@ export function ordenar(
   nacao: NacaoId = 'bra',
 ): void {
   sim.enqueue({ tick: sim.state.tick, nacao, tipo, dados: dados as never });
+}
+
+/** Semeia jazidas em coordenadas locais (x, z) no próximo tick e devolve os IDs novos. */
+export function semear(
+  sim: Sim,
+  jazidas: Array<{ recurso: RecursosId; quantidade: number; x: number; z: number }>,
+): EntityId[] {
+  const antes = sim.state.nextEntityId;
+  sim.enqueue({
+    tick: sim.state.tick,
+    nacao: sim.state.nacoes[0]!,
+    tipo: SEMEAR_JAZIDAS_COMMAND,
+    dados: jazidas.map((j) => ({
+      recurso: j.recurso,
+      quantidade: j.quantidade,
+      d: ponto(j.x, j.z),
+    })) as never,
+  });
+  sim.step();
+  return Array.from({ length: sim.state.nextEntityId - antes }, (_, k) => antes + k);
 }

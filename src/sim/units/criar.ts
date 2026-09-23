@@ -73,6 +73,31 @@ export function criarUnidade(
   setComponent(state, id, 'order', { tipo: 'nenhuma', patrulha: null });
   if (aerea) setComponent(state, id, 'air', { estado: 'voando', timer_s: 0 });
   if (tipo === 'printer') setComponent(state, id, 'producer', { pontoDeEncontro: null });
+  if (tipo === 'hover_explorer') {
+    // Recém-impresso: ocioso para a Diretiva de Coleta (ECO-19).
+    setComponent(state, id, 'coleta', {
+      estado: 'ocioso',
+      jazida: null,
+      recurso: null,
+      carga: 0,
+      cargaRecurso: null,
+      entrega: null,
+      timer_s: 0,
+      manual: false,
+    });
+    getComponent(state, id, 'order')!.tipo = 'tarefa';
+  }
+  if (tipo === 'mobile_silo') {
+    setComponent(state, id, 'silo', {
+      estado: 'solto',
+      timer_s: 0,
+      carga: {},
+      ancora: null,
+      cicloAutomatico: true,
+      limiar_pct: param('limiar_ciclo_silo_pct'),
+      entrega: null,
+    });
+  }
   return id;
 }
 

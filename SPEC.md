@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.3.1 — rascunho para aprovação |
+| Versão do SPEC | 0.4.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -423,7 +423,7 @@ flowchart LR
 - **ENE-08** — Toda unidade móvel tem bateria (`bateria_en`) e sai da impressão com ela cheia. Exceção: a Bateria Móvel sai com `bateria_movel_carga_inicial_pct`% do estoque.
 - **ENE-09** — Unidades só gastam energia ao realizar tarefas (regra do briefing). Unidade parada no solo gasta 0. Drones pairando gastam `pairar_en_s`; pousados, 0.
 - **ENE-10** — O custo de cada tarefa está na tabela abaixo.
-- **ENE-11** — **Estados de bateria.** *Normal*: acima de `limiar_bateria_baixa_pct`. *Baixa*: no limiar ou abaixo (ícone amarelo). *Reserva*: 0 EN. Na Reserva a unidade anda a `modo_reserva_vel_pct`% da velocidade e não executa tarefas (não dispara, não minera, não imprime, não entra em Sentinela), mas continua podendo receber recarga.
+- **ENE-11** — **Estados de bateria.** *Normal*: acima de `limiar_bateria_baixa_pct`. *Baixa*: no limiar ou abaixo (ícone amarelo). *Reserva*: 0 EN. Na Reserva a unidade anda a `modo_reserva_vel_pct`% da velocidade e não executa tarefas (não dispara, não minera, não imprime, não entra em Sentinela), mas continua podendo receber recarga. Drone em voo que chega a 0 EN pousa onde está (em `tempo_pouso_s`) e só decola de novo depois de receber energia (D-28).
 
 | Tarefa | Quem | Custo |
 |---|---|---|
@@ -440,10 +440,10 @@ flowchart LR
 
 ### 6.4 Recarga
 
-- **ENE-12** — A Nave e as usinas têm **portas de recarga** (`portas` e `taxa_porta_en_s` em `dados:estruturas`). Cada porta atende 1 unidade por vez e tira energia do banco.
+- **ENE-12** — A Nave e as usinas têm **portas de recarga** (`portas` e `taxa_porta_en_s` em `dados:estruturas`). Cada porta atende 1 unidade por vez e tira energia do banco. A unidade acopla com o casco a até `raio_deposito_m` da borda da estrutura (D-28).
 - **ENE-13** — As unidades esperam em fila por ordem de chegada. Cada unidade escolhe o ponto de recarga com o menor tempo estimado (deslocamento + fila).
 - **ENE-14** — A unidade se desacopla com 100% ou quando recebe outra ordem.
-- **ENE-15** — **Auto-recarga** (ligada por padrão; desligável por unidade ou nas Diretivas). Os limiares por papel estão nos parâmetros (`auto_recarga_*`). Militares e drones só saem para recarregar **fora de combate** (sem causar nem sofrer dano há `estado_combate_s`). Exceção: drones com bateria em `recarga_forcada_drone_pct` ou menos saem sempre.
+- **ENE-15** — **Auto-recarga** (ligada por padrão; desligável por unidade ou nas Diretivas). Os limiares por papel estão nos parâmetros (`auto_recarga_*`). Militares e drones só saem para recarregar **fora de combate** (sem causar nem sofrer dano há `estado_combate_s`). Exceção: drones com bateria em `recarga_forcada_drone_pct` ou menos saem sempre. Depois da auto-recarga, o Hover de Exploração volta à coleta, a Impressora volta à impressão (ENE-16) e as demais unidades voltam ao lugar (e à patrulha) de onde saíram (D-28).
 - **ENE-16** — Impressora com bateria em `auto_recarga_impressora_pct` ou menos pausa a impressão (o progresso fica guardado), vai recarregar e volta.
 
 ### 6.5 Bateria Móvel
@@ -1444,6 +1444,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-25 | Zonas de pouso em pontos antípodas (N = 2) ou num tetraedro regular (N = 4); zonas contestadas e centrais nos pontos médios entre zonas, com as mesmas quantidades totais de antes; recursos ímpares num ponto médio simétrico viram pares espelhados. | A simetria deixa todas as zonas equivalentes, cada uma com 2 contestadas e 1 central vizinhas, como no mapa quadrado (2 vizinhas e 1 oposta). | Proposta |
 | D-26 | Zoom contínuo até a visão planetária (planeta inteiro na tela) e sol que acompanha o foco (sem noite). | O planeta pequeno fica legível de relance, e nenhuma base fica no escuro. | Proposta |
 | D-27 | O raio de colisão da jazida acompanha o tamanho visual (de `raio_jazida_max_m` a `raio_jazida_min_m`); o hover minera com o casco a até `distancia_mineracao_m` da borda. | Resposta do produto à Q-06 e à lacuna da distância de mineração. A navegação só é recalculada quando o conjunto de células bloqueadas muda. | Aprovada |
+| D-28 | Recarga: acopla a até `raio_deposito_m` da borda; depois da auto-recarga as unidades voltam ao lugar de onde saíram; drone a 0 EN em voo pousa onde está. | Respostas do produto às lacunas de ENE-11, ENE-12 e ENE-15. | Aprovada |
 
 ---
 
@@ -1506,3 +1507,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.2.1 | 2026-09-23 | ECO-08: pares espelhados nos pontos médios simétricos (a única forma de todas as zonas verem as mesmas distâncias); TEC-13: variação real do tamanho das células. |
 | 0.3.0 | 2026-09-23 | D-27 (responde Q-06): raio da jazida acompanha a quantidade; novas chaves `raio_jazida_max_m`, `raio_jazida_min_m` e `distancia_mineracao_m`; ECO-05, ECO-09 e ECO-11 (distâncias medidas pelo casco) reescritas. |
 | 0.3.1 | 2026-09-23 | INV-01: a distância de 30 m é entre centros (como em `dados:jazidas`) e só conta o que foi descarregado. |
+| 0.4.0 | 2026-09-23 | D-28: distância de acoplamento (ENE-12), volta depois da auto-recarga (ENE-15) e pouso forçado de drone sem energia (ENE-11). |

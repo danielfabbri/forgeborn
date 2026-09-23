@@ -74,7 +74,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-006 — Núcleo da simulação** · G · Spec: TEC-04 – TEC-09, REG-20 · Dep: T-003, T-004 · Feito: 2026-09-23
   - Loop de passo fixo, RNG seedado, entidades e componentes, ordem de sistemas de TEC-06, comandos serializáveis, barramento de eventos, snapshot JSON.
   - Aceite: mesma seed + mesmos comandos ⇒ hash de estado idêntico após 10.000 ticks; snapshot → restauração → mesmo hash.
-- [ ] **T-007 — Runner headless** · P · Spec: TEC-25 · Dep: T-006
+- [x] **T-007 — Runner headless** · P · Spec: TEC-25 · Dep: T-006 · Feito: 2026-09-23
   - CLI `sim:match` com seed, IAs e duração máxima. Sem IA por enquanto: roda os ticks e imprime o hash final e o tempo médio do tick.
   - Aceite: roda em Node sem DOM e termina com código 0.
 - [ ] **T-008 — Loop de render e overlay de depuração** · M · Spec: TEC-04, TEC-26 · Dep: T-006

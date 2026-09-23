@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.2.1 |
+| Derivado de | `SPEC.md` v0.3.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -125,9 +125,9 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [ ] **T-030 — Jazidas** · M · Spec: ECO-04 – ECO-06 · Dep: T-011
   - Aceite: hover além de `slots_por_jazida` procura outra jazida a até `raio_busca_jazida_m`, ou espera; jazida some em 0 e emite AL-07; tamanho visual proporcional à quantidade.
-  - Aceite: jazida é obstáculo rígido (MOV-04) com o raio decidido em Q-06; unidades não a atravessam.
+  - Aceite: jazida é obstáculo rígido (MOV-04) com o raio de ECO-05 (D-27), que encolhe com a quantidade; unidades não a atravessam; a navegação só é refeita quando as células bloqueadas mudam.
 - [ ] **T-031 — Ciclo de coleta** · M · Spec: ECO-09 – ECO-12 · Dep: T-030, T-023
-  - Aceite: taxa por recurso = `taxa_mineracao_u_s`; descarga em `tempo_descarga_hover_s`; escolha do ponto de entrega mais próximo pelo caminho; INV-01 verde.
+  - Aceite: minera só a até `distancia_mineracao_m` da borda da jazida; taxa por recurso = `taxa_mineracao_u_s`; descarga em `tempo_descarga_hover_s`; escolha do ponto de entrega mais próximo pelo caminho; INV-01 verde.
 - [ ] **T-032 — Estoque e contabilização** · M · Spec: ECO-14 – ECO-17 · Dep: T-031
   - Aceite: carga em hover não pode ser gasta; descarregar na Nave ou num Armazém incrementa o estoque; o valor "em trânsito" é publicado para o HUD.
 - [ ] **T-033 — Diretiva de Coleta** · M · Spec: ECO-18 – ECO-21 · Dep: T-031

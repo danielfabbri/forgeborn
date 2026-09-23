@@ -96,6 +96,24 @@
     "descricao": "Vagas simultâneas por jazida"
   },
   {
+    "chave": "raio_jazida_max_m",
+    "valor": 2.5,
+    "unidade": "m",
+    "descricao": "Raio da jazida cheia (visual e colisão)"
+  },
+  {
+    "chave": "raio_jazida_min_m",
+    "valor": 0.8,
+    "unidade": "m",
+    "descricao": "Raio da jazida quase vazia (visual e colisão)"
+  },
+  {
+    "chave": "distancia_mineracao_m",
+    "valor": 1.5,
+    "unidade": "m",
+    "descricao": "Distância máxima entre o casco do hover e a borda da jazida para minerar"
+  },
+  {
     "chave": "raio_busca_jazida_m",
     "valor": 40,
     "unidade": "m",

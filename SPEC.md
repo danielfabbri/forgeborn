@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.2.1 — rascunho para aprovação |
+| Versão do SPEC | 0.3.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -291,7 +291,7 @@ flowchart LR
 ### 5.2 Jazidas
 
 - **ECO-04** — Recursos vêm de **jazidas**: afloramentos cristalinos na cor do recurso. Cada jazida tem tipo, quantidade restante e `slots_por_jazida` vagas de mineração simultânea.
-- **ECO-05** — O tamanho visual da jazida é proporcional à quantidade restante. Em 0 ela desaparece e dispara AL-07.
+- **ECO-05** — O tamanho visual e o raio de colisão (MOV-04) da jazida acompanham a quantidade restante: o raio vai linearmente de `raio_jazida_max_m` (cheia) a `raio_jazida_min_m` (quase vazia), pela fração restante da quantidade inicial. Em 0 ela desaparece e dispara AL-07 (D-27).
 - **ECO-06** — Hover sem vaga livre procura outra jazida do mesmo tipo a até `raio_busca_jazida_m`. Se não houver, espera na fila da jazida.
 - **ECO-07** — A distribuição de jazidas por zona segue `dados:jazidas`. As quantidades são valores-base, multiplicados pelo perfil do cenário (§14.1).
 - **ECO-08** — Zonas contestadas e centrais ficam nos pontos médios entre zonas de pouso (CEN-07). **N = 2:** no equador entre as duas zonas, as 2 zonas contestadas ficam nos flancos (a 90° de cada lado) e os 2 pontos centrais nos outros dois pontos do equador. **N = 4:** dos 6 pontos médios entre pares de zonas, 4 são contestados, de modo que cada zona tem 2 contestadas vizinhas, e os 2 restantes são centrais, cada um compartilhado por um par de zonas. As jazidas `por_mapa` da zona central se dividem igualmente entre os 2 pontos centrais. Num ponto médio que a simetria leva nele mesmo (trocando as duas zonas vizinhas), as jazidas vêm em pares espelhados: um recurso com número ímpar de jazidas ali ganha uma jazida a mais, e a quantidade do recurso se divide igualmente entre elas (ex.: 1 × 1200 u vira 2 × 600 u).
@@ -316,9 +316,9 @@ flowchart LR
 
 ### 5.3 Ciclo de coleta
 
-- **ECO-09** — O Hover de Exploração minera um tipo de recurso por vez, à `taxa_mineracao_u_s` do recurso, até `carga_hover_u`.
+- **ECO-09** — O Hover de Exploração minera um tipo de recurso por vez, à `taxa_mineracao_u_s` do recurso, até `carga_hover_u`. Para minerar, ocupa uma vaga (ECO-04) e fica com o casco a até `distancia_mineracao_m` da borda da jazida (D-27).
 - **ECO-10** — Cheio (ou com a jazida esgotada e carga > 0), o hover leva a carga ao **ponto de entrega** mais próximo pelo caminho: Nave Inicial, Armazém ou Silo Móvel ancorado com espaço.
-- **ECO-11** — Descarregar leva `tempo_descarga_hover_s`, com o hover a até `raio_deposito_m` da borda do ponto de entrega.
+- **ECO-11** — Descarregar leva `tempo_descarga_hover_s`, com o casco do hover a até `raio_deposito_m` da borda do ponto de entrega.
 - **ECO-12** — Depois de descarregar, o hover volta à mesma jazida (ou à mais próxima do mesmo tipo, conforme ECO-06).
 - **ECO-13** — Hover sob ataque foge para a estrutura própria armada mais próxima (ou para a Nave) e retoma a tarefa após `fuga_hover_retorno_s` sem sofrer dano. Desligável nas Diretivas (UI-02).
 
@@ -358,6 +358,9 @@ flowchart LR
 | tempo_descarga_hover_s | 1,0 | s | Tempo para descarregar |
 | raio_deposito_m | 3 | m | Distância máxima da borda do ponto de entrega |
 | slots_por_jazida | 3 | hovers | Vagas simultâneas por jazida |
+| raio_jazida_max_m | 2,5 | m | Raio da jazida cheia (visual e colisão) |
+| raio_jazida_min_m | 0,8 | m | Raio da jazida quase vazia (visual e colisão) |
+| distancia_mineracao_m | 1,5 | m | Distância máxima entre o casco do hover e a borda da jazida para minerar |
 | raio_busca_jazida_m | 40 | m | Busca de jazida alternativa do mesmo tipo |
 | raio_diretiva_m | 150 | m | Distância máxima jazida–ponto de entrega para a diretiva |
 | fuga_hover_retorno_s | 10 | s | Tempo sem dano para retomar a tarefa após fuga |
@@ -1440,6 +1443,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-24 | O mapa é um planeta esférico sem borda (cubo-esfera), no lugar do quadrado plano, com raios de mesma área que os quadrados antigos. | Pedido do produto: a borda quebrava a ilusão e o visual de "pequeno mundo" (referência: Planetary Annihilation). Área igual preserva tempos de deslocamento e o balanceamento. | Aprovada |
 | D-25 | Zonas de pouso em pontos antípodas (N = 2) ou num tetraedro regular (N = 4); zonas contestadas e centrais nos pontos médios entre zonas, com as mesmas quantidades totais de antes; recursos ímpares num ponto médio simétrico viram pares espelhados. | A simetria deixa todas as zonas equivalentes, cada uma com 2 contestadas e 1 central vizinhas, como no mapa quadrado (2 vizinhas e 1 oposta). | Proposta |
 | D-26 | Zoom contínuo até a visão planetária (planeta inteiro na tela) e sol que acompanha o foco (sem noite). | O planeta pequeno fica legível de relance, e nenhuma base fica no escuro. | Proposta |
+| D-27 | O raio de colisão da jazida acompanha o tamanho visual (de `raio_jazida_max_m` a `raio_jazida_min_m`); o hover minera com o casco a até `distancia_mineracao_m` da borda. | Resposta do produto à Q-06 e à lacuna da distância de mineração. A navegação só é recalculada quando o conjunto de células bloqueadas muda. | Aprovada |
 
 ---
 
@@ -1454,7 +1458,7 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | Q-03 | Voz da IA: TTS ou dublagem? | TTS + legendas. |
 | Q-04 | Lançamento só em pt-BR ou pt-BR + inglês? | pt-BR no v1.0; inglês no v1.x. |
 | Q-05 | Distribuição: site próprio, itch.io, outra? | Site estático gratuito. |
-| Q-06 | Raio de colisão da jazida (MOV-04): fixo ou acompanha o tamanho visual (ECO-05)? | Proposta, aguardando resposta antes de T-030: raio fixo por jazida enquanto houver recurso; o visual encolhe, a colisão não (evita recalcular a navegação a cada descarga). Valor a definir numa tabela de dados. |
+| Q-06 | Raio de colisão da jazida (MOV-04): fixo ou acompanha o tamanho visual (ECO-05)? | Respondida em 0.3.0: acompanha o visual (D-27). |
 | Q-07 | Chrome e Edge reservam Ctrl+1..9 para trocar de aba; fora da tela cheia a página não recebe essas teclas (CTL-05). Manter, trocar ou dar alternativa? | Implementado como no SPEC. Proposta, aguardando resposta: em tela cheia, travar o teclado (Keyboard Lock) para Ctrl+1..9 funcionar; fora dela, aceitar também Alt+1..9 para definir grupo. |
 
 ---
@@ -1500,3 +1504,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.1.5 | 2026-09-23 | Q-07: conflito de Ctrl+1..9 com atalhos do navegador. |
 | 0.2.0 | 2026-09-23 | Planeta esférico (D-24 a D-26): `dados:tamanhos_mapa` troca o lado do quadrado por `raio_m`; CEN-06 a CEN-09, CEN-13, ECO-08, PRD-10, MOV-01, MOV-02, CTL-01 a CTL-03, VIS-07, TEC-13 e TEC-14 reescritas; novas CEN-14, CEN-15, CTL-16 e ART-11. |
 | 0.2.1 | 2026-09-23 | ECO-08: pares espelhados nos pontos médios simétricos (a única forma de todas as zonas verem as mesmas distâncias); TEC-13: variação real do tamanho das células. |
+| 0.3.0 | 2026-09-23 | D-27 (responde Q-06): raio da jazida acompanha a quantidade; novas chaves `raio_jazida_max_m`, `raio_jazida_min_m` e `distancia_mineracao_m`; ECO-05, ECO-09 e ECO-11 (distâncias medidas pelo casco) reescritas. |

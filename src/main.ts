@@ -16,6 +16,7 @@ import { createView } from './render/view';
 import { createSim, type EntityId, getComponent, type NacaoId } from './sim';
 import { DEBUG_CRIAR_COMMAND, debugCriarHandlers } from './sim/debug/criar';
 import { emTransito, estoque, SEMEAR_JAZIDAS_COMMAND } from './sim/economia';
+import { DEBUG_ENCHER_BANCO_COMMAND, leituraDaRede } from './sim/energia';
 import { avancar, norteEm, type Vec3 } from './sim/map/esfera';
 import { alturaEm } from './sim/map/heightmap';
 import { PRESETS_DE_MAPA } from './sim/map/presets';
@@ -124,6 +125,9 @@ nacoes.forEach((nacao, k) => {
     dados: cenaDaNacao(nacao, zonaDe(k), R, Math.max(0, extras)) as never,
   });
 });
+// REG-06 (até a T-056): toda nação começa com o banco cheio.
+for (const nacao of nacoes)
+  sim.enqueue({ tick: 1, nacao, tipo: DEBUG_ENCHER_BANCO_COMMAND, dados: {} as never });
 const ID_PATRULHEIRO = 1;
 const patrulha = destinoDaPatrulha(zonaDe(0), R);
 sim.enqueue({
@@ -298,6 +302,7 @@ const frame = (agora: number): void => {
       triangulos: view.renderer.info.render.triangles,
       estoque: estoque(sim.state, jogador),
       transito: emTransito(sim.state, jogador),
+      energia: leituraDaRede(sim.state, jogador),
     };
     quadros = 0;
     inicioJanela = agora;

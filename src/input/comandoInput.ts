@@ -132,7 +132,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   const enviar = (tipo: string, dados: Record<string, unknown>) => {
     sim.enqueue({ tick: sim.state.tick, nacao: jogador, tipo, dados: dados as never });
   };
-  const minhas = (componente: 'unit' | 'producer') =>
+  const minhas = (componente: 'unit' | 'producer' | 'structure') =>
     selecao.filter(
       (id) =>
         isAlive(sim.state, id) &&
@@ -275,11 +275,22 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       case 'Escape':
         definirModo('normal');
         break;
-      // §12.4 (Silo Móvel): T ancora ou desancora; G descarrega agora.
+      // §12.4: R recarrega agora (ENE-12).
+      case 'KeyR':
+        if (minhas('unit').length === 0) return;
+        enviar('recarregar', { ids: minhas('unit') });
+        break;
+      // §12.4 T: Silo Móvel ancora ou desancora; Bateria Móvel liga o suporte; Usina Nuclear liga.
       case 'KeyT': {
-        const silos = minhas('unit').filter((id) => getComponent(sim.state, id, 'silo'));
-        if (silos.length === 0) return;
-        enviar('ancorar_silo', { ids: silos });
+        const com = (c: 'silo' | 'suporte') =>
+          minhas('unit').filter((id) => getComponent(sim.state, id, c));
+        const silos = com('silo');
+        const baterias = com('suporte');
+        const usinas = minhas('structure').filter((id) => getComponent(sim.state, id, 'reator'));
+        if (silos.length + baterias.length + usinas.length === 0) return;
+        if (silos.length > 0) enviar('ancorar_silo', { ids: silos });
+        if (baterias.length > 0) enviar('suporte_bateria', { ids: baterias });
+        if (usinas.length > 0) enviar('ligar_usina', { ids: usinas });
         break;
       }
       case 'KeyG': {

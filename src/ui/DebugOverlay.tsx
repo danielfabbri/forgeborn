@@ -48,6 +48,13 @@ export function DebugOverlay() {
         {t('debug.transito')}: +
         {Math.floor(Object.values(stats.transito).reduce((s, u) => s + u, 0))}
       </div>
+      {stats.energia && (
+        <div data-testid="debug-energia" data-indicador={stats.energia.indicador}>
+          {t('debug.energia')}: +{stats.energia.geracao.toFixed(1)} −
+          {stats.energia.consumo.toFixed(1)} · {Math.floor(stats.energia.banco)}/
+          {stats.energia.capacidade} · {t(`energia.${stats.energia.indicador}` as TextKey)}
+        </div>
+      )}
     </div>
   );
 }

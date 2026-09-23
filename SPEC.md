@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.1.4 — rascunho para aprovação |
+| Versão do SPEC | 0.1.5 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1445,6 +1445,7 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | Q-04 | Lançamento só em pt-BR ou pt-BR + inglês? | pt-BR no v1.0; inglês no v1.x. |
 | Q-05 | Distribuição: site próprio, itch.io, outra? | Site estático gratuito. |
 | Q-06 | Raio de colisão da jazida (MOV-04): fixo ou acompanha o tamanho visual (ECO-05)? | Proposta, aguardando resposta antes de T-030: raio fixo por jazida enquanto houver recurso; o visual encolhe, a colisão não (evita recalcular a navegação a cada descarga). Valor a definir numa tabela de dados. |
+| Q-07 | Chrome e Edge reservam Ctrl+1..9 para trocar de aba; fora da tela cheia a página não recebe essas teclas (CTL-05). Manter, trocar ou dar alternativa? | Implementado como no SPEC. Proposta, aguardando resposta: em tela cheia, travar o teclado (Keyboard Lock) para Ctrl+1..9 funcionar; fora dela, aceitar também Alt+1..9 para definir grupo. |
 
 ---
 
@@ -1486,3 +1487,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.1.2 | 2026-09-23 | TEC-03: pasta `tests/render/` para testes unitários de render e câmera. |
 | 0.1.3 | 2026-09-23 | TEC-14: A* direto na grade (0,4 ms no mapa G, medido em T-023); hierarquia só se o orçamento estourar. |
 | 0.1.4 | 2026-09-23 | Q-06: raio de colisão da jazida em aberto. |
+| 0.1.5 | 2026-09-23 | Q-07: conflito de Ctrl+1..9 com atalhos do navegador. |

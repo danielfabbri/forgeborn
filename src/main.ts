@@ -1,5 +1,7 @@
 import './styles.css';
 import { createFixedLoop } from './game/loop';
+import { ligarEntradaCamera } from './input/cameraInput';
+import { criarEstadoCamera, poseDaCamera } from './render/cameraRts';
 import { EntityMeshes } from './render/entityMeshes';
 import { PositionHistory } from './render/interpolation';
 import { criarCeu, DIRECAO_TERRA } from './render/sky';
@@ -7,6 +9,7 @@ import { criarTerreno } from './render/terrain';
 import { createView } from './render/view';
 import { createSim } from './sim';
 import { DEBUG_ORBIT_COMMAND, debugOrbitHandlers, debugOrbitSystem } from './sim/debug/orbit';
+import { FAIXA_BORDA_M } from './sim/map/grids';
 import { alturaEm } from './sim/map/heightmap';
 import { PRESETS_DE_MAPA } from './sim/map/presets';
 import { gerarMapaValido } from './sim/map/validacao';
@@ -16,7 +19,10 @@ import { mountUi } from './ui/mount';
 declare global {
   interface Window {
     /** Sonda para os testes E2E (só existe com `?e2e` na URL). */
-    __forgeborn?: { amostras: Array<{ t: number; tick: number; x: number }> };
+    __forgeborn?: {
+      amostras: Array<{ t: number; tick: number; x: number }>;
+      camera?: { x: number; z: number; altura: number; yaw: number };
+    };
   }
 }
 
@@ -36,14 +42,21 @@ const pronto = gerarMapaValido(preset.seed, preset.tamanho, preset.zonas, preset
 const terreno = criarTerreno(pronto.mapa);
 view.scene.add(terreno.objeto, criarCeu());
 
-if (parametros.get('camera') === 'rts') {
-  // Vista de jogo (CTL-01): 90 m de altura e 55° de inclinação sobre a zona de pouso 0.
-  const zona = pronto.mapa.zonasDePouso[0]!;
-  const recuo = 90 / Math.tan((55 * Math.PI) / 180);
-  view.camera.position.set(zona.x - 20, 90, zona.z - 20 + recuo);
-  view.camera.lookAt(zona.x - 20, 0, zona.z - 20);
-  view.focarSombras(zona.x - 20, zona.z - 20);
-} else if (parametros.get('camera') === 'cinematica') {
+// Câmera: RTS por padrão (CTL-01); `?camera=geral` e `?camera=cinematica` são vistas fixas.
+const modoCamera = parametros.get('camera') ?? 'rts';
+const zonaInicial = pronto.mapa.zonasDePouso[0]!;
+const camera = criarEstadoCamera(
+  zonaInicial.x,
+  zonaInicial.z,
+  pronto.mapa.lado_m / 2 - FAIXA_BORDA_M,
+);
+const entradaCamera =
+  modoCamera === 'rts'
+    ? ligarEntradaCamera(viewport, camera, { rolagemPelasBordas: () => true })
+    : null;
+let chaoSuave = alturaEm(pronto.mapa, camera.focoX, camera.focoZ);
+
+if (modoCamera === 'cinematica') {
   // Vista baixa sobre uma zona de pouso, olhando para o horizonte onde está a Terra.
   const zona = pronto.mapa.zonasDePouso[2]!;
   const olho = { x: zona.x - 30, y: 26, z: zona.z - 10 };
@@ -93,7 +106,23 @@ let ultimoQuadro = 0;
 let quadros = 0;
 let inicioJanela = 0;
 
+const posicionarCamera = (dt: number): void => {
+  if (!entradaCamera) return;
+  entradaCamera.atualizar(dt);
+  // O chão sob o foco é suavizado para a câmera não saltar em bordas de platô.
+  const chao = alturaEm(pronto.mapa, camera.focoX, camera.focoZ);
+  chaoSuave += (chao - chaoSuave) * (1 - Math.exp(-6 * dt));
+  const { olho, alvo } = poseDaCamera(camera, chaoSuave);
+  view.camera.position.set(...olho);
+  view.camera.lookAt(...alvo);
+  view.focarSombras(camera.focoX, camera.focoZ);
+  if (sonda) {
+    sonda.camera = { x: camera.focoX, z: camera.focoZ, altura: camera.altura, yaw: camera.yaw };
+  }
+};
+
 const frame = (agora: number): void => {
+  posicionarCamera(Math.min((agora - ultimoQuadro) / 1000, 0.1));
   loop.advance(agora - ultimoQuadro);
   ultimoQuadro = agora;
   quadros++;

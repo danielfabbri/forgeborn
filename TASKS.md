@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.1.1 |
+| Derivado de | `SPEC.md` v0.1.2 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -96,7 +96,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [~] **T-014 — Renderização do terreno** · G · Spec: TEC-13, ART-08, §14.4 · Dep: T-010, T-008 · Falta: aprovação das capturas em `docs/referencia/`
   - Chunks de 64 m com LOD, material de regolito, sol direcional com sombras, céu estrelado com a Terra escura.
   - Aceite: mapa M a ≥ 60 fps no preset Médio no hardware-alvo (TEC-15); captura de referência aprovada pelo produto.
-- [ ] **T-015 — Câmera RTS** · M · Spec: CTL-01 – CTL-03 · Dep: T-014
+- [x] **T-015 — Câmera RTS** · M · Spec: CTL-01 – CTL-03 · Dep: T-014 · Feito: 2026-09-23
   - Aceite: pan por setas e bordas; zoom de 15 a 120 m com inclinação dinâmica; rotação pelo botão do meio; Home; a câmera não sai do mapa.
 
 ## M2 — Entidades, seleção e movimento

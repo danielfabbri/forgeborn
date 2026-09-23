@@ -20,8 +20,8 @@ async function medir(page: import('@playwright/test').Page, url: string) {
 }
 
 for (const [nome, url] of [
-  ['visão de jogo (RTS)', '/?camera=rts'],
-  ['visão geral do mapa M', '/'],
+  ['visão de jogo (RTS)', '/'],
+  ['visão geral do mapa M', '/?camera=geral'],
   ['vista cinematográfica com a Terra', '/?camera=cinematica'],
 ]) {
   test(`T-014: terreno do mapa M a ≥ 60 fps — ${nome}`, async ({ page }) => {

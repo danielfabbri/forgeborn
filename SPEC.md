@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.1.1 — rascunho para aprovação |
+| Versão do SPEC | 0.1.2 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1263,7 +1263,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
   - `src/ui/`: HUD e menus (Preact).
   - `src/input/`: traduz teclado e mouse em Comandos.
   - `src/audio/`, `src/game/` (telas, modos, campanha, persistência), `src/i18n/`, `src/assets/`.
-  - `tools/`: `spec-sync` e utilitários. `tests/`: `spec/`, `sim/`, `balance/`, `e2e/`.
+  - `tools/`: `spec-sync` e utilitários. `tests/`: `spec/`, `sim/`, `render/`, `balance/`, `e2e/`.
 - **TEC-04** — Simulação em passo fixo de `tick_hz`; renderização em `requestAnimationFrame`, interpolando entre os dois últimos estados.
 - **TEC-05** — Determinismo: mesma seed + mesma sequência de comandos + mesma build ⇒ mesmo resultado. RNG seedado próprio; `Math.random` e `Date.now` são proibidos na simulação; iteração sempre em ordem estável de IDs.
 - **TEC-06** — Entidades com IDs inteiros crescentes e componentes como dados simples (ECS leve). Sistemas puros, chamados em ordem fixa a cada tick: comandos → IA → produção → energia → movimento → economia → combate → projéteis → morte e destroços → visão (a cada 4 ticks) → eventos.
@@ -1482,3 +1482,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 |---|---|---|
 | 0.1.0 | 2026-09-23 | Primeira versão completa, a partir do `doc.txt`. Números validados por simulação de balanceamento (§21). |
 | 0.1.1 | 2026-09-23 | `dist_min_m` da zona contestada: 180 → 120 m (D-23), para caber no mapa M com 3–4 jogadores. |
+| 0.1.2 | 2026-09-23 | TEC-03: pasta `tests/render/` para testes unitários de render e câmera. |

@@ -16,6 +16,7 @@ const pastas = [
   'tools',
   'tests/spec',
   'tests/sim',
+  'tests/render',
   'tests/balance',
   'tests/e2e',
 ];

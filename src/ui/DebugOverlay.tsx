@@ -32,6 +32,12 @@ export function DebugOverlay() {
       <div>
         {t('debug.tick')}: <span data-testid="debug-tick">{stats.tick}</span>
       </div>
+      <div>
+        {t('debug.draw_calls')}: <span data-testid="debug-draw-calls">{stats.drawCalls}</span>
+      </div>
+      <div>
+        {t('debug.triangulos')}: <span data-testid="debug-triangulos">{stats.triangulos}</span>
+      </div>
     </div>
   );
 }

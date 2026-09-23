@@ -5,6 +5,8 @@
   "debug.tick_ms": "Tick (ms)",
   "debug.entidades": "Entidades",
   "debug.tick": "Tick",
+  "debug.draw_calls": "Draw calls",
+  "debug.triangulos": "Triângulos",
   "mapa.mare_imbrium": "Mare Imbrium",
   "mapa.mare_tranquillitatis": "Mare Tranquillitatis",
   "mapa.oceanus_procellarum": "Oceanus Procellarum"

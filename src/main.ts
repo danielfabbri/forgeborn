@@ -2,9 +2,14 @@ import './styles.css';
 import { createFixedLoop } from './game/loop';
 import { EntityMeshes } from './render/entityMeshes';
 import { PositionHistory } from './render/interpolation';
+import { criarCeu, DIRECAO_TERRA } from './render/sky';
+import { criarTerreno } from './render/terrain';
 import { createView } from './render/view';
 import { createSim } from './sim';
 import { DEBUG_ORBIT_COMMAND, debugOrbitHandlers, debugOrbitSystem } from './sim/debug/orbit';
+import { alturaEm } from './sim/map/heightmap';
+import { PRESETS_DE_MAPA } from './sim/map/presets';
+import { gerarMapaValido } from './sim/map/validacao';
 import { debugStats } from './ui/debugStats';
 import { mountUi } from './ui/mount';
 
@@ -20,9 +25,32 @@ const uiRoot = document.getElementById('ui');
 if (!viewport || !uiRoot) {
   throw new Error('index.html precisa dos elementos #viewport e #ui');
 }
+const parametros = new URLSearchParams(location.search);
 
 const view = createView(viewport);
 mountUi(uiRoot);
+
+// Mapa: preset Mare Tranquillitatis até existir a configuração de partida (T-104).
+const preset = PRESETS_DE_MAPA.find((p) => p.id === 'mare_tranquillitatis')!;
+const pronto = gerarMapaValido(preset.seed, preset.tamanho, preset.zonas, preset.cenario);
+const terreno = criarTerreno(pronto.mapa);
+view.scene.add(terreno.objeto, criarCeu());
+
+if (parametros.get('camera') === 'rts') {
+  // Vista de jogo (CTL-01): 90 m de altura e 55° de inclinação sobre a zona de pouso 0.
+  const zona = pronto.mapa.zonasDePouso[0]!;
+  const recuo = 90 / Math.tan((55 * Math.PI) / 180);
+  view.camera.position.set(zona.x - 20, 90, zona.z - 20 + recuo);
+  view.camera.lookAt(zona.x - 20, 0, zona.z - 20);
+  view.focarSombras(zona.x - 20, zona.z - 20);
+} else if (parametros.get('camera') === 'cinematica') {
+  // Vista baixa sobre uma zona de pouso, olhando para o horizonte onde está a Terra.
+  const zona = pronto.mapa.zonasDePouso[2]!;
+  const olho = { x: zona.x - 30, y: 26, z: zona.z - 10 };
+  view.camera.position.set(olho.x, olho.y, olho.z);
+  view.camera.lookAt(olho.x + DIRECAO_TERRA.x * 100, 12, olho.z + DIRECAO_TERRA.z * 100);
+  view.focarSombras(olho.x + DIRECAO_TERRA.x * 90, olho.z + DIRECAO_TERRA.z * 90);
+}
 
 // A seed vem de fora da simulação; aqui o relógio real é permitido (TEC-05 vale para src/sim).
 const seed = Date.now() % 2_147_483_647;
@@ -39,7 +67,7 @@ sim.enqueue({
 });
 
 const history = new PositionHistory();
-const meshes = new EntityMeshes(view.scene);
+const meshes = new EntityMeshes(view.scene, (x, z) => alturaEm(pronto.mapa, x, z));
 let tickTotalMs = 0;
 let tickCount = 0;
 
@@ -58,9 +86,7 @@ const loop = createFixedLoop({
   },
 });
 
-const sonda: Window['__forgeborn'] = new URLSearchParams(location.search).has('e2e')
-  ? { amostras: [] }
-  : undefined;
+const sonda: Window['__forgeborn'] = parametros.has('e2e') ? { amostras: [] } : undefined;
 window.__forgeborn = sonda;
 
 let ultimoQuadro = 0;
@@ -78,6 +104,8 @@ const frame = (agora: number): void => {
       tickMs: tickCount > 0 ? tickTotalMs / tickCount : 0,
       entidades: sim.state.entities.length,
       tick: sim.state.tick,
+      drawCalls: view.renderer.info.render.calls,
+      triangulos: view.renderer.info.render.triangles,
     };
     quadros = 0;
     inicioJanela = agora;

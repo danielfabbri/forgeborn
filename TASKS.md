@@ -93,7 +93,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-013 — Grades derivadas** · M · Spec: TEC-13, MOV-01, PRD-10 · Dep: T-010 · Feito: 2026-09-23
   - Navegação (`celula_navegacao_m`), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`).
   - Aceite: com heightmap sintético, células acima de `inclinacao_max_hover_graus` são intransponíveis e acima de `inclinacao_max_construcao_graus` não aceitam construção.
-- [ ] **T-014 — Renderização do terreno** · G · Spec: TEC-13, ART-08, §14.4 · Dep: T-010, T-008
+- [~] **T-014 — Renderização do terreno** · G · Spec: TEC-13, ART-08, §14.4 · Dep: T-010, T-008 · Falta: aprovação das capturas em `docs/referencia/`
   - Chunks de 64 m com LOD, material de regolito, sol direcional com sombras, céu estrelado com a Terra escura.
   - Aceite: mapa M a ≥ 60 fps no preset Médio no hardware-alvo (TEC-15); captura de referência aprovada pelo produto.
 - [ ] **T-015 — Câmera RTS** · M · Spec: CTL-01 – CTL-03 · Dep: T-014

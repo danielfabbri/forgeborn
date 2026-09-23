@@ -8,13 +8,16 @@ import type { PositionHistory, Vec3 } from './interpolation';
  */
 export class EntityMeshes {
   private readonly scene: Scene;
+  /** Altura do terreno em (x, z): até o movimento da simulação cuidar do y (T-022). */
+  private readonly alturaDoTerreno: ((x: number, z: number) => number) | undefined;
   private readonly meshes = new Map<EntityId, Mesh>();
   private readonly materials = new Map<string, MeshStandardMaterial>();
   private readonly geometry = new BoxGeometry(2, 1, 3);
   private readonly scratch: Vec3 = { x: 0, y: 0, z: 0 };
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, alturaDoTerreno?: (x: number, z: number) => number) {
     this.scene = scene;
+    this.alturaDoTerreno = alturaDoTerreno;
   }
 
   sync(state: SimState, history: PositionHistory, alpha: number): void {
@@ -28,7 +31,9 @@ export class EntityMeshes {
         this.meshes.set(id, mesh);
       }
       const p = history.interpolate(id, getComponent(state, id, 'position')!, alpha, this.scratch);
-      mesh.position.set(p.x, p.y + 0.5, p.z);
+      // MOV-01: hovers flutuam ~0,6 m acima do terreno; o bloco tem 1 m de altura.
+      const chao = this.alturaDoTerreno ? this.alturaDoTerreno(p.x, p.z) : p.y;
+      mesh.position.set(p.x, chao + 0.6 + 0.5, p.z);
     }
     for (const [id, mesh] of this.meshes) {
       if (!alive.has(id)) {

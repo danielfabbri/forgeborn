@@ -86,7 +86,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-010 — Gerador de mapas lunares** · G · Spec: CEN-06 – CEN-09, CEN-13 · Dep: T-006 · Feito: 2026-09-23
   - Heightmap de 16 bits por seed: crateras, colinas, sulcos, borda intransponível, platôs de pouso com rampas, simetria rotacional N = 2 ou 4.
   - Aceite: mesma seed ⇒ mesmo hash; teste de simetria (altura em p e em p rotacionado iguais, ± 1 cm); platôs com inclinação < 5°.
-- [ ] **T-011 — Distribuição de jazidas** · M · Spec: ECO-07, ECO-08, CEN-10 · Dep: T-010
+- [x] **T-011 — Distribuição de jazidas** · M · Spec: ECO-07, ECO-08, CEN-10 · Dep: T-010 · Feito: 2026-09-23
   - Aceite: contagens e quantidades = `dados:jazidas` × perfil do cenário; distâncias dentro das faixas; número de zonas contestadas conforme o número de jogadores.
 - [ ] **T-012 — Validação do gerador e presets** · M · Spec: CEN-11, CEN-12, §14.4 · Dep: T-011, T-013
   - Aceite: 100 seeds testadas, inválidas rejeitadas com o motivo; presets Mare Imbrium (P), Mare Tranquillitatis (M) e Oceanus Procellarum (G) fixados.

@@ -62,7 +62,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-002 — Scaffold do projeto** · M · Spec: TEC-01, TEC-03 · Dep: T-001 · Feito: 2026-09-23
   - Vite + TypeScript strict + Three.js + Preact/Signals + Vitest + Playwright + ESLint/Prettier; pastas de TEC-03; scripts `dev`, `build`, `test`, `lint`, `spec:sync`, `spec:check`, `sim:match`, `balance:report` (os três últimos podem começar como stubs).
   - Aceite: `npm run dev` mostra uma cena Three.js vazia; `npm test`, `npm run lint` e `npm run build` verdes.
-- [ ] **T-003 — Fronteira da simulação** · P · Spec: TEC-03, TEC-05 · Dep: T-002
+- [x] **T-003 — Fronteira da simulação** · P · Spec: TEC-03, TEC-05 · Dep: T-002 · Feito: 2026-09-23
   - Regra de lint: `src/sim/**` não importa `three`, `preact` nem APIs de DOM; `Math.random` e `Date.now` proibidos ali.
   - Aceite: um arquivo-fixture com import proibido faz o lint falhar; o código real passa.
 - [ ] **T-004 — `spec:sync`** · M · Spec: GOV-04, GOV-05, GOV-06, TEC-11 · Dep: T-002

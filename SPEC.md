@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.5.0 — rascunho para aprovação |
+| Versão do SPEC | 0.6.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -215,7 +215,7 @@ flowchart LR
 ### 4.2 Início
 
 - **REG-04** — Cada nação começa com 1 Nave Inicial pousada numa zona de pouso e 1 Hover de Exploração saindo dela.
-- **REG-05** — O estoque inicial segue o modo escolhido (`dados:estoque_inicial`). O estoque padrão paga 1 Hover extra, mas não a Impressora: o hover inicial precisa coletar (regra do briefing).
+- **REG-05** — O estoque inicial segue o modo escolhido (`dados:estoque_inicial`). O estoque padrão paga 1 Hover extra e o Cu e o Li da Impressora, mas não o Fe e o Si dela: o hover inicial precisa coletar (regra do briefing, D-30).
 - **REG-06** — O banco de energia começa cheio.
 - **REG-07** — Área explorada inicial: círculo de raio `raio_explorado_inicial_m` em volta da nave (varredura feita durante a descida). O resto do mapa começa em escuro absoluto.
 - **REG-08** — O Hover inicial começa a coletar sozinho, segundo a Diretiva de Coleta (§5.5).
@@ -223,7 +223,7 @@ flowchart LR
 <!-- dados:estoque_inicial -->
 | modo | fe | si | cu | li | ti | u |
 |---|---|---|---|---|---|---|
-| padrao | 20 | 10 | 5 | 0 | 0 | 0 |
+| padrao | 20 | 10 | 10 | 3 | 0 | 0 |
 | alto | 200 | 150 | 100 | 60 | 30 | 0 |
 
 ### 4.3 Vitória, derrota e eliminação
@@ -1357,7 +1357,7 @@ Confrontos de referência (simulação com foco de fogo e aproximação pelo alc
 ### 21.3 Invariantes (normativos, testados em `tests/balance/`)
 
 - **INV-01** — Um Hover de Exploração minerando Fe a 30 m do depósito (entre os centros da jazida e da Nave, como as distâncias de `dados:jazidas`) paga o próprio custo em VR em até 75 s, contando só o que já foi descarregado.
-- **INV-02** — Com estoque padrão e diretiva automática, a abertura "1 Hover extra → Impressora" entrega a Impressora entre 70 s e 100 s de jogo (jazidas iniciais nas distâncias médias de `dados:jazidas`).
+- **INV-02** — Com estoque padrão e diretiva automática, a abertura "1 Hover extra → Impressora" entrega a Impressora entre 45 s e 60 s de jogo (D-30) (jazidas iniciais nas distâncias médias de `dados:jazidas`).
 - **INV-03** — 4 OPQ vencem 6 EX1 (mesmo VR) em campo aberto, começando a 25 m, com 20%–60% do HP total restante.
 - **INV-04** — 6 EX1 vencem 4 Drones Laser (mesmo VR) com 40%–80% do HP total restante.
 - **INV-05** — 4 Drones Laser vencem 4 OPQ sem perdas.
@@ -1446,6 +1446,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-27 | O raio de colisão da jazida acompanha o tamanho visual (de `raio_jazida_max_m` a `raio_jazida_min_m`); o hover minera com o casco a até `distancia_mineracao_m` da borda. | Resposta do produto à Q-06 e à lacuna da distância de mineração. A navegação só é recalculada quando o conjunto de células bloqueadas muda. | Aprovada |
 | D-28 | Recarga: acopla a até `raio_deposito_m` da borda; depois da auto-recarga as unidades voltam ao lugar de onde saíram; drone a 0 EN em voo pousa onde está. | Respostas do produto às lacunas de ENE-11, ENE-12 e ENE-15. | Aprovada |
 | D-29 | Obra e reparo a até `raio_deposito_m` da borda do alvo; a pegada fica reservada entre posicionar e instalar o canteiro; a unidade impressa nasce do lado do ponto de encontro. | Respostas do produto às lacunas de PRD-08, PRD-10, PRD-11, PRD-15 e PRD-18. | Aprovada |
+| D-30 | O estoque padrão traz o Cu e o Li da Impressora (Cu 10, Li 3); a INV-02 passa a 45–60 s. | Com Cu 5 e Li 0, os 2 hovers da abertura ficam em Fe e Si pela Diretiva e a Impressora nunca sai (medido na T-056). Com o Cu e o Li no estoque, ela sai em 49 s. | Aprovada |
 
 ---
 
@@ -1510,3 +1511,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.3.1 | 2026-09-23 | INV-01: a distância de 30 m é entre centros (como em `dados:jazidas`) e só conta o que foi descarregado. |
 | 0.4.0 | 2026-09-23 | D-28: distância de acoplamento (ENE-12), volta depois da auto-recarga (ENE-15) e pouso forçado de drone sem energia (ENE-11). |
 | 0.5.0 | 2026-09-23 | D-29: alcance de obra e reparo (PRD-11, PRD-15), reserva da pegada (PRD-10) e lado de nascimento da unidade impressa (PRD-08). |
+| 0.6.0 | 2026-09-23 | D-30: `dados:estoque_inicial` padrão com Cu 10 e Li 3 (REG-05); INV-02 passa a 45–60 s. |

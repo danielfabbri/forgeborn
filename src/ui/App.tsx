@@ -1,3 +1,5 @@
+import { DebugOverlay } from './DebugOverlay';
+
 export function App() {
-  return null;
+  return <DebugOverlay />;
 }

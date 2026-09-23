@@ -1,3 +1,8 @@
 {
-  "jogo.titulo": "Forgeborn — Nascidos da Forja"
+  "jogo.titulo": "Forgeborn — Nascidos da Forja",
+  "debug.titulo": "Depuração",
+  "debug.fps": "FPS",
+  "debug.tick_ms": "Tick (ms)",
+  "debug.entidades": "Entidades",
+  "debug.tick": "Tick"
 }

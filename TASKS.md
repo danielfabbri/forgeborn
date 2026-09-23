@@ -77,7 +77,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-007 — Runner headless** · P · Spec: TEC-25 · Dep: T-006 · Feito: 2026-09-23
   - CLI `sim:match` com seed, IAs e duração máxima. Sem IA por enquanto: roda os ticks e imprime o hash final e o tempo médio do tick.
   - Aceite: roda em Node sem DOM e termina com código 0.
-- [ ] **T-008 — Loop de render e overlay de depuração** · M · Spec: TEC-04, TEC-26 · Dep: T-006
+- [x] **T-008 — Loop de render e overlay de depuração** · M · Spec: TEC-04, TEC-26 · Dep: T-006 · Feito: 2026-09-23
   - `requestAnimationFrame` com interpolação entre estados; overlay Ctrl+Shift+D com FPS, ms do tick e contagem de entidades.
   - Aceite: uma entidade de teste se move suavemente com a simulação em `tick_hz` e o render a 60+ fps.
 

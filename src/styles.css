@@ -21,3 +21,20 @@ body {
   inset: 0;
   pointer-events: none;
 }
+
+.debug-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 160px;
+  padding: 8px 10px;
+  font:
+    12px/1.5 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: rgba(5, 10, 18, 0.78);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 4px;
+}

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.4.0 — rascunho para aprovação |
+| Versão do SPEC | 0.5.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -506,26 +506,26 @@ flowchart LR
 ### 7.3 Impressão de unidades
 
 - **PRD-07** — A Impressora precisa estar **parada** para imprimir. Se receber ordem de movimento, a impressão pausa e retoma quando ela parar.
-- **PRD-08** — A unidade surge ao lado da Impressora (ou na rampa da Nave) e segue para o **ponto de encontro** do produtor, se houver (clique direito com o produtor selecionado). Com o ponto de encontro sobre uma jazida, o hover recém-impresso começa a minerar ali.
+- **PRD-08** — A unidade surge na borda do produtor, do lado do ponto de encontro; sem ponto de encontro, na rampa da Nave (sul local) ou à frente da Impressora (D-29). Depois segue para o **ponto de encontro** do produtor, se houver (clique direito com o produtor selecionado). Com o ponto de encontro sobre uma jazida, o hover recém-impresso começa a minerar ali.
 - **PRD-09** — Assistência não acelera a impressão de unidades (§7.5 vale só para estruturas).
 
 ### 7.4 Construção de estruturas
 
-- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas e jazidas (com folga de `distancia_min_jazida_m`). A pegada é um quadrado no plano tangente, alinhado ao norte local (CEN-15). Unidades próprias dentro da pegada são empurradas para fora quando a obra começa.
-- **PRD-11** — A Impressora vai até o local, instala o **canteiro** e imprime a estrutura em camadas. O canteiro nasce com `hp_inicial_canteiro_pct`% do HP e ganha HP proporcional ao progresso. Dano sofrido durante a obra é descontado do HP final.
+- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas e jazidas (com folga de `distancia_min_jazida_m`). A pegada é um quadrado no plano tangente, alinhado ao norte local (CEN-15). Unidades próprias dentro da pegada são empurradas para fora quando a obra começa. Entre posicionar e instalar o canteiro, a pegada fica reservada: nenhuma outra estrutura pode ser posicionada sobre ela, mas unidades passam (D-29).
+- **PRD-11** — A Impressora vai até o local (casco a até `raio_deposito_m` da borda da pegada, D-29), instala o **canteiro** e imprime a estrutura em camadas. O canteiro nasce com `hp_inicial_canteiro_pct`% do HP e ganha HP proporcional ao progresso. Dano sofrido durante a obra é descontado do HP final.
 - **PRD-12** — Estrutura em construção não funciona (não gera energia, não dispara, não recebe descargas) até chegar a 100%.
 - **PRD-13** — Canteiro abandonado não se degrada e pode ser retomado por qualquer Impressora ou Hover de Exploração próprio.
 - **PRD-14** — Cancelar uma estrutura em construção devolve os recursos conforme PRD-05 e remove o canteiro.
 
 ### 7.5 Poder de Impressão (PI) e assistência
 
-- **PRD-15** — Velocidade da obra = Σ PI dos construtores ativos ÷ `tempo_s` da estrutura. PI da Impressora: `pi_impressora`; PI do Hover de Exploração: `pi_hover`. Aceita até `max_assistentes` além do construtor principal.
+- **PRD-15** — Velocidade da obra = Σ PI dos construtores ativos ÷ `tempo_s` da estrutura. PI da Impressora: `pi_impressora`; PI do Hover de Exploração: `pi_hover`. Aceita até `max_assistentes` além do construtor principal. Construtores e reparadores trabalham com o casco a até `raio_deposito_m` da borda do alvo (D-29).
 - **PRD-16** — Só uma Impressora pode **iniciar** um canteiro. Depois de iniciado, Hovers de Exploração podem continuá-lo sozinhos (é o papel de "construtor" do hover no briefing).
 - **PRD-17** — A energia total da obra (`en_impressao`) é fixa. Cada construtor paga a fração proporcional ao seu PI, da própria bateria.
 
 ### 7.6 Reparo
 
-- **PRD-18** — Hovers de Exploração e Impressoras reparam estruturas e unidades próprias, gastando só energia (taxas nos parâmetros). No máximo `max_reparadores` por alvo. Drones só podem ser reparados pousados.
+- **PRD-18** — Hovers de Exploração e Impressoras reparam estruturas e unidades próprias, gastando só energia (taxas nos parâmetros), com o casco a até `raio_deposito_m` da borda do alvo (D-29). No máximo `max_reparadores` por alvo. Drones só podem ser reparados pousados.
 - **PRD-19** — Impressora ociosa repara sozinha estruturas próprias danificadas a até `raio_reparo_auto_m`.
 
 <!-- dados:parametros -->
@@ -1445,6 +1445,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-26 | Zoom contínuo até a visão planetária (planeta inteiro na tela) e sol que acompanha o foco (sem noite). | O planeta pequeno fica legível de relance, e nenhuma base fica no escuro. | Proposta |
 | D-27 | O raio de colisão da jazida acompanha o tamanho visual (de `raio_jazida_max_m` a `raio_jazida_min_m`); o hover minera com o casco a até `distancia_mineracao_m` da borda. | Resposta do produto à Q-06 e à lacuna da distância de mineração. A navegação só é recalculada quando o conjunto de células bloqueadas muda. | Aprovada |
 | D-28 | Recarga: acopla a até `raio_deposito_m` da borda; depois da auto-recarga as unidades voltam ao lugar de onde saíram; drone a 0 EN em voo pousa onde está. | Respostas do produto às lacunas de ENE-11, ENE-12 e ENE-15. | Aprovada |
+| D-29 | Obra e reparo a até `raio_deposito_m` da borda do alvo; a pegada fica reservada entre posicionar e instalar o canteiro; a unidade impressa nasce do lado do ponto de encontro. | Respostas do produto às lacunas de PRD-08, PRD-10, PRD-11, PRD-15 e PRD-18. | Aprovada |
 
 ---
 
@@ -1508,3 +1509,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.3.0 | 2026-09-23 | D-27 (responde Q-06): raio da jazida acompanha a quantidade; novas chaves `raio_jazida_max_m`, `raio_jazida_min_m` e `distancia_mineracao_m`; ECO-05, ECO-09 e ECO-11 (distâncias medidas pelo casco) reescritas. |
 | 0.3.1 | 2026-09-23 | INV-01: a distância de 30 m é entre centros (como em `dados:jazidas`) e só conta o que foi descarregado. |
 | 0.4.0 | 2026-09-23 | D-28: distância de acoplamento (ENE-12), volta depois da auto-recarga (ENE-15) e pouso forçado de drone sem energia (ENE-11). |
+| 0.5.0 | 2026-09-23 | D-29: alcance de obra e reparo (PRD-11, PRD-15), reserva da pegada (PRD-10) e lado de nascimento da unidade impressa (PRD-08). |

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { dados } from '../../src/sim';
 import { componenteConectado, noComponente, temFolga } from '../../src/sim/map/conectividade';
+import { aplicarRotacao, arco, rotacoesDeSimetria } from '../../src/sim/map/esfera';
 import { celulaDe, derivarGrades } from '../../src/sim/map/grids';
 import { distribuirJazidas, type DistribuicaoDeJazidas } from '../../src/sim/map/jazidas';
-import { gerarMapaLunar, type MapaLunar, rotacionar, type Simetria } from '../../src/sim/map/lunar';
+import { gerarMapaLunar, type MapaLunar, type Simetria } from '../../src/sim/map/lunar';
 
 interface Caso {
   nome: string;
@@ -27,91 +28,111 @@ const perfil = (recurso: string) =>
 
 describe.each(CASOS)('distribuição de jazidas — $nome', ({ mapa, dist }) => {
   const n = mapa.simetria;
+  const R = mapa.raio_m;
+  /** Pontos médios fixados por uma meia-volta do grupo (ECO-08: pares espelhados). */
+  const estabilizado = (d: number[]) =>
+    rotacoesDeSimetria(n)
+      .slice(1)
+      .some((sigma) => aplicarRotacao(sigma, d as never).every((v, k) => v === d[k]));
+  /** Contagem e fração da quantidade esperadas por ponto, pela regra de ECO-08. */
+  const esperado = (linha: (typeof dados.jazidas)[number], pontos: { d: number[] }[]) => {
+    const porPonto = linha.zona === 'central' ? linha.jazidas / pontos.length : linha.jazidas;
+    return pontos.map((ponto) => {
+      const total = estabilizado(ponto.d) && porPonto % 2 === 1 ? porPonto + 1 : porPonto;
+      return { total, fracao: porPonto / total };
+    });
+  };
 
-  it('ECO-07: contagens e quantidades = dados:jazidas × perfil do cenário', () => {
+  it('ECO-07/ECO-08: contagens e quantidades = dados:jazidas × perfil do cenário', () => {
     for (const linha of dados.jazidas) {
-      const copias = linha.escopo === 'por_mapa' ? 1 : n;
       const achadas = dist.jazidas.filter(
         (j) => j.zona === linha.zona && j.recurso === linha.recurso,
       );
-      expect(achadas, `${linha.zona}/${linha.recurso}`).toHaveLength(linha.jazidas * copias);
-      for (const jazida of achadas) {
-        expect(jazida.quantidade).toBe(Math.round(linha.quantidade_u * perfil(linha.recurso)));
+      const base = Math.round(linha.quantidade_u * perfil(linha.recurso));
+      const rotulo = `${linha.zona}/${linha.recurso}`;
+      if (linha.zona === 'inicial' || linha.zona === 'expansao') {
+        expect(achadas, rotulo).toHaveLength(linha.jazidas * n);
+        for (const jazida of achadas) expect(jazida.quantidade).toBe(base);
+        continue;
       }
+      const pontos = linha.zona === 'contestada' ? dist.contestadas : dist.centrais;
+      const porPonto = esperado(linha, pontos);
+      expect(achadas, rotulo).toHaveLength(porPonto.reduce((s, p) => s + p.total, 0));
+      // a quantidade total do recurso se mantém (± arredondamento)
+      const totalAchado = achadas.reduce((s, j) => s + j.quantidade, 0);
+      const totalBase =
+        base * (linha.zona === 'central' ? linha.jazidas : linha.jazidas * pontos.length);
+      expect(Math.abs(totalAchado - totalBase), rotulo).toBeLessThanOrEqual(achadas.length);
+      const fracoes = porPonto.map((p) => Math.round(base * p.fracao));
+      for (const jazida of achadas) expect(fracoes).toContain(jazida.quantidade);
     }
-    expect(dist.jazidas).toHaveLength(
-      dados.jazidas.reduce((soma, l) => soma + l.jazidas * (l.escopo === 'por_mapa' ? 1 : n), 0),
-    );
   });
 
-  it('ECO-07: distâncias dentro das faixas do SPEC', () => {
+  it('ECO-07: distâncias (arcos) dentro das faixas do SPEC', () => {
     for (const jazida of dist.jazidas) {
       const linha = dados.jazidas.find(
         (l) => l.zona === jazida.zona && l.recurso === jazida.recurso,
       )!;
       for (const k of jazida.zonasDePouso) {
-        const zona = mapa.zonasDePouso[k]!;
-        const d = Math.hypot(jazida.x - zona.x, jazida.z - zona.z);
-        expect(d, `${jazida.zona}/${jazida.recurso}`).toBeGreaterThanOrEqual(linha.dist_min_m ?? 0);
-        expect(d, `${jazida.zona}/${jazida.recurso}`).toBeLessThanOrEqual(
-          linha.dist_max_m ?? Infinity,
-        );
+        const d = R * arco(jazida.d, mapa.zonasDePouso[k]!.d);
+        const rotulo = `${jazida.zona}/${jazida.recurso}`;
+        expect(d, rotulo).toBeGreaterThanOrEqual(linha.dist_min_m ?? 0);
+        expect(d, rotulo).toBeLessThanOrEqual(linha.dist_max_m ?? Infinity);
       }
     }
   });
 
-  it('ECO-08: 2 zonas contestadas em mapas de 2 zonas; uma entre cada par vizinho em mapas de 4', () => {
+  it('ECO-08: contestadas e centrais nos pontos médios; centrais divididas entre os 2 pontos', () => {
     expect(dist.contestadas).toHaveLength(n === 2 ? 2 : 4);
+    expect(dist.centrais).toHaveLength(2);
     if (n === 4) {
-      expect(dist.contestadas.map((c) => c.zonasDePouso)).toEqual([
-        [0, 1],
-        [1, 2],
-        [2, 3],
-        [3, 0],
-      ]);
+      // cada zona de pouso tem 2 contestadas e 1 central vizinhas
+      for (let k = 0; k < 4; k++) {
+        expect(dist.contestadas.filter((c) => c.zonasDePouso.includes(k))).toHaveLength(2);
+        expect(dist.centrais.filter((c) => c.zonasDePouso.includes(k))).toHaveLength(1);
+      }
+    }
+    const centrais = dist.jazidas.filter((j) => j.zona === 'central');
+    for (const ponto of dist.centrais) {
+      const aqui = centrais.filter(
+        (j) =>
+          R * arco(j.d, ponto.d) < 60 &&
+          dist.centrais.every((o) => arco(j.d, ponto.d) <= arco(j.d, o.d)),
+      );
+      expect([...new Set(aqui.map((j) => j.recurso))].sort()).toEqual(['ti', 'u']);
     }
   });
 
   it('CEN-11: jazidas transponíveis, a ≥ 6 m de penhascos e alcançáveis por solo', () => {
     const { navegacao } = derivarGrades(mapa);
-    const [ci, cj] = celulaDe(navegacao, mapa.zonasDePouso[0]!.x, mapa.zonasDePouso[0]!.z)!;
-    const alcancavel = componenteConectado(navegacao, ci, cj);
+    const alcancavel = componenteConectado(navegacao, celulaDe(navegacao, mapa.zonasDePouso[0]!.d));
     for (const jazida of dist.jazidas) {
-      expect(temFolga(navegacao, jazida.x, jazida.z, 6)).toBe(true);
-      expect(noComponente(navegacao, alcancavel, jazida.x, jazida.z)).toBe(true);
+      expect(temFolga(navegacao, jazida.d, 6)).toBe(true);
+      expect(noComponente(navegacao, alcancavel, jazida.d)).toBe(true);
     }
   });
 
-  it('justiça: as jazidas de cada zona de pouso são rotações exatas das da zona 0', () => {
-    const daZona = (k: number) =>
-      dist.jazidas.filter(
-        (j) => j.zona !== 'central' && j.zona !== 'contestada' && j.zonasDePouso[0] === k,
-      );
-    const zero = daZona(0);
-    for (let k = 1; k < n; k++) {
-      daZona(k).forEach((jazida, indice) => {
-        const [x, z] = rotacionar(zero[indice]!.x, zero[indice]!.z, k, n);
-        expect(jazida.recurso).toBe(zero[indice]!.recurso);
-        expect(jazida.x).toBeCloseTo(x, 9);
-        expect(jazida.z).toBeCloseTo(z, 9);
-      });
+  it('CEN-06: o conjunto de jazidas é invariante pelas rotações do grupo', () => {
+    const chave = (recurso: string, d: number[]) =>
+      `${recurso}:${d.map((v) => v.toFixed(9)).join(',')}`;
+    const conjunto = new Set(dist.jazidas.map((j) => chave(j.recurso, j.d)));
+    for (const sigma of rotacoesDeSimetria(n)) {
+      for (const j of dist.jazidas) {
+        expect(conjunto.has(chave(j.recurso, aplicarRotacao(sigma, j.d)))).toBe(true);
+      }
     }
   });
 
-  it('justiça: cada zona de pouso tem um Ti e um U centrais à mesma distância', () => {
-    const centrais = dist.jazidas.filter((j) => j.zona === 'central');
-    const maisProxima = (x: number, z: number, recurso: string) =>
-      Math.min(
-        ...centrais.filter((j) => j.recurso === recurso).map((j) => Math.hypot(j.x - x, j.z - z)),
+  it('justiça: cada zona de pouso vê as mesmas distâncias a cada recurso', () => {
+    const assinatura = (k: number) =>
+      [...new Set(dist.jazidas.map((j) => j.recurso))].map((recurso) =>
+        dist.jazidas
+          .filter((j) => j.recurso === recurso)
+          .map((j) => R * arco(j.d, mapa.zonasDePouso[k]!.d))
+          .sort((a, b) => a - b)
+          .map((d) => d.toFixed(6)),
       );
-    const distancias = mapa.zonasDePouso.map((zona) => [
-      maisProxima(zona.x, zona.z, 'ti'),
-      maisProxima(zona.x, zona.z, 'u'),
-    ]);
-    for (const [ti, u] of distancias) {
-      expect(ti).toBeCloseTo(distancias[0]![0]!, 6);
-      expect(u).toBeCloseTo(distancias[0]![1]!, 6);
-    }
+    for (let k = 1; k < n; k++) expect(assinatura(k)).toEqual(assinatura(0));
   });
 });
 

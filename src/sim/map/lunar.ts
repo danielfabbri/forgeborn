@@ -1,21 +1,44 @@
 /**
- * Gerador de mapas lunares por seed (CEN-06 a CEN-09).
+ * Gerador de planetas lunares por seed (CEN-06 a CEN-09, CEN-14).
  *
- * Simetria exata: crateras, colinas e sulcos são sorteados num setor de 2π/N e replicados por
- * rotações exatas (90° ou 180°); o ruído é a média das N rotações. As alturas são calculadas só
- * no domínio fundamental e copiadas para os outros setores, então amostras simétricas são iguais.
+ * Simetria exata: crateras, colinas e sulcos são sorteados uma vez e replicados pelas rotações
+ * do grupo (CEN-06); o ruído é a soma das rotações. As alturas são calculadas só num vértice de
+ * cada órbita do grupo e copiadas para os outros, então amostras simétricas são idênticas.
+ *
+ * Cada feição usa coordenadas locais no plano tangente ao seu centro: distância pelo arco
+ * (CEN-14) e ângulo a partir de um rumo de referência que gira junto com a feição.
  */
 import { nextFloat, nextU32, type RngState, seedRng } from '../core/rng';
 import { dados, type TamanhosMapaId } from '../data';
-import { FAIXA_BORDA_M } from './grids';
-import { codificarAltura, type Heightmap } from './heightmap';
-import { fbm } from './noise';
+import {
+  aplicarRotacao,
+  arco,
+  avancar,
+  celulasPorAresta,
+  girar,
+  normalizar,
+  norteEm,
+  produtoEscalar,
+  produtoVetorial,
+  rotacoesDeSimetria,
+  type Simetria,
+  TAU,
+  tangente,
+  type Vec3,
+} from './esfera';
+import {
+  codificarAltura,
+  direcaoDoVertice,
+  type Heightmap,
+  indiceDoVertice,
+  verticeRotacionado,
+} from './heightmap';
+import { fbm3 } from './noise';
 
-export type Simetria = 2 | 4;
+export type { Simetria };
 
 /** Números do gerador (GOV-04). Os que vêm do SPEC citam a regra. */
 export const GERADOR_LUA = {
-  distanciaZonaFracao: 0.36, // CEN-07
   raioPlato: 50, // CEN-08
   /** O topo plano vai um pouco além dos 50 m para a borda do platô também medir 0°. */
   folgaTopo: 2,
@@ -24,9 +47,9 @@ export const GERADOR_LUA = {
   larguraRampa: 16, // CEN-08: ≥ 12 m
   ombroRampa: 4,
   comprimentoRampa: 32,
-  faixaBorda: FAIXA_BORDA_M, // CEN-09
-  alturaBorda: 30,
-  /** Centro livre para a zona central: 40 m + a queda externa máxima de uma borda (16 m). */
+  /** Jitter do rumo das rampas em torno da direção dos pontos médios. */
+  desvioRampa_graus: 20,
+  /** Pontos médios livres de feições: 40 m + a queda externa máxima de uma borda (16 m). */
   raioLivreCentro: 56,
   crateraBordaMax: 8, // CEN-09
   /**
@@ -49,45 +72,52 @@ export const GERADOR_LUA = {
   folgaCorredor: 6,
   /** Quanto o corredor protegido passa do fim da rampa. */
   saidaRampa: 20,
+  /** Resolução do heightmap: ~1 m entre vértices (CEN-13). */
+  texel_m: 1,
 } as const;
 
 const G = GERADOR_LUA;
-const TAU = Math.PI * 2;
 
 export interface ZonaDePouso {
-  x: number;
-  z: number;
-  /** Direção de cada rampa de saída, em radianos (0 = +x, π/2 = +z). */
-  rampas: number[];
+  /** Centro (direção unitária). */
+  d: Vec3;
+  /** Rumo tangente de cada rampa de saída. */
+  rampas: Vec3[];
+}
+
+/** Ponto médio entre zonas de pouso (ECO-08): contestado ou central. */
+export interface PontoMedio {
+  d: Vec3;
+  zonasDePouso: [number, number];
 }
 
 export interface Cratera {
-  x: number;
-  z: number;
+  d: Vec3;
+  /** Rumo de referência para os ângulos da borda. */
+  ref: Vec3;
   raio: number;
   profundidade: number;
   borda: number;
-  /** Direções (rad) das brechas na borda. */
+  /** Ângulos (rad, a partir de `ref`) das brechas na borda. */
   brechas: number[];
   fase1: number;
   fase2: number;
 }
 
 interface Colina {
-  x: number;
-  z: number;
+  d: Vec3;
   altura: number;
   sigma: number;
 }
 
 interface Sulco {
-  pontos: Array<[number, number]>;
+  /** Pontos da linha, já na superfície (m). */
+  pontos: Vec3[];
+  /** Centro e alcance angular, para descartar rápido. */
+  centro: Vec3;
+  cosAlcance: number;
   largura: number;
   profundidade: number;
-  minX: number;
-  maxX: number;
-  minZ: number;
-  maxZ: number;
 }
 
 export interface MapaLunar extends Heightmap {
@@ -95,24 +125,69 @@ export interface MapaLunar extends Heightmap {
   tamanho: TamanhosMapaId;
   simetria: Simetria;
   zonasDePouso: ZonaDePouso[];
+  contestados: PontoMedio[];
+  centrais: PontoMedio[];
   /** Todas as crateras, já replicadas. */
   crateras: Cratera[];
 }
 
-/** Rotação exata de k passos de 2π/N em torno do centro do mapa. */
-export function rotacionar(x: number, z: number, k: number, n: Simetria): [number, number] {
-  const passos = ((k % n) + n) % n;
-  if (n === 2) return passos === 0 ? [x, z] : [-x, -z];
-  switch (passos) {
-    case 0:
-      return [x, z];
-    case 1:
-      return [-z, x];
-    case 2:
-      return [-x, -z];
-    default:
-      return [z, -x];
+/** CEN-07 e ECO-08: zonas de pouso e pontos médios de cada simetria. */
+export function geometriaDasZonas(n: Simetria): {
+  zonas: Vec3[];
+  contestados: PontoMedio[];
+  centrais: PontoMedio[];
+} {
+  if (n === 2) {
+    return {
+      zonas: [
+        [0, 0, 1],
+        [0, 0, -1],
+      ],
+      contestados: [
+        { d: [0, 1, 0], zonasDePouso: [0, 1] },
+        { d: [0, -1, 0], zonasDePouso: [0, 1] },
+      ],
+      centrais: [
+        { d: [1, 0, 0], zonasDePouso: [0, 1] },
+        { d: [-1, 0, 0], zonasDePouso: [0, 1] },
+      ],
+    };
   }
+  const zona0 = normalizar([1, 1, 1]);
+  const zonas = rotacoesDeSimetria(4).map((sigma) => aplicarRotacao(sigma, zona0));
+  return {
+    zonas,
+    // Z0+Z1 = +x, Z2+Z3 = −x, Z0+Z3 = +z, Z1+Z2 = −z; os centrais são ±y (Z0+Z2 e Z1+Z3).
+    contestados: [
+      { d: [1, 0, 0], zonasDePouso: [0, 1] },
+      { d: [-1, 0, 0], zonasDePouso: [2, 3] },
+      { d: [0, 0, 1], zonasDePouso: [0, 3] },
+      { d: [0, 0, -1], zonasDePouso: [1, 2] },
+    ],
+    centrais: [
+      { d: [0, 1, 0], zonasDePouso: [0, 2] },
+      { d: [0, -1, 0], zonasDePouso: [1, 3] },
+    ],
+  };
+}
+
+/** Rumo tangente do "fundo" do platô: o meio do maior vão entre as rampas. */
+export function rumoSemRampa(zona: ZonaDePouso): Vec3 {
+  const ref = zona.rampas[0]!;
+  const e2 = produtoVetorial(zona.d, ref);
+  const angulos = zona.rampas
+    .map((u) => (Math.atan2(produtoEscalar(u, e2), produtoEscalar(u, ref)) + TAU) % TAU)
+    .sort((a, b) => a - b);
+  let meio = 0;
+  let maiorVao = -1;
+  angulos.forEach((a, k) => {
+    const b = k + 1 < angulos.length ? angulos[k + 1]! : angulos[0]! + TAU;
+    if (b - a > maiorVao) {
+      maiorVao = b - a;
+      meio = (a + b) / 2;
+    }
+  });
+  return normalizar(girar(ref, zona.d, meio));
 }
 
 function clamp01(t: number): number {
@@ -139,27 +214,38 @@ function inteiroEntre(rng: RngState, [a, b]: readonly [number, number]): number 
   return a + Math.floor(nextFloat(rng) * (b - a + 1));
 }
 
-function distanciaAoSegmento(
-  px: number,
-  pz: number,
-  [ax, az]: [number, number],
-  [bx, bz]: [number, number],
-): number {
-  const vx = bx - ax;
-  const vz = bz - az;
-  const t = clamp01(((px - ax) * vx + (pz - az) * vz) / (vx * vx + vz * vz));
-  return Math.hypot(px - (ax + vx * t), pz - (az + vz * t));
+/** Direção uniforme na esfera. */
+function direcaoSorteada(rng: RngState): Vec3 {
+  const z = 2 * nextFloat(rng) - 1;
+  const phi = TAU * nextFloat(rng);
+  const r = Math.sqrt(Math.max(0, 1 - z * z));
+  return [r * Math.cos(phi), z, r * Math.sin(phi)];
 }
 
-/** Contribuição de uma cratera para a altura no ponto (x, z). */
-export function alturaCratera(c: Cratera, x: number, z: number): number {
-  const dx = x - c.x;
-  const dz = z - c.z;
+/** Rumo tangente sorteado em d. */
+function rumoSorteado(rng: RngState, d: Vec3): Vec3 {
+  return normalizar(girar(norteEm(d), d, TAU * nextFloat(rng)));
+}
+
+/**
+ * Coordenadas locais (m) de p no plano tangente ao centro c: x ao longo de `ref`, y ao longo de
+ * c × ref, e a distância pelo arco.
+ */
+function local(c: Vec3, ref: Vec3, p: Vec3, raio: number): { x: number; y: number; d: number } {
+  const d = raio * arco(c, p);
+  const t = tangente(c, p);
+  if (!t) return { x: 0, y: 0, d };
+  const e2 = produtoVetorial(c, ref);
+  return { x: d * produtoEscalar(t, ref), y: d * produtoEscalar(t, e2), d };
+}
+
+/** Contribuição de uma cratera para a altura na direção p. */
+export function alturaCratera(c: Cratera, p: Vec3, raioPlaneta: number): number {
   const alcance = c.raio * 1.6 + 8;
-  if (Math.abs(dx) > alcance || Math.abs(dz) > alcance) return 0;
-  const d = Math.hypot(dx, dz);
+  if (produtoEscalar(c.d, p) < Math.cos(Math.min(Math.PI, alcance / raioPlaneta))) return 0;
+  const { x, y, d } = local(c.d, c.ref, p, raioPlaneta);
   if (d > alcance) return 0;
-  const theta = Math.atan2(dz, dx);
+  const theta = Math.atan2(y, x);
   const raio =
     c.raio * (1 + 0.05 * Math.sin(3 * theta + c.fase1) + 0.03 * Math.sin(5 * theta + c.fase2));
   const rho = d / raio;
@@ -182,11 +268,20 @@ export function alturaCratera(c: Cratera, x: number, z: number): number {
   return normal + (perfilBrecha - normal) * g;
 }
 
-function alturaSulco(s: Sulco, x: number, z: number): number {
-  if (x < s.minX || x > s.maxX || z < s.minZ || z > s.maxZ) return 0;
+/** Distância (m) de P ao segmento AB, em 3D (a corda ≈ o arco para trechos curtos). */
+function distanciaAoSegmento3(p: Vec3, a: Vec3, b: Vec3): number {
+  const v: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const w: Vec3 = [p[0] - a[0], p[1] - a[1], p[2] - a[2]];
+  const t = clamp01(produtoEscalar(w, v) / produtoEscalar(v, v));
+  return Math.hypot(w[0] - v[0] * t, w[1] - v[1] * t, w[2] - v[2] * t);
+}
+
+function alturaSulco(s: Sulco, p: Vec3, raioPlaneta: number): number {
+  if (produtoEscalar(s.centro, p) < s.cosAlcance) return 0;
+  const P: Vec3 = [p[0] * raioPlaneta, p[1] * raioPlaneta, p[2] * raioPlaneta];
   let menor = Infinity;
   for (let k = 0; k < s.pontos.length - 1; k++) {
-    menor = Math.min(menor, distanciaAoSegmento(x, z, s.pontos[k]!, s.pontos[k + 1]!));
+    menor = Math.min(menor, distanciaAoSegmento3(P, s.pontos[k]!, s.pontos[k + 1]!));
   }
   if (menor >= s.largura) return 0;
   const q = 1 - (menor / s.largura) ** 2;
@@ -196,77 +291,70 @@ function alturaSulco(s: Sulco, x: number, z: number): number {
 export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetria): MapaLunar {
   const definicao = dados.tamanhos_mapa.find((t) => t.id === tamanho);
   if (!definicao) throw new Error(`Tamanho de mapa desconhecido: ${tamanho}`);
-  const lado = definicao.lado_m;
-  const meio = lado / 2;
-  const passo = TAU / n;
+  const R = definicao.raio_m;
+  const grupo = rotacoesDeSimetria(n);
   const rng = seedRng(seed);
   const seedRuido = nextU32(rng) | 0;
+  const geo = geometriaDasZonas(n);
 
-  // CEN-07: zonas de pouso a 36% do lado, em ângulos igualmente espaçados a partir de 45°.
-  const rZona = G.distanciaZonaFracao * lado;
-  const x0 = rZona * Math.cos(Math.PI / 4);
-  const z0 = rZona * Math.sin(Math.PI / 4);
-  const paraOCentro = Math.atan2(-z0, -x0);
-  // CEN-08: 2 ou 3 rampas, voltadas para o interior do mapa.
-  const rampas0 =
-    inteiroEntre(rng, [2, 3]) === 2
-      ? (() => {
-          const d = (entre(rng, [25, 50]) * Math.PI) / 180;
-          return [paraOCentro - d, paraOCentro + d];
-        })()
-      : (() => {
-          const d = (entre(rng, [45, 65]) * Math.PI) / 180;
-          return [paraOCentro - d, paraOCentro, paraOCentro + d];
-        })();
-  const zonasDePouso: ZonaDePouso[] = Array.from({ length: n }, (_, k) => {
-    const [x, z] = rotacionar(x0, z0, k, n);
-    return { x, z, rampas: rampas0.map((a) => a + k * passo) };
-  });
+  // CEN-08: 2 ou 3 rampas por zona, rumo aos pontos médios vizinhos, com um desvio sorteado.
+  const zona0 = geo.zonas[0]!;
+  const vizinhos0 = [...geo.contestados, ...geo.centrais].filter((m) => m.zonasDePouso.includes(0));
+  const contestados0 = vizinhos0.filter((m) => geo.contestados.includes(m));
+  const centrais0 = vizinhos0.filter((m) => geo.centrais.includes(m));
+  const tres = inteiroEntre(rng, [2, 3]) === 3;
+  const alvosRampa = tres
+    ? [...contestados0.slice(0, 2), centrais0[Math.floor(nextFloat(rng) * centrais0.length)]!]
+    : contestados0.slice(0, 2);
+  const desvio = (entre(rng, [-1, 1]) * G.desvioRampa_graus * Math.PI) / 180;
+  const rampas0 = alvosRampa.map((m) => normalizar(girar(tangente(zona0, m.d)!, zona0, desvio)));
+  const zonasDePouso: ZonaDePouso[] = grupo.map((sigma) => ({
+    d: aplicarRotacao(sigma, zona0),
+    rampas: rampas0.map((r) => aplicarRotacao(sigma, r)),
+  }));
 
-  const areaSetor = (lado * lado) / n;
+  const area = 4 * Math.PI * R * R;
   const topo = G.raioPlato + G.folgaTopo;
-  const noSetor = (x: number, z: number): boolean => {
-    let a = Math.atan2(z, x);
-    if (a < 0) a += TAU;
-    return a < passo;
-  };
-  /** Ponto sorteado dentro do setor fundamental e do quadrado útil `[-limite, limite]²`. */
-  const sortearNoSetor = (limite: number): [number, number] => {
-    for (;;) {
-      const x = entre(rng, [-limite, limite]);
-      const z = entre(rng, [-limite, limite]);
-      if (noSetor(x, z)) return [x, z];
-    }
-  };
-  /** Um obstáculo de raio `raio` em (x, z) não encosta no penhasco nem nos corredores das rampas. */
-  const respeitaZonas = (x: number, z: number, raio: number): boolean =>
+  const alcanceCorredor = topo + G.comprimentoRampa + G.saidaRampa;
+  const meiaLarguraCorredor = G.larguraRampa / 2 + G.ombroRampa + G.folgaCorredor;
+
+  /** Um obstáculo de raio `raio` em p não encosta no penhasco nem nos corredores das rampas. */
+  const respeitaZonas = (p: Vec3, raio: number): boolean =>
     zonasDePouso.every((zona) => {
-      if (Math.hypot(x - zona.x, z - zona.z) < topo + G.larguraPenhasco + G.folgaZona + raio) {
-        return false;
-      }
-      const alcance = topo + G.comprimentoRampa + G.saidaRampa;
-      const meiaLargura = G.larguraRampa / 2 + G.ombroRampa + G.folgaCorredor;
-      return zona.rampas.every((a) => {
-        const fim: [number, number] = [
-          zona.x + Math.cos(a) * alcance,
-          zona.z + Math.sin(a) * alcance,
-        ];
-        return distanciaAoSegmento(x, z, [zona.x, zona.z], fim) >= raio + meiaLargura;
+      const distancia = R * arco(zona.d, p);
+      if (distancia < topo + G.larguraPenhasco + G.folgaZona + raio) return false;
+      if (distancia > alcanceCorredor + raio + meiaLarguraCorredor) return true;
+      return zona.rampas.every((u) => {
+        const { x, y } = local(zona.d, u, p, R);
+        const aoSegmento =
+          x < 0
+            ? Math.hypot(x, y)
+            : x > alcanceCorredor
+              ? Math.hypot(x - alcanceCorredor, y)
+              : Math.abs(y);
+        return aoSegmento >= raio + meiaLarguraCorredor;
       });
     });
+  // Pontos médios (contestados e centrais) ficam livres de feições, para caber as jazidas.
+  const pontosMedios = [...geo.contestados, ...geo.centrais];
+  const longeDosCentrais = (p: Vec3, raio: number): boolean =>
+    pontosMedios.every((m) => R * arco(m.d, p) >= G.raioLivreCentro + raio);
+  const replicas = (p: Vec3): Vec3[] => grupo.map((sigma) => aplicarRotacao(sigma, p));
 
   // Crateras (CEN-09).
   const crateras: Cratera[] = [];
   for (const classe of G.classesCratera) {
-    const quantidade = Math.floor((classe.densidade * areaSetor) / 10000 + nextFloat(rng));
+    const quantidade = Math.floor((classe.densidade * area) / n / 10000 + nextFloat(rng));
     for (let c = 0; c < quantidade; c++) {
       for (let tentativa = 0; tentativa < G.tentativas; tentativa++) {
         const raio = entre(rng, classe.raio);
-        const [x, z] = sortearNoSetor(meio - G.faixaBorda - raio * 1.3);
-        if (Math.hypot(x, z) < G.raioLivreCentro + raio) continue;
+        const p = direcaoSorteada(rng);
+        if (!longeDosCentrais(p, raio)) continue;
         // Alcance visível da borda: raio + duas larguras da queda externa.
-        if (!respeitaZonas(x, z, raio + 2 * Math.min(0.3 * raio, 8))) continue;
-        if (crateras.some((o) => Math.hypot(x - o.x, z - o.z) < 0.9 * (raio + o.raio))) continue;
+        if (!respeitaZonas(p, raio + 2 * Math.min(0.3 * raio, 8))) continue;
+        const copias = replicas(p);
+        if (copias.slice(1).some((q) => R * arco(p, q) < 1.8 * raio)) continue;
+        if (crateras.some((o) => R * arco(p, o.d) < 0.9 * (raio + o.raio))) continue;
 
         const profundidade = Math.min(Math.max(0.2 * raio, 2), 10);
         const borda = Math.min(Math.max(0.14 * raio, 1.2), G.crateraBordaMax);
@@ -275,18 +363,17 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
         );
         const fase1 = entre(rng, [0, TAU]);
         const fase2 = entre(rng, [0, TAU]);
-        for (let k = 0; k < n; k++) {
-          const [rx, rz] = rotacionar(x, z, k, n);
-          const beta = k * passo;
+        const ref = rumoSorteado(rng, p);
+        for (const sigma of grupo) {
           crateras.push({
-            x: rx,
-            z: rz,
+            d: aplicarRotacao(sigma, p),
+            ref: aplicarRotacao(sigma, ref),
             raio,
             profundidade,
             borda,
-            brechas: brechas.map((b) => b + beta),
-            fase1: fase1 - 3 * beta,
-            fase2: fase2 - 5 * beta,
+            brechas,
+            fase1,
+            fase2,
           });
         }
         break;
@@ -296,23 +383,20 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
 
   // Colinas suaves.
   const colinas: Colina[] = [];
-  const quantidadeColinas = Math.floor((G.colinas.densidade * areaSetor) / 10000 + nextFloat(rng));
+  const quantidadeColinas = Math.floor((G.colinas.densidade * area) / n / 10000 + nextFloat(rng));
   for (let c = 0; c < quantidadeColinas; c++) {
     for (let tentativa = 0; tentativa < G.tentativas; tentativa++) {
       const sigma = entre(rng, G.colinas.sigma);
       const altura = entre(rng, G.colinas.altura);
-      const [x, z] = sortearNoSetor(meio - G.faixaBorda - sigma);
-      if (Math.hypot(x, z) < 1.5 * sigma) continue;
-      if (!respeitaZonas(x, z, 2 * sigma)) continue;
-      for (let k = 0; k < n; k++) {
-        const [rx, rz] = rotacionar(x, z, k, n);
-        colinas.push({ x: rx, z: rz, altura, sigma });
-      }
+      const p = direcaoSorteada(rng);
+      if (!longeDosCentrais(p, sigma)) continue;
+      if (!respeitaZonas(p, 2 * sigma)) continue;
+      for (const q of replicas(p)) colinas.push({ d: q, altura, sigma });
       break;
     }
   }
 
-  // Sulcos (canais rasos e sinuosos).
+  // Sulcos (canais rasos e sinuosos), andando pela superfície com o rumo girando aos poucos.
   const sulcos: Sulco[] = [];
   const quantidadeSulcos = inteiroEntre(rng, G.sulcos.porSetor);
   for (let c = 0; c < quantidadeSulcos; c++) {
@@ -320,92 +404,66 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
       const largura = entre(rng, G.sulcos.largura);
       const profundidade = entre(rng, G.sulcos.profundidade);
       const comprimento = entre(rng, G.sulcos.comprimento);
-      const limite = meio - G.faixaBorda - largura;
-      const ax = entre(rng, [-limite, limite]);
-      const az = entre(rng, [-limite, limite]);
-      const direcao = entre(rng, [0, TAU]);
-      const curva = entre(rng, [-0.25, 0.25]) * comprimento;
-      const bx = ax + Math.cos(direcao) * comprimento;
-      const bz = az + Math.sin(direcao) * comprimento;
-      const cx = (ax + bx) / 2 - Math.sin(direcao) * curva;
-      const cz = (az + bz) / 2 + Math.cos(direcao) * curva;
-      const pontos: Array<[number, number]> = [];
-      for (let s = 0; s <= 16; s++) {
-        const t = s / 16;
-        pontos.push([
-          (1 - t) * (1 - t) * ax + 2 * (1 - t) * t * cx + t * t * bx,
-          (1 - t) * (1 - t) * az + 2 * (1 - t) * t * cz + t * t * bz,
-        ]);
+      const curva = entre(rng, [-0.9, 0.9]);
+      const inicio = direcaoSorteada(rng);
+      let estado = { p: inicio, rumo: rumoSorteado(rng, inicio) };
+      const pontos: Vec3[] = [estado.p];
+      for (let s = 0; s < 16; s++) {
+        estado = avancar(estado.p, estado.rumo, comprimento / 16 / R);
+        estado.rumo = normalizar(girar(estado.rumo, estado.p, curva / 16));
+        pontos.push(estado.p);
       }
-      const valido =
-        noSetor(ax, az) &&
-        pontos.every(
-          ([x, z]) =>
-            Math.abs(x) <= limite &&
-            Math.abs(z) <= limite &&
-            Math.hypot(x, z) >= G.raioLivreCentro &&
-            respeitaZonas(x, z, largura),
-        );
+      const valido = pontos.every((p) => longeDosCentrais(p, largura) && respeitaZonas(p, largura));
       if (!valido) continue;
-      for (let k = 0; k < n; k++) {
-        const replicados = pontos.map(([x, z]) => rotacionar(x, z, k, n));
-        const xs = replicados.map((p) => p[0]);
-        const zs = replicados.map((p) => p[1]);
+      const meio = pontos[8]!;
+      const alcance = comprimento / 2 + largura + 2;
+      for (const sigma of grupo) {
         sulcos.push({
-          pontos: replicados,
+          pontos: pontos.map((p) => {
+            const q = aplicarRotacao(sigma, p);
+            return [q[0] * R, q[1] * R, q[2] * R] as Vec3;
+          }),
+          centro: aplicarRotacao(sigma, meio),
+          cosAlcance: Math.cos(Math.min(Math.PI, alcance / R)),
           largura,
           profundidade,
-          minX: Math.min(...xs) - largura,
-          maxX: Math.max(...xs) + largura,
-          minZ: Math.min(...zs) - largura,
-          maxZ: Math.max(...zs) + largura,
         });
       }
       break;
     }
   }
 
-  const alturaNatural = (x: number, z: number): number => {
+  const alturaNatural = (p: Vec3): number => {
     let ruido = 0;
-    for (let k = 0; k < n; k++) {
-      const [rx, rz] = rotacionar(x, z, k, n);
-      ruido += fbm(rx, rz, seedRuido, G.ruido.oitavas, G.ruido.frequencia);
+    for (const sigma of grupo) {
+      const q = aplicarRotacao(sigma, p);
+      ruido += fbm3(q[0] * R, q[1] * R, q[2] * R, seedRuido, G.ruido.oitavas, G.ruido.frequencia);
     }
-    ruido /= n;
-    let h = ruido * Math.sqrt(n) * G.ruido.amplitude;
+    let h = (ruido / Math.sqrt(n)) * G.ruido.amplitude;
     for (const c of colinas) {
-      const d2 = (x - c.x) ** 2 + (z - c.z) ** 2;
-      if (d2 < 9 * c.sigma * c.sigma) h += c.altura * Math.exp(-d2 / (c.sigma * c.sigma));
+      const d = R * arco(c.d, p);
+      if (d < 3 * c.sigma) h += c.altura * Math.exp(-(d * d) / (c.sigma * c.sigma));
     }
-    for (const c of crateras) h += alturaCratera(c, x, z);
-    for (const s of sulcos) h += alturaSulco(s, x, z);
-    // CEN-09: serras na faixa da borda.
-    const e = meio - Math.max(Math.abs(x), Math.abs(z));
-    if (e < G.faixaBorda) {
-      const t = 1 - Math.max(e, 0) / G.faixaBorda;
-      h += G.alturaBorda * t * t * (1 + 0.6 * ruido);
-    }
+    for (const c of crateras) h += alturaCratera(c, p, R);
+    for (const s of sulcos) h += alturaSulco(s, p, R);
     return h;
   };
 
-  // CEN-08: platôs planos com penhascos, exceto nas rampas.
+  // CEN-08: platôs planos (altura radial constante) com penhascos, exceto nas rampas.
   const alcanceRampa = topo + Math.max(G.larguraPenhasco, G.comprimentoRampa) + G.larguraRampa;
-  const aplicarPlatos = (x: number, z: number, natural: number): number => {
+  const cosAlcanceRampa = Math.cos(alcanceRampa / R);
+  const aplicarPlatos = (p: Vec3, natural: number): number => {
     let t = 1;
     for (const zona of zonasDePouso) {
-      const dx = x - zona.x;
-      const dz = z - zona.z;
-      const d = Math.hypot(dx, dz);
-      if (d > alcanceRampa) continue;
+      if (produtoEscalar(zona.d, p) < cosAlcanceRampa) continue;
+      const d = R * arco(zona.d, p);
       if (d <= topo) return G.alturaPlato;
       const tPenhasco = smoothstep(topo, topo + G.larguraPenhasco, d);
       let tZona = tPenhasco;
-      for (const angulo of zona.rampas) {
-        const ux = Math.cos(angulo);
-        const uz = Math.sin(angulo);
-        const aoLongo = dx * ux + dz * uz;
+      for (const u of zona.rampas) {
+        const { x: aoLongo, y } = local(zona.d, u, p, R);
         if (aoLongo <= 0) continue;
-        const lateral = Math.abs(dx * uz - dz * ux);
+        const lateral = Math.abs(y);
         const s = 1 - smoothstep(G.larguraRampa / 2, G.larguraRampa / 2 + G.ombroRampa, lateral);
         if (s <= 0) continue;
         const tRampa = clamp01((aoLongo - topo) / G.comprimentoRampa);
@@ -416,26 +474,32 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
     return G.alturaPlato + (natural - G.alturaPlato) * t;
   };
 
-  // Alturas: só o domínio fundamental é calculado; o resto é cópia por rotação.
-  const resolucao = lado + 1;
-  const alturas = new Uint16Array(resolucao * resolucao);
-  const fundamental = (i: number, j: number): boolean =>
-    (i === meio && j === meio) ||
-    (n === 4 ? i > meio && j >= meio : j > meio || (j === meio && i > meio));
-  for (let j = 0; j < resolucao; j++) {
-    for (let i = 0; i < resolucao; i++) {
-      if (!fundamental(i, j)) continue;
-      const x = i - meio;
-      const z = j - meio;
-      const valor = codificarAltura(aplicarPlatos(x, z, alturaNatural(x, z)));
-      let ii = i;
-      let jj = j;
-      for (let k = 0; k < n; k++) {
-        alturas[jj * resolucao + ii] = valor;
-        [ii, jj] = n === 4 ? [lado - jj, ii] : [lado - ii, lado - jj];
+  // Alturas: só um vértice de cada órbita do grupo é calculado; os outros são cópias exatas.
+  const resolucao = celulasPorAresta(R, G.texel_m);
+  const alturas = new Uint16Array(6 * (resolucao + 1) * (resolucao + 1));
+  for (let face = 0; face < 6; face++) {
+    for (let j = 0; j <= resolucao; j++) {
+      for (let i = 0; i <= resolucao; i++) {
+        const v = indiceDoVertice(resolucao, face, i, j);
+        const orbita = grupo.map((sigma) => verticeRotacionado(resolucao, v, sigma));
+        if (orbita.some((w) => w < v)) continue;
+        const p = direcaoDoVertice(resolucao, face, i, j);
+        const valor = codificarAltura(aplicarPlatos(p, alturaNatural(p)));
+        for (const w of orbita) alturas[w] = valor;
       }
     }
   }
 
-  return { seed, tamanho, simetria: n, lado_m: lado, resolucao, alturas, zonasDePouso, crateras };
+  return {
+    seed,
+    tamanho,
+    simetria: n,
+    raio_m: R,
+    resolucao,
+    alturas,
+    zonasDePouso,
+    contestados: geo.contestados,
+    centrais: geo.centrais,
+    crateras,
+  };
 }

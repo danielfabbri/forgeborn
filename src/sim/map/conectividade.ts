@@ -1,60 +1,66 @@
-import { celulaDe, ehPassavel, type GradeNavegacao } from './grids';
+import { arco, centroDaCelula, type Vec3 } from './esfera';
+import { celulaDe, type GradeNavegacao } from './grids';
 
 /**
- * Células transponíveis alcançáveis a partir de (ci, cj), andando só entre vizinhas
- * de lado (critério conservador: se liga assim, liga para qualquer pathfinding).
+ * Células transponíveis alcançáveis a partir de `inicio`, andando só entre vizinhas de lado
+ * (critério conservador: se liga assim, liga para qualquer pathfinding).
  */
-export function componenteConectado(nav: GradeNavegacao, ci: number, cj: number): Uint8Array {
-  const { colunas, linhas } = nav;
-  const marcado = new Uint8Array(colunas * linhas);
-  if (!ehPassavel(nav, ci, cj)) return marcado;
-  const fila = new Int32Array(colunas * linhas);
-  let inicio = 0;
+export function componenteConectado(nav: GradeNavegacao, inicio: number): Uint8Array {
+  const total = nav.esfera.celulas;
+  const marcado = new Uint8Array(total);
+  if (nav.passavel[inicio] !== 1) return marcado;
+  const fila = new Int32Array(total);
+  let cabeca = 0;
   let fim = 0;
-  marcado[cj * colunas + ci] = 1;
-  fila[fim++] = cj * colunas + ci;
-  const visitar = (v: number) => {
-    if (marcado[v] === 1 || nav.passavel[v] !== 1) return;
-    marcado[v] = 1;
-    fila[fim++] = v;
-  };
-  while (inicio < fim) {
-    const indice = fila[inicio++]!;
-    const x = indice % colunas;
-    if (x + 1 < colunas) visitar(indice + 1);
-    if (x > 0) visitar(indice - 1);
-    if (indice + colunas < colunas * linhas) visitar(indice + colunas);
-    if (indice >= colunas) visitar(indice - colunas);
+  marcado[inicio] = 1;
+  fila[fim++] = inicio;
+  const vizinhos = nav.esfera.vizinhos;
+  while (cabeca < fim) {
+    const atual = fila[cabeca++]!;
+    for (let d = 0; d < 4; d++) {
+      const v = vizinhos[atual * 8 + d]!;
+      if (v < 0 || marcado[v] === 1 || nav.passavel[v] !== 1) continue;
+      marcado[v] = 1;
+      fila[fim++] = v;
+    }
   }
   return marcado;
 }
 
-/** O ponto (x, z) está numa célula do componente? */
-export function noComponente(
-  nav: GradeNavegacao,
-  componente: Uint8Array,
-  x: number,
-  z: number,
-): boolean {
-  const celula = celulaDe(nav, x, z);
-  return celula !== null && componente[celula[1] * nav.colunas + celula[0]] === 1;
+/** A direção d está numa célula do componente? */
+export function noComponente(nav: GradeNavegacao, componente: Uint8Array, d: Vec3): boolean {
+  return componente[celulaDe(nav, d)] === 1;
 }
 
-/** Todas as células cujo centro está a até `raio` m de (x, z) são transponíveis? */
-export function temFolga(nav: GradeNavegacao, x: number, z: number, raio: number): boolean {
-  const celula = celulaDe(nav, x, z);
-  if (!celula) return false;
-  const alcance = Math.ceil(raio / nav.celula_m) + 1;
-  for (let dj = -alcance; dj <= alcance; dj++) {
-    for (let di = -alcance; di <= alcance; di++) {
-      const ci = celula[0] + di;
-      const cj = celula[1] + dj;
-      const cx = -nav.meio_m + (ci + 0.5) * nav.celula_m;
-      const cz = -nav.meio_m + (cj + 0.5) * nav.celula_m;
-      if (Math.hypot(cx - x, cz - z) > raio) continue;
-      if (ci < 0 || cj < 0 || ci >= nav.colunas || cj >= nav.linhas) return false;
-      if (!ehPassavel(nav, ci, cj)) return false;
+/**
+ * Células cujo centro está a até `raio_m` (arco) de d, por busca em largura a partir da célula
+ * de d (as vizinhas de fora do raio não são expandidas).
+ */
+export function celulasNoRaio(nav: GradeNavegacao, d: Vec3, raio_m: number): number[] {
+  const esfera = nav.esfera;
+  const limite = raio_m / nav.raio_m;
+  // Um pouco de folga para expandir células cujo centro fica logo além do raio.
+  const expandir = limite + 1.2 * esfera.anguloNominal;
+  const inicio = celulaDe(nav, d);
+  const vistos = new Set<number>([inicio]);
+  const fila = [inicio];
+  const dentro: number[] = [];
+  for (let k = 0; k < fila.length; k++) {
+    const c = fila[k]!;
+    const a = arco(d, centroDaCelula(esfera, c));
+    if (a <= limite) dentro.push(c);
+    if (a > expandir) continue;
+    for (let v = 0; v < 8; v++) {
+      const w = esfera.vizinhos[c * 8 + v]!;
+      if (w < 0 || vistos.has(w)) continue;
+      vistos.add(w);
+      fila.push(w);
     }
   }
-  return true;
+  return dentro;
+}
+
+/** Todas as células cujo centro está a até `raio_m` de d são transponíveis? */
+export function temFolga(nav: GradeNavegacao, d: Vec3, raio_m: number): boolean {
+  return celulasNoRaio(nav, d, raio_m).every((c) => nav.passavel[c] === 1);
 }

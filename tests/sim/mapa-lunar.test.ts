@@ -1,13 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { param } from '../../src/sim';
+import { dados, param } from '../../src/sim';
 import { hashNumeros } from '../../src/sim/core/hash';
-import { alturaEm, inclinacaoAmostra } from '../../src/sim/map/heightmap';
+import {
+  arco,
+  avancar,
+  celulasPorAresta,
+  girar,
+  normalizar,
+  rotacoesDeSimetria,
+  type Vec3,
+} from '../../src/sim/map/esfera';
+import {
+  alturaEm,
+  direcaoDoVertice,
+  inclinacaoEm,
+  indiceDoVertice,
+  verticeRotacionado,
+} from '../../src/sim/map/heightmap';
 import {
   alturaCratera,
   type Cratera,
   GERADOR_LUA,
   gerarMapaLunar,
   type MapaLunar,
+  rumoSemRampa,
   type Simetria,
 } from '../../src/sim/map/lunar';
 
@@ -16,31 +32,60 @@ const MAPA_P2 = gerarMapaLunar(7, 'p', 2);
 const LIMITE_HOVER = param('inclinacao_max_hover_graus');
 const graus = (rad: number) => (rad * 180) / Math.PI;
 
-/** Maior inclinação (graus) ao longo de uma linha, medida pela altura a cada 0,5 m. */
-function inclinacaoMaxima(
-  altura: (x: number, z: number) => number,
-  [ax, az]: [number, number],
-  [bx, bz]: [number, number],
-): number {
-  const comprimento = Math.hypot(bx - ax, bz - az);
+/** Ponto a `metros` de c no rumo `rumo` (tangente em c). */
+function em(mapa: MapaLunar, c: Vec3, rumo: Vec3, metros: number): Vec3 {
+  return avancar(c, rumo, metros / mapa.raio_m).p;
+}
+
+/** Maior inclinação (graus) ao longo do arco de a até b, pela altura a cada 0,5 m. */
+function inclinacaoMaxima(mapa: MapaLunar, altura: (p: Vec3) => number, a: Vec3, b: Vec3): number {
+  const comprimento = mapa.raio_m * arco(a, b);
   const passos = Math.ceil(comprimento / 0.5);
+  const eixo = normalizar([
+    a[1] * b[2] - a[2] * b[1],
+    a[2] * b[0] - a[0] * b[2],
+    a[0] * b[1] - a[1] * b[0],
+  ]);
   let maior = 0;
-  let anterior = altura(ax, az);
+  let anterior = altura(a);
   for (let p = 1; p <= passos; p++) {
-    const t = p / passos;
-    const atual = altura(ax + (bx - ax) * t, az + (bz - az) * t);
+    const q = normalizar(girar(a, eixo, (arco(a, b) * p) / passos));
+    const atual = altura(q);
     maior = Math.max(maior, graus(Math.atan(Math.abs(atual - anterior) / (comprimento / passos))));
     anterior = atual;
   }
   return maior;
 }
 
-describe('CEN-13: heightmap de 16 bits', () => {
-  it('1 texel = 1 m: (lado + 1)² amostras num Uint16Array', () => {
+describe('CEN-13: heightmap de 16 bits nas 6 faces', () => {
+  it('~1 m entre vértices: 6 × (res + 1)² amostras num Uint16Array', () => {
+    const raio = dados.tamanhos_mapa.find((t) => t.id === 'm')!.raio_m;
+    expect(MAPA_M4.raio_m).toBe(raio);
+    expect(MAPA_M4.resolucao).toBe(celulasPorAresta(raio, 1));
     expect(MAPA_M4.alturas).toBeInstanceOf(Uint16Array);
-    expect(MAPA_M4.lado_m).toBe(512);
-    expect(MAPA_M4.alturas).toHaveLength(513 * 513);
-    expect(MAPA_P2.alturas).toHaveLength(385 * 385);
+    expect(MAPA_M4.alturas).toHaveLength(6 * (MAPA_M4.resolucao + 1) ** 2);
+  });
+
+  it('CEN-09: sem borda — os vértices das arestas do cubo têm a mesma altura em todas as faces', () => {
+    const res = MAPA_M4.resolucao;
+    const porDirecao = new Map<string, number>();
+    for (let face = 0; face < 6; face++) {
+      for (let k = 0; k <= res; k++) {
+        for (const [i, j] of [
+          [k, 0],
+          [k, res],
+          [0, k],
+          [res, k],
+        ] as Array<[number, number]>) {
+          const d = direcaoDoVertice(res, face, i, j);
+          const chave = d.map((v) => v.toFixed(12)).join(',');
+          const valor = MAPA_M4.alturas[indiceDoVertice(res, face, i, j)]!;
+          const outro = porDirecao.get(chave);
+          if (outro !== undefined) expect(valor).toBe(outro);
+          else porDirecao.set(chave, valor);
+        }
+      }
+    }
   });
 });
 
@@ -53,84 +98,93 @@ describe('CEN-06: determinismo e simetria', () => {
   it.each([
     [4, MAPA_M4],
     [2, MAPA_P2],
-  ] as Array<[Simetria, MapaLunar]>)('simetria rotacional de ordem %i (± 1 cm)', (n, mapa) => {
-    const { lado_m: lado, resolucao: res, alturas } = mapa;
-    let maiorDiferenca = 0;
-    for (let j = 0; j < res; j++) {
-      for (let i = 0; i < res; i++) {
-        const [ri, rj] = n === 4 ? [lado - j, i] : [lado - i, lado - j];
-        const diferenca = Math.abs(alturas[j * res + i]! - alturas[rj * res + ri]!);
-        maiorDiferenca = Math.max(maiorDiferenca, diferenca);
-      }
-    }
-    expect(maiorDiferenca).toBeLessThanOrEqual(1);
-  });
-});
-
-describe('CEN-07: zonas de pouso', () => {
-  it.each([
-    [4, MAPA_M4],
-    [2, MAPA_P2],
   ] as Array<[Simetria, MapaLunar]>)(
-    'N = %i: a 36%% do lado a partir do centro, igualmente espaçadas a partir de 45°',
+    'N = %i: altura em p e em g·p iguais (± 1 cm) para cada rotação g do grupo',
     (n, mapa) => {
-      expect(mapa.zonasDePouso).toHaveLength(n);
-      mapa.zonasDePouso.forEach((zona, k) => {
-        expect(Math.hypot(zona.x, zona.z)).toBeCloseTo(0.36 * mapa.lado_m, 6);
-        const esperado = Math.PI / 4 + (k * 2 * Math.PI) / n;
-        const diferenca = Math.atan2(zona.z, zona.x) - esperado;
-        expect(Math.cos(diferenca)).toBeCloseTo(1, 9);
-      });
+      let maiorDiferenca = 0;
+      for (const sigma of rotacoesDeSimetria(n)) {
+        for (let v = 0; v < mapa.alturas.length; v++) {
+          const w = verticeRotacionado(mapa.resolucao, v, sigma);
+          maiorDiferenca = Math.max(maiorDiferenca, Math.abs(mapa.alturas[v]! - mapa.alturas[w]!));
+        }
+      }
+      expect(maiorDiferenca).toBeLessThanOrEqual(1);
     },
   );
 });
 
-describe('CEN-08: platôs de pouso', () => {
-  it('são planos (< 5°) num raio de 50 m', () => {
-    for (const mapa of [MAPA_M4, MAPA_P2]) {
-      const meio = mapa.lado_m / 2;
-      for (const zona of mapa.zonasDePouso) {
-        let maior = 0;
-        for (let j = Math.ceil(zona.z + meio - 50); j <= zona.z + meio + 50; j++) {
-          for (let i = Math.ceil(zona.x + meio - 50); i <= zona.x + meio + 50; i++) {
-            if (Math.hypot(i - meio - zona.x, j - meio - zona.z) > 50) continue;
-            maior = Math.max(maior, inclinacaoAmostra(mapa, i, j));
-          }
-        }
-        expect(maior).toBeLessThan(5);
+describe('CEN-07: zonas de pouso', () => {
+  it('N = 2: antípodas', () => {
+    const [a, b] = MAPA_P2.zonasDePouso;
+    expect(arco(a!.d, b!.d)).toBeCloseTo(Math.PI, 12);
+  });
+
+  it('N = 4: vértices de um tetraedro regular (todas à mesma distância)', () => {
+    const zonas = MAPA_M4.zonasDePouso;
+    expect(zonas).toHaveLength(4);
+    for (let a = 0; a < 4; a++) {
+      for (let b = a + 1; b < 4; b++) {
+        expect(arco(zonas[a]!.d, zonas[b]!.d)).toBeCloseTo(Math.acos(-1 / 3), 12);
       }
     }
   });
 
-  it('têm 2 ou 3 rampas transponíveis de ≥ 12 m de largura; fora delas, penhasco', () => {
-    const altura = (x: number, z: number) => alturaEm(MAPA_M4, x, z);
+  it('ECO-08: pontos médios equidistantes das duas zonas vizinhas', () => {
+    for (const mapa of [MAPA_M4, MAPA_P2]) {
+      for (const m of [...mapa.contestados, ...mapa.centrais]) {
+        const [a, b] = m.zonasDePouso.map((k) => mapa.zonasDePouso[k]!.d);
+        expect(arco(m.d, a!)).toBeCloseTo(arco(m.d, b!), 12);
+      }
+    }
+  });
+});
+
+describe('CEN-08: platôs de pouso', () => {
+  it('são planos (< 5° da vertical local) num raio de 50 m', () => {
+    for (const mapa of [MAPA_M4, MAPA_P2]) {
+      for (const zona of mapa.zonasDePouso) {
+        let maior = inclinacaoEm(mapa, zona.d);
+        for (let r = 5; r <= 50; r += 5) {
+          for (let a = 0; a < 360; a += 15) {
+            const rumo = normalizar(girar(zona.rampas[0]!, zona.d, (a * Math.PI) / 180));
+            maior = Math.max(maior, inclinacaoEm(mapa, em(mapa, zona.d, rumo, r)));
+          }
+        }
+        expect(maior).toBeLessThan(5);
+        expect(alturaEm(mapa, zona.d)).toBeCloseTo(GERADOR_LUA.alturaPlato, 1);
+      }
+    }
+  });
+
+  it('têm 2 ou 3 rampas transponíveis de ≥ 12 m de largura; atrás delas, penhasco', () => {
+    const mapa = MAPA_M4;
+    const altura = (p: Vec3) => alturaEm(mapa, p);
     const topo = GERADOR_LUA.raioPlato;
     const fim = GERADOR_LUA.raioPlato + GERADOR_LUA.folgaTopo + GERADOR_LUA.comprimentoRampa + 4;
     expect(GERADOR_LUA.larguraRampa).toBeGreaterThanOrEqual(12);
-    for (const zona of MAPA_M4.zonasDePouso) {
+    for (const zona of mapa.zonasDePouso) {
       expect(zona.rampas.length).toBeGreaterThanOrEqual(2);
       expect(zona.rampas.length).toBeLessThanOrEqual(3);
-      for (const angulo of zona.rampas) {
-        const [ux, uz] = [Math.cos(angulo), Math.sin(angulo)];
+      for (const u of zona.rampas) {
+        const lado = normalizar([
+          zona.d[1] * u[2] - zona.d[2] * u[1],
+          zona.d[2] * u[0] - zona.d[0] * u[2],
+          zona.d[0] * u[1] - zona.d[1] * u[0],
+        ]);
         for (const lateral of [-6, 0, 6]) {
-          const inicio: [number, number] = [
-            zona.x + ux * topo - uz * lateral,
-            zona.z + uz * topo + ux * lateral,
-          ];
-          const final: [number, number] = [
-            zona.x + ux * fim - uz * lateral,
-            zona.z + uz * fim + ux * lateral,
-          ];
-          expect(inclinacaoMaxima(altura, inicio, final)).toBeLessThan(LIMITE_HOVER);
+          const base = lateral === 0 ? zona.d : em(mapa, zona.d, lado, lateral);
+          const rumo = normalizar(girar(u, zona.d, 0));
+          const inicio = em(mapa, base, rumo, topo);
+          const final = em(mapa, base, rumo, fim);
+          expect(inclinacaoMaxima(mapa, altura, inicio, final)).toBeLessThan(LIMITE_HOVER);
         }
       }
-      // Para fora do mapa (lado oposto às rampas) só há penhasco.
-      const fora = Math.atan2(zona.z, zona.x);
-      const [fx, fz] = [Math.cos(fora), Math.sin(fora)];
+      const fundo = rumoSemRampa(zona);
       const penhasco = inclinacaoMaxima(
+        mapa,
         altura,
-        [zona.x + fx * topo, zona.z + fz * topo],
-        [zona.x + fx * (topo + 12), zona.z + fz * (topo + 12)],
+        em(mapa, zona.d, fundo, topo),
+        em(mapa, zona.d, fundo, topo + 12),
       );
       expect(penhasco).toBeGreaterThan(LIMITE_HOVER);
     }
@@ -149,9 +203,10 @@ describe('CEN-09: relevo', () => {
   });
 
   it('a borda da cratera passa de 30°, exceto na brecha', () => {
+    const raioPlaneta = 1000;
     const cratera: Cratera = {
-      x: 0,
-      z: 0,
+      d: [0, 1, 0],
+      ref: [1, 0, 0],
       raio: 30,
       profundidade: 6,
       borda: 4.2,
@@ -159,29 +214,19 @@ describe('CEN-09: relevo', () => {
       fase1: 0,
       fase2: 0,
     };
-    const altura = (x: number, z: number) => alturaCratera(cratera, x, z);
-    const atravessar = (angulo: number) =>
-      inclinacaoMaxima(
+    const falso = { raio_m: raioPlaneta } as MapaLunar;
+    const altura = (p: Vec3) => alturaCratera(cratera, p, raioPlaneta);
+    const atravessar = (angulo: number) => {
+      const rumo = normalizar(girar([1, 0, 0], [0, 1, 0], -angulo));
+      return inclinacaoMaxima(
+        falso,
         altura,
-        [Math.cos(angulo) * 5, Math.sin(angulo) * 5],
-        [Math.cos(angulo) * 60, Math.sin(angulo) * 60],
+        em(falso, cratera.d, rumo, 5),
+        em(falso, cratera.d, rumo, 60),
       );
+    };
     expect(atravessar(Math.PI)).toBeGreaterThan(LIMITE_HOVER);
     expect(atravessar(Math.PI / 2)).toBeGreaterThan(LIMITE_HOVER);
     expect(atravessar(0)).toBeLessThan(LIMITE_HOVER);
-  });
-
-  it('a faixa de 16 m da borda do mapa é serra', () => {
-    const { resolucao: res } = MAPA_M4;
-    for (let k = 0; k < res; k++) {
-      for (const [i, j] of [
-        [k, 0],
-        [0, k],
-        [k, res - 1],
-        [res - 1, k],
-      ] as Array<[number, number]>) {
-        expect(alturaEm(MAPA_M4, i - 256, j - 256)).toBeGreaterThan(12);
-      }
-    }
   });
 });

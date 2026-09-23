@@ -1,19 +1,33 @@
 /**
- * Grades derivadas do heightmap (TEC-13): navegação, construção e névoa.
- * A célula (ci, cj) cobre x ∈ [−lado/2 + ci·c, −lado/2 + (ci+1)·c), o mesmo para z.
+ * Grades derivadas do heightmap (TEC-13): navegação, construção e névoa, cada uma uma
+ * cubo-esfera (CEN-14) com área média de célula igual ao tamanho nominal.
  */
 import { param } from '../data';
-import { alturaAmostra, type Heightmap } from './heightmap';
-
-/** CEN-09: faixa da borda do mapa que é sempre intransponível. */
-export const FAIXA_BORDA_M = 16;
+import {
+  celulaDaDirecao,
+  celulasPorAresta,
+  centroDaCelula as centroNaEsfera,
+  type CuboEsfera,
+  cuboEsfera,
+  direcaoDaFace,
+  rotacoesDeSimetria,
+  type Simetria,
+  tanDaDivisao,
+  type Vec3,
+} from './esfera';
+import {
+  direcaoDoVertice,
+  type Heightmap,
+  inclinacaoEm,
+  indiceDoVertice,
+  verticeRotacionado,
+} from './heightmap';
 
 export interface Grade {
+  /** Tamanho nominal da célula (m). */
   celula_m: number;
-  colunas: number;
-  linhas: number;
-  /** Metade do lado do mapa: o mundo vai de −meio_m a +meio_m. */
-  meio_m: number;
+  raio_m: number;
+  esfera: CuboEsfera;
 }
 
 export interface GradeNavegacao extends Grade {
@@ -22,7 +36,7 @@ export interface GradeNavegacao extends Grade {
 }
 
 export interface GradeConstrucao extends Grade {
-  /** 1 = inclinação e posição permitem construir (PRD-10). */
+  /** 1 = inclinação permite construir (PRD-10). */
   construivel: Uint8Array;
 }
 
@@ -32,101 +46,105 @@ export interface GradesDoMapa {
   nevoa: Grade;
 }
 
-function criarGrade(mapa: Heightmap, celula: number): Grade {
-  const colunas = mapa.lado_m / celula;
-  if (!Number.isInteger(colunas)) {
-    throw new Error(`O lado do mapa (${mapa.lado_m} m) não é múltiplo da célula (${celula} m)`);
-  }
-  return { celula_m: celula, colunas, linhas: colunas, meio_m: mapa.lado_m / 2 };
+function criarGrade(raio_m: number, celula: number): Grade {
+  return { celula_m: celula, raio_m, esfera: cuboEsfera(celulasPorAresta(raio_m, celula)) };
 }
 
-/** Célula que contém o ponto (x, z), ou null fora do mapa. */
-export function celulaDe(grade: Grade, x: number, z: number): [number, number] | null {
-  const ci = Math.floor((x + grade.meio_m) / grade.celula_m);
-  const cj = Math.floor((z + grade.meio_m) / grade.celula_m);
-  if (ci < 0 || cj < 0 || ci >= grade.colunas || cj >= grade.linhas) return null;
-  return [ci, cj];
+/** Célula que contém a direção d. */
+export function celulaDe(grade: Grade, d: Vec3): number {
+  return celulaDaDirecao(grade.esfera.n, d);
 }
 
-export function centroDaCelula(grade: Grade, ci: number, cj: number): [number, number] {
-  return [-grade.meio_m + (ci + 0.5) * grade.celula_m, -grade.meio_m + (cj + 0.5) * grade.celula_m];
+export function centroDaCelula(grade: Grade, indice: number): Vec3 {
+  return centroNaEsfera(grade.esfera, indice);
 }
 
-/** Inclinação (graus) de cada amostra do heightmap, por diferenças centrais. */
-function inclinacoes(mapa: Heightmap): Float32Array {
+/**
+ * Maior inclinação por célula: cada vértice do heightmap conta para as células a meio texel dele
+ * nas 4 diagonais (um vértice na fronteira conta dos dois lados; nunca cai exatamente nela).
+ */
+function inclinacaoPorCelula(
+  mapa: Heightmap,
+  porVertice: Float32Array,
+  grade: Grade,
+): Float32Array {
   const res = mapa.resolucao;
-  const saida = new Float32Array(res * res);
-  for (let j = 0; j < res; j++) {
-    for (let i = 0; i < res; i++) {
-      const dx = (alturaAmostra(mapa, i + 1, j) - alturaAmostra(mapa, i - 1, j)) / 2;
-      const dz = (alturaAmostra(mapa, i, j + 1) - alturaAmostra(mapa, i, j - 1)) / 2;
-      saida[j * res + i] = (Math.atan(Math.hypot(dx, dz)) * 180) / Math.PI;
-    }
-  }
-  return saida;
-}
-
-/** Maior inclinação entre as amostras que cobrem a célula (bordas incluídas). */
-function inclinacaoDaCelula(
-  inclinacao: Float32Array,
-  res: number,
-  celula: number,
-  ci: number,
-  cj: number,
-): number {
-  let maior = 0;
-  for (let j = cj * celula; j <= (cj + 1) * celula; j++) {
-    for (let i = ci * celula; i <= (ci + 1) * celula; i++) {
-      const valor = inclinacao[j * res + i]!;
-      if (valor > maior) maior = valor;
+  const n = grade.esfera.n;
+  const maior = new Float32Array(grade.esfera.celulas);
+  for (let face = 0; face < 6; face++) {
+    for (let j = 0; j <= res; j++) {
+      for (let i = 0; i <= res; i++) {
+        const valor = porVertice[indiceDoVertice(res, face, i, j)]!;
+        for (const [di, dj] of [
+          [-1, -1],
+          [1, -1],
+          [-1, 1],
+          [1, 1],
+        ] as const) {
+          const d = direcaoDaFace(
+            face,
+            tanDaDivisao(2 * i + di, 2 * res),
+            tanDaDivisao(2 * j + dj, 2 * res),
+          );
+          const c = celulaDaDirecao(n, d);
+          if (valor > maior[c]!) maior[c] = valor;
+        }
+      }
     }
   }
   return maior;
 }
 
-function naFaixaDaBorda(grade: Grade, ci: number, cj: number): boolean {
-  const [x, z] = centroDaCelula(grade, ci, cj);
-  return grade.meio_m - Math.max(Math.abs(x), Math.abs(z)) < FAIXA_BORDA_M;
+/**
+ * Inclinação (graus) em cada vértice do heightmap. Com simetria (CEN-06), só um vértice de cada
+ * órbita é calculado e copiado, para as grades saírem exatamente simétricas.
+ */
+function inclinacoesDosVertices(mapa: Heightmap, rotacoes: Vec3[]): Float32Array {
+  const res = mapa.resolucao;
+  const saida = new Float32Array(mapa.alturas.length);
+  for (let face = 0; face < 6; face++) {
+    for (let j = 0; j <= res; j++) {
+      for (let i = 0; i <= res; i++) {
+        const v = indiceDoVertice(res, face, i, j);
+        const orbita = rotacoes.map((sigma) => verticeRotacionado(res, v, sigma));
+        if (orbita.some((w) => w < v)) continue;
+        const valor = inclinacaoEm(mapa, direcaoDoVertice(res, face, i, j));
+        for (const w of orbita) saida[w] = valor;
+      }
+    }
+  }
+  return saida;
 }
 
-export function derivarGrades(mapa: Heightmap): GradesDoMapa {
-  const inclinacao = inclinacoes(mapa);
+export function derivarGrades(mapa: Heightmap & { simetria?: Simetria }): GradesDoMapa {
+  const rotacoes = mapa.simetria ? rotacoesDeSimetria(mapa.simetria) : [[1, 1, 1] as Vec3];
+  const porVertice = inclinacoesDosVertices(mapa, rotacoes);
   const limiteHover = param('inclinacao_max_hover_graus');
   const limiteConstrucao = param('inclinacao_max_construcao_graus');
 
-  const nav = criarGrade(mapa, param('celula_navegacao_m'));
-  const passavel = new Uint8Array(nav.colunas * nav.linhas);
-  for (let cj = 0; cj < nav.linhas; cj++) {
-    for (let ci = 0; ci < nav.colunas; ci++) {
-      const ok =
-        !naFaixaDaBorda(nav, ci, cj) &&
-        inclinacaoDaCelula(inclinacao, mapa.resolucao, nav.celula_m, ci, cj) <= limiteHover;
-      passavel[cj * nav.colunas + ci] = ok ? 1 : 0;
-    }
-  }
+  const nav = criarGrade(mapa.raio_m, param('celula_navegacao_m'));
+  const inclinacaoNav = inclinacaoPorCelula(mapa, porVertice, nav);
+  const passavel = new Uint8Array(nav.esfera.celulas);
+  for (let c = 0; c < passavel.length; c++) passavel[c] = inclinacaoNav[c]! <= limiteHover ? 1 : 0;
 
-  const obra = criarGrade(mapa, param('celula_construcao_m'));
-  const construivel = new Uint8Array(obra.colunas * obra.linhas);
-  for (let cj = 0; cj < obra.linhas; cj++) {
-    for (let ci = 0; ci < obra.colunas; ci++) {
-      const ok =
-        !naFaixaDaBorda(obra, ci, cj) &&
-        inclinacaoDaCelula(inclinacao, mapa.resolucao, obra.celula_m, ci, cj) <= limiteConstrucao;
-      construivel[cj * obra.colunas + ci] = ok ? 1 : 0;
-    }
+  const obra = criarGrade(mapa.raio_m, param('celula_construcao_m'));
+  const inclinacaoObra = inclinacaoPorCelula(mapa, porVertice, obra);
+  const construivel = new Uint8Array(obra.esfera.celulas);
+  for (let c = 0; c < construivel.length; c++) {
+    construivel[c] = inclinacaoObra[c]! <= limiteConstrucao ? 1 : 0;
   }
 
   return {
     navegacao: { ...nav, passavel },
     construcao: { ...obra, construivel },
-    nevoa: criarGrade(mapa, param('celula_nevoa_m')),
+    nevoa: criarGrade(mapa.raio_m, param('celula_nevoa_m')),
   };
 }
 
-export function ehPassavel(grade: GradeNavegacao, ci: number, cj: number): boolean {
-  return grade.passavel[cj * grade.colunas + ci] === 1;
+export function ehPassavel(grade: GradeNavegacao, indice: number): boolean {
+  return grade.passavel[indice] === 1;
 }
 
-export function ehConstruivel(grade: GradeConstrucao, ci: number, cj: number): boolean {
-  return grade.construivel[cj * grade.colunas + ci] === 1;
+export function ehConstruivel(grade: GradeConstrucao, indice: number): boolean {
+  return grade.construivel[indice] === 1;
 }

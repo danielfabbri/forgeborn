@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.9.0 — rascunho para aprovação |
+| Versão do SPEC | 0.10.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -767,7 +767,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ### 9.4 Dano em área (splash)
 
-- **CMB-10** — Armas com `splash_m` > 0 aplicam dano cheio até `nucleo_splash_pct`% do raio e caem linearmente até `splash_borda_pct`% na borda.
+- **CMB-10** — Armas com `splash_m` > 0 aplicam dano cheio até `nucleo_splash_pct`% do raio e caem linearmente até `splash_borda_pct`% na borda. A distância é medida até o centro da unidade e, nas estruturas, até a borda da pegada (D-33).
 - **CMB-11** — Splash de armas não fere unidades do próprio atacante (sem fogo amigo). Explosões **ambientais** (§9.8) ferem todos.
 
 ### 9.5 Aquisição de alvo e posturas
@@ -1450,6 +1450,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-30 | O estoque padrão traz o Cu e o Li da Impressora (Cu 10, Li 3); a INV-02 passa a 45–60 s. | Com Cu 5 e Li 0, os 2 hovers da abertura ficam em Fe e Si pela Diretiva e a Impressora nunca sai (medido na T-056). Com o Cu e o Li no estoque, ela sai em 49 s. | Aprovada |
 | D-31 | Torpedo detona ao fim do tempo máximo de voo; unidade recua quando o alvo está dentro do alcance mínimo; disparos sem linha de visada. | Respostas do produto às lacunas de CMB-04, CMB-07 e CMB-13. | Aprovada |
 | D-32 | Explosão ambiental com 0% na borda; radiação só fere unidades móveis; reciclagem a `distancia_mineracao_m`; mover dispara sem desviar e M não dispara. | Respostas do produto às lacunas de CMB-24, CMB-26, ECO-28 e CTL-07. | Aprovada |
+| D-33 | O splash mede a distância até o centro da unidade (estruturas: até a borda da pegada). | Medida pela borda do casco, a INV-03 dependia da formação (74% em fila cerrada); pelo centro, fica em 27–34% em qualquer formação (medido na T-068). | Aprovada |
 
 ---
 
@@ -1518,3 +1519,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.7.0 | 2026-09-23 | UI-13: informação de jazidas (tooltip e seleção), a pedido do produto. |
 | 0.8.0 | 2026-09-24 | D-31: sem linha de visada (CMB-04), torpedo detona no tempo máximo (CMB-07), recuo no alcance mínimo (CMB-13). |
 | 0.9.0 | 2026-09-24 | D-32: borda da explosão ambiental (CMB-26), alvos da radiação (CMB-24), distância de reciclagem (ECO-28) e disparo ao mover (CTL-07). |
+| 0.10.0 | 2026-09-24 | D-33: distância do splash (CMB-10) até o centro da unidade; estruturas pela pegada. |

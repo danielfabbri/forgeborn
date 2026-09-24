@@ -20,9 +20,10 @@ async function medir(page: import('@playwright/test').Page, url: string) {
 }
 
 for (const [nome, url, captura] of [
-  ['visão de jogo (RTS)', '/', 't014-rts'],
-  ['visão planetária do planeta M', '/?camera=geral', 't014-geral'],
-  ['vista cinematográfica com a Terra', '/?camera=cinematica', 't014-cinematica'],
+  // Medido com a cena de demonstração (`?demo`), a mesma das capturas de referência.
+  ['visão de jogo (RTS)', '/?demo', 't014-rts'],
+  ['visão planetária do planeta M', '/?camera=geral&demo', 't014-geral'],
+  ['vista cinematográfica com a Terra', '/?camera=cinematica&demo', 't014-cinematica'],
 ]) {
   test(`T-014: terreno do planeta M a ≥ 60 fps — ${nome}`, async ({ page }) => {
     const medida = await medir(page, url!);

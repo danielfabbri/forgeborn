@@ -1,6 +1,7 @@
 /**
- * Seleção (CTL-04 – CTL-06) e ordens básicas (CTL-07 parcial, atalhos M/S/H/P de §12.4).
- * Toda ordem vira um Comando serializável na simulação (TEC-07); aqui só se lê o estado.
+ * Seleção (CTL-04 – CTL-06), ordens (CTL-07 parcial) e atalhos de §12.4, inclusive os de
+ * produção (PRD-01) e o posicionamento de estruturas com holograma (UI-08). Toda ordem vira um
+ * Comando serializável na simulação (TEC-07); aqui só se lê o estado.
  */
 import { type PerspectiveCamera, Vector3 } from 'three';
 import {
@@ -13,11 +14,18 @@ import {
   selecionarCaixa,
   ToqueDuplo,
 } from '../game/selecao';
+import {
+  MENU_ESTRUTURAS,
+  MENU_NAVE,
+  MENU_UNIDADES,
+  type OpcaoDeMenu,
+} from '../game/atalhosProducao';
 import { centrarEm, type EstadoCameraRts } from '../render/cameraRts';
 import { pontoNoTerreno } from '../render/picking';
 import type { JazidaDesenhada } from '../render/jazidas';
 import type { CorpoDesenhado } from '../render/unidades';
 import { type EntityId, getComponent, isAlive, type NacaoId, type Sim } from '../sim';
+import type { CustosId, EstruturasId } from '../sim/data';
 import { normalizar, type Vec3 } from '../sim/map/esfera';
 import type { Heightmap } from '../sim/map/heightmap';
 
@@ -38,10 +46,33 @@ interface Projetavel {
 /** Distância (px) a partir da qual o arrasto vira caixa de seleção. */
 const LIMIAR_ARRASTO_PX = 6;
 
-type Modo = 'normal' | 'mover' | 'patrulhar';
+type Modo = 'normal' | 'mover' | 'patrulhar' | 'reparar';
+
+export type MenuDeProducao = 'unidades' | 'estruturas' | null;
+
+/** Estado de produção da entrada, para o painel (UI-08). */
+export interface EstadoDaEntrada {
+  menu: MenuDeProducao;
+  posicionando: EstruturasId | null;
+  /** Motivo de o local sob o cursor não servir (PRD-10), ou null. */
+  motivo: string | null;
+  reparando: boolean;
+}
+
+/** Holograma da pegada sob o cursor (UI-08). */
+export interface HologramaDePosicionamento {
+  mostrar(tipo: EstruturasId, d: Vec3, valido: boolean): void;
+  esconder(): void;
+}
 
 export interface EntradaComandos {
   readonly selecao: readonly EntityId[];
+  readonly estado: EstadoDaEntrada;
+  /** Botões do painel de produção: o mesmo que a tecla do item. */
+  escolher(item: CustosId): void;
+  abrirMenu(menu: MenuDeProducao): void;
+  cancelarItem(produtor: EntityId, indice: number): void;
+  cancelarObra(obra: EntityId): void;
   /** Corpos selecionados desenhados no quadro atual (para os anéis). */
   selecionadosDesenhados(): CorpoDesenhado[];
   dispose(): void;
@@ -59,12 +90,18 @@ export interface OpcoesEntradaComandos {
   /** Jazidas desenhadas (alvo do clique direito de coleta, CTL-07). */
   jazidas?: () => readonly JazidaDesenhada[];
   aoMudarSelecao?: (ids: readonly EntityId[]) => void;
+  /** PRD-10: por que o local não serve, ou null (a validação da simulação). */
+  validarLocal?: (tipo: EstruturasId, d: Vec3) => string | null;
+  holograma?: HologramaDePosicionamento;
 }
 
 export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos {
   const { viewport, sim, jogador } = o;
   let selecao: EntityId[] = [];
   let modo: Modo = 'normal';
+  let menuAberto: MenuDeProducao = null;
+  let posicionando: EstruturasId | null = null;
+  let motivo: string | null = null;
   let inicio: { x: number; y: number } | null = null;
   let arrastando = false;
   const grupos = new Grupos();
@@ -82,7 +119,14 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   };
   const definirModo = (novo: Modo) => {
     modo = novo;
-    viewport.style.cursor = novo === 'normal' ? '' : 'crosshair';
+    viewport.style.cursor = novo === 'normal' && !posicionando ? '' : 'crosshair';
+  };
+  const sairDaProducao = () => {
+    menuAberto = null;
+    posicionando = null;
+    motivo = null;
+    o.holograma?.esconder();
+    definirModo(modo);
   };
 
   const v = new Vector3();
@@ -144,11 +188,97 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   const coletores = () =>
     minhas('unit').filter((id) => getComponent(sim.state, id, 'coleta') !== undefined);
 
+  const tipoDe = (id: EntityId) =>
+    getComponent(sim.state, id, 'unit')?.tipo ?? getComponent(sim.state, id, 'structure')?.tipo;
+  const doTipo = (tipo: string) =>
+    selecao.filter(
+      (id) =>
+        isAlive(sim.state, id) &&
+        getComponent(sim.state, id, 'owner')?.nacao === jogador &&
+        tipoDe(id) === tipo &&
+        !getComponent(sim.state, id, 'obra'),
+    );
+  /** Quem constrói e repara (PRD-13, PRD-18). */
+  const trabalhadores = () => [...doTipo('printer'), ...doTipo('hover_explorer')];
+
+  /** Impressora selecionada com a menor fila (a que recebe a estrutura). */
+  const impressoraLivre = (): EntityId | null => {
+    const fila = (id: EntityId) => getComponent(sim.state, id, 'producer')!.fila.length;
+    return doTipo('printer').sort((a, b) => fila(a) - fila(b) || a - b)[0] ?? null;
+  };
+
+  const escolher = (item: CustosId) => {
+    if (MENU_ESTRUTURAS.some((opcao) => opcao.item === item)) {
+      if (doTipo('printer').length === 0) return;
+      menuAberto = null;
+      posicionando = item as EstruturasId;
+      motivo = null;
+      definirModo('normal');
+      return;
+    }
+    const naves = doTipo('ship');
+    if (naves.length > 0 && MENU_NAVE.some((opcao) => opcao.item === item)) {
+      enviar('imprimir', { ids: naves, item });
+      return;
+    }
+    const impressoras = doTipo('printer');
+    if (impressoras.length > 0) enviar('imprimir', { ids: impressoras, item });
+  };
+
+  /** UI-08: holograma verde ou vermelho sob o cursor. */
+  const atualizarHolograma = (px: number, py: number) => {
+    if (!posicionando) return;
+    const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
+    if (!ponto) {
+      o.holograma?.esconder();
+      return;
+    }
+    const d = normalizar(ponto);
+    motivo = o.validarLocal?.(posicionando, d) ?? null;
+    o.holograma?.mostrar(posicionando, d, motivo === null);
+  };
+
+  const confirmarPosicionamento = (px: number, py: number, manter: boolean) => {
+    if (!posicionando) return;
+    const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
+    const impressora = impressoraLivre();
+    if (!ponto || impressora === null) return;
+    const d = normalizar(ponto);
+    if (o.validarLocal?.(posicionando, d)) return;
+    enviar('posicionar_estrutura', {
+      id: impressora,
+      tipo: posicionando,
+      x: d[0],
+      y: d[1],
+      z: d[2],
+    });
+    if (!manter) sairDaProducao();
+  };
+
+  /** CTL-07: canteiro próprio → auxiliar; próprio danificado → reparar. */
+  const trabalhoNoPonto = (px: number, py: number): boolean => {
+    const quem = trabalhadores();
+    if (quem.length === 0) return false;
+    const alvo = corpoNoPonto(naTela(), px, py);
+    if (!alvo || alvo.nacao !== jogador) return false;
+    if (getComponent(sim.state, alvo.id, 'obra')) {
+      enviar('construir', { ids: quem, alvo: alvo.id });
+      return true;
+    }
+    const vida = getComponent(sim.state, alvo.id, 'vida');
+    if (vida && vida.hp < vida.max && !quem.includes(alvo.id)) {
+      enviar('reparar', { ids: quem, alvo: alvo.id });
+      return true;
+    }
+    return false;
+  };
+
   /**
    * CTL-07 (parcial): jazida → coletar (hovers de exploração; os demais se movem até lá);
    * terreno → mover; com só produtores selecionados → ponto de encontro.
    */
   const ordemNoPonto = (px: number, py: number, tipo: 'mover' | 'patrulhar') => {
+    if (tipo === 'mover' && trabalhoNoPonto(px, py)) return;
     if (tipo === 'mover') {
       const jazida = corpoNoPonto(jazidasNaTela(), px, py);
       const hovers = coletores();
@@ -192,6 +322,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     arrastando = false;
   };
   const moveu = (e: PointerEvent) => {
+    atualizarHolograma(e.clientX, e.clientY);
     if (!inicio) return;
     if (!arrastando && Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y) > LIMIAR_ARRASTO_PX) {
       arrastando = modo === 'normal';
@@ -200,7 +331,8 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   };
   const soltou = (e: PointerEvent) => {
     if (e.button === 2) {
-      if (modo !== 'normal') definirModo('normal');
+      if (posicionando || menuAberto) sairDaProducao();
+      else if (modo !== 'normal') definirModo('normal');
       else ordemNoPonto(e.clientX, e.clientY, 'mover');
       return;
     }
@@ -208,6 +340,17 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     const origem = inicio;
     inicio = null;
     caixaDiv.hidden = true;
+    if (posicionando) {
+      arrastando = false;
+      confirmarPosicionamento(e.clientX, e.clientY, e.shiftKey);
+      return;
+    }
+    if (modo === 'reparar') {
+      arrastando = false;
+      trabalhoNoPonto(e.clientX, e.clientY);
+      definirModo('normal');
+      return;
+    }
     if (modo !== 'normal') {
       ordemNoPonto(e.clientX, e.clientY, modo);
       definirModo('normal');
@@ -243,8 +386,27 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     centrarEm(o.estadoCamera, normalizar(soma));
   };
 
+  /** Menu aberto ou posicionamento: as teclas escolhem itens (§12.4). */
+  const teclaDeProducao = (e: KeyboardEvent): boolean => {
+    if (!menuAberto && !posicionando) return false;
+    if (e.code === 'Escape') {
+      sairDaProducao();
+      e.preventDefault();
+      return true;
+    }
+    if (posicionando) return true;
+    const opcoes: OpcaoDeMenu[] = menuAberto === 'unidades' ? MENU_UNIDADES : MENU_ESTRUTURAS;
+    const opcao = opcoes.find((x) => x.codigo === e.code);
+    if (opcao) {
+      escolher(opcao.item);
+      e.preventDefault();
+    }
+    return true;
+  };
+
   const tecla = (e: KeyboardEvent) => {
     if (e.repeat) return;
+    if (!e.ctrlKey && !e.altKey && !e.metaKey && teclaDeProducao(e)) return;
     const digito = /^Digit([1-9])$/.exec(e.code);
     if (digito) {
       const n = Number(digito[1]);
@@ -259,7 +421,20 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       return;
     }
     if (e.ctrlKey || e.altKey || e.metaKey) return;
+    // §12.4 (Nave): E Hover de Exploração, I Impressora.
+    const daNave = doTipo('ship').length > 0 ? MENU_NAVE.find((x) => x.codigo === e.code) : null;
+    if (daNave) {
+      escolher(daNave.item);
+      e.preventDefault();
+      return;
+    }
     switch (e.code) {
+      // §12.4 (Impressora): U menu de unidades; B menu de estruturas.
+      case 'KeyU':
+      case 'KeyB':
+        if (doTipo('printer').length === 0) return;
+        menuAberto = e.code === 'KeyU' ? 'unidades' : 'estruturas';
+        break;
       case 'KeyS':
         enviar('parar', { ids: minhas('unit') });
         break;
@@ -293,10 +468,13 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         if (usinas.length > 0) enviar('ligar_usina', { ids: usinas });
         break;
       }
+      // §12.4 G: Silo Móvel descarrega agora; Hover de Exploração repara (PRD-18).
       case 'KeyG': {
         const silos = minhas('unit').filter((id) => getComponent(sim.state, id, 'silo'));
-        if (silos.length === 0) return;
-        enviar('descarregar_silo', { ids: silos });
+        const hovers = doTipo('hover_explorer');
+        if (silos.length + hovers.length === 0) return;
+        if (silos.length > 0) enviar('descarregar_silo', { ids: silos });
+        if (hovers.length > 0) definirModo('reparar');
         break;
       }
       default:
@@ -314,6 +492,21 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   return {
     get selecao() {
       return selecao;
+    },
+    get estado(): EstadoDaEntrada {
+      return { menu: menuAberto, posicionando, motivo, reparando: modo === 'reparar' };
+    },
+    escolher,
+    abrirMenu(menu) {
+      if (doTipo('printer').length === 0) return;
+      sairDaProducao();
+      menuAberto = menu;
+    },
+    cancelarItem(produtor, indice) {
+      enviar('cancelar_impressao', { id: produtor, indice });
+    },
+    cancelarObra(obra) {
+      enviar('cancelar_obra', { ids: [obra] });
     },
     selecionadosDesenhados() {
       const vivos = selecao.filter((id) => isAlive(sim.state, id));

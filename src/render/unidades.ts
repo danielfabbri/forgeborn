@@ -1,6 +1,8 @@
 /**
  * Desenho de unidades, estruturas e minas com instancing: um InstancedMesh por tipo, com a
  * cor da nação como atributo de instância (TEC-16) acendendo a tarja e o olho (ART-02).
+ * Estrutura em obra (ART-06, versão simples): o modelo cresce de baixo para cima com o
+ * progresso, dentro do holograma em wireframe da estrutura final.
  */
 import {
   type BufferGeometry,
@@ -8,7 +10,9 @@ import {
   DynamicDrawUsage,
   InstancedBufferAttribute,
   InstancedMesh,
+  type Material,
   Matrix4,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   type Scene,
   Vector3,
@@ -36,6 +40,8 @@ export interface CorpoDesenhado {
 }
 
 const CAPACIDADE_INICIAL = 32;
+/** Altura mínima desenhada de um canteiro recém-instalado (fração do modelo). */
+const ALTURA_MINIMA_OBRA = 0.03;
 const INTENSIDADE_EMISSIVA = 1.8;
 
 function criarMaterial(): MeshStandardMaterial {
@@ -88,8 +94,9 @@ class Lote {
   constructor(
     private readonly scene: Scene,
     private readonly geometriaBase: BufferGeometry,
-    private readonly material: MeshStandardMaterial,
+    private readonly material: Material,
     capacidade: number,
+    private readonly sombras = true,
   ) {
     [this.malha, this.cores] = this.criar(capacidade);
   }
@@ -102,8 +109,8 @@ class Lote {
     geometria.setAttribute('aCorNacao', cores);
     const malha = new InstancedMesh(geometria, this.material, capacidade);
     malha.instanceMatrix.setUsage(DynamicDrawUsage);
-    malha.castShadow = true;
-    malha.receiveShadow = true;
+    malha.castShadow = this.sombras;
+    malha.receiveShadow = this.sombras;
     // As instâncias se espalham pelo mapa; a esfera da geometria base não serve para culling.
     malha.frustumCulled = false;
     malha.count = 0;
@@ -124,7 +131,15 @@ class Lote {
 
 export class UnidadesRender {
   private readonly material = criarMaterial();
+  private readonly materialHolograma = new MeshBasicMaterial({
+    color: '#7fd6ff',
+    wireframe: true,
+    transparent: true,
+    opacity: 0.35,
+    depthWrite: false,
+  });
   private readonly lotes = new Map<TipoDeModelo, Lote>();
+  private readonly hologramas = new Map<TipoDeModelo, Lote>();
   private readonly corDaNacao = new Map<string, Color>();
   private readonly scratch: Vec3 = { x: 0, y: 0, z: 0 };
   private readonly scratchRumo: Vec3 = { x: 0, y: 0, z: 0 };
@@ -141,7 +156,9 @@ export class UnidadesRender {
   sync(state: SimState, history: PositionHistory, alpha: number): void {
     this.corpos.length = 0;
     this.porId.clear();
-    const porTipo = new Map<TipoDeModelo, Array<{ corpo: CorpoDesenhado; frente: Vec3 | null }>>();
+    type Desenho = { corpo: CorpoDesenhado; frente: Vec3 | null; altura: number };
+    const porTipo = new Map<TipoDeModelo, Desenho[]>();
+    const emObra = new Map<TipoDeModelo, Desenho[]>();
     for (const id of entitiesWith(state, 'position')) {
       const unidade = getComponent(state, id, 'unit');
       const estrutura = getComponent(state, id, 'structure');
@@ -174,16 +191,37 @@ export class UnidadesRender {
       };
       this.corpos.push(corpo);
       this.porId.set(id, corpo);
+      const obra = getComponent(state, id, 'obra');
+      if (obra) {
+        let holos = emObra.get(tipo);
+        if (!holos) emObra.set(tipo, (holos = []));
+        holos.push({ corpo, frente, altura: 1 });
+        // Só reservada: só o holograma.
+        if (!obra.instalada) continue;
+      }
       let lista = porTipo.get(tipo);
       if (!lista) porTipo.set(tipo, (lista = []));
-      lista.push({ corpo, frente });
+      const altura = obra ? Math.max(ALTURA_MINIMA_OBRA, obra.progresso) : 1;
+      lista.push({ corpo, frente, altura });
     }
 
-    for (const lote of this.lotes.values()) lote.usados = 0;
+    this.preencher(this.lotes, porTipo, (tipo) => this.lote(tipo));
+    this.preencher(this.hologramas, emObra, (tipo) => this.holograma(tipo));
+  }
+
+  private preencher(
+    lotes: Map<TipoDeModelo, Lote>,
+    porTipo: Map<
+      TipoDeModelo,
+      Array<{ corpo: CorpoDesenhado; frente: Vec3 | null; altura: number }>
+    >,
+    obter: (tipo: TipoDeModelo) => Lote,
+  ): void {
+    for (const lote of lotes.values()) lote.usados = 0;
     for (const [tipo, lista] of porTipo) {
-      const lote = this.lote(tipo);
+      const lote = obter(tipo);
       lote.garantir(lista.length);
-      lista.forEach(({ corpo, frente }, k) => {
+      lista.forEach(({ corpo, frente, altura }, k) => {
         // Base do modelo: +x = frente (rumo, ou o norte local para estruturas e minas, PRD-10),
         // +y = vertical local, +z = x × y.
         this.cima.set(...corpo.cima);
@@ -193,14 +231,14 @@ export class UnidadesRender {
         // Garante a frente tangente (a interpolação pode tirá-la um pouco do plano).
         this.frente.addScaledVector(this.cima, -this.frente.dot(this.cima)).normalize();
         this.lado.crossVectors(this.frente, this.cima);
-        this.matriz.makeBasis(this.frente, this.cima, this.lado);
+        this.matriz.makeBasis(this.frente, this.cima.multiplyScalar(altura), this.lado);
         this.matriz.setPosition(corpo.x, corpo.y, corpo.z);
         lote.malha.setMatrixAt(k, this.matriz);
         this.cor(corpo.nacao).toArray(lote.cores.array, k * 3);
       });
       lote.usados = lista.length;
     }
-    for (const lote of this.lotes.values()) {
+    for (const lote of lotes.values()) {
       lote.malha.count = lote.usados;
       lote.malha.instanceMatrix.needsUpdate = true;
       lote.cores.needsUpdate = true;
@@ -209,6 +247,21 @@ export class UnidadesRender {
 
   get(id: EntityId): CorpoDesenhado | undefined {
     return this.porId.get(id);
+  }
+
+  private holograma(tipo: TipoDeModelo): Lote {
+    let lote = this.hologramas.get(tipo);
+    if (!lote) {
+      lote = new Lote(
+        this.scene,
+        geometriaDoModelo(tipo),
+        this.materialHolograma,
+        CAPACIDADE_INICIAL,
+        false,
+      );
+      this.hologramas.set(tipo, lote);
+    }
+    return lote;
   }
 
   private lote(tipo: TipoDeModelo): Lote {

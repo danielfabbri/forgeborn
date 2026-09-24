@@ -44,3 +44,75 @@ body {
   border: 1px solid rgba(220, 240, 255, 0.9);
   background: rgba(160, 200, 255, 0.12);
 }
+
+.painel-producao,
+.aviso-producao {
+  position: absolute;
+  left: 8px;
+  font:
+    12px/1.5 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: rgba(5, 10, 18, 0.82);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.painel-producao {
+  bottom: 8px;
+  min-width: 260px;
+  max-width: 420px;
+  pointer-events: auto;
+}
+
+.aviso-producao {
+  bottom: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffd27a;
+}
+
+.painel-producao button {
+  font: inherit;
+  color: inherit;
+  background: rgba(40, 60, 90, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 3px;
+  margin: 2px 4px 2px 0;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+
+.painel-producao button.ativa {
+  background: rgba(70, 130, 200, 0.7);
+}
+
+.painel-producao .painel-estoque {
+  color: #9fb8d8;
+  margin-bottom: 4px;
+}
+
+.painel-producao .motivo {
+  color: #ff7a7a;
+}
+
+.painel-producao .item-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.painel-producao .barra {
+  flex: 1;
+  height: 6px;
+  background: rgba(120, 160, 220, 0.2);
+}
+
+.painel-producao .barra span {
+  display: block;
+  height: 100%;
+  background: #46e08a;
+}

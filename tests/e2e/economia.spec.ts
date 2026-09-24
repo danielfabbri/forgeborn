@@ -74,9 +74,11 @@ test('T-032: o estoque do jogador cresce com a coleta automática (ECO-14, ECO-1
     const texto = (await page.getByTestId('debug-estoque').textContent()) ?? '';
     return [...texto.matchAll(/(\d+)/g)].reduce((s, m) => s + Number(m[1]), 0);
   };
-  expect(await total()).toBe(0);
+  // A cena de demonstração começa com o estoque do modo alto (REG-05).
+  await page.waitForTimeout(500);
+  const inicial = await total();
   await page.waitForTimeout(25_000);
-  expect(await total()).toBeGreaterThan(0);
+  expect(await total()).toBeGreaterThan(inicial);
 });
 
 test('T-035: T ancora o Silo Móvel selecionado', async ({ page }) => {

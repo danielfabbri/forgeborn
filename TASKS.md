@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.6.0 |
+| Derivado de | `SPEC.md` v0.7.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -223,6 +223,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [ ] **T-086 — Tooltips e fila visível** · P · Spec: UI-09, UI-10 · Dep: T-082
 - [ ] **T-087 — Textos em pt-BR** · P · Spec: TEC-23 · Dep: T-080
   - Aceite: nenhuma string de interface fixa no código (verificação automatizada).
+- [ ] **T-088 — Informação de jazidas** · P · Spec: UI-13, UI-09 · Dep: T-081, T-030
+  - Aceite: tooltip com recurso e quantidade restante após o atraso; clique seleciona a jazida sozinha e o painel mostra recurso, restante/inicial e hovers designados.
 
 ## M9 — IA
 

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.12.0 |
+| Derivado de | `SPEC.md` v0.13.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -245,7 +245,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [ ] **T-100 — Splash e carregamento** · P · Spec: FLX-01, FLX-08 · Dep: T-002
 - [ ] **T-101 — Tela de Abertura** · M · Spec: FLX-02, TEC-22 · Dep: T-100
   - Aceite: cena da Terra escura com as Arcas-Forja; a primeira tecla ou clique libera o áudio.
-- [ ] **T-102 — Seleção de Modo e Configurações** · M · Spec: FLX-03, FLX-13, TEC-19 · Dep: T-101
+- [ ] **T-102 — Seleção de Modo e Configurações** · M · Spec: FLX-03, FLX-13, FLX-14, TEC-19 · Dep: T-101
 - [ ] **T-103 — Visão do Universo (versão MVP)** · M · Spec: FLX-04 · Dep: T-102
   - Aceite: navegação 3D, estados bloqueado/disponível/concluído e seleção de cenário.
 - [ ] **T-104 — Configuração de Free Battle** · M · Spec: FLX-07, §16, FB-01 – FB-04 · Dep: T-103, T-012

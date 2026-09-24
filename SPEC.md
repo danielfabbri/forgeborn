@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.12.0 — rascunho para aprovação |
+| Versão do SPEC | 0.13.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -188,7 +188,7 @@ flowchart LR
 
 - **FLX-01** — **Splash e carregamento inicial.** Logo e barra de progresso enquanto carrega o núcleo do jogo (orçamento em TEC-18).
 - **FLX-02** — **Tela de Abertura.** Cena 3D em loop: a Terra escura, sem luzes de cidades, e quatro Arcas-Forja partindo em dobra. Título "FORGEBORN — Nascidos da Forja" e "Pressione qualquer tecla". A primeira interação DEVE desbloquear o áudio do navegador (TEC-22).
-- **FLX-03** — **Seleção de Modo.** Opções: **Free Battle**, **Campanha**, **Configurações**, **Créditos**. O fundo 3D continua o da abertura.
+- **FLX-03** — **Seleção de Modo.** Opções: **Free Battle**, **Campanha**, **Configurações**, **Créditos**. O fundo 3D continua o da abertura. Enquanto a Campanha não existir, o botão aparece desabilitado, com a dica de que estará disponível em breve (D-38).
 - **FLX-04** — **Visão do Universo.** Sistema Solar estilizado em 3D (fora de escala) e navegável: arrastar gira, a roda do mouse aproxima, clicar num corpo foca nele. Corpos: Sol, Vênus, Terra + Lua, Marte + Fobos, Cinturão (Ceres), Júpiter + Europa, Saturno + Titã. Estados de um cenário: *bloqueado* (cinza, com cadeado), *disponível* (pulsando), *concluído* (cor da nação do jogador + estrelas). Uma linha tracejada de dobra liga a Terra ao alvo selecionado.
   - Em **Free Battle**, a tela lista os cenários implementados, todos disponíveis.
   - Em **Campanha**, lista as missões. Clicar abre o Briefing.
@@ -200,7 +200,8 @@ flowchart LR
 - **FLX-10** — **Partida.** Ver §4 a §17.
 - **FLX-11** — **Menu de Pausa** (Esc): Continuar, Configurações, Reiniciar, Render-se, Sair para o menu. Em single-player a simulação pausa.
 - **FLX-12** — **Fim de Partida.** Vitória ou derrota, estatísticas (REG-23) e botões: Continuar (campanha → Universo), Jogar novamente, Menu.
-- **FLX-13** — **Configurações.** Acessível na Seleção de Modo e na Pausa: Gráficos, Áudio, Jogo, Controles, Acessibilidade (UI-11, UI-12).
+- **FLX-13** — **Configurações.** Acessível na Seleção de Modo e na Pausa: Gráficos, Áudio, Jogo, Controles, Acessibilidade (UI-11, UI-12). Conteúdo do MVP (D-36): **Gráficos**, o preset de TEC-19; **Jogo**, rolagem pelas bordas (liga/desliga) e barras de vida (automático/sempre, UI-07); **Controles**, a lista de atalhos de §12; **Acessibilidade**, a escala da interface (UI-12). Áudio entra com o som (T-126) e o modo daltônico com a UI-11. As configurações ficam salvas (TEC-21) e valem na hora.
+- **FLX-14** — A troca entre menus e partida recarrega a página: a configuração da partida vai junto, e sair para o menu ou jogar de novo começa numa página limpa (D-39).
 
 ---
 
@@ -1164,7 +1165,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | tempo_limite_min | 20+30+45+60 | 30 |
 | velocidade | 0,75+1+1,25+1,5 | 1 |
 
-- **FB-01** — Névoa "explorado": o mapa inteiro começa em névoa, sem escuro absoluto. "Revelado": tudo visível o tempo todo.
+- **FB-01** — Névoa "explorado": o mapa inteiro começa em névoa, sem escuro absoluto. "Revelado": tudo visível o tempo todo. A camuflagem (CMB-22) continua valendo nos dois: minas e Sentinelas só aparecem para detectores (D-37).
 - **FB-02** — Zona de pouso "escolher": o jogador clica numa zona livre na pré-visualização; as IAs sorteiam as restantes.
 - **FB-03** — O tamanho de mapa respeita `dados:tamanhos_mapa`; opções inválidas ficam desabilitadas com explicação.
 - **FB-04** — Cada oponente tem nação e dificuldade próprias. As últimas opções usadas ficam salvas (TEC-21).
@@ -1311,7 +1312,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **TEC-16** — Instancing por tipo de unidade, com a cor da nação como atributo de instância. No máximo 300 draw calls na visão RTS; sombras só para objetos na área visível; 3 níveis de LOD por modelo.
 - **TEC-17** — A névoa é uma textura atualizada a `nevoa_atualizacao_hz`, amostrada no shader do terreno e aplicada aos objetos. O minimapa usa a mesma textura.
 - **TEC-18** — Assets em glTF 2.0 (.glb) com meshopt e texturas KTX2 (Basis). Download inicial ≤ 40 MB e tela de abertura interativa em ≤ 8 s numa conexão de 50 Mbps; outros cenários carregam sob demanda. Até existir arte final, modelos placeholder procedurais com as mesmas silhuetas e proporções (ART-03).
-- **TEC-19** — Presets gráficos (Baixo, Médio, Alto, Ultra) controlam escala de resolução, sombras, SSAO, partículas e distância de LOD.
+- **TEC-19** — Presets gráficos (Baixo, Médio, Alto, Ultra) controlam escala de resolução, sombras, SSAO, partículas e distância de LOD. Escala de resolução (limitada à densidade da tela) e mapa de sombras: Baixo 0,75× e sem sombras; Médio 1× e 1024 px; Alto 1,5× e 2048 px (padrão); Ultra 2× e 4096 px. SSAO, partículas e LOD entram com a T-124.
 
 ### 20.6 Plataforma e persistência
 
@@ -1465,6 +1466,10 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-33 | O splash mede a distância até o centro da unidade (estruturas: até a borda da pegada). | Medida pela borda do casco, a INV-03 dependia da formação (74% em fila cerrada); pelo centro, fica em 27–34% em qualquer formação (medido na T-068). | Aprovada |
 | D-34 | Constantes de ajuste da IA viram chaves `ia_*` de §13.1 (IA-07), e os traços numéricos de §13.3 as citam. | A IA precisa desses ajustes e o GOV-04 exige que números de jogo fiquem nas tabelas. | Aprovada |
 | D-35 | Mais cobre: jazida inicial de Cu com 2000 u e de expansão com 1500 u (antes 1000 e 1000). | O Cu esgotava por volta dos 30 min nas partidas entre IAs (T-095), com Fe e Si sobrando aos milhares; quase toda unidade militar e de energia gasta Cu. | Aprovada |
+| D-36 | O MVP das Configurações tem Gráficos (preset), Jogo (rolagem pelas bordas e barras), Controles (lista de atalhos) e Acessibilidade (escala da interface). | Resposta do produto à lacuna de FLX-13: Áudio depende do som (T-126) e o daltônico da UI-11. | Aprovada |
+| D-37 | Na névoa "revelado" a camuflagem continua valendo. | Resposta do produto à lacuna de FB-01: a camuflagem é regra de detecção, não de névoa. | Aprovada |
+| D-38 | Até a Campanha existir, o botão fica desabilitado com aviso. | Resposta do produto à lacuna de FLX-03. | Aprovada |
+| D-39 | Menus e partida trocam por recarga de página (FLX-14). | Resposta do produto: cada partida começa sem memória de GPU nem listeners da anterior; o carregamento (FLX-08) cobre a espera. | Aprovada |
 
 ---
 
@@ -1538,3 +1543,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.10.1 | 2026-09-24 | Q-08: ordem de ataque direta com postura Passiva. |
 | 0.11.0 | 2026-09-24 | D-34: IA-07 e as chaves `ia_*` de ajuste da IA; o traço "meta de hovers" da China cita `ia_traco_meta_hovers_pct`. |
 | 0.12.0 | 2026-09-24 | D-35: `dados:jazidas` com mais Cu (inicial 2000 u, expansão 1500 u). |
+| 0.13.0 | 2026-09-24 | D-36 a D-39: conteúdo do MVP das Configurações (FLX-13), camuflagem na névoa revelada (FB-01), botão da Campanha (FLX-03) e troca de tela por recarga (nova FLX-14); valores dos presets gráficos em TEC-19. |

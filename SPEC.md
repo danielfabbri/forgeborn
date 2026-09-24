@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.8.0 — rascunho para aprovação |
+| Versão do SPEC | 0.9.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -347,7 +347,7 @@ flowchart LR
 ### 5.7 Destroços e reciclagem
 
 - **ECO-27** — Toda unidade ou estrutura destruída deixa um **destroço** com `rendimento_destroco_pct`% da receita (arredondado para baixo, recurso a recurso). Dura `duracao_destroco_unidade_s` (unidades) ou `duracao_destroco_estrutura_s` (estruturas). A Nave deixa um destroço fixo (`destroco_nave_*`).
-- **ECO-28** — Qualquer nação pode reciclar qualquer destroço com Hovers de Exploração, a `taxa_reciclagem_u_s`, até `carga_hover_u`. A carga é **sucata**, com a mesma composição do destroço, e se converte nos recursos correspondentes ao ser descarregada.
+- **ECO-28** — Qualquer nação pode reciclar qualquer destroço com Hovers de Exploração, a `taxa_reciclagem_u_s`, até `carga_hover_u`, com o casco a até `distancia_mineracao_m` do destroço (D-32). A carga é **sucata**, com a mesma composição do destroço, e se converte nos recursos correspondentes ao ser descarregada.
 - **ECO-29** — Destroços não bloqueiam movimento. Na névoa aparecem como fantasmas (VIS-04).
 
 <!-- dados:parametros -->
@@ -793,9 +793,9 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 ### 9.8 Explosões ambientais
 
 - **CMB-23** — Bateria Móvel destruída: `explosao_bateria_dano` num raio de `explosao_bateria_raio_m`.
-- **CMB-24** — Usina Nuclear destruída: `explosao_nuclear_dano` num raio de `explosao_nuclear_raio_m`, mais uma zona de radiação de raio `radiacao_raio_m` por `radiacao_duracao_s`, que causa `radiacao_dano_hp_s` a unidades de solo dentro dela (de qualquer nação; drones em voo são imunes).
+- **CMB-24** — Usina Nuclear destruída: `explosao_nuclear_dano` num raio de `explosao_nuclear_raio_m`, mais uma zona de radiação de raio `radiacao_raio_m` por `radiacao_duracao_s`, que causa `radiacao_dano_hp_s` a unidades móveis de solo dentro dela (de qualquer nação; drones em voo, estruturas e minas são imunes, D-32).
 - **CMB-25** — Nave Inicial destruída: `explosao_nave_dano` num raio de `explosao_nave_raio_m`.
-- **CMB-26** — Dano ambiental usa o multiplicador `ambiental`, segue CMB-10 e atinge todas as nações. Não se aplica às autodestruições de REG-10.
+- **CMB-26** — Dano ambiental usa o multiplicador `ambiental`, segue CMB-10 com 0% na borda e atinge todas as nações (D-32). Não se aplica às autodestruições de REG-10.
 
 ### 9.9 Morte
 
@@ -908,7 +908,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ### 12.3 Clique direito contextual
 
-- **CTL-07** — Com unidades selecionadas, o clique direito em: terreno → mover; inimigo → atacar; jazida → coletar (hovers); ponto de entrega → descarregar; canteiro próprio → auxiliar; unidade ou estrutura própria danificada → reparar (hovers e impressoras); porta de recarga → recarregar; destroço → reciclar; Bateria Móvel → seguir (suporte). Com um produtor selecionado, o clique direito define o ponto de encontro.
+- **CTL-07** — Com unidades selecionadas, o clique direito em: terreno → mover (as armadas disparam no que estiver no alcance, sem desviar; M move sem disparar, D-32); inimigo → atacar; jazida → coletar (hovers); ponto de entrega → descarregar; canteiro próprio → auxiliar; unidade ou estrutura própria danificada → reparar (hovers e impressoras); porta de recarga → recarregar; destroço → reciclar; Bateria Móvel → seguir (suporte). Com um produtor selecionado, o clique direito define o ponto de encontro.
 
 ### 12.4 Atalhos
 
@@ -1449,6 +1449,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-29 | Obra e reparo a até `raio_deposito_m` da borda do alvo; a pegada fica reservada entre posicionar e instalar o canteiro; a unidade impressa nasce do lado do ponto de encontro. | Respostas do produto às lacunas de PRD-08, PRD-10, PRD-11, PRD-15 e PRD-18. | Aprovada |
 | D-30 | O estoque padrão traz o Cu e o Li da Impressora (Cu 10, Li 3); a INV-02 passa a 45–60 s. | Com Cu 5 e Li 0, os 2 hovers da abertura ficam em Fe e Si pela Diretiva e a Impressora nunca sai (medido na T-056). Com o Cu e o Li no estoque, ela sai em 49 s. | Aprovada |
 | D-31 | Torpedo detona ao fim do tempo máximo de voo; unidade recua quando o alvo está dentro do alcance mínimo; disparos sem linha de visada. | Respostas do produto às lacunas de CMB-04, CMB-07 e CMB-13. | Aprovada |
+| D-32 | Explosão ambiental com 0% na borda; radiação só fere unidades móveis; reciclagem a `distancia_mineracao_m`; mover dispara sem desviar e M não dispara. | Respostas do produto às lacunas de CMB-24, CMB-26, ECO-28 e CTL-07. | Aprovada |
 
 ---
 
@@ -1516,3 +1517,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.6.0 | 2026-09-23 | D-30: `dados:estoque_inicial` padrão com Cu 10 e Li 3 (REG-05); INV-02 passa a 45–60 s. |
 | 0.7.0 | 2026-09-23 | UI-13: informação de jazidas (tooltip e seleção), a pedido do produto. |
 | 0.8.0 | 2026-09-24 | D-31: sem linha de visada (CMB-04), torpedo detona no tempo máximo (CMB-07), recuo no alcance mínimo (CMB-13). |
+| 0.9.0 | 2026-09-24 | D-32: borda da explosão ambiental (CMB-26), alvos da radiação (CMB-24), distância de reciclagem (ECO-28) e disparo ao mover (CTL-07). |

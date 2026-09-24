@@ -143,7 +143,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-040 — Rede de energia** · M · Spec: ENE-01 – ENE-05 · Dep: T-006 · Feito: 2026-09-23
   - Aceite: testes de geração, capacidade, excedente perdido e de cada nível de prioridade do racionamento, incluindo satélite offline.
-- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Todos os custos de §6.3 prontos
+- [x] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Feito: 2026-09-24 (o custo do Impulso entrou com a T-111)
   - Aceite: custo de cada tarefa da tabela §6.3 verificado; unidade parada no solo gasta 0; Modo Reserva anda a `modo_reserva_vel_pct`% e não executa tarefas.
 - [x] **T-042 — Portas de recarga** · M · Spec: ENE-12 – ENE-14 · Dep: T-041 · Feito: 2026-09-23
   - Aceite: 1 unidade por porta; fila por ordem de chegada; escolha pelo menor tempo estimado; a recarga retira energia do banco.

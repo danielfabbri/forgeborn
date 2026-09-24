@@ -5,7 +5,7 @@ import { ATIVAR_IA_COMMAND, dificuldade, pesos } from '../../src/sim/ia';
 import { montarQuadro } from '../../src/sim/ia/quadro';
 import { CATEGORIAS } from '../../src/sim/ia/producao';
 import { INICIAR_PARTIDA_COMMAND } from '../../src/sim/producao';
-import { criar, mundoLiso, ordenar, partida, ponto, revelar, semear } from './mundo-teste';
+import { criar, mundoLiso, ordenar, partida, ponto, pos, revelar, semear } from './mundo-teste';
 import { criarPartida } from '../../tools/sim/match';
 
 function contexto(sim: Sim): SystemContext {
@@ -183,4 +183,67 @@ describe('T-093 — IA-04, IA-05, §13.2: militar e dificuldades', () => {
     // IA-05: cada uma destruiu algo da outra.
     for (const n of nacoes) expect(sim.state.placar[n]!.vrDestruido).toBeGreaterThan(0);
   }, 180_000);
+
+  /** IA no nível dado com unidades próprias e inimigas em contato perto da base (defesa). */
+  function combate(
+    nivel: string,
+    proprias: Parameters<typeof criar>[1],
+    inimigas: Parameters<typeof criar>[1],
+  ) {
+    const sim = comIa(nivel);
+    const meus = criar(sim, proprias);
+    const deles = criar(sim, inimigas, 'usa');
+    return { sim, meus, deles };
+  }
+  const ordem = (sim: Sim, id: number) => getComponent(sim.state, id, 'order')!.tipo;
+
+  it('§13.2 micro 1: foco de fogo — quem está engajado passa a atacar o inimigo de menor HP', () => {
+    const { sim, meus, deles } = combate(
+      'normal',
+      [
+        { unidade: 'hover_ex1', x: 0, z: 26, postura: 'manter' },
+        { unidade: 'hover_ex1', x: 8, z: 26, postura: 'manter' },
+      ],
+      [
+        { unidade: 'hover_opq', x: -3, z: 33, postura: 'passiva' },
+        { unidade: 'hover_opq', x: 11, z: 33, postura: 'passiva' },
+      ],
+    );
+    getComponent(sim.state, deles[1]!, 'vida')!.hp = 120;
+    sim.run(1.5 * sim.tickHz);
+    for (const id of meus) expect(getComponent(sim.state, id, 'arma')!.alvo).toBe(deles[1]);
+  });
+
+  it('§13.2 micro 0: sem foco de fogo no Fácil', () => {
+    const { sim, meus } = combate(
+      'facil',
+      [{ unidade: 'hover_ex1', x: 0, z: 26, postura: 'manter' }],
+      [{ unidade: 'hover_explorer', x: -4, z: 33, postura: 'passiva' }],
+    );
+    sim.run(3 * sim.tickHz);
+    expect(ordem(sim, meus[0]!)).not.toBe('atacar');
+  });
+
+  it('§13.2 micro 2: ferido abaixo de ia_ferido_pct recua para a reunião', () => {
+    const { sim, meus } = combate(
+      'dificil',
+      [{ unidade: 'hover_ex1', x: 0, z: 26 }],
+      [{ unidade: 'hover_ex1', x: 0, z: 33, postura: 'manter' }],
+    );
+    const vida = getComponent(sim.state, meus[0]!, 'vida')!;
+    vida.hp = (vida.max * (param('ia_ferido_pct') - 5)) / 100;
+    sim.run(2 * sim.tickHz);
+    expect(ordem(sim, meus[0]!)).toBe('mover');
+  });
+
+  it('§13.2 micro 3: OPQ recua com o inimigo a menos de ia_kite_pct do alcance', () => {
+    const { sim, meus } = combate(
+      'brutal',
+      [{ unidade: 'hover_opq', x: 0, z: 26 }],
+      [{ unidade: 'hover_ex1', x: 0, z: 31, postura: 'manter' }],
+    );
+    const antes = pos(sim, meus[0]!);
+    sim.run(2 * sim.tickHz);
+    expect(pos(sim, meus[0]!).z).toBeLessThan(antes.z);
+  });
 });

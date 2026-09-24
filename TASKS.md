@@ -234,7 +234,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: atinge `meta_hovers` da dificuldade; mantém saldo de energia ≥ 0 na maior parte da partida; expande até `expansoes_max`.
 - [x] **T-092 — Produção e composição** · M · Spec: IA-03, §13.3 · Dep: T-091 · Feito: 2026-09-24
   - Aceite: a composição converge para os pesos da personalidade, redistribuindo tiers bloqueados; a adaptação reage ao exército inimigo observado.
-- [~] **T-093 — Militar e dificuldades** · G · Spec: IA-04, IA-05, §13.2 · Dep: T-092 · Ondas, recuo, defesa e ataque entre IAs prontos e testados; os níveis de micro estão implementados, mas sem teste por nível; as partidas entre IAs iguais ainda empatam (ver T-095)
+- [x] **T-093 — Militar e dificuldades** · G · Spec: IA-04, IA-05, §13.2 · Dep: T-092 · Feito: 2026-09-24 (as partidas entre IAs iguais ainda empatam: ver T-095)
   - Aceite: ondas respeitam `primeiro_ataque_min` e `vr_exercito_ataque`; recuo abaixo de `ia_recuo_vr_pct`; níveis de `micro` implementados; IAs se atacam entre si.
 - [~] **T-094 — Batedor e Sentinelas** · P · Spec: IA-01 · Dep: T-072, T-090 · Batedor com Hover de Observação pronto; Sentinelas esperam a T-072
 - [ ] **T-095 — Estabilidade e hierarquia de dificuldade** · M · Spec: INV-12, INV-14 · Dep: T-093, T-007

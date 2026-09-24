@@ -30,6 +30,7 @@ import { avancar, norteEm, type Vec3 } from './sim/map/esfera';
 import { alturaEm } from './sim/map/heightmap';
 import { PRESETS_DE_MAPA } from './sim/map/presets';
 import { gerarMapaValido } from './sim/map/validacao';
+import { ATIVAR_IA_COMMAND } from './sim/ia';
 import { INICIAR_PARTIDA_COMMAND, validarPosicionamento } from './sim/producao';
 import { comandosDoJogo, sistemasDoJogo } from './sim/units';
 import { debugStats } from './ui/debugStats';
@@ -180,6 +181,13 @@ if (demo) {
       nacoes: nacoes.map((nacao, k) => ({ nacao, zona: zonaDe(k).d })),
     } as never,
   });
+  // §13: as outras nações são IAs; `?ia=facil|normal|dificil|brutal` escolhe o nível
+  // (até a configuração da partida, T-104).
+  const nivelIa = parametros.get('ia') ?? 'normal';
+  for (const nacao of nacoes) {
+    if (nacao === jogador) continue;
+    sim.enqueue({ tick: 0, nacao, tipo: ATIVAR_IA_COMMAND, dados: { nivel: nivelIa } as never });
+  }
 }
 
 const history = new PositionHistory();

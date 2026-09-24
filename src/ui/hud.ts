@@ -65,6 +65,30 @@ export const acoesDaPartida: {
   sair: () => {},
 };
 
+/** CTL-14: HUD do controle direto (null fora dele). */
+export interface EstadoDoControleDireto {
+  modo: '1p' | '3p';
+  tipo: string;
+  hp: number;
+  hpMax: number;
+  en: { atual: number; max: number } | null;
+  /** Arma: 1 = pronta; null sem arma. */
+  recarga: number | null;
+  /** CTL-11: progresso da trava do torpedo (0..1), ou null. */
+  trava: number | null;
+  /** O que está sob a mira. */
+  mira: 'inimigo' | 'aliado' | 'jazida' | null;
+  /** Rumo da mira (graus a partir do norte) e os sinais de radar (rumos, graus). */
+  rumo: number;
+  sinais: number[];
+  carga: { atual: number; max: number } | null;
+  /** Chave da habilidade do clique direito (D-42), ou null. */
+  habilidade: string | null;
+}
+export const controleDireto = signal<EstadoDoControleDireto | null>(null);
+/** CTL-13: "SINAL PERDIDO" na tela. */
+export const sinalPerdido = signal(false);
+
 /** Canvas do retrato 3D (UI-03), montado pelo painel e desenhado pelo render. */
 export const canvasDoRetrato = signal<HTMLCanvasElement | null>(null);
 

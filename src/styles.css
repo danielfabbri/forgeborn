@@ -737,3 +737,202 @@ body {
   justify-content: space-between;
   margin-top: 10px;
 }
+
+/* CTL-14: HUD do controle direto. O HUD do RTS some; o minimapa fica reduzido. */
+body.em-controle-direto .painel-selecao,
+body.em-controle-direto .painel-producao,
+body.em-controle-direto .tooltip,
+body.em-controle-direto .caixa-selecao {
+  display: none;
+}
+body.em-controle-direto .minimapa {
+  width: 120px;
+  height: 120px;
+}
+.hud-direto {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font:
+    12px/1.4 ui-monospace,
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+}
+.hud-direto .mira {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(220, 240, 255, 0.8);
+  border-radius: 50%;
+}
+.hud-direto .mira::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  transform: translate(-50%, -50%);
+  background: currentColor;
+  border-radius: 50%;
+}
+.hud-direto .mira.inimigo {
+  border-color: #ff5a4f;
+  color: #ff5a4f;
+}
+.hud-direto .mira.jazida {
+  border-color: #ffd27a;
+  color: #ffd27a;
+}
+.hud-direto .mira.aliado {
+  border-color: #7fe3a0;
+  color: #7fe3a0;
+}
+.hud-direto .trava {
+  position: absolute;
+  left: -11px;
+  top: -11px;
+  width: 44px;
+  height: 44px;
+  transform: rotate(-90deg);
+}
+.hud-direto .trava circle {
+  fill: none;
+  stroke: #ffb347;
+  stroke-width: 2.5;
+}
+.hud-direto .trava circle.travado {
+  stroke: #ff3b30;
+}
+.bussola {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  width: 360px;
+  height: 22px;
+  transform: translateX(-50%);
+  background: rgba(5, 10, 18, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bussola .ponto,
+.bussola .sinal,
+.bussola .centro {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.bussola .sinal {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff3b3b;
+}
+.bussola .centro {
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+}
+.status-direto {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(5, 10, 18, 0.7);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+.barra-direto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.barra-direto span {
+  width: 42px;
+}
+.barra-direto .trilho {
+  flex: 1;
+  height: 6px;
+  background: rgba(120, 160, 220, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.barra-direto .cheio {
+  height: 100%;
+}
+.barra-direto.hp .cheio {
+  background: #5fd38a;
+}
+.barra-direto.en .cheio {
+  background: #4fd6ff;
+}
+.barra-direto.arma .cheio {
+  background: #ffb347;
+}
+.barra-direto.carga .cheio {
+  background: #c9a46a;
+}
+.dicas-direto {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  background: rgba(5, 10, 18, 0.6);
+  border-radius: 3px;
+  opacity: 0.85;
+}
+.sinal-perdido {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  pointer-events: none;
+  overflow: hidden;
+}
+.sinal-perdido .estatica {
+  position: absolute;
+  inset: -50%;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 3px),
+    repeating-radial-gradient(
+      circle at 30% 40%,
+      rgba(255, 255, 255, 0.12) 0 1px,
+      transparent 1px 4px
+    );
+  animation: estatica 0.12s steps(3) infinite;
+}
+@keyframes estatica {
+  0% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(-7%, 4%);
+  }
+  66% {
+    transform: translate(5%, -6%);
+  }
+}
+.sinal-perdido p {
+  position: relative;
+  font:
+    700 40px/1 ui-monospace,
+    Consolas,
+    monospace;
+  letter-spacing: 0.3em;
+  color: #ff5a4f;
+  text-shadow: 0 0 12px rgba(255, 90, 79, 0.7);
+}

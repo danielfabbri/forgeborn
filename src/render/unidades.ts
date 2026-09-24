@@ -141,6 +141,8 @@ export class UnidadesRender {
   });
   private readonly lotes = new Map<TipoDeModelo, Lote>();
   private readonly hologramas = new Map<TipoDeModelo, Lote>();
+  /** Corpo que não é desenhado (o pilotado em 1ª pessoa). */
+  oculto: EntityId | null = null;
   /** VIS-04: fantasmas em cinza translúcido. */
   private readonly materialFantasma = new MeshStandardMaterial({
     color: '#8a8f99',
@@ -254,6 +256,8 @@ export class UnidadesRender {
         // Só reservada: só o holograma.
         if (!obra.instalada) continue;
       }
+      // CTL-15: na 1ª pessoa o corpo pilotado não se desenha (a câmera está dentro dele).
+      if (id === this.oculto) continue;
       let lista = porTipo.get(tipo);
       if (!lista) porTipo.set(tipo, (lista = []));
       const altura = obra ? Math.max(ALTURA_MINIMA_OBRA, obra.progresso) : 1;

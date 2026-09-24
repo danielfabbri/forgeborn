@@ -143,7 +143,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-040 — Rede de energia** · M · Spec: ENE-01 – ENE-05 · Dep: T-006 · Feito: 2026-09-23
   - Aceite: testes de geração, capacidade, excedente perdido e de cada nível de prioridade do racionamento, incluindo satélite offline.
-- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Todos os custos de §6.3 prontos, menos o impulso (controle direto)
+- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Todos os custos de §6.3 prontos
   - Aceite: custo de cada tarefa da tabela §6.3 verificado; unidade parada no solo gasta 0; Modo Reserva anda a `modo_reserva_vel_pct`% e não executa tarefas.
 - [x] **T-042 — Portas de recarga** · M · Spec: ENE-12 – ENE-14 · Dep: T-041 · Feito: 2026-09-23
   - Aceite: 1 unidade por porta; fila por ordem de chegada; escolha pelo menor tempo estimado; a recarga retira energia do banco.
@@ -256,11 +256,11 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M11 — Controle direto
 
-- [ ] **T-110 — Câmeras de 1ª e 3ª pessoa** · M · Spec: CTL-08, CTL-09, CTL-15 · Dep: T-106
-- [ ] **T-111 — Movimento e Impulso** · M · Spec: CTL-10, CTL-12 · Dep: T-110
-- [ ] **T-112 — Mira e ações** · M · Spec: CTL-11 · Dep: T-111, T-062
+- [x] **T-110 — Câmeras de 1ª e 3ª pessoa** · M · Spec: CTL-08, CTL-09, CTL-15 · Dep: T-106 · Feito: 2026-09-24
+- [x] **T-111 — Movimento e Impulso** · M · Spec: CTL-10, CTL-12 · Dep: T-110 · Feito: 2026-09-24
+- [x] **T-112 — Mira e ações** · M · Spec: CTL-11 · Dep: T-111, T-062 · Feito: 2026-09-24
   - Aceite: lasers acertam o que está sob a mira; trava do torpedo; marcador de impacto da bomba; hover de exploração minera e descarrega em controle direto.
-- [ ] **T-113 — HUD, Sincronia e Sinal Perdido** · P · Spec: CTL-12 – CTL-14 · Dep: T-112
+- [x] **T-113 — HUD, Sincronia e Sinal Perdido** · P · Spec: CTL-12 – CTL-14 · Dep: T-112 · Feito: 2026-09-24
 
 ## M12 — Arte e áudio
 

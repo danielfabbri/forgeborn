@@ -17,10 +17,8 @@ import { dados } from '../sim';
 type Aba = 'graficos' | 'jogo' | 'controles' | 'acessibilidade';
 const ABAS: readonly Aba[] = ['graficos', 'jogo', 'controles', 'acessibilidade'];
 
-/** §12.4 sem o controle direto (M11), que ainda não existe no jogo. */
-const ATALHOS = dados.atalhos.filter(
-  (a) => a.contexto !== 'controle_direto' && !(a.contexto === 'global' && a.tecla === 'V'),
-);
+/** §12.4: todos os atalhos, com os do controle direto (M11). */
+const ATALHOS = dados.atalhos;
 
 export function Configuracoes({ aoVoltar }: { aoVoltar: () => void }) {
   const [aba, setAba] = useState<Aba>('graficos');

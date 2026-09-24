@@ -3,6 +3,7 @@ import { DebugOverlay } from './DebugOverlay';
 import { PainelProducao } from './PainelProducao';
 import { PainelSelecao, Tooltip } from './PainelSelecao';
 import { FimDePartida, MenuDePausa } from './TelasDaPartida';
+import { HudControleDireto } from './ControleDireto';
 
 export function App() {
   return (
@@ -11,6 +12,7 @@ export function App() {
       <PainelSelecao />
       <PainelProducao />
       <Tooltip />
+      <HudControleDireto />
       <MenuDePausa />
       <FimDePartida />
       <DebugOverlay />

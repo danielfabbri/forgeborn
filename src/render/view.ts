@@ -11,6 +11,9 @@ import {
 } from 'three';
 import { DIRECAO_SOL, DIRECAO_TERRA } from './sky';
 
+/** FOV vertical da câmera RTS (graus). */
+export const FOV_RTS = 50;
+
 /** Metade do lado da área com sombras em volta do foco da câmera. */
 const ALCANCE_SOMBRA_M = 140;
 
@@ -79,7 +82,7 @@ export function createView(
   };
   focarSombras(new Vector3(0, 0, 0), DIRECAO_SOL, DIRECAO_TERRA);
 
-  const camera = new PerspectiveCamera(50, 1, 0.5, 6000);
+  const camera = new PerspectiveCamera(FOV_RTS, 1, 0.5, 6000);
   camera.position.set(0, 160, 170);
   camera.lookAt(0, 0, 0);
 

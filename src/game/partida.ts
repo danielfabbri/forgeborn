@@ -11,6 +11,23 @@ import {
 } from './freeBattle';
 import { createFixedLoop } from './loop';
 import {
+  type ControleDireto,
+  FOV_1P,
+  ligarControleDireto,
+  rumoEmGraus,
+} from '../input/controleDireto';
+
+/** D-42: a habilidade do clique direito de cada unidade (chave de i18n). */
+const HABILIDADES: Record<string, string> = {
+  hover_explorer: 'direto.habilidade.descarregar',
+  hover_minelayer: 'direto.habilidade.plantar',
+  hover_scout: 'direto.habilidade.sentinela',
+  drone_bomber: 'direto.habilidade.pousar',
+  drone_laser: 'direto.habilidade.pousar',
+  mobile_silo: 'direto.habilidade.ancorar',
+  mobile_battery: 'direto.habilidade.suporte',
+};
+import {
   alterarConfiguracoes,
   aplicarEscalaDaInterface,
   configuracoes,
@@ -38,6 +55,7 @@ import {
 import { PositionHistory } from '../render/interpolation';
 import { JazidasRender } from '../render/jazidas';
 import { MemoriaDeFantasmas } from '../render/fantasmas';
+import { MarcadorDeImpacto } from '../render/marcadorImpacto';
 import { HologramaRender } from '../render/holograma';
 import { campoDaCamera, Minimapa } from '../render/minimapa';
 import { NevoaRender } from '../render/nevoa';
@@ -46,21 +64,27 @@ import { pontoNoTerreno } from '../render/picking';
 import { criarCeu } from '../render/sky';
 import { criarTerreno } from '../render/terrain';
 import { UnidadesRender } from '../render/unidades';
-import { createView } from '../render/view';
+import { createView, FOV_RTS } from '../render/view';
 import {
   createSim,
   dados,
   type EntityId,
   getComponent,
+  isAlive,
   type NacaoId,
   param,
   type SimEvent,
 } from '../sim';
 import type { SystemContext } from '../sim/core/pipeline';
-import { DEBUG_CRIAR_COMMAND, DEBUG_ESTOQUE_COMMAND, debugCriarHandlers } from '../sim/debug/criar';
+import {
+  DEBUG_CRIAR_COMMAND,
+  DEBUG_DESTRUIR_COMMAND,
+  DEBUG_ESTOQUE_COMMAND,
+  debugCriarHandlers,
+} from '../sim/debug/criar';
 import { emTransito, estoque, SEMEAR_JAZIDAS_COMMAND } from '../sim/economia';
 import { DEBUG_ENCHER_BANCO_COMMAND, leituraDaRede } from '../sim/energia';
-import { avancar, norteEm, type Vec3 } from '../sim/map/esfera';
+import { avancar, normalizar, norteEm, tangente, type Vec3 } from '../sim/map/esfera';
 import { alturaEm } from '../sim/map/heightmap';
 import { PRESETS_DE_MAPA } from '../sim/map/presets';
 import { gerarMapaValido } from '../sim/map/validacao';
@@ -74,6 +98,8 @@ import { mountUi } from '../ui/mount';
 import {
   acoesDaPartida,
   acoesDaSelecao,
+  controleDireto,
+  sinalPerdido,
   barraSuperior,
   canvasDoRetrato,
   fimDePartida,
@@ -100,6 +126,8 @@ declare global {
       encontro?: (id: EntityId) => Vec3 | null;
       /** O raio sob o ponto de tela (px) toca o chão do planeta? */
       chaoNaTela?: (x: number, y: number) => boolean;
+      /** Controle direto (CTL-08): unidade pilotada, câmera e alvo sob a mira. */
+      direto?: () => { ativo: EntityId | null; modo: string; alvo: EntityId | null } | null;
       /** Ponto de tela (px) de uma direção no minimapa (CTL-03), ou null do outro lado. */
       noMinimapa?: (d: Vec3) => { x: number; y: number } | null;
       coleta?: (id: EntityId) => { estado: string; jazida: EntityId | null } | null;
@@ -110,6 +138,8 @@ declare global {
       obra?: (id: EntityId) => { instalada: boolean; progresso: number } | null;
       /** Cria um corpo no chão sob o ponto de tela (px), pelo comando de depuração. */
       criarNaTela?: (tipo: string, nacao: string, x: number, y: number) => boolean;
+      /** Destrói um corpo (comando de depuração), para os testes de perda (CTL-13). */
+      destruir?: (id: EntityId) => void;
       /** Corpos com barras desenhadas neste quadro (UI-07). */
       barras?: () => number;
       /** A estrutura cabe no ponto de tela (px) (PRD-10)? */
@@ -193,6 +223,7 @@ export function iniciarPartida(): void {
       ? ligarEntradaCamera(viewport, camera, {
           rolagemPelasBordas: () =>
             configuracoes.value.rolagemPelasBordas && menuDePausa.value === 'fechado',
+          bloqueado: () => direto?.ativo != null,
         })
       : null;
   let chaoSuave = alturaEm(pronto.mapa, camera.foco);
@@ -319,9 +350,50 @@ export function iniciarPartida(): void {
           validarLocal: (tipo, d) => validarPosicionamento(leitura(), tipo, d, jogador),
           holograma,
           aoEsc: () => abrirMenuDePausa(),
-          bloqueado: () => menuDePausa.value !== 'fechado' || fimDePartida.value !== null,
+          bloqueado: () =>
+            menuDePausa.value !== 'fechado' || fimDePartida.value !== null || direto?.ativo != null,
         })
       : null;
+
+  // CTL-08 a CTL-15: controle direto (V com 1 unidade móvel própria selecionada).
+  const direto: ControleDireto | null = comandos
+    ? ligarControleDireto({
+        viewport,
+        camera: view.camera,
+        sim,
+        jogador,
+        mapa: pronto.mapa,
+        corpo: (id) => unidades.get(id),
+        corpos: () => unidades.corpos,
+        jazidas: () => jazidas.desenhadas,
+        aoSair: (onde, perdida) => {
+          // Esc volta à visão RTS centrada na unidade; a perdida mostra SINAL PERDIDO (CTL-13).
+          centrarEm(camera, onde);
+          view.camera.fov = FOV_RTS;
+          view.camera.updateProjectionMatrix();
+          controleDireto.value = null;
+          document.body.classList.remove('em-controle-direto');
+          if (perdida) {
+            sinalPerdido.value = true;
+            setTimeout(() => (sinalPerdido.value = false), SINAL_PERDIDO_MS);
+          }
+        },
+      })
+    : null;
+  window.addEventListener('keydown', (e) => {
+    if (e.code !== 'KeyV' || e.repeat || !direto || direto.ativo !== null) return;
+    if (menuDePausa.value !== 'fechado' || fimDePartida.value) return;
+    const sel = comandos!.selecao.filter((id) => isAlive(sim.state, id));
+    const id = sel[0];
+    if (sel.length !== 1 || id === undefined) return;
+    if (getComponent(sim.state, id, 'owner')?.nacao !== jogador) return;
+    if (!getComponent(sim.state, id, 'unit')) return;
+    e.preventDefault();
+    direto.entrar(id);
+    view.camera.fov = FOV_1P;
+    view.camera.updateProjectionMatrix();
+    document.body.classList.add('em-controle-direto');
+  });
   if (comandos) {
     acoesDoPainel.atual = {
       escolher: (item) => comandos.escolher(item as never),
@@ -339,6 +411,8 @@ export function iniciarPartida(): void {
     const selecionados = new Set(comandos?.selecao ?? []);
     const olho = view.camera.position;
     for (const c of unidades.corpos) {
+      // No controle direto, o corpo pilotado mostra HP e EN no HUD (CTL-14), não na barra.
+      if (c.id === direto?.ativo) continue;
       const doLado =
         (olho.x - c.x) * c.cima[0] + (olho.y - c.y) * c.cima[1] + (olho.z - c.z) * c.cima[2] > 0;
       if (!doLado) continue;
@@ -354,7 +428,77 @@ export function iniciarPartida(): void {
   /** UI-01, UI-03, UI-13: barra superior, painel de seleção e tooltip de jazida. */
   const ATRASO_TOOLTIP_MS = 400;
   let jazidaSobMouse: { id: EntityId; desde: number } | null = null;
+  /** CTL-11: o marcador do impacto previsto da bomba (a mesma conta da simulação). */
+  const impacto = new MarcadorDeImpacto(
+    view.scene,
+    dados.armas.find((a) => a.id === 'bomb')?.splash_m ?? 1,
+  );
+  const marcarImpacto = (): void => {
+    const id = direto?.ativo ?? null;
+    if (id === null || getComponent(sim.state, id, 'unit')?.tipo !== 'drone_bomber') {
+      impacto.mostrar(null, null);
+      return;
+    }
+    const d = direcaoDe(getComponent(sim.state, id, 'position')!);
+    const loc = getComponent(sim.state, id, 'locomotion')!;
+    const p = getComponent(sim.state, id, 'pilotado');
+    const rumo = (p?.deslocamento && tangente(d, p.deslocamento)) || loc.rumo;
+    const ponto = avancar(d, rumo, (loc.speed * param('bomba_tempo_queda_s')) / R).p;
+    const r = R + alturaEm(pronto.mapa, ponto);
+    impacto.mostrar([ponto[0] * r, ponto[1] * r, ponto[2] * r], ponto);
+  };
+
+  /** CTL-13 (apresentação): 1,5 s de estática no SINAL PERDIDO. */
+  const SINAL_PERDIDO_MS = 1500;
+  /** CTL-14: o HUD do controle direto, lido do estado da simulação. */
+  const atualizarHudDireto = (): void => {
+    const id = direto?.ativo ?? null;
+    const corpo = id !== null ? unidades.get(id) : undefined;
+    if (id === null || !corpo) return;
+    const st = sim.state;
+    const tipo = getComponent(st, id, 'unit')!.tipo;
+    const vida = getComponent(st, id, 'vida')!;
+    const bateria = getComponent(st, id, 'bateria');
+    const arma = getComponent(st, id, 'arma');
+    const pilotado = getComponent(st, id, 'pilotado');
+    const coleta = getComponent(st, id, 'coleta');
+    const total = arma ? (dados.armas.find((a) => a.id === arma.id)?.recarga_s ?? 0) : 0;
+    const alvo = direto!.alvo;
+    const donoDoAlvo = alvo !== null ? getComponent(st, alvo, 'owner')?.nacao : undefined;
+    const cima = corpo.cima;
+    const norte = norteEm(cima);
+    const rumoDe = (v: Vec3) => rumoEmGraus(cima, v, norte);
+    controleDireto.value = {
+      modo: direto!.modo,
+      tipo,
+      hp: vida.hp,
+      hpMax: vida.max,
+      en: bateria ? { atual: bateria.en, max: bateria.max } : null,
+      recarga: arma ? (total > 0 ? 1 - arma.recarga_s / total : 1) : null,
+      trava:
+        arma?.id === 'opq_torpedo' && pilotado?.segurando && pilotado.travando !== null
+          ? Math.min(1, pilotado.trava_s / param('trava_torpedo_s'))
+          : null,
+      mira:
+        alvo === null
+          ? null
+          : getComponent(st, alvo, 'jazida')
+            ? 'jazida'
+            : donoDoAlvo === jogador
+              ? 'aliado'
+              : 'inimigo',
+      rumo: rumoDe(direto!.mira),
+      sinais: (st.sinais[jogador] ?? [])
+        .map((p) => tangente(cima, p))
+        .filter((v): v is Vec3 => v !== null)
+        .map(rumoDe),
+      carga: coleta ? { atual: coleta.carga, max: param('carga_hover_u') } : null,
+      habilidade: HABILIDADES[tipo] ?? null,
+    };
+  };
+
   const atualizarHud = (agora: number): void => {
+    atualizarHudDireto();
     const transito = emTransito(sim.state, jogador);
     const noEstoque = estoque(sim.state, jogador);
     barraSuperior.value = {
@@ -579,7 +723,11 @@ export function iniciarPartida(): void {
         nevoa ? fantasmas.visiveis(leitura(), jogador) : [],
       );
       jazidas.sync(sim.state, nevoa ? exploradoPeloJogador : null);
-      aneis.sync(comandos ? comandos.selecionadosDesenhados() : [], jogador);
+      unidades.oculto = direto?.ativo != null && direto.modo === '1p' ? direto.ativo : null;
+      aneis.sync(
+        comandos && direto?.ativo == null ? comandos.selecionadosDesenhados() : [],
+        jogador,
+      );
       sincronizarBarras();
       // VIS-06/VIS-08: sinais de radar e o círculo dos satélites do jogador.
       marcas.sync(
@@ -646,6 +794,8 @@ export function iniciarPartida(): void {
     sonda.encontro = (id) => getComponent(sim.state, id, 'producer')?.pontoDeEncontro ?? null;
     sonda.chaoNaTela = (x, y) => pontoNoTerreno(view.camera, viewport, x, y, pronto.mapa) !== null;
     sonda.noMinimapa = (d) => minimapa?.pontoDe(d) ?? null;
+    sonda.direto = () =>
+      direto ? { ativo: direto.ativo, modo: direto.modo, alvo: direto.alvo } : null;
     sonda.coleta = (id) => {
       const c = getComponent(sim.state, id, 'coleta');
       return c ? { estado: c.estado, jazida: c.jazida } : null;
@@ -659,6 +809,13 @@ export function iniciarPartida(): void {
       return o ? { instalada: o.instalada, progresso: o.progresso } : null;
     };
     sonda.barras = () => corposComBarras.length;
+    sonda.destruir = (id) =>
+      sim.enqueue({
+        tick: sim.state.tick,
+        nacao: jogador,
+        tipo: DEBUG_DESTRUIR_COMMAND,
+        dados: { id },
+      });
     sonda.criarNaTela = (tipo, nacao, x, y) => {
       const p = pontoNoTerreno(view.camera, viewport, x, y, pronto.mapa);
       if (!p || !nacoes.includes(nacao as NacaoId)) return false;
@@ -730,6 +887,22 @@ export function iniciarPartida(): void {
 
   const posicionarCamera = (dt: number): void => {
     entradaCamera?.atualizar(dt);
+    const pose = direto?.atualizar(performance.now()) ?? null;
+    if (pose) {
+      // CTL-15: câmera de 1ª ou 3ª pessoa na unidade.
+      const d = normalizar(pose.olho);
+      camera.foco = d;
+      ceu.atualizar(d, norteEm(d), new Vector3(...pose.olho));
+      view.camera.up.set(...pose.cima);
+      view.camera.position.set(...pose.olho);
+      pontoFocal.set(...pose.alvo);
+      view.camera.lookAt(pontoFocal);
+      view.camera.updateMatrixWorld();
+      view.focarSombras(new Vector3(...pose.olho), ceu.sol, ceu.terra);
+      marcarImpacto();
+      return;
+    }
+    impacto.mostrar(null, null);
     // O chão sob o foco é suavizado para a câmera não saltar em bordas de platô.
     const chao = alturaEm(pronto.mapa, camera.foco);
     chaoSuave += (chao - chaoSuave) * (1 - Math.exp(-6 * dt));

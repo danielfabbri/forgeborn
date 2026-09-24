@@ -12,6 +12,8 @@ import { criarEstrutura, criarMina, criarUnidade } from '../units/criar';
 export const DEBUG_CRIAR_COMMAND = 'debug_criar';
 /** Aplica à nação que envia o estoque inicial de um modo (REG-05), para a cena de demonstração. */
 export const DEBUG_ESTOQUE_COMMAND = 'debug_estoque';
+/** Testes: zera o HP de um corpo (o sistema de morte o destrói no mesmo tick). */
+export const DEBUG_DESTRUIR_COMMAND = 'debug_destruir';
 
 /** `d` é a direção do ponto na superfície (normalizada aqui). */
 export type Criacao =
@@ -26,6 +28,12 @@ export type Criacao =
   | { mina: true; nacao?: NacaoId; d: Vec3 };
 
 export const debugCriarHandlers: Record<string, CommandHandler> = {
+  [DEBUG_DESTRUIR_COMMAND]: (ctx, comando) => {
+    const id = (comando.dados as { id?: unknown } | null)?.id;
+    if (typeof id !== 'number') return;
+    const vida = getComponent(ctx.state, id, 'vida');
+    if (vida) vida.hp = 0;
+  },
   [DEBUG_CRIAR_COMMAND]: (ctx, comando) => {
     for (const c of comando.dados as unknown as Criacao[]) {
       const nacao = c.nacao ?? comando.nacao;

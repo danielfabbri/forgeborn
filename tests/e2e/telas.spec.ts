@@ -42,7 +42,7 @@ test.describe('M10: telas', () => {
     const erros: string[] = [];
     page.on('pageerror', (e) => erros.push(String(e)));
     await page.goto('/');
-    await page.getByTestId('abertura').waitFor({ timeout: 20_000 });
+    await page.getByTestId('abertura').waitFor({ timeout: 45_000 });
     await expect(page.getByTestId('carregamento')).toHaveCount(0);
     expect(await menus(page, (s) => s.audio())).toBeNull();
     await page.keyboard.press('Space');

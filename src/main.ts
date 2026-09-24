@@ -5,8 +5,12 @@ import { createFixedLoop } from './game/loop';
 import { ligarEntradaCamera } from './input/cameraInput';
 import { ligarEntradaComandos } from './input/comandoInput';
 import { MENU_ESTRUTURAS, MENU_NAVE, MENU_UNIDADES } from './game/atalhosProducao';
+import { barrasDe, corpos as corposDa, relogio, resumoDaJazida } from './game/hud';
+import { resumoDaSelecao } from './game/painelSelecao';
 import { t, type TextKey } from './i18n';
 import { AneisDeSelecao } from './render/aneis';
+import { BarrasRender, type CorpoComBarras } from './render/barras';
+import { RetratoRender } from './render/retrato';
 import { alturaMaxima, criarEstadoCamera, poseDaCamera, rumoDaCamera } from './render/cameraRts';
 import { PositionHistory } from './render/interpolation';
 import { JazidasRender } from './render/jazidas';
@@ -16,7 +20,7 @@ import { criarCeu } from './render/sky';
 import { criarTerreno } from './render/terrain';
 import { UnidadesRender } from './render/unidades';
 import { createView } from './render/view';
-import { createSim, type EntityId, getComponent, type NacaoId, type SimEvent } from './sim';
+import { createSim, dados, type EntityId, getComponent, type NacaoId, type SimEvent } from './sim';
 import type { SystemContext } from './sim/core/pipeline';
 import { DEBUG_CRIAR_COMMAND, DEBUG_ESTOQUE_COMMAND, debugCriarHandlers } from './sim/debug/criar';
 import { emTransito, estoque, SEMEAR_JAZIDAS_COMMAND } from './sim/economia';
@@ -29,6 +33,7 @@ import { INICIAR_PARTIDA_COMMAND, validarPosicionamento } from './sim/producao';
 import { comandosDoJogo, sistemasDoJogo } from './sim/units';
 import { debugStats } from './ui/debugStats';
 import { mountUi } from './ui/mount';
+import { acoesDaSelecao, barraSuperior, canvasDoRetrato, painelSelecao, tooltip } from './ui/hud';
 import { acoesDoPainel, avisoProducao, painelProducao } from './ui/producao';
 
 declare global {
@@ -53,6 +58,8 @@ declare global {
       jazidasNaTela?: () => Array<{ id: EntityId; recurso: string; x: number; y: number }>;
       fila?: (id: EntityId) => Array<{ item: string; obra: EntityId | null }> | null;
       obra?: (id: EntityId) => { instalada: boolean; progresso: number } | null;
+      /** Corpos com barras desenhadas neste quadro (UI-07). */
+      barras?: () => number;
       /** A estrutura cabe no ponto de tela (px) (PRD-10)? */
       localValido?: (tipo: string, x: number, y: number) => boolean;
     };
@@ -170,6 +177,15 @@ const unidades = new UnidadesRender(view.scene);
 const jazidas = new JazidasRender(view.scene);
 const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
 const holograma = new HologramaRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+const barras = new BarrasRender(view.scene);
+const retrato = new RetratoRender();
+/** UI-07: Tab alterna as barras entre automático e "sempre". */
+let barrasSempre = false;
+window.addEventListener('keydown', (e) => {
+  if (e.code !== 'Tab' || e.repeat) return;
+  e.preventDefault();
+  barrasSempre = !barrasSempre;
+});
 /** Contexto só de leitura para a validação de posicionamento (PRD-10) na interface. */
 const leitura = (): SystemContext => ({
   state: sim.state,
@@ -202,7 +218,67 @@ if (comandos) {
     cancelarItem: (produtor, indice) => comandos.cancelarItem(produtor, indice),
     cancelarObra: (obra) => comandos.cancelarObra(obra),
   };
+  acoesDaSelecao.filtrar = (ids) => comandos.selecionar(ids);
 }
+
+/** UI-07: barras dos corpos visíveis (do lado da câmera). */
+const corposComBarras: CorpoComBarras[] = [];
+const sincronizarBarras = (): void => {
+  corposComBarras.length = 0;
+  const selecionados = new Set(comandos?.selecao ?? []);
+  const olho = view.camera.position;
+  for (const c of unidades.corpos) {
+    const doLado =
+      (olho.x - c.x) * c.cima[0] + (olho.y - c.y) * c.cima[1] + (olho.z - c.z) * c.cima[2] > 0;
+    if (!doLado) continue;
+    const b = barrasDe(sim.state, c.id, selecionados.has(c.id), barrasSempre);
+    if (b)
+      corposComBarras.push({ x: c.x, y: c.y, z: c.z, cima: c.cima, altura: c.altura, barras: b });
+  }
+  const pixel =
+    (2 * Math.tan((view.camera.fov * Math.PI) / 360)) / Math.max(1, viewport.clientHeight);
+  barras.sync(corposComBarras, pixel);
+};
+
+/** UI-01, UI-03, UI-13: barra superior, painel de seleção e tooltip de jazida. */
+const ATRASO_TOOLTIP_MS = 400;
+let jazidaSobMouse: { id: EntityId; desde: number } | null = null;
+const atualizarHud = (agora: number): void => {
+  const transito = emTransito(sim.state, jogador);
+  const noEstoque = estoque(sim.state, jogador);
+  barraSuperior.value = {
+    recursos: dados.recursos.map((r) => ({
+      id: r.id,
+      cor: r.cor,
+      quantidade: noEstoque[r.id] ?? 0,
+      transito: transito[r.id] ?? 0,
+    })),
+    energia: leituraDaRede(sim.state, jogador),
+    corpos: corposDa(sim.state, jogador),
+    relogio: relogio(sim.state.tick, sim.tickHz),
+  };
+  painelSelecao.value = resumoDaSelecao(sim.state, comandos?.selecao ?? []);
+
+  const mouse = comandos?.mouse ?? null;
+  const jazida = mouse ? comandos!.jazidaNoPonto(mouse.x, mouse.y) : null;
+  if (jazida === null) jazidaSobMouse = null;
+  else if (jazidaSobMouse?.id !== jazida) jazidaSobMouse = { id: jazida, desde: agora };
+  const resumo =
+    jazidaSobMouse && agora - jazidaSobMouse.desde >= ATRASO_TOOLTIP_MS
+      ? resumoDaJazida(sim.state, jazidaSobMouse.id)
+      : null;
+  tooltip.value =
+    resumo && mouse
+      ? {
+          texto: t('jazida.tooltip', {
+            recurso: t(`recurso_nome.${resumo.recurso}` as TextKey),
+            quantidade: Math.floor(resumo.quantidade),
+          }),
+          x: mouse.x,
+          y: mouse.y,
+        }
+      : null;
+};
 
 /** Avisos da produção do jogador (AL-06, AL-11). */
 const DURACAO_AVISO_MS = 3000;
@@ -294,7 +370,12 @@ const loop = createFixedLoop({
     unidades.sync(sim.state, history, alpha);
     jazidas.sync(sim.state);
     aneis.sync(comandos ? comandos.selecionadosDesenhados() : [], jogador);
+    sincronizarBarras();
     view.render();
+    const sel = painelSelecao.peek();
+    if (sel.tipo === 'corpo') {
+      retrato.desenhar(canvasDoRetrato.peek(), sel.modelo as never, sel.cor, 1 / 60);
+    }
   },
 });
 
@@ -344,6 +425,7 @@ if (sonda) {
     const o = getComponent(sim.state, id, 'obra');
     return o ? { instalada: o.instalada, progresso: o.progresso } : null;
   };
+  sonda.barras = () => corposComBarras.length;
   sonda.localValido = (tipo, x, y) => {
     const p = pontoNoTerreno(view.camera, viewport, x, y, pronto.mapa);
     if (!p) return false;
@@ -431,6 +513,7 @@ const frame = (agora: number): void => {
 
   if (agora - ultimoPainel >= 100) {
     atualizarPainel(agora);
+    atualizarHud(agora);
     ultimoPainel = agora;
   }
 

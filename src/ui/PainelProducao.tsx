@@ -18,11 +18,6 @@ export function PainelProducao() {
       )}
       {mostrar && (
         <div class="painel-producao" data-testid="painel-producao">
-          <div class="painel-estoque">
-            {Object.entries(estado.estoque)
-              .map(([r, u]) => `${t(`recurso.${r}` as TextKey)} ${Math.floor(u)}`)
-              .join(' · ')}
-          </div>
           {estado.posicionando && (
             <div data-testid="posicionando">
               {t('producao.posicionando', { item: nome(estado.posicionando) })}

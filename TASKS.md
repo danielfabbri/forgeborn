@@ -211,19 +211,19 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M8 — HUD e UX
 
-- [ ] **T-080 — Barra superior** · M · Spec: UI-01, ENE-22 · Dep: T-032, T-040
+- [~] **T-080 — Barra superior** · M · Spec: UI-01, ENE-22 · Dep: T-032, T-040 · Recursos com trânsito, energia com as três cores, corpos e relógio prontos; o menu entra com a T-105 e o clique nos recursos, com a T-083
   - Aceite: recursos com "em trânsito", energia com as três cores do indicador, corpos, relógio e menu.
-- [ ] **T-081 — Painel de seleção e retrato 3D** · M · Spec: UI-03 · Dep: T-021
+- [~] **T-081 — Painel de seleção e retrato 3D** · M · Spec: UI-03 · Dep: T-021 · Retrato 3D, nome, HP, EN, estado, carga, arma, grupos com mini-barras e filtro prontos; a postura entra com a T-063
 - [ ] **T-082 — Cartão de comandos e atalhos** · M · Spec: UI-04, §12.4 · Dep: T-050, T-025
   - Aceite: botões e teclas vêm de `dados:atalhos`; custo faltante em vermelho; menus B e U da Impressora.
 - [ ] **T-083 — Painel de Diretivas** · P · Spec: UI-02 · Dep: T-033, T-043
 - [ ] **T-084 — Alertas** · M · Spec: UI-06, AUD-05, `dados:alertas` · Dep: T-060
   - Aceite: todos os AL-NN disparam pelo gatilho descrito, respeitam `cooldown_s` e levam ao local ao clicar ou com Espaço.
-- [ ] **T-085 — Barras sobre unidades** · P · Spec: UI-07 · Dep: T-041
+- [x] **T-085 — Barras sobre unidades** · P · Spec: UI-07 · Dep: T-041 · Feito: 2026-09-23
 - [ ] **T-086 — Tooltips e fila visível** · P · Spec: UI-09, UI-10 · Dep: T-082
 - [ ] **T-087 — Textos em pt-BR** · P · Spec: TEC-23 · Dep: T-080
   - Aceite: nenhuma string de interface fixa no código (verificação automatizada).
-- [ ] **T-088 — Informação de jazidas** · P · Spec: UI-13, UI-09 · Dep: T-081, T-030
+- [x] **T-088 — Informação de jazidas** · P · Spec: UI-13, UI-09 · Dep: T-081, T-030 · Feito: 2026-09-23
   - Aceite: tooltip com recurso e quantidade restante após o atraso; clique seleciona a jazida sozinha e o painel mostra recurso, restante/inicial e hovers designados.
 
 ## M9 — IA

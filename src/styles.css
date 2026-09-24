@@ -24,7 +24,7 @@ body {
 
 .debug-overlay {
   position: absolute;
-  top: 8px;
+  top: 40px;
   right: 8px;
   min-width: 160px;
   padding: 8px 10px;
@@ -115,4 +115,141 @@ body {
   display: block;
   height: 100%;
   background: #46e08a;
+}
+
+.barra-superior {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  padding: 6px 12px;
+  font:
+    13px/1.4 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: linear-gradient(rgba(5, 10, 18, 0.9), rgba(5, 10, 18, 0.7));
+  border-bottom: 1px solid rgba(120, 160, 220, 0.3);
+}
+
+.barra-superior .icone {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.barra-superior small {
+  color: #8aa4c4;
+}
+
+.barra-superior .relogio {
+  margin-left: auto;
+}
+
+.painel-selecao,
+.tooltip {
+  position: absolute;
+  font:
+    12px/1.5 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: rgba(5, 10, 18, 0.85);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 4px;
+}
+
+.painel-selecao {
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 300px;
+  max-width: 520px;
+  padding: 8px 10px;
+  pointer-events: auto;
+}
+
+.painel-selecao .corpo {
+  display: flex;
+  gap: 10px;
+}
+
+.painel-selecao .retrato {
+  width: 96px;
+  height: 96px;
+  background: radial-gradient(rgba(60, 90, 130, 0.5), rgba(5, 10, 18, 0.2));
+  border-radius: 3px;
+}
+
+.painel-selecao .dados {
+  flex: 1;
+}
+
+.barra-sel {
+  display: inline-block;
+  vertical-align: middle;
+  width: 90px;
+  height: 6px;
+  margin-left: 6px;
+  background: rgba(120, 160, 220, 0.2);
+}
+
+.barra-sel span {
+  display: block;
+  height: 100%;
+}
+
+.barra-sel.hp span {
+  background: #46e08a;
+}
+
+.barra-sel.en span {
+  background: #3fd8f0;
+}
+
+.barra-sel.jazida span {
+  background: #c9b27a;
+}
+
+.painel-selecao .grupos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.painel-selecao .grupo {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: rgba(40, 60, 90, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 3px;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+
+.painel-selecao .mini-barras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 160px;
+}
+
+.painel-selecao .mini-barras .barra-sel {
+  width: 14px;
+  height: 3px;
+  margin: 0;
+}
+
+.tooltip {
+  padding: 3px 8px;
+  pointer-events: none;
 }

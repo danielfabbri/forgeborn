@@ -68,6 +68,12 @@ export interface HologramaDePosicionamento {
 export interface EntradaComandos {
   readonly selecao: readonly EntityId[];
   readonly estado: EstadoDaEntrada;
+  /** Última posição do mouse (px), para o tooltip (UI-09). */
+  readonly mouse: { x: number; y: number } | null;
+  /** Jazida sob o ponto de tela (UI-13), ou null. */
+  jazidaNoPonto(x: number, y: number): EntityId | null;
+  /** Troca a seleção (clique num grupo do painel, UI-03). */
+  selecionar(ids: EntityId[]): void;
   /** Botões do painel de produção: o mesmo que a tecla do item. */
   escolher(item: CustosId): void;
   abrirMenu(menu: MenuDeProducao): void;
@@ -102,6 +108,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   let menuAberto: MenuDeProducao = null;
   let posicionando: EstruturasId | null = null;
   let motivo: string | null = null;
+  let mouse: { x: number; y: number } | null = null;
   let inicio: { x: number; y: number } | null = null;
   let arrastando = false;
   const grupos = new Grupos();
@@ -322,6 +329,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     arrastando = false;
   };
   const moveu = (e: PointerEvent) => {
+    mouse = { x: e.clientX, y: e.clientY };
     atualizarHolograma(e.clientX, e.clientY);
     if (!inicio) return;
     if (!arrastando && Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y) > LIMIAR_ARRASTO_PX) {
@@ -365,7 +373,10 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     }
     const alvo = corpoNoPonto(corpos, e.clientX, e.clientY);
     if (!alvo) {
-      if (!e.shiftKey) definirSelecao([]);
+      // UI-13: clicar numa jazida a seleciona sozinha.
+      const jazida = corpoNoPonto(jazidasNaTela(), e.clientX, e.clientY);
+      if (jazida) definirSelecao([jazida.id]);
+      else if (!e.shiftKey) definirSelecao([]);
       return;
     }
     const duplo = cliqueDuplo.tocar(`c${alvo.id}`, performance.now());
@@ -495,6 +506,15 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     },
     get estado(): EstadoDaEntrada {
       return { menu: menuAberto, posicionando, motivo, reparando: modo === 'reparar' };
+    },
+    get mouse() {
+      return mouse;
+    },
+    jazidaNoPonto(x, y) {
+      return corpoNoPonto(jazidasNaTela(), x, y)?.id ?? null;
+    },
+    selecionar(ids) {
+      definirSelecao(ids.filter((id) => isAlive(sim.state, id)));
     },
     escolher,
     abrirMenu(menu) {

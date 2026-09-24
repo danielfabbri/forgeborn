@@ -44,7 +44,7 @@ const CAPACIDADE_INICIAL = 32;
 const ALTURA_MINIMA_OBRA = 0.03;
 const INTENSIDADE_EMISSIVA = 1.8;
 
-function criarMaterial(): MeshStandardMaterial {
+export function criarMaterial(): MeshStandardMaterial {
   const material = new MeshStandardMaterial({
     vertexColors: true,
     roughness: 0.75,

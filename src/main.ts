@@ -219,7 +219,7 @@ const comandos =
         corpos: () => unidades.corpos,
         jazidas: () => jazidas.desenhadas,
         destrocos: () => combate.destrocosDesenhados,
-        validarLocal: (tipo, d) => validarPosicionamento(leitura(), tipo, d),
+        validarLocal: (tipo, d) => validarPosicionamento(leitura(), tipo, d, jogador),
         holograma,
       })
     : null;
@@ -465,7 +465,7 @@ if (sonda) {
     if (!p) return false;
     const r = Math.hypot(...p);
     const d: Vec3 = [p[0] / r, p[1] / r, p[2] / r];
-    return validarPosicionamento(leitura(), tipo as never, d) === null;
+    return validarPosicionamento(leitura(), tipo as never, d, jogador) === null;
   };
   sonda.jazidasNaTela = () => {
     const r = viewport.getBoundingClientRect();

@@ -44,10 +44,11 @@ import {
 import { aproximar, bordaDe, noAlcance, pararNoLugar } from './alcance';
 import { custoDe, pagar, produz, reembolsar } from './custos';
 import { cabeNaFila, enfileirar } from './fila';
+import { explorado } from '../visao/nevoa';
 import { encerrarTrabalho } from './trabalho';
 
 /** PRD-10: por que o local não serve (UI-08), ou null se serve. */
-export type MotivoRecusa = 'inclinacao' | 'ocupado' | 'jazida';
+export type MotivoRecusa = 'inexplorado' | 'inclinacao' | 'ocupado' | 'jazida';
 
 /** Base local (leste, norte) no plano tangente em d, alinhada ao norte local (CEN-15). */
 function baseLocal(d: Vec3): { leste: Vec3; norte: Vec3 } {
@@ -64,16 +65,16 @@ function noPlano(R: number, d: Vec3, p: Vec3): [number, number] {
 /** Metade do lado da pegada quadrada (m). */
 const meiaPegada = (tipo: string): number => statsEstrutura(tipo).pegada_m / 2;
 
-/** PRD-10: valida o local da estrutura `tipo` com centro em `d`. */
+/** PRD-10: valida o local da estrutura `tipo` com centro em `d` (para `nacao`, se dada). */
 export function validarPosicionamento(
   ctx: SystemContext,
   tipo: EstruturasId,
   d: Vec3,
+  nacao?: NacaoId,
 ): MotivoRecusa | null {
   const { state } = ctx;
   const R = raioDoMundo(ctx);
   const h = meiaPegada(tipo);
-  // Terreno explorado: até a névoa existir (T-070), todo o terreno conta como explorado.
   if (ctx.mundo) {
     const grade = ctx.mundo.grades.construcao;
     const { leste, norte } = baseLocal(d);
@@ -84,6 +85,8 @@ export function validarPosicionamento(
         const e = -h + (2 * h * i) / n;
         const s = -h + (2 * h * j) / n;
         const p = normalizar(soma(d, soma(escalar(leste, e / R), escalar(norte, s / R))));
+        // Terreno explorado pela nação (VIS-01).
+        if (nacao && !explorado(ctx, nacao, p)) return 'inexplorado';
         if (!ehConstruivel(grade, celulaDe(grade, p))) return 'inclinacao';
       }
     }
@@ -314,7 +317,7 @@ export const comandosDeObra: Record<string, CommandHandler> = {
     const alvo = direcaoDoComando(d);
     if (impressora === null || !alvo || !ehEstrutura(d.tipo) || !produz('printer', d.tipo)) return;
     if (!cabeNaFila(ctx, impressora, d.tipo)) return;
-    const motivo = validarPosicionamento(ctx, d.tipo, alvo);
+    const motivo = validarPosicionamento(ctx, d.tipo, alvo, comando.nacao);
     if (motivo) {
       ctx.emit('posicionamento_recusado', { nacao: comando.nacao, tipo: d.tipo, motivo });
       return;

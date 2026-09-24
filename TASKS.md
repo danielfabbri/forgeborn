@@ -162,7 +162,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: matriz de produção respeitada (a Impressora não imprime Impressora); pagamento ao enfileirar; AL-06 lista o que falta; cancelar devolve `reembolso_cancelamento_pct`%; energia consumida durante a impressão (rede na Nave, bateria na Impressora).
 - [x] **T-051 — Impressão de unidades** · M · Spec: PRD-07 – PRD-09 · Dep: T-050 · Feito: 2026-09-23
   - Aceite: a Impressora só imprime parada e retoma ao parar; a unidade nasce ao lado e vai ao ponto de encontro; hover com ponto de encontro numa jazida começa a minerar.
-- [x] **T-052 — Posicionamento de estruturas** · M · Spec: PRD-10, UI-08 · Dep: T-013, T-050 · Feito: 2026-09-23 (terreno explorado entra com a névoa, T-070; o planeta não tem limites de mapa, D-24)
+- [x] **T-052 — Posicionamento de estruturas** · M · Spec: PRD-10, UI-08 · Dep: T-013, T-050 · Feito: 2026-09-23 (o planeta não tem limites de mapa, D-24; terreno explorado desde a T-070)
   - Aceite: holograma verde ou vermelho com o motivo; regras de inclinação, folga de jazida, terreno explorado e limites do mapa.
 - [x] **T-053 — Canteiro e obra** · M · Spec: PRD-11 – PRD-14, ART-06 (versão simples) · Dep: T-052 · Feito: 2026-09-23
   - Aceite: HP inicial `hp_inicial_canteiro_pct`% e crescente; dano descontado do HP final; nada funciona antes de 100%; canteiro retomável; cancelamento devolve recursos.
@@ -170,7 +170,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: velocidade = Σ PI ÷ `tempo_s` (com os valores atuais, 1 Impressora + 2 hovers = 2,0 PI, metade do tempo); energia dividida por PI; hovers continuam um canteiro sem a Impressora; no máximo `max_assistentes`.
 - [x] **T-055 — Reparo** · P · Spec: PRD-18, PRD-19 · Dep: T-054 · Feito: 2026-09-23
   - Aceite: taxas por reparador e tipo de alvo; no máximo `max_reparadores`; drones só pousados; Impressora ociosa repara dentro de `raio_reparo_auto_m`.
-- [x] **T-056 — Início de partida** · M · Spec: REG-04 – REG-08, FLX-09 (versão simples) · Dep: T-050, T-033 · Feito: 2026-09-23 (a área explorada inicial, REG-07, entra com a névoa, T-070; o pouso é o hover saindo pela rampa, sem cinemática)
+- [x] **T-056 — Início de partida** · M · Spec: REG-04 – REG-08, FLX-09 (versão simples) · Dep: T-050, T-033 · Feito: 2026-09-23 (o pouso é o hover saindo pela rampa, sem cinemática; área explorada inicial desde a T-070)
   - Aceite: cada nação começa com Nave e 1 hover; estoque inicial por modo; área explorada inicial; o hover inicial coleta sozinho; INV-02 verde.
 
 ## M6 — Combate
@@ -198,7 +198,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M7 — Visão
 
-- [ ] **T-070 — Névoa na simulação** · M · Spec: VIS-01 – VIS-03 · Dep: T-013, T-022
+- [x] **T-070 — Névoa na simulação** · M · Spec: VIS-01 – VIS-03 · Dep: T-013, T-022 · Feito: 2026-09-24
   - Aceite: três estados por nação, atualizados a `nevoa_atualizacao_hz`; visão circular por unidade e estrutura; visão compartilhada na nação.
 - [ ] **T-071 — Névoa no render e fantasmas** · M · Spec: VIS-01, VIS-04, TEC-17 · Dep: T-070, T-014
   - Aceite: escuro absoluto preto com céu visível; névoa dessaturada; fantasmas de estruturas com tipo e HP da última observação, removidos quando a área é revista.

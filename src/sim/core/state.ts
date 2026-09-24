@@ -35,6 +35,11 @@ export interface SimState {
   chaves: Record<NacaoId, ChavesDaNacao>;
   /** REG-12: tempo limite (s) da partida, ou null. */
   tempoLimite_s: number | null;
+  /**
+   * VIS-01: grade de névoa de cada nação (0 escuro, 1 névoa, 2 visível), uma posição por célula
+   * de `celula_nevoa_m`. Vazia até o primeiro passo de visão (ou sem mapa).
+   */
+  nevoa: Record<NacaoId, number[]>;
   /** REG-11/REG-12: fim da partida, ou null. */
   resultado: { vencedor: NacaoId | null; motivo: 'eliminacao' | 'tempo'; tick: number } | null;
 }
@@ -126,6 +131,7 @@ export function createInitialState(
       nacoes.map((n): [NacaoId, ChavesDaNacao] => [n, { fuga: true, fabricarMinas: true }]),
     ) as SimState['chaves'],
     tempoLimite_s: null,
+    nevoa: Object.fromEntries(nacoes.map((n) => [n, [] as number[]])) as SimState['nevoa'],
     resultado: null,
   };
 }

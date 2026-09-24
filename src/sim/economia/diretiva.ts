@@ -3,12 +3,12 @@
  * atual de hovers está mais abaixo do alvo, entre as jazidas elegíveis; em empate, a jazida
  * mais próxima.
  *
- * Elegível: jazida explorada a até `raio_diretiva_m` de um ponto de entrega. Até a névoa existir
- * (T-070), toda jazida conta como explorada.
+ * Elegível: jazida explorada a até `raio_diretiva_m` de um ponto de entrega.
  */
 import { entitiesWith, getComponent } from '../core/entities';
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId } from '../core/types';
+import { explorado } from '../visao/nevoa';
 import { dados, param, type RecursosId } from '../data';
 import { direcaoDe, distanciaM } from '../units/superficie';
 import { designar } from './coleta';
@@ -49,6 +49,8 @@ export function jazidasElegiveis(ctx: SystemContext, nacao: NacaoId): EntityId[]
   const raio = param('raio_diretiva_m');
   return todasAsJazidas(ctx).filter((id) => {
     const d = direcaoDe(getComponent(ctx.state, id, 'position')!);
+    // ECO-19: só jazidas exploradas pela nação (VIS-01).
+    if (!explorado(ctx, nacao, d)) return false;
     return entregas.some((e) => distanciaM(ctx, d, e.d) <= raio);
   });
 }

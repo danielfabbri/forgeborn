@@ -4,7 +4,7 @@ import type { RecursosId } from '../../src/sim/data';
 import { SEMEAR_JAZIDAS_COMMAND } from '../../src/sim/economia';
 import { recursosSemJazida } from '../../src/sim/economia/diretiva';
 import { avancar, normalizar, norteEm, girar } from '../../src/sim/map/esfera';
-import { criar, mundoLiso, mundoLua, ordenar, partida, semear } from './mundo-teste';
+import { criar, mundoLiso, mundoLua, ordenar, partida, revelar, semear } from './mundo-teste';
 
 const RECURSOS = dados.recursos.map((r) => r.id);
 
@@ -23,6 +23,8 @@ function partidaComHovers(n: number, antes?: (sim: Sim) => void) {
       d: j.d,
     })) as never,
   });
+  // As jazidas da distribuição inteira contam como exploradas (VIS-01).
+  revelar(sim);
   criar(sim, [{ estrutura: 'ship', d: zona.d }]);
   antes?.(sim);
   // Hovers em anel em volta da Nave, a 18 m do centro.

@@ -116,5 +116,6 @@
   "estado.ataque_movimento": "Ataque-movimento",
   "estado.fugindo": "Fugindo",
   "estado.reciclando": "Reciclando",
-  "estado.plantando": "Plantando minas"
+  "estado.plantando": "Plantando minas",
+  "motivo.inexplorado": "Terreno não explorado"
 }

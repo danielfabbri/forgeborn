@@ -3,7 +3,7 @@
  * zona e o primeiro Hover de Exploração sai pela rampa. Estoque inicial pelo modo
  * (`dados:estoque_inicial`), banco cheio, e o hover começa a coletar sozinho pela Diretiva.
  *
- * A área explorada inicial (REG-07) entra com a névoa (T-070).
+ * REG-07: a área em volta da Nave começa explorada (`raio_explorado_inicial_m`).
  */
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { NacaoId } from '../core/types';
@@ -11,6 +11,7 @@ import { dados, type EstoqueInicialModo } from '../data';
 import { capacidadeDaRede } from '../energia/rede';
 import { normalizar, type Vec3 } from '../map/esfera';
 import { criarEstrutura } from '../units/criar';
+import { explorar, raioExploradoInicial } from '../visao/nevoa';
 import { nascer } from './fila';
 
 export const INICIAR_PARTIDA_COMMAND = 'iniciar_partida';
@@ -34,6 +35,7 @@ export function iniciarPartida(
     if (nave === null) continue;
     for (const r of dados.recursos) ctx.state.estoques[nacao]![r.id] = estoque[r.id];
     ctx.state.energia[nacao]!.banco = capacidadeDaRede(ctx.state, nacao);
+    explorar(ctx, nacao, normalizar(zona), raioExploradoInicial());
     nascer(ctx, nave, 'hover_explorer', false);
   }
 }

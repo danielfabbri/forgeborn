@@ -11,7 +11,17 @@ import {
 import type { CustosId, RecursosId } from '../../src/sim/data';
 import { custoDe, INICIAR_PARTIDA_COMMAND, validarPosicionamento } from '../../src/sim/producao';
 import { statsEstrutura, statsMovel } from '../../src/sim/units/stats';
-import { alvo, criar, mundoLiso, ordenar, partida, ponto, pos, semear } from './mundo-teste';
+import {
+  alvo,
+  criar,
+  mundoLiso,
+  ordenar,
+  partida,
+  ponto,
+  pos,
+  revelar,
+  semear,
+} from './mundo-teste';
 import type { SystemContext } from '../../src/sim/core/pipeline';
 
 const RECURSOS: RecursosId[] = ['fe', 'si', 'cu', 'li', 'ti', 'u'];
@@ -320,6 +330,7 @@ describe('T-052 — PRD-10, UI-08: posicionamento de estruturas', () => {
   it('D-29: a pegada reservada bloqueia outra estrutura, mas não é obstáculo', () => {
     const sim = partida(mundoLiso());
     rico(sim);
+    revelar(sim);
     const [impressora] = criar(sim, [{ unidade: 'printer', x: -60, z: 0 }]);
     const eventos: SimEvent[] = [];
     posicionar(sim, impressora!, 'storage', 0, 0);
@@ -341,6 +352,7 @@ describe('T-052 — PRD-10, UI-08: posicionamento de estruturas', () => {
 
 /** Impressora, estrutura posicionada e canteiro instalado; devolve os IDs. */
 function canteiro(sim: Sim, tipo: CustosId = 'storage') {
+  revelar(sim);
   const [impressora] = criar(sim, [{ unidade: 'printer', x: -20, z: 0 }]);
   bateria(sim, impressora!).autoRecarga = false;
   posicionar(sim, impressora!, tipo, 0, 0);
@@ -408,6 +420,7 @@ describe('T-053 — PRD-11 a PRD-14: canteiro e obra', () => {
   it('PRD-13/PRD-16: sem a Impressora, hovers continuam o canteiro; só a Impressora instala', () => {
     const sim = partida(mundoLiso());
     rico(sim);
+    revelar(sim);
     const [impressora] = criar(sim, [{ unidade: 'printer', x: -60, z: 0 }]);
     posicionar(sim, impressora!, 'storage', 0, 0);
     passo(sim);

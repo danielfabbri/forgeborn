@@ -125,6 +125,12 @@ export function partida(
   });
 }
 
+/** Marca todo o mapa como explorado pela nação (VIS-01), para testes de outras regras. */
+export function revelar(sim: Sim, nacao: NacaoId = 'bra'): void {
+  const celulas = mundoLiso().grades.nevoa.esfera.celulas;
+  sim.state.nevoa[nacao] = new Array<number>(celulas).fill(1);
+}
+
 /** Cria corpos no próximo tick e devolve os IDs novos. */
 export function criar(sim: Sim, criacoes: Criacao[], nacao: NacaoId = 'bra'): EntityId[] {
   const antes = sim.state.nextEntityId;

@@ -1,7 +1,7 @@
 import { BarraSuperior } from './BarraSuperior';
 import { DebugOverlay } from './DebugOverlay';
 import { PainelProducao } from './PainelProducao';
-import { PainelSelecao, Tooltip } from './PainelSelecao';
+import { FimDePartida, PainelSelecao, Tooltip } from './PainelSelecao';
 
 export function App() {
   return (
@@ -10,6 +10,7 @@ export function App() {
       <PainelSelecao />
       <PainelProducao />
       <Tooltip />
+      <FimDePartida />
       <DebugOverlay />
     </>
   );

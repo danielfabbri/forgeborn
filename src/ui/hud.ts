@@ -31,6 +31,8 @@ export type EstadoDaSelecao =
       estado: string;
       carga: { atual: number; max: number; recurso: string | null } | null;
       arma: { dano: number; alcance: number } | null;
+      /** CMB-13 (null: desarmada ou estrutura). */
+      postura: string | null;
     }
   | { tipo: 'grupo'; grupos: Array<{ modelo: string; ids: EntityId[]; hp: number[] }> }
   | { tipo: 'jazida'; recurso: string; quantidade: number; inicial: number; hovers: number };
@@ -39,6 +41,9 @@ export const painelSelecao = signal<EstadoDaSelecao>({ tipo: 'nenhum' });
 
 /** UI-09/UI-13: tooltip na posição do mouse (px). */
 export const tooltip = signal<{ texto: string; x: number; y: number } | null>(null);
+
+/** REG-11/REG-12: resultado da partida para o jogador, ou null. */
+export const fimDePartida = signal<'vitoria' | 'derrota' | 'empate' | null>(null);
 
 /** Canvas do retrato 3D (UI-03), montado pelo painel e desenhado pelo render. */
 export const canvasDoRetrato = signal<HTMLCanvasElement | null>(null);

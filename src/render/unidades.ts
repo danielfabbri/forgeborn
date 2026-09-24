@@ -151,7 +151,14 @@ export class UnidadesRender {
   readonly corpos: CorpoDesenhado[] = [];
   private readonly porId = new Map<EntityId, CorpoDesenhado>();
 
-  constructor(private readonly scene: Scene) {}
+  /**
+   * `jogador`: minas de outras nações não são desenhadas (CMB-19; a detecção chega com a
+   * T-065).
+   */
+  constructor(
+    private readonly scene: Scene,
+    private readonly jogador: string | null = null,
+  ) {}
 
   sync(state: SimState, history: PositionHistory, alpha: number): void {
     this.corpos.length = 0;
@@ -163,6 +170,8 @@ export class UnidadesRender {
       const unidade = getComponent(state, id, 'unit');
       const estrutura = getComponent(state, id, 'structure');
       const mina = getComponent(state, id, 'mine');
+      if (mina && this.jogador && getComponent(state, id, 'owner')?.nacao !== this.jogador)
+        continue;
       const tipo: TipoDeModelo | null = unidade
         ? unidade.tipo
         : estrutura

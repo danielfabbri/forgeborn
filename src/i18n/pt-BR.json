@@ -102,5 +102,19 @@
   "estado.silo_desancorando": "Desancorando",
   "estado.silo_indo_descarregar": "Indo descarregar",
   "estado.silo_descarregando": "Descarregando",
-  "estado.silo_voltando": "Voltando"
+  "estado.silo_voltando": "Voltando",
+  "selecao.postura": "Postura",
+  "postura.agressiva": "Agressiva",
+  "postura.defensiva": "Defensiva",
+  "postura.manter": "Manter posição",
+  "postura.passiva": "Passiva",
+  "fim.vitoria": "Vitória",
+  "fim.derrota": "Derrota",
+  "fim.empate": "Empate",
+  "estado.atacando": "Atacando",
+  "estado.movendo_ignorando": "Movendo (sem atacar)",
+  "estado.ataque_movimento": "Ataque-movimento",
+  "estado.fugindo": "Fugindo",
+  "estado.reciclando": "Reciclando",
+  "estado.plantando": "Plantando minas"
 }

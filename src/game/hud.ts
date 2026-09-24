@@ -16,8 +16,13 @@ export function estadoDaUnidade(state: SimState, id: EntityId): string {
   if (recarga?.estado === 'fila') return 'estado.fila_recarga';
   if (recarga?.estado === 'acoplada') return 'estado.recarregando';
   if (bateria && estadoDaBateria(bateria) === 'reserva') return 'estado.reserva';
+  if (getComponent(state, id, 'fuga')) return 'estado.fugindo';
   const trabalho = getComponent(state, id, 'trabalho');
-  if (trabalho) return trabalho.tipo === 'construir' ? 'estado.construindo' : 'estado.reparando';
+  if (trabalho) {
+    if (trabalho.tipo === 'construir') return 'estado.construindo';
+    return trabalho.tipo === 'reparar' ? 'estado.reparando' : 'estado.reciclando';
+  }
+  if ((getComponent(state, id, 'lancaMinas')?.plantios.length ?? 0) > 0) return 'estado.plantando';
   const producer = getComponent(state, id, 'producer');
   const item = producer?.fila[0];
   if (item) return item.obra !== null ? 'estado.construindo' : 'estado.imprimindo';
@@ -29,6 +34,9 @@ export function estadoDaUnidade(state: SimState, id: EntityId): string {
   if (air?.estado === 'pousado') return 'estado.pousado';
   const ordem = getComponent(state, id, 'order')?.tipo;
   if (ordem === 'mover') return 'estado.movendo';
+  if (ordem === 'mover_ignorando') return 'estado.movendo_ignorando';
+  if (ordem === 'atacar_mover') return 'estado.ataque_movimento';
+  if (ordem === 'atacar' || getComponent(state, id, 'arma')?.alvo != null) return 'estado.atacando';
   if (ordem === 'patrulhar') return 'estado.patrulhando';
   if (ordem === 'manter') return 'estado.mantendo';
   return 'estado.ocioso';

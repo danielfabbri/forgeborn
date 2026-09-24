@@ -54,6 +54,7 @@ export function resumoDaSelecao(state: SimState, selecao: readonly EntityId[]): 
       estado: estadoDaUnidade(state, id),
       carga: cargaDe(state, id),
       arma: armaDe(modelo),
+      postura: getComponent(state, id, 'arma')?.postura ?? null,
     };
   }
   const grupos = new Map<string, { modelo: string; ids: EntityId[]; hp: number[] }>();

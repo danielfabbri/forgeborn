@@ -1,5 +1,5 @@
 import { t, type TextKey } from '../i18n';
-import { acoesDaSelecao, canvasDoRetrato, painelSelecao, tooltip } from './hud';
+import { acoesDaSelecao, canvasDoRetrato, fimDePartida, painelSelecao, tooltip } from './hud';
 
 const nome = (modelo: string) => t(`item.${modelo}` as TextKey);
 
@@ -48,6 +48,11 @@ export function PainelSelecao() {
                 {sel.carga.recurso && ` ${t(`recurso.${sel.carga.recurso}` as TextKey)}`}
               </div>
             )}
+            {sel.postura && (
+              <div data-testid="selecao-postura">
+                {t('selecao.postura')}: {t(`postura.${sel.postura}` as TextKey)}
+              </div>
+            )}
             {sel.arma && (
               <div data-testid="selecao-arma">
                 {t('selecao.arma')}:{' '}
@@ -92,6 +97,17 @@ export function PainelSelecao() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** REG-11/REG-12: aviso de fim de partida (a tela completa vem com FLX-12). */
+export function FimDePartida() {
+  const fim = fimDePartida.value;
+  if (!fim) return null;
+  return (
+    <div class={`fim-de-partida ${fim}`} data-testid="fim-de-partida">
+      {t(`fim.${fim}`)}
     </div>
   );
 }

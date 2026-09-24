@@ -22,6 +22,7 @@ import {
 } from '../game/atalhosProducao';
 import { centrarEm, type EstadoCameraRts } from '../render/cameraRts';
 import { pontoNoTerreno } from '../render/picking';
+import type { DestrocoDesenhado } from '../render/combate';
 import type { JazidaDesenhada } from '../render/jazidas';
 import type { CorpoDesenhado } from '../render/unidades';
 import { type EntityId, getComponent, isAlive, type NacaoId, type Sim } from '../sim';
@@ -46,7 +47,18 @@ interface Projetavel {
 /** Distância (px) a partir da qual o arrasto vira caixa de seleção. */
 const LIMIAR_ARRASTO_PX = 6;
 
-type Modo = 'normal' | 'mover' | 'patrulhar' | 'reparar';
+type Modo =
+  | 'normal'
+  | 'mover_ignorando'
+  | 'patrulhar'
+  | 'atacar_mover'
+  | 'reparar'
+  | 'plantar'
+  | 'campo'
+  | 'reciclar';
+
+/** Ordens de deslocamento que um clique no terreno pode dar. */
+type OrdemNoTerreno = 'mover' | 'mover_ignorando' | 'patrulhar' | 'atacar_mover';
 
 export type MenuDeProducao = 'unidades' | 'estruturas' | null;
 
@@ -95,6 +107,8 @@ export interface OpcoesEntradaComandos {
   corpos: () => readonly CorpoDesenhado[];
   /** Jazidas desenhadas (alvo do clique direito de coleta, CTL-07). */
   jazidas?: () => readonly JazidaDesenhada[];
+  /** Destroços desenhados (alvo do clique direito de reciclar, CTL-07). */
+  destrocos?: () => readonly DestrocoDesenhado[];
   aoMudarSelecao?: (ids: readonly EntityId[]) => void;
   /** PRD-10: por que o local não serve, ou null (a validação da simulação). */
   validarLocal?: (tipo: EstruturasId, d: Vec3) => string | null;
@@ -143,6 +157,15 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       (o.jazidas?.() ?? []).map((j) => ({
         ...j,
         tipo: 'jazida',
+        nacao: null,
+        movel: false,
+      })),
+    );
+  const destrocosNaTela = (): CorpoNaTela[] =>
+    projetar(
+      (o.destrocos?.() ?? []).map((d) => ({
+        ...d,
+        tipo: 'destroco',
         nacao: null,
         movel: false,
       })),
@@ -284,7 +307,26 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
    * CTL-07 (parcial): jazida → coletar (hovers de exploração; os demais se movem até lá);
    * terreno → mover; com só produtores selecionados → ponto de encontro.
    */
-  const ordemNoPonto = (px: number, py: number, tipo: 'mover' | 'patrulhar') => {
+  /** CTL-07: inimigo → atacar (CMB-15); destroço → reciclar (hovers, ECO-28). */
+  const alvoDeCombateNoPonto = (px: number, py: number): boolean => {
+    const unidades = minhas('unit');
+    if (unidades.length === 0) return false;
+    const alvo = corpoNoPonto(naTela(), px, py);
+    if (alvo && alvo.nacao !== null && alvo.nacao !== jogador) {
+      enviar('atacar', { ids: unidades, alvo: alvo.id });
+      return true;
+    }
+    const hovers = doTipo('hover_explorer');
+    const destroco = hovers.length > 0 ? corpoNoPonto(destrocosNaTela(), px, py) : null;
+    if (destroco) {
+      enviar('reciclar', { ids: hovers, alvo: destroco.id });
+      return true;
+    }
+    return false;
+  };
+
+  const ordemNoPonto = (px: number, py: number, tipo: OrdemNoTerreno) => {
+    if (tipo === 'mover' && alvoDeCombateNoPonto(px, py)) return;
     if (tipo === 'mover' && trabalhoNoPonto(px, py)) return;
     if (tipo === 'mover') {
       const jazida = corpoNoPonto(jazidasNaTela(), px, py);
@@ -356,6 +398,26 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     if (modo === 'reparar') {
       arrastando = false;
       trabalhoNoPonto(e.clientX, e.clientY);
+      definirModo('normal');
+      return;
+    }
+    // UNI-02: plantar mina ou Campo minado no ponto; ECO-28: reciclar o destroço.
+    if (modo === 'plantar' || modo === 'campo' || modo === 'reciclar') {
+      arrastando = false;
+      if (modo === 'reciclar') {
+        const destroco = corpoNoPonto(destrocosNaTela(), e.clientX, e.clientY);
+        if (destroco) enviar('reciclar', { ids: doTipo('hover_explorer'), alvo: destroco.id });
+      } else {
+        const ponto = pontoNoTerreno(o.camera, viewport, e.clientX, e.clientY, o.mapa);
+        if (ponto) {
+          enviar(modo === 'plantar' ? 'plantar_mina' : 'campo_minado', {
+            ids: doTipo('hover_minelayer'),
+            x: ponto[0],
+            y: ponto[1],
+            z: ponto[2],
+          });
+        }
+      }
       definirModo('normal');
       return;
     }
@@ -452,8 +514,21 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       case 'KeyH':
         enviar('manter_posicao', { ids: minhas('unit') });
         break;
+      // §12.4: M move ignorando inimigos (D-32); A ataque-movimento (CMB-14); X postura (CMB-13).
       case 'KeyM':
-        if (minhas('unit').length > 0) definirModo('mover');
+        if (minhas('unit').length > 0) definirModo('mover_ignorando');
+        break;
+      case 'KeyA':
+        if (minhas('unit').length > 0) definirModo('atacar_mover');
+        break;
+      case 'KeyX':
+        if (minhas('unit').length === 0) return;
+        enviar('alternar_postura', { ids: minhas('unit') });
+        break;
+      // §12.4 (Hover de Exploração) F: reciclar (ECO-28).
+      case 'KeyF':
+        if (doTipo('hover_explorer').length === 0) return;
+        definirModo('reciclar');
         break;
       case 'KeyP':
         if (minhas('unit').length > 0) definirModo('patrulhar');
@@ -473,7 +548,10 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         const silos = com('silo');
         const baterias = com('suporte');
         const usinas = minhas('structure').filter((id) => getComponent(sim.state, id, 'reator'));
-        if (silos.length + baterias.length + usinas.length === 0) return;
+        const plantadores = doTipo('hover_minelayer');
+        if (silos.length + baterias.length + usinas.length + plantadores.length === 0) return;
+        // §12.4 (Plantio de Minas) T: plantar mina no ponto.
+        if (plantadores.length > 0) definirModo('plantar');
         if (silos.length > 0) enviar('ancorar_silo', { ids: silos });
         if (baterias.length > 0) enviar('suporte_bateria', { ids: baterias });
         if (usinas.length > 0) enviar('ligar_usina', { ids: usinas });
@@ -483,9 +561,12 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       case 'KeyG': {
         const silos = minhas('unit').filter((id) => getComponent(sim.state, id, 'silo'));
         const hovers = doTipo('hover_explorer');
-        if (silos.length + hovers.length === 0) return;
+        const plantadores = doTipo('hover_minelayer');
+        if (silos.length + hovers.length + plantadores.length === 0) return;
         if (silos.length > 0) enviar('descarregar_silo', { ids: silos });
         if (hovers.length > 0) definirModo('reparar');
+        // §12.4 (Plantio de Minas) G: Campo minado na direção indicada.
+        if (plantadores.length > 0) definirModo('campo');
         break;
       }
       default:

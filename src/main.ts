@@ -10,6 +10,7 @@ import { resumoDaSelecao } from './game/painelSelecao';
 import { t, type TextKey } from './i18n';
 import { AneisDeSelecao } from './render/aneis';
 import { BarrasRender, type CorpoComBarras } from './render/barras';
+import { CombateRender } from './render/combate';
 import { RetratoRender } from './render/retrato';
 import { alturaMaxima, criarEstadoCamera, poseDaCamera, rumoDaCamera } from './render/cameraRts';
 import { PositionHistory } from './render/interpolation';
@@ -33,7 +34,14 @@ import { INICIAR_PARTIDA_COMMAND, validarPosicionamento } from './sim/producao';
 import { comandosDoJogo, sistemasDoJogo } from './sim/units';
 import { debugStats } from './ui/debugStats';
 import { mountUi } from './ui/mount';
-import { acoesDaSelecao, barraSuperior, canvasDoRetrato, painelSelecao, tooltip } from './ui/hud';
+import {
+  acoesDaSelecao,
+  barraSuperior,
+  canvasDoRetrato,
+  fimDePartida,
+  painelSelecao,
+  tooltip,
+} from './ui/hud';
 import { acoesDoPainel, avisoProducao, painelProducao } from './ui/producao';
 
 declare global {
@@ -58,6 +66,8 @@ declare global {
       jazidasNaTela?: () => Array<{ id: EntityId; recurso: string; x: number; y: number }>;
       fila?: (id: EntityId) => Array<{ item: string; obra: EntityId | null }> | null;
       obra?: (id: EntityId) => { instalada: boolean; progresso: number } | null;
+      /** Cria um corpo no chão sob o ponto de tela (px), pelo comando de depuração. */
+      criarNaTela?: (tipo: string, nacao: string, x: number, y: number) => boolean;
       /** Corpos com barras desenhadas neste quadro (UI-07). */
       barras?: () => number;
       /** A estrutura cabe no ponto de tela (px) (PRD-10)? */
@@ -173,7 +183,8 @@ if (demo) {
 }
 
 const history = new PositionHistory();
-const unidades = new UnidadesRender(view.scene);
+const unidades = new UnidadesRender(view.scene, jogador);
+const combate = new CombateRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
 const jazidas = new JazidasRender(view.scene);
 const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
 const holograma = new HologramaRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
@@ -207,6 +218,7 @@ const comandos =
         jogador,
         corpos: () => unidades.corpos,
         jazidas: () => jazidas.desenhadas,
+        destrocos: () => combate.destrocosDesenhados,
         validarLocal: (tipo, d) => validarPosicionamento(leitura(), tipo, d),
         holograma,
       })
@@ -258,6 +270,14 @@ const atualizarHud = (agora: number): void => {
     relogio: relogio(sim.state.tick, sim.tickHz),
   };
   painelSelecao.value = resumoDaSelecao(sim.state, comandos?.selecao ?? []);
+  const resultado = sim.state.resultado;
+  fimDePartida.value = !resultado
+    ? null
+    : resultado.vencedor === null
+      ? 'empate'
+      : resultado.vencedor === jogador
+        ? 'vitoria'
+        : 'derrota';
 
   const mouse = comandos?.mouse ?? null;
   const jazida = mouse ? comandos!.jazidaNoPonto(mouse.x, mouse.y) : null;
@@ -364,6 +384,7 @@ const loop = createFixedLoop({
     const eventos = sim.step();
     tickTotalMs += performance.now() - inicio;
     avisar(eventos);
+    combate.registrar(sim.state, eventos, performance.now());
     tickCount++;
   },
   render: (alpha) => {
@@ -371,6 +392,7 @@ const loop = createFixedLoop({
     jazidas.sync(sim.state);
     aneis.sync(comandos ? comandos.selecionadosDesenhados() : [], jogador);
     sincronizarBarras();
+    combate.sync(sim.state, (id) => unidades.get(id), performance.now());
     view.render();
     const sel = painelSelecao.peek();
     if (sel.tipo === 'corpo') {
@@ -426,6 +448,18 @@ if (sonda) {
     return o ? { instalada: o.instalada, progresso: o.progresso } : null;
   };
   sonda.barras = () => corposComBarras.length;
+  sonda.criarNaTela = (tipo, nacao, x, y) => {
+    const p = pontoNoTerreno(view.camera, viewport, x, y, pronto.mapa);
+    if (!p || !nacoes.includes(nacao as NacaoId)) return false;
+    const unidade = dados.moveis.some((m) => m.id === tipo);
+    sim.enqueue({
+      tick: sim.state.tick,
+      nacao: nacao as NacaoId,
+      tipo: DEBUG_CRIAR_COMMAND,
+      dados: [unidade ? { unidade: tipo, d: p } : { estrutura: tipo, d: p }] as never,
+    });
+    return true;
+  };
   sonda.localValido = (tipo, x, y) => {
     const p = pontoNoTerreno(view.camera, viewport, x, y, pronto.mapa);
     if (!p) return false;

@@ -11,7 +11,10 @@ import type { Ponto } from '../core/components';
 import { getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId } from '../core/types';
-import { param } from '../data';
+import { dados, type EstruturasId, param } from '../data';
+import { raioDaPegada } from '../units/criar';
+import { statsMovel } from '../units/stats';
+import { limiarDeRecarga, papelDe } from '../energia/bateria';
 import { armaDe } from '../combate/armas';
 import { avancar, tangente } from '../map/esfera';
 import { bordaDe } from '../producao/alcance';
@@ -83,11 +86,7 @@ function escolherAlvo(ctx: SystemContext, q: Quadro): { nacao: NacaoId; ponto: P
     q.nivel === 'brutal'
       ? nacoes.sort((a, b) => forca(a) - forca(b) || distancia(a) - distancia(b))[0]!
       : nacoes.sort((a, b) => distancia(a) - distancia(b))[0]!;
-  // Prefere a Nave; senão, a estrutura conhecida mais próxima.
-  const estruturas = porNacao.get(nacao)!;
-  const nave = estruturas.find((c) => c.tipo === 'ship');
-  const ponto = nave?.d ?? maisProximo(ctx, q.base, estruturas, (c) => c.d)!.d;
-  return { nacao, ponto };
+  return { nacao, ponto: escolherAlvoDaNacao(ctx, q, nacao)! };
 }
 
 /** VR inimigo visível perto do exército (para decidir o recuo). */
@@ -161,11 +160,29 @@ function micro(ctx: SystemContext, q: Quadro, exercito: EntityId[], reuniao: Pon
   if (ids.length > 0) comandar(ctx, q.nacao, 'atacar', { ids, alvo: foco });
 }
 
+/** Energia (EN) para ir até `destino` e voltar, pelo gasto de movimento (ENE-09). */
+function energiaDeViagem(ctx: SystemContext, id: EntityId, destino: Ponto): number {
+  const s = statsMovel(getComponent(ctx.state, id, 'unit')!.tipo);
+  return ((2 * distanciaM(ctx, pos(ctx, id), destino)) / s.vel_m_s) * s.mov_en_s;
+}
+
+/**
+ * Pronta para a onda: chega à frente e volta sem cair no limiar de auto-recarga do papel
+ * (ENE-15) e não está indo recarregar.
+ */
+function prontaPara(ctx: SystemContext, id: EntityId, destino: Ponto): boolean {
+  const b = getComponent(ctx.state, id, 'bateria')!;
+  const recarga = getComponent(ctx.state, id, 'recarga');
+  if (recarga && recarga.estado !== 'nenhuma') return false;
+  const limiar =
+    (b.max * limiarDeRecarga(papelDe(getComponent(ctx.state, id, 'unit')!.tipo))) / 100;
+  return b.en - energiaDeViagem(ctx, id, destino) > limiar;
+}
+
 export function decidirMilitar(ctx: SystemContext, q: Quadro): void {
   const { state } = ctx;
   const exercito = q.exercito;
   const reuniao = pontoDeReuniao(ctx, q);
-  const vr = vrDe(state, exercito);
 
   // Defesa: inimigo visível perto de uma estrutura própria.
   const estruturas = proprios(state, q.nacao).filter((id) => getComponent(state, id, 'structure'));
@@ -182,7 +199,12 @@ export function decidirMilitar(ctx: SystemContext, q: Quadro): void {
 
   if (q.ia.onda) {
     const onda = q.ia.onda;
-    const membros = onda.membros.filter((id) => exercito.includes(id));
+    // Quem morreu ou saiu para recarregar deixa a onda.
+    const membros = onda.membros.filter((id) => {
+      if (!exercito.includes(id)) return false;
+      const recarga = getComponent(state, id, 'recarga');
+      return !recarga || recarga.estado === 'nenhuma';
+    });
     onda.membros = membros;
     const vrOnda = vrDe(state, membros);
     const alvo = escolherAlvoDaNacao(ctx, q, onda.alvo);
@@ -216,19 +238,36 @@ export function decidirMilitar(ctx: SystemContext, q: Quadro): void {
   const minimo =
     dificuldade(q.nivel, 'vr_exercito_ataque') *
     (temTraco(q.nacao, 'ondas grandes') ? param('ia_ondas_grandes_mult') : 1);
-  const pronto = q.minutos >= dificuldade(q.nivel, 'primeiro_ataque_min') && vr >= minimo;
+  // Só parte quem tem bateria para a ida e a volta; o VR de IA-04 conta só esses.
+  const destinoDaOnda = escolherAlvo(ctx, q)?.ponto ?? frente(ctx, q) ?? reuniao;
+  const prontos = exercito.filter((id) => prontaPara(ctx, id, destinoDaOnda));
+  const vrPronto = vrDe(state, prontos);
+  // Quem está parado na reunião sem bateria para a viagem vai recarregar antes.
+  const recarregar = exercito.filter(
+    (id) =>
+      !prontos.includes(id) &&
+      getComponent(state, id, 'order')!.tipo === 'nenhuma' &&
+      getComponent(state, id, 'recarga')!.estado === 'nenhuma',
+  );
+  if (recarregar.length > 0) comandar(ctx, q.nacao, 'recarregar', { ids: recarregar });
+  const pronto = q.minutos >= dificuldade(q.nivel, 'primeiro_ataque_min') && vrPronto >= minimo;
   if (pronto) {
     const alvo = escolherAlvo(ctx, q);
     if (alvo) {
-      q.ia.onda = { vrInicial: vr, alvo: alvo.nacao, ponto: alvo.ponto, membros: [...exercito] };
+      q.ia.onda = {
+        vrInicial: vrPronto,
+        alvo: alvo.nacao,
+        ponto: alvo.ponto,
+        membros: [...prontos],
+      };
       q.ia.postura = 'atacar';
-      enviar(ctx, q, exercito, alvo.ponto, 'atacar_mover');
+      enviar(ctx, q, prontos, alvo.ponto, 'atacar_mover');
       return;
     }
     // Ninguém conhecido: o exército vai procurar pela frente (zona de pouso alheia).
     const busca = frente(ctx, q);
     if (busca) {
-      enviar(ctx, q, exercito, busca, 'atacar_mover');
+      enviar(ctx, q, prontos, busca, 'atacar_mover');
       return;
     }
   }
@@ -237,11 +276,35 @@ export function decidirMilitar(ctx: SystemContext, q: Quadro): void {
   enviar(ctx, q, ociosos, reuniao, 'atacar_mover');
 }
 
-/** Ponto de ataque dentro da nação-alvo da onda (Nave, senão a estrutura conhecida mais perto). */
+/**
+ * Ponto de ataque dentro da nação-alvo (IA-04 escolhe a nação; o ponto é da IA): a estrutura
+ * conhecida menos protegida — com menos estruturas armadas conhecidas cobrindo-a pelo alcance
+ * da arma delas —, e a mais próxima no empate. Expansões e usinas caem antes da Nave.
+ */
 function escolherAlvoDaNacao(ctx: SystemContext, q: Quadro, nacao: NacaoId): Ponto | null {
   if (ctx.state.placar[nacao]?.eliminada) return null;
   const estruturas = Object.values(q.ia.conhecidas).filter((c) => c.nacao === nacao);
   if (estruturas.length === 0) return null;
-  const nave = estruturas.find((c) => c.tipo === 'ship');
-  return nave?.d ?? maisProximo(ctx, q.base, estruturas, (c) => c.d)!.d;
+  const armadas = estruturas.filter((c) => estruturaArmada(c.tipo));
+  const cobertura = (d: Ponto) =>
+    armadas.filter(
+      (a) =>
+        distanciaM(ctx, a.d, d) <=
+        alcanceDaEstrutura(a.tipo) + raioDaPegada(a.tipo as EstruturasId),
+    ).length;
+  const ordenadas = [...estruturas].sort(
+    (a, b) =>
+      cobertura(a.d) - cobertura(b.d) ||
+      distanciaM(ctx, q.base, a.d) - distanciaM(ctx, q.base, b.d),
+  );
+  return ordenadas[0]!.d;
+}
+
+function estruturaArmada(tipo: string): boolean {
+  return dados.estruturas.find((e) => e.id === tipo)?.arma != null;
+}
+
+function alcanceDaEstrutura(tipo: string): number {
+  const arma = dados.estruturas.find((e) => e.id === tipo)?.arma;
+  return arma ? armaDe(arma).alcance_m : 0;
 }

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.10.0 — rascunho para aprovação |
+| Versão do SPEC | 0.10.1 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1467,6 +1467,7 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | Q-05 | Distribuição: site próprio, itch.io, outra? | Site estático gratuito. |
 | Q-06 | Raio de colisão da jazida (MOV-04): fixo ou acompanha o tamanho visual (ECO-05)? | Respondida em 0.3.0: acompanha o visual (D-27). |
 | Q-07 | Chrome e Edge reservam Ctrl+1..9 para trocar de aba; fora da tela cheia a página não recebe essas teclas (CTL-05). Manter, trocar ou dar alternativa? | Implementado como no SPEC. Proposta, aguardando resposta: em tela cheia, travar o teclado (Keyboard Lock) para Ctrl+1..9 funcionar; fora dela, aceitar também Alt+1..9 para definir grupo. |
+| Q-08 | A ordem de ataque direta (CMB-15) vale para unidade em postura Passiva, que "nunca dispara" (CMB-13)? | Implementado assim: a Passiva não dispara sozinha, mas cumpre a ordem direta do jogador. Aguardando resposta. |
 
 ---
 
@@ -1520,3 +1521,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.8.0 | 2026-09-24 | D-31: sem linha de visada (CMB-04), torpedo detona no tempo máximo (CMB-07), recuo no alcance mínimo (CMB-13). |
 | 0.9.0 | 2026-09-24 | D-32: borda da explosão ambiental (CMB-26), alvos da radiação (CMB-24), distância de reciclagem (ECO-28) e disparo ao mover (CTL-07). |
 | 0.10.0 | 2026-09-24 | D-33: distância do splash (CMB-10) até o centro da unidade; estruturas pela pegada. |
+| 0.10.1 | 2026-09-24 | Q-08: ordem de ataque direta com postura Passiva. |

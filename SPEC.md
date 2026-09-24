@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.10.1 — rascunho para aprovação |
+| Versão do SPEC | 0.11.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -995,6 +995,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 - **IA-04** — Uma onda de ataque parte quando o VR do exército ≥ `vr_exercito_ataque` e o relógio passou de `primeiro_ataque_min`. O alvo é a nação inimiga conhecida mais próxima (na Brutal, a mais fraca). A onda recua se o VR do exército cair abaixo de `ia_recuo_vr_pct`% do inicial e o do defensor for maior.
 - **IA-05** — As IAs também atacam umas às outras (todos contra todos).
 - **IA-06** — A IA respeita `tiers_permitidos` (§8.1): 1 = só T1; 2 = T1 + T2; 3 = todos.
+- **IA-07** — Ajustes da IA (D-34): mantém `ia_impressoras_alvo` Impressoras e `ia_batedores` Hovers de Observação batedores; enfileira até `ia_fila_por_produtor` itens por produtor; defende quando há inimigo visível a até `ia_raio_defesa_m` de uma estrutura própria; expande (Armazém junto a jazidas exploradas a mais de `ia_distancia_expansao_m` dos depósitos) a partir de `ia_expansao_hovers_pct`% da meta de hovers. Traços (§13.3): "meta de hovers" soma `ia_traco_meta_hovers_pct`%; "ondas grandes" multiplica `vr_exercito_ataque` por `ia_ondas_grandes_mult`; "expande cedo" usa `ia_expansao_cedo_pct`%.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1002,10 +1003,21 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ia_intervalo_estrategista_s | 5 | s | Período de decisão do Estrategista |
 | ia_margem_energia_pct | 20 | % | Folga de geração sobre o consumo mantida pela IA |
 | ia_recuo_vr_pct | 40 | % | Fração do VR inicial da onda abaixo da qual ela recua |
+| ia_impressoras_alvo | 2 | impressoras | Impressoras que a IA mantém |
+| ia_batedores | 1 | unidades | Hovers de Observação usados como batedores |
+| ia_fila_por_produtor | 2 | itens | Itens que a IA mantém na fila de cada produtor |
+| ia_raio_defesa_m | 40 | m | Inimigo visível a esta distância de uma estrutura própria aciona a defesa |
+| ia_distancia_expansao_m | 60 | m | Distância mínima jazida–depósito para uma expansão |
+| ia_expansao_hovers_pct | 60 | % | Fração da meta de hovers a partir da qual a IA expande |
+| ia_expansao_cedo_pct | 40 | % | Idem, com o traço "expande cedo" |
+| ia_traco_meta_hovers_pct | 15 | % | Acréscimo à meta de hovers do traço "meta de hovers" |
+| ia_ondas_grandes_mult | 1,25 | × | Multiplicador de `vr_exercito_ataque` do traço "ondas grandes" |
+| ia_ferido_pct | 25 | % | micro ≥ 2: unidade com HP abaixo disso recua |
+| ia_kite_pct | 60 | % | micro 3: OPQ e drones recuam com o inimigo a menos dessa fração do alcance |
 
 ### 13.2 Dificuldade
 
-`micro`: 0 = nenhum; 1 = foco de fogo; 2 = + recuo de feridos (HP < 25%) e recarga coordenada com Bateria Móvel; 3 = + kite (OPQ e drones recuam mantendo distância).
+`micro`: 0 = nenhum; 1 = foco de fogo; 2 = + recuo de feridos (HP < `ia_ferido_pct`%) e recarga coordenada com Bateria Móvel; 3 = + kite (OPQ e drones recuam mantendo distância, `ia_kite_pct`).
 
 <!-- dados:dificuldade -->
 | parametro | facil | normal | dificil | brutal |
@@ -1029,7 +1041,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | nacao | estilo | ex1 | opq | minas | obs | bomb | dlaser | torres | tracos |
 |---|---|---|---|---|---|---|---|---|---|
 | usa | Supremacia aérea | 25 | 10 | 0 | 5 | 25 | 30 | 5 | Satélite cedo; ataques aéreos às linhas de coleta |
-| chn | Maré | 50 | 20 | 0 | 5 | 10 | 10 | 5 | Meta de hovers +15%; expande cedo; ondas grandes |
+| chn | Maré | 50 | 20 | 0 | 5 | 10 | 10 | 5 | Meta de hovers; expande cedo; ondas grandes |
 | rus | Muralha e martelo | 20 | 40 | 15 | 5 | 10 | 0 | 10 | Nuclear cedo; Torres e minas nas entradas; avanços lentos com OPQ |
 | bra | Guerrilha logística | 25 | 15 | 15 | 10 | 5 | 25 | 5 | Sentinelas nas rotas; silos e baterias; assédio à mineração; ataca quem já está em combate |
 
@@ -1451,6 +1463,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-31 | Torpedo detona ao fim do tempo máximo de voo; unidade recua quando o alvo está dentro do alcance mínimo; disparos sem linha de visada. | Respostas do produto às lacunas de CMB-04, CMB-07 e CMB-13. | Aprovada |
 | D-32 | Explosão ambiental com 0% na borda; radiação só fere unidades móveis; reciclagem a `distancia_mineracao_m`; mover dispara sem desviar e M não dispara. | Respostas do produto às lacunas de CMB-24, CMB-26, ECO-28 e CTL-07. | Aprovada |
 | D-33 | O splash mede a distância até o centro da unidade (estruturas: até a borda da pegada). | Medida pela borda do casco, a INV-03 dependia da formação (74% em fila cerrada); pelo centro, fica em 27–34% em qualquer formação (medido na T-068). | Aprovada |
+| D-34 | Constantes de ajuste da IA viram chaves `ia_*` de §13.1 (IA-07), e os traços numéricos de §13.3 as citam. | A IA precisa desses ajustes e o GOV-04 exige que números de jogo fiquem nas tabelas. | Aprovada |
 
 ---
 
@@ -1522,3 +1535,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.9.0 | 2026-09-24 | D-32: borda da explosão ambiental (CMB-26), alvos da radiação (CMB-24), distância de reciclagem (ECO-28) e disparo ao mover (CTL-07). |
 | 0.10.0 | 2026-09-24 | D-33: distância do splash (CMB-10) até o centro da unidade; estruturas pela pegada. |
 | 0.10.1 | 2026-09-24 | Q-08: ordem de ataque direta com postura Passiva. |
+| 0.11.0 | 2026-09-24 | D-34: IA-07 e as chaves `ia_*` de ajuste da IA; o traço "meta de hovers" da China cita `ia_traco_meta_hovers_pct`. |

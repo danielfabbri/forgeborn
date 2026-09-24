@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.10.1 |
+| Derivado de | `SPEC.md` v0.11.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -228,7 +228,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M9 — IA
 
-- [ ] **T-090 — Arquitetura de IA** · M · Spec: IA-01, IA-02, IA-06 · Dep: T-056, T-063
+- [ ] **T-090 — Arquitetura de IA** · M · Spec: IA-01, IA-02, IA-06, IA-07 · Dep: T-056, T-063, T-070
   - Aceite: módulos emitem apenas Comandos (TEC-07); a IA só lê o que a própria névoa permite (teste com unidade escondida).
 - [ ] **T-091 — Economia e energia da IA** · M · Spec: IA-01, §13.2 · Dep: T-090
   - Aceite: atinge `meta_hovers` da dificuldade; mantém saldo de energia ≥ 0 na maior parte da partida; expande até `expansoes_max`.

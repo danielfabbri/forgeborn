@@ -804,6 +804,72 @@
     "descricao": "Fração do VR inicial da onda abaixo da qual ela recua"
   },
   {
+    "chave": "ia_impressoras_alvo",
+    "valor": 2,
+    "unidade": "impressoras",
+    "descricao": "Impressoras que a IA mantém"
+  },
+  {
+    "chave": "ia_batedores",
+    "valor": 1,
+    "unidade": "unidades",
+    "descricao": "Hovers de Observação usados como batedores"
+  },
+  {
+    "chave": "ia_fila_por_produtor",
+    "valor": 2,
+    "unidade": "itens",
+    "descricao": "Itens que a IA mantém na fila de cada produtor"
+  },
+  {
+    "chave": "ia_raio_defesa_m",
+    "valor": 40,
+    "unidade": "m",
+    "descricao": "Inimigo visível a esta distância de uma estrutura própria aciona a defesa"
+  },
+  {
+    "chave": "ia_distancia_expansao_m",
+    "valor": 60,
+    "unidade": "m",
+    "descricao": "Distância mínima jazida–depósito para uma expansão"
+  },
+  {
+    "chave": "ia_expansao_hovers_pct",
+    "valor": 60,
+    "unidade": "%",
+    "descricao": "Fração da meta de hovers a partir da qual a IA expande"
+  },
+  {
+    "chave": "ia_expansao_cedo_pct",
+    "valor": 40,
+    "unidade": "%",
+    "descricao": "Idem, com o traço \"expande cedo\""
+  },
+  {
+    "chave": "ia_traco_meta_hovers_pct",
+    "valor": 15,
+    "unidade": "%",
+    "descricao": "Acréscimo à meta de hovers do traço \"meta de hovers\""
+  },
+  {
+    "chave": "ia_ondas_grandes_mult",
+    "valor": 1.25,
+    "unidade": "×",
+    "descricao": "Multiplicador de `vr_exercito_ataque` do traço \"ondas grandes\""
+  },
+  {
+    "chave": "ia_ferido_pct",
+    "valor": 25,
+    "unidade": "%",
+    "descricao": "micro ≥ 2: unidade com HP abaixo disso recua"
+  },
+  {
+    "chave": "ia_kite_pct",
+    "valor": 60,
+    "unidade": "%",
+    "descricao": "micro 3: OPQ e drones recuam com o inimigo a menos dessa fração do alcance"
+  },
+  {
     "chave": "tempestade_intervalo_min_s",
     "valor": 360,
     "unidade": "s",

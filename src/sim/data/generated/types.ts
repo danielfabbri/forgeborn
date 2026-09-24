@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.10.1.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.11.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -415,6 +415,17 @@ export type ParametrosChave =
   | 'ia_intervalo_estrategista_s'
   | 'ia_margem_energia_pct'
   | 'ia_recuo_vr_pct'
+  | 'ia_impressoras_alvo'
+  | 'ia_batedores'
+  | 'ia_fila_por_produtor'
+  | 'ia_raio_defesa_m'
+  | 'ia_distancia_expansao_m'
+  | 'ia_expansao_hovers_pct'
+  | 'ia_expansao_cedo_pct'
+  | 'ia_traco_meta_hovers_pct'
+  | 'ia_ondas_grandes_mult'
+  | 'ia_ferido_pct'
+  | 'ia_kite_pct'
   | 'tempestade_intervalo_min_s'
   | 'tempestade_intervalo_max_s'
   | 'tempestade_duracao_s'

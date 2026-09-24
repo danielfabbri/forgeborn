@@ -242,16 +242,16 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M10 — Telas e Free Battle (MVP)
 
-- [ ] **T-100 — Splash e carregamento** · P · Spec: FLX-01, FLX-08 · Dep: T-002
-- [ ] **T-101 — Tela de Abertura** · M · Spec: FLX-02, TEC-22 · Dep: T-100
+- [x] **T-100 — Splash e carregamento** · P · Spec: FLX-01, FLX-08 · Dep: T-002 · Feito: 2026-09-24
+- [x] **T-101 — Tela de Abertura** · M · Spec: FLX-02, TEC-22 · Dep: T-100 · Feito: 2026-09-24 (Arcas-Forja com o modelo placeholder da Nave, ART-03)
   - Aceite: cena da Terra escura com as Arcas-Forja; a primeira tecla ou clique libera o áudio.
-- [ ] **T-102 — Seleção de Modo e Configurações** · M · Spec: FLX-03, FLX-13, FLX-14, TEC-19 · Dep: T-101
-- [ ] **T-103 — Visão do Universo (versão MVP)** · M · Spec: FLX-04 · Dep: T-102
+- [x] **T-102 — Seleção de Modo e Configurações** · M · Spec: FLX-03, FLX-13, FLX-14, TEC-19 · Dep: T-101 · Feito: 2026-09-24 (conteúdo do MVP de D-36)
+- [x] **T-103 — Visão do Universo (versão MVP)** · M · Spec: FLX-04 · Dep: T-102 · Feito: 2026-09-24 (só a Lua disponível; "concluído" entra com a campanha)
   - Aceite: navegação 3D, estados bloqueado/disponível/concluído e seleção de cenário.
-- [ ] **T-104 — Configuração de Free Battle** · M · Spec: FLX-07, §16, FB-01 – FB-04 · Dep: T-103, T-012
+- [x] **T-104 — Configuração de Free Battle** · M · Spec: FLX-07, §16, FB-01 – FB-04 · Dep: T-103, T-012 · Feito: 2026-09-24
   - Aceite: todas as opções de `dados:free_battle` com os padrões; combinações inválidas desabilitadas com explicação; última configuração lembrada.
-- [ ] **T-105 — Pausa, pausa tática e render-se** · P · Spec: FLX-11, REG-13, REG-21 · Dep: T-104
-- [ ] **T-106 — Fim de partida e pontuação** · M · Spec: FLX-12, REG-22, REG-23 · Dep: T-067
+- [x] **T-105 — Pausa, pausa tática e render-se** · P · Spec: FLX-11, REG-13, REG-21 · Dep: T-104 · Feito: 2026-09-24 (a ordem dada na pausa tática entra ao retomar)
+- [~] **T-106 — Fim de partida e pontuação** · M · Spec: FLX-12, REG-22, REG-23 · Dep: T-067 · E2E do marco MVP pronto; falta a sessão manual de 20 min contra IA Normal
   - Aceite (**marco MVP**): teste E2E (Playwright) abre o jogo, inicia um Free Battle na Lua contra IA Fácil, confere o HUD, se rende e vê a tela de derrota com estatísticas; sessão manual de 20 min contra IA Normal sem erros no console.
 
 ## M11 — Controle direto

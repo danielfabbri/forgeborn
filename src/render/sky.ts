@@ -46,7 +46,7 @@ export function paraOMundo(local: Vector3, foco: Vec3, norte: Vec3): Vector3 {
 
 const DISTANCIA_CEU = 4000;
 
-function estrelas(): Points {
+export function estrelas(): Points {
   const quantidade = 5000;
   const posicoes = new Float32Array(quantidade * 3);
   const cores = new Float32Array(quantidade * 3);
@@ -83,7 +83,8 @@ function estrelas(): Points {
   return new Points(geometria, material);
 }
 
-function terra(): Mesh<SphereGeometry, ShaderMaterial> {
+/** A Terra depois do Silêncio: oceano sem luzes de cidades (FLX-02 também a usa). */
+export function terra(raio = 170): Mesh<SphereGeometry, ShaderMaterial> {
   const material = new ShaderMaterial({
     uniforms: { uSol: { value: DIRECAO_SOL.clone() } },
     vertexShader: /* glsl */ `
@@ -113,7 +114,7 @@ function terra(): Mesh<SphereGeometry, ShaderMaterial> {
       }
     `,
   });
-  const malha = new Mesh(new SphereGeometry(170, 64, 32), material);
+  const malha = new Mesh(new SphereGeometry(raio, 64, 32), material);
   malha.position.copy(DIRECAO_TERRA).multiplyScalar(DISTANCIA_CEU * 0.9);
   return malha;
 }

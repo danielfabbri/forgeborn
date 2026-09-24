@@ -23,13 +23,18 @@ export interface View {
    * direções (mundo) do céu local.
    */
   focarSombras(alvo: Vector3, sol: Vector3, terra: Vector3): void;
+  /** TEC-19: escala de resolução e sombras do preset gráfico; vale na hora. */
+  aplicarGraficos(escala: number, sombra: number): void;
   render(): void;
   dispose(): void;
 }
 
-export function createView(container: HTMLElement): View {
+export function createView(
+  container: HTMLElement,
+  graficos: { escala: number; sombra: number } = { escala: 1.5, sombra: 2048 },
+): View {
   const renderer = new WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, graficos.escala));
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
   renderer.shadowMap.enabled = true;
@@ -52,7 +57,8 @@ export function createView(container: HTMLElement): View {
 
   const sol = new DirectionalLight(0xfff8f0, 3.4);
   sol.castShadow = true;
-  sol.shadow.mapSize.set(2048, 2048);
+  sol.shadow.mapSize.set(Math.max(graficos.sombra, 256), Math.max(graficos.sombra, 256));
+  renderer.shadowMap.enabled = graficos.sombra > 0;
   sol.shadow.camera.left = -ALCANCE_SOMBRA_M;
   sol.shadow.camera.right = ALCANCE_SOMBRA_M;
   sol.shadow.camera.top = ALCANCE_SOMBRA_M;
@@ -87,11 +93,35 @@ export function createView(container: HTMLElement): View {
   window.addEventListener('resize', resize);
   resize();
 
+  const aplicarGraficos = (escala: number, sombra: number): void => {
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, escala));
+    resize();
+    const ligadas = sombra > 0;
+    if (ligadas && sombra !== sol.shadow.mapSize.x) {
+      sol.shadow.map?.dispose();
+      sol.shadow.map = null;
+      sol.shadow.mapSize.set(sombra, sombra);
+    }
+    if (ligadas !== renderer.shadowMap.enabled) {
+      renderer.shadowMap.enabled = ligadas;
+      // Ligar ou desligar as sombras muda os shaders: os materiais recompilam.
+      scene.traverse((o) => {
+        const material = (
+          o as { material?: { needsUpdate: boolean } | Array<{ needsUpdate: boolean }> }
+        ).material;
+        for (const m of Array.isArray(material) ? material : material ? [material] : []) {
+          m.needsUpdate = true;
+        }
+      });
+    }
+  };
+
   return {
     scene,
     camera,
     renderer,
     focarSombras,
+    aplicarGraficos,
     render: () => renderer.render(scene, camera),
     dispose: () => {
       window.removeEventListener('resize', resize);

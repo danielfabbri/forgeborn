@@ -20,6 +20,8 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
+  /* UI-12: escala da interface (Configurações > Acessibilidade). */
+  zoom: var(--escala-ui, 1);
 }
 
 .debug-overlay {
@@ -294,4 +296,444 @@ body {
   box-shadow: 0 0 0 1px rgba(120, 160, 220, 0.35);
   pointer-events: auto;
   cursor: crosshair;
+}
+
+/* FLX-01 / FLX-08: splash e carregamento. */
+.carregamento {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: #000;
+  color: #cfe3ff;
+  font:
+    13px/1.5 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+}
+.carregamento .logo {
+  font:
+    700 44px/1 'Segoe UI',
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.35em;
+  color: #e8f2ff;
+  text-shadow: 0 0 24px rgba(120, 190, 255, 0.45);
+}
+.carregamento .trilho {
+  width: min(420px, 70vw);
+  height: 4px;
+  background: rgba(120, 160, 220, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.carregamento .barra {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #4fa6ff, #9fe3ff);
+  transition: width 0.25s ease-out;
+}
+.carregamento .etapa {
+  opacity: 0.7;
+}
+.carregamento .dica {
+  max-width: min(560px, 80vw);
+  text-align: center;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+/* Menus (§3). */
+.menus {
+  position: absolute;
+  inset: 0;
+  font:
+    14px/1.5 'Segoe UI',
+    system-ui,
+    sans-serif;
+  color: #dce9ff;
+}
+.menus button,
+.pausa button,
+.fim-partida button {
+  pointer-events: auto;
+  font: inherit;
+  color: #dce9ff;
+  background: rgba(20, 35, 60, 0.85);
+  border: 1px solid rgba(120, 170, 240, 0.4);
+  border-radius: 4px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.menus button:hover:not(:disabled),
+.pausa button:hover:not(:disabled),
+.fim-partida button:hover:not(:disabled) {
+  background: rgba(40, 70, 120, 0.9);
+  border-color: rgba(160, 210, 255, 0.8);
+}
+.menus button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.menus button.ativa {
+  background: rgba(60, 120, 200, 0.9);
+  border-color: #9fd8ff;
+}
+.menus button.primario,
+.pausa button.primario,
+.fim-partida button.primario {
+  background: rgba(40, 140, 90, 0.9);
+  border-color: #6fe3a6;
+}
+.menus small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.7;
+}
+.menus select {
+  pointer-events: auto;
+  font: inherit;
+  color: #dce9ff;
+  background: #0d1624;
+  border: 1px solid rgba(120, 170, 240, 0.4);
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+.discreto {
+  opacity: 0.7;
+}
+.abertura {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 12vh;
+  text-align: center;
+  pointer-events: auto;
+}
+.abertura h1 {
+  font:
+    300 42px/1.2 'Segoe UI',
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.12em;
+  margin: 0 0 18px;
+  text-shadow: 0 0 30px rgba(120, 190, 255, 0.5);
+}
+.abertura .piscando {
+  font-size: 17px;
+  letter-spacing: 0.2em;
+  color: #e3f0ff;
+  text-shadow: 0 0 12px rgba(120, 190, 255, 0.6);
+}
+.piscando {
+  animation: piscar 1.6s ease-in-out infinite;
+}
+@keyframes piscar {
+  50% {
+    opacity: 0.25;
+  }
+}
+.painel-menu {
+  position: absolute;
+  pointer-events: auto;
+  background: rgba(5, 10, 18, 0.82);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 6px;
+  padding: 18px 22px;
+}
+.painel-menu h1,
+.painel-menu h2,
+.painel-menu h3 {
+  margin: 0 0 12px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+.modo {
+  left: 8vw;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 260px;
+}
+.modo h1 {
+  letter-spacing: 0.35em;
+}
+.modo button {
+  text-align: left;
+  font-size: 16px;
+}
+.creditos,
+.configuracoes {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(640px, 90vw);
+  max-height: 80vh;
+  overflow: auto;
+}
+.configuracoes .abas,
+.opcoes {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.configuracoes .conteudo-aba {
+  margin: 14px 0;
+  min-height: 120px;
+}
+.configuracoes .campo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  pointer-events: auto;
+}
+.configuracoes .campo > span {
+  min-width: 90px;
+}
+.configuracoes input {
+  pointer-events: auto;
+}
+.atalhos {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+.atalhos td {
+  padding: 3px 6px;
+  border-bottom: 1px solid rgba(120, 160, 220, 0.15);
+}
+.atalhos .contexto {
+  opacity: 0.65;
+  white-space: nowrap;
+}
+.atalhos kbd {
+  font-family: ui-monospace, Consolas, monospace;
+  background: rgba(120, 160, 220, 0.15);
+  border-radius: 3px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+.universo-topo {
+  position: absolute;
+  left: 24px;
+  top: 16px;
+}
+.universo-topo h2 {
+  margin: 0;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+}
+.universo-painel {
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.universo-painel .cenario {
+  text-align: left;
+}
+.universo-painel .cenario.disponivel {
+  border-color: #8fe3ff;
+}
+.universo-rotulos {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.universo-rotulos .rotulo {
+  position: absolute;
+  transform: translateX(-50%);
+  font:
+    12px/1 'Segoe UI',
+    system-ui,
+    sans-serif;
+  color: #b9c7da;
+  white-space: nowrap;
+  text-shadow: 0 0 4px #000;
+}
+.universo-rotulos .rotulo.bloqueado {
+  color: #7d8390;
+}
+.universo-rotulos .rotulo.disponivel {
+  color: #bff0ff;
+}
+.universo-rotulos .rotulo.selecionado {
+  color: #fff;
+  font-weight: 600;
+}
+.config-partida {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(920px, 94vw);
+  max-height: 92vh;
+  overflow: auto;
+}
+.config-partida .colunas {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+}
+.opcoes-fb {
+  flex: 1;
+}
+.linha-fb {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 6px 0;
+}
+.linha-fb .rotulo {
+  width: 130px;
+  padding-top: 6px;
+  opacity: 0.8;
+}
+.linha-fb .controle {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.linha-fb .opcoes button {
+  padding: 5px 10px;
+}
+.explicacao {
+  color: #ffcf7a;
+  font-size: 12px;
+  width: 100%;
+}
+.previa {
+  width: 260px;
+  text-align: center;
+}
+.previa-mapa {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: #05080d;
+  pointer-events: auto;
+  cursor: grab;
+}
+.config-partida .acoes {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+/* FLX-11 / REG-21: pausa. */
+.pausa,
+.fim-partida {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.55);
+  font:
+    14px/1.5 'Segoe UI',
+    system-ui,
+    sans-serif;
+  color: #dce9ff;
+}
+.painel-pausa {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 240px;
+  background: rgba(5, 10, 18, 0.9);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 6px;
+  padding: 18px 22px;
+}
+.painel-pausa h2 {
+  margin: 0 0 6px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+.aviso-pausa {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: rgba(40, 30, 5, 0.85);
+  border: 1px solid #ffcf7a;
+  color: #ffe2a8;
+  font:
+    13px/1.5 'Segoe UI',
+    system-ui,
+    sans-serif;
+}
+
+/* FLX-12: fim de partida. */
+.painel-fim {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(860px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: rgba(5, 10, 18, 0.92);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 6px;
+  padding: 18px 22px;
+}
+.painel-fim h1 {
+  margin: 0;
+  font-weight: 300;
+  font-size: 40px;
+  letter-spacing: 0.15em;
+}
+.fim-partida.vitoria h1 {
+  color: #8ff0b4;
+}
+.fim-partida.derrota h1 {
+  color: #ff8a80;
+}
+.estatisticas {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.estatisticas th,
+.estatisticas td {
+  padding: 4px 8px;
+  text-align: right;
+  border-bottom: 1px solid rgba(120, 160, 220, 0.15);
+}
+.estatisticas th small {
+  display: block;
+  font-weight: 400;
+  opacity: 0.7;
+}
+.estatisticas .rotulo,
+.estatisticas th:first-child {
+  text-align: left;
+  opacity: 0.8;
+}
+.painel-fim .acoes {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
 }

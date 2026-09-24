@@ -1,5 +1,6 @@
 import { signal } from '@preact/signals';
 import type { EntityId } from '../sim';
+import type { FimDaPartida } from '../game/fimDePartida';
 import type { LeituraDaRede } from '../sim/energia';
 
 /** UI-01: barra superior, atualizada pelo loop principal. */
@@ -42,8 +43,27 @@ export const painelSelecao = signal<EstadoDaSelecao>({ tipo: 'nenhum' });
 /** UI-09/UI-13: tooltip na posição do mouse (px). */
 export const tooltip = signal<{ texto: string; x: number; y: number } | null>(null);
 
-/** REG-11/REG-12: resultado da partida para o jogador, ou null. */
-export const fimDePartida = signal<'vitoria' | 'derrota' | 'empate' | null>(null);
+/** FLX-12: fim de partida do jogador (resultado e estatísticas), ou null enquanto joga. */
+export const fimDePartida = signal<FimDaPartida | null>(null);
+
+/** REG-21/FLX-11: simulação pausada; o menu de pausa pode estar aberto ou não (pausa tática). */
+export const pausado = signal(false);
+export const menuDePausa = signal<'fechado' | 'aberto' | 'configuracoes'>('fechado');
+
+/** Ações do menu de pausa e do fim de partida, ligadas pela partida. */
+export const acoesDaPartida: {
+  continuar: () => void;
+  reiniciar: () => void;
+  renderSe: () => void;
+  jogarDeNovo: () => void;
+  sair: () => void;
+} = {
+  continuar: () => {},
+  reiniciar: () => {},
+  renderSe: () => {},
+  jogarDeNovo: () => {},
+  sair: () => {},
+};
 
 /** Canvas do retrato 3D (UI-03), montado pelo painel e desenhado pelo render. */
 export const canvasDoRetrato = signal<HTMLCanvasElement | null>(null);

@@ -1,3 +1,4 @@
+import type { RecursosId } from '../../src/sim/data';
 import { describe, expect, it } from 'vitest';
 import { dados, getComponent } from '../../src/sim';
 import { criar, mundoLiso, ordenar, partida, semear } from '../sim/mundo-teste';
@@ -13,9 +14,10 @@ describe('§21.3 — invariantes de energia', () => {
     const lista = iniciais.flatMap((linha, k) =>
       Array.from({ length: linha.jazidas }, (_, n) => {
         const angulo = ((k * 2 + n + 0.5) / 8) * 2 * Math.PI;
-        const distancia = (linha.dist_min_m + (linha.dist_max_m ?? linha.dist_min_m)) / 2;
+        const minimo = linha.dist_min_m ?? 0;
+        const distancia = (minimo + (linha.dist_max_m ?? minimo)) / 2;
         return {
-          recurso: linha.recurso,
+          recurso: linha.recurso as RecursosId,
           quantidade: 100_000,
           x: distancia * Math.sin(angulo),
           z: distancia * Math.cos(angulo),

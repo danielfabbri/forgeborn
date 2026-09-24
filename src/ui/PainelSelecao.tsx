@@ -1,5 +1,5 @@
 import { t, type TextKey } from '../i18n';
-import { acoesDaSelecao, canvasDoRetrato, fimDePartida, painelSelecao, tooltip } from './hud';
+import { acoesDaSelecao, canvasDoRetrato, painelSelecao, tooltip } from './hud';
 
 const nome = (modelo: string) => t(`item.${modelo}` as TextKey);
 
@@ -102,16 +102,6 @@ export function PainelSelecao() {
 }
 
 /** REG-11/REG-12: aviso de fim de partida (a tela completa vem com FLX-12). */
-export function FimDePartida() {
-  const fim = fimDePartida.value;
-  if (!fim) return null;
-  return (
-    <div class={`fim-de-partida ${fim}`} data-testid="fim-de-partida">
-      {t(`fim.${fim}`)}
-    </div>
-  );
-}
-
 /** UI-09/UI-13: tooltip ao lado do cursor. */
 export function Tooltip() {
   const dica = tooltip.value;

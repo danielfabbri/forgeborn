@@ -10,7 +10,8 @@ function jazidasIniciais(sim: Sim): void {
   const total = iniciais.reduce((s, j) => s + j.jazidas, 0);
   const lista: Array<{ recurso: RecursosId; quantidade: number; x: number; z: number }> = [];
   for (const linha of iniciais) {
-    const distancia = (linha.dist_min_m + (linha.dist_max_m ?? linha.dist_min_m)) / 2;
+    const minimo = linha.dist_min_m ?? 0;
+    const distancia = (minimo + (linha.dist_max_m ?? minimo)) / 2;
     for (let n = 0; n < linha.jazidas; n++) {
       const angulo = ((lista.length + 0.5) / total) * 2 * Math.PI;
       lista.push({

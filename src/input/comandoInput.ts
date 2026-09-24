@@ -117,6 +117,10 @@ export interface OpcoesEntradaComandos {
   /** PRD-10: por que o local não serve, ou null (a validação da simulação). */
   validarLocal?: (tipo: EstruturasId, d: Vec3) => string | null;
   holograma?: HologramaDePosicionamento;
+  /** §12.4: Esc sem modo a cancelar abre o menu de pausa (FLX-11). */
+  aoEsc?: () => void;
+  /** Menu aberto por cima do jogo: as teclas de comando não valem. */
+  bloqueado?: () => boolean;
 }
 
 export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos {
@@ -500,7 +504,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   };
 
   const tecla = (e: KeyboardEvent) => {
-    if (e.repeat) return;
+    if (e.repeat || o.bloqueado?.()) return;
     if (!e.ctrlKey && !e.altKey && !e.metaKey && teclaDeProducao(e)) return;
     const digito = /^Digit([1-9])$/.exec(e.code);
     if (digito) {
@@ -556,7 +560,8 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         if (minhas('unit').length > 0) definirModo('patrulhar');
         break;
       case 'Escape':
-        definirModo('normal');
+        if (modo !== 'normal') definirModo('normal');
+        else o.aoEsc?.();
         break;
       // §12.4: R recarrega agora (ENE-12).
       case 'KeyR':

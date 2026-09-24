@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.13.0 — rascunho para aprovação |
+| Versão do SPEC | 0.14.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -963,12 +963,12 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 
 - **CTL-08** — Com exatamente 1 unidade móvel própria selecionada, V entra em controle direto em 1ª pessoa. V de novo alterna entre 1ª e 3ª pessoa; Esc volta à visão RTS centrada na unidade. Estruturas não podem ser controladas no v1.
 - **CTL-09** — A simulação continua em tempo real; os outros corpos seguem autônomos; alertas e minimapa continuam visíveis. Com o jogo pausado, o controle direto também pausa.
-- **CTL-10** — Controles: W/S frente e ré, A/D deslocamento lateral, mouse orienta; clique esquerdo usa a arma principal (ou minera, no Hover de Exploração); clique direito usa a habilidade da unidade (plantar mina, Sentinela, descarregar, pousar); Shift ativa o Impulso.
-- **CTL-11** — Mira: lasers acertam o que estiver sob a mira, dentro do alcance. O torpedo trava no alvo sob a mira se o clique for mantido por `trava_torpedo_s`; sem trava, sai reto. Bombas caem no ponto indicado por um marcador de impacto previsto.
-- **CTL-12** — **Sincronia:** a unidade em controle direto recebe +`controle_direto_bonus_dano_pct`% de dano e +`controle_direto_bonus_vel_pct`% de velocidade. **Impulso** (Shift): +`impulso_bonus_vel_pct`% de velocidade, com gasto de movimento × `impulso_mult_en`.
+- **CTL-10** — Controles: W/S frente e ré, A/D deslocamento lateral, mouse orienta; clique esquerdo usa a arma principal (ou minera, no Hover de Exploração); clique direito usa a habilidade da unidade (D-42): Hover de Exploração descarrega no ponto de entrega ao alcance, Hover de Plantio planta mina, Hover de Observação liga ou desliga a Sentinela, drones pousam ou decolam, Silo Móvel ancora ou desancora e Bateria Móvel liga ou desliga o suporte; EX1, OPQ e Impressora não têm habilidade. Shift ativa o Impulso. A unidade em controle direto não age sozinha: não dispara, não foge, não sai para recarregar e não segue ordens (D-44).
+- **CTL-11** — Mira: lasers acertam o que estiver sob a mira, dentro do alcance. O torpedo trava no alvo sob a mira se o clique for mantido por `trava_torpedo_s`; sem trava, sai reto e detona no primeiro corpo inimigo em que encostar ou, sem acertar nada, no tempo máximo de voo (D-40). Disparo sem alvo sob a mira sai e se perde: gasta `en_disparo` e a recarga (D-44). Bombas caem no ponto indicado por um marcador de impacto previsto.
+- **CTL-12** — **Sincronia:** a unidade em controle direto recebe +`controle_direto_bonus_dano_pct`% de dano e +`controle_direto_bonus_vel_pct`% de velocidade. **Impulso** (Shift): +`impulso_bonus_vel_pct`% de velocidade, com gasto de movimento × `impulso_mult_en`. Os bônus de velocidade somam (D-41).
 - **CTL-13** — Se a unidade for destruída, a tela mostra "SINAL PERDIDO" com estática por 1,5 s e volta à visão RTS.
 - **CTL-14** — HUD do controle direto: mira, HP, bateria, recarga da arma, bússola com sinais de radar, minimapa reduzido e a dica "Esc: sair".
-- **CTL-15** — Câmera de 1ª pessoa no sensor da unidade (FOV 75°). Câmera de 3ª pessoa ~3 m acima e ~7 m atrás, orbitável com o mouse. Drones mantêm altitude fixa.
+- **CTL-15** — Câmera de 1ª pessoa no sensor da unidade (FOV 75°). Câmera de 3ª pessoa ~3 m acima e ~7 m atrás; o mouse gira a unidade e a câmera vem atrás, e com o botão do meio pressionado a câmera orbita sem girar a unidade, voltando para trás dela ao soltar (D-43). Drones mantêm altitude fixa.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1470,6 +1470,11 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-37 | Na névoa "revelado" a camuflagem continua valendo. | Resposta do produto à lacuna de FB-01: a camuflagem é regra de detecção, não de névoa. | Aprovada |
 | D-38 | Até a Campanha existir, o botão fica desabilitado com aviso. | Resposta do produto à lacuna de FLX-03. | Aprovada |
 | D-39 | Menus e partida trocam por recarga de página (FLX-14). | Resposta do produto: cada partida começa sem memória de GPU nem listeners da anterior; o carregamento (FLX-08) cobre a espera. | Aprovada |
+| D-40 | Torpedo sem trava detona no primeiro corpo inimigo em que encosta ou no tempo máximo de voo. | Resposta do produto à lacuna de CTL-11. | Aprovada |
+| D-41 | Sincronia e Impulso somam os bônus de velocidade. | Resposta do produto à lacuna de CTL-12. | Aprovada |
+| D-42 | Habilidade do clique direito por unidade (lista em CTL-10). | Resposta do produto à lacuna de CTL-10. | Aprovada |
+| D-43 | Na 3ª pessoa o botão do meio orbita a câmera; o mouse gira a unidade. | Resposta do produto à lacuna de CTL-15. | Aprovada |
+| D-44 | Disparo sem alvo sob a mira se perde (gasta energia e recarga); a unidade em controle direto não age sozinha. | Lacunas de CTL-10 e CTL-11: o disparo é do jogador, e a autonomia não pode disputar o controle com ele. | Proposta |
 
 ---
 
@@ -1544,3 +1549,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.11.0 | 2026-09-24 | D-34: IA-07 e as chaves `ia_*` de ajuste da IA; o traço "meta de hovers" da China cita `ia_traco_meta_hovers_pct`. |
 | 0.12.0 | 2026-09-24 | D-35: `dados:jazidas` com mais Cu (inicial 2000 u, expansão 1500 u). |
 | 0.13.0 | 2026-09-24 | D-36 a D-39: conteúdo do MVP das Configurações (FLX-13), camuflagem na névoa revelada (FB-01), botão da Campanha (FLX-03) e troca de tela por recarga (nova FLX-14); valores dos presets gráficos em TEC-19. |
+| 0.14.0 | 2026-09-24 | D-40 a D-44: torpedo sem trava, soma dos bônus de velocidade, habilidades do clique direito, órbita da 3ª pessoa e disparo sem alvo no controle direto (CTL-10, CTL-11, CTL-12, CTL-15). |

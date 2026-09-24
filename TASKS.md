@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.13.0 |
+| Derivado de | `SPEC.md` v0.14.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 

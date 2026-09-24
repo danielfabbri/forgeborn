@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.11.0 — rascunho para aprovação |
+| Versão do SPEC | 0.12.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -301,11 +301,11 @@ flowchart LR
 |---|---|---|---|---|---|---|
 | inicial | fe | 2 | 1500 | 20 | 45 | por_jogador |
 | inicial | si | 2 | 1200 | 20 | 45 | por_jogador |
-| inicial | cu | 1 | 1000 | 25 | 45 | por_jogador |
+| inicial | cu | 1 | 2000 | 25 | 45 | por_jogador |
 | inicial | li | 1 | 600 | 30 | 45 | por_jogador |
 | expansao | fe | 1 | 1500 | 90 | 130 | por_jogador |
 | expansao | si | 1 | 1200 | 90 | 130 | por_jogador |
-| expansao | cu | 1 | 1000 | 90 | 130 | por_jogador |
+| expansao | cu | 1 | 1500 | 90 | 130 | por_jogador |
 | expansao | li | 1 | 800 | 90 | 130 | por_jogador |
 | expansao | ti | 1 | 800 | 100 | 130 | por_jogador |
 | contestada | ti | 2 | 1000 | 120 | — | por_zona |
@@ -1464,6 +1464,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-32 | Explosão ambiental com 0% na borda; radiação só fere unidades móveis; reciclagem a `distancia_mineracao_m`; mover dispara sem desviar e M não dispara. | Respostas do produto às lacunas de CMB-24, CMB-26, ECO-28 e CTL-07. | Aprovada |
 | D-33 | O splash mede a distância até o centro da unidade (estruturas: até a borda da pegada). | Medida pela borda do casco, a INV-03 dependia da formação (74% em fila cerrada); pelo centro, fica em 27–34% em qualquer formação (medido na T-068). | Aprovada |
 | D-34 | Constantes de ajuste da IA viram chaves `ia_*` de §13.1 (IA-07), e os traços numéricos de §13.3 as citam. | A IA precisa desses ajustes e o GOV-04 exige que números de jogo fiquem nas tabelas. | Aprovada |
+| D-35 | Mais cobre: jazida inicial de Cu com 2000 u e de expansão com 1500 u (antes 1000 e 1000). | O Cu esgotava por volta dos 30 min nas partidas entre IAs (T-095), com Fe e Si sobrando aos milhares; quase toda unidade militar e de energia gasta Cu. | Aprovada |
 
 ---
 
@@ -1536,3 +1537,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.10.0 | 2026-09-24 | D-33: distância do splash (CMB-10) até o centro da unidade; estruturas pela pegada. |
 | 0.10.1 | 2026-09-24 | Q-08: ordem de ataque direta com postura Passiva. |
 | 0.11.0 | 2026-09-24 | D-34: IA-07 e as chaves `ia_*` de ajuste da IA; o traço "meta de hovers" da China cita `ia_traco_meta_hovers_pct`. |
+| 0.12.0 | 2026-09-24 | D-35: `dados:jazidas` com mais Cu (inicial 2000 u, expansão 1500 u). |

@@ -21,7 +21,7 @@
     "zona": "inicial",
     "recurso": "cu",
     "jazidas": 1,
-    "quantidade_u": 1000,
+    "quantidade_u": 2000,
     "dist_min_m": 25,
     "dist_max_m": 45,
     "escopo": "por_jogador"
@@ -57,7 +57,7 @@
     "zona": "expansao",
     "recurso": "cu",
     "jazidas": 1,
-    "quantidade_u": 1000,
+    "quantidade_u": 1500,
     "dist_min_m": 90,
     "dist_max_m": 130,
     "escopo": "por_jogador"

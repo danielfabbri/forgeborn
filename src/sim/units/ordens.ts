@@ -38,7 +38,7 @@ function dadosDe(comando: QueuedCommand): Partial<DadosAlvo> {
   return (comando.dados ?? {}) as Partial<DadosAlvo>;
 }
 
-function daNacao(
+export function daNacao(
   ctx: SystemContext,
   nacao: NacaoId,
   ids: unknown,
@@ -156,6 +156,18 @@ function mandarMover(
 /** Ordem de mover dada pela simulação (ponto de encontro, PRD-08). */
 export function moverPara(ctx: SystemContext, ids: EntityId[], alvo: Ponto): void {
   mandarMover(ctx, ids, alvo, false, false);
+}
+
+/** Mover com outro tipo de ordem: M (sem disparar, D-32) ou A (ataque-movimento, CMB-14). */
+export function moverComo(
+  ctx: SystemContext,
+  ids: EntityId[],
+  alvo: Ponto,
+  tipo: 'mover_ignorando' | 'atacar_mover',
+  livreDeGrupo: boolean,
+): void {
+  mandarMover(ctx, ids, alvo, livreDeGrupo, false);
+  for (const id of ids) getComponent(ctx.state, id, 'order')!.tipo = tipo;
 }
 
 function parar(ctx: SystemContext, ids: EntityId[], manter: boolean): void {

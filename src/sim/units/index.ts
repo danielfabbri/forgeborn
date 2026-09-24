@@ -1,4 +1,5 @@
 import type { CommandHandler, GameSystemId, SystemFn } from '../core/pipeline';
+import { comandosDoCombate, sistemaCombate, sistemaMorte, sistemaProjeteis } from '../combate';
 import { comandosDaEconomia, sistemaEconomia } from '../economia';
 import { comandosDaEnergia, sistemaEnergia } from '../energia';
 import { comandosDaProducao, sistemaProducao } from '../producao';
@@ -15,6 +16,9 @@ export const sistemasDoJogo: Partial<Record<GameSystemId, SystemFn>> = {
   energia: sistemaEnergia,
   movimento: sistemaMovimento,
   economia: sistemaEconomia,
+  combate: sistemaCombate,
+  projeteis: sistemaProjeteis,
+  morte: sistemaMorte,
 };
 
 /** Tratadores de Comando já implementados. */
@@ -23,4 +27,5 @@ export const comandosDoJogo: Record<string, CommandHandler> = {
   ...comandosDaEconomia,
   ...comandosDaEnergia,
   ...comandosDaProducao,
+  ...comandosDoCombate,
 };

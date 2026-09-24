@@ -1,8 +1,10 @@
 /**
- * Ordens diretas de construir (PRD-13, PRD-16) e reparar (PRD-18, PRD-19). A unidade vai até o
- * alvo, fica a até `raio_deposito_m` da borda (D-29) e trabalha; outra ordem encerra o trabalho.
+ * Ordens diretas de construir (PRD-13, PRD-16), reparar (PRD-18, PRD-19) e reciclar (ECO-28).
+ * A unidade vai até o alvo, fica a até `raio_deposito_m` da borda (D-29) — ou a até
+ * `distancia_mineracao_m` do destroço (D-32) — e trabalha; outra ordem encerra o trabalho.
  */
 import {
+  destroyEntity,
   entitiesWith,
   getComponent,
   isAlive,
@@ -11,8 +13,8 @@ import {
 } from '../core/entities';
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { EntityId } from '../core/types';
-import { param } from '../data';
-import { liberar, retomarColeta } from '../economia/coleta';
+import { param, type RecursosId } from '../data';
+import { iniciarEntrega, liberar, retomarColeta } from '../economia/coleta';
 import { emReserva, gastar } from '../energia/bateria';
 import { aproximar, folgaAte, noAlcance, pararNoLugar } from './alcance';
 import { instalarCanteiro } from './obra';
@@ -32,10 +34,15 @@ export function encerrarTrabalho(ctx: SystemContext, id: EntityId): void {
   else ordem.tipo = 'nenhuma';
 }
 
-function comecarTrabalho(
+/** Faixa de trabalho do tipo: destroço como ponto (D-32); o resto pela borda (D-29). */
+function faixaDe(tipo: string): number {
+  return param(tipo === 'reciclar' ? 'distancia_mineracao_m' : 'raio_deposito_m');
+}
+
+export function comecarTrabalho(
   ctx: SystemContext,
   id: EntityId,
-  tipo: 'construir' | 'reparar',
+  tipo: 'construir' | 'reparar' | 'reciclar',
   alvo: EntityId,
   auto: boolean,
 ): void {
@@ -58,6 +65,7 @@ function terminou(ctx: SystemContext, trabalho: { tipo: string; alvo: EntityId }
   const { state } = ctx;
   if (!isAlive(state, trabalho.alvo)) return true;
   if (trabalho.tipo === 'construir') return !getComponent(state, trabalho.alvo, 'obra');
+  if (trabalho.tipo === 'reciclar') return !getComponent(state, trabalho.alvo, 'destroco');
   const vida = getComponent(state, trabalho.alvo, 'vida');
   return !vida || vida.hp >= vida.max - 1e-9;
 }
@@ -78,13 +86,58 @@ function passoTrabalho(ctx: SystemContext): void {
     }
     const recarga = getComponent(state, id, 'recarga');
     if (recarga && recarga.estado !== 'nenhuma') continue;
+    // ECO-13: em fuga, o trabalho espera.
+    if (getComponent(state, id, 'fuga')) continue;
+    // ECO-28: levando a sucata, o hover volta depois de descarregar.
+    const coleta = getComponent(state, id, 'coleta');
+    if (coleta && coleta.estado !== 'ocioso') continue;
     const loc = getComponent(state, id, 'locomotion')!;
-    if (noAlcance(ctx, id, trabalho.alvo)) {
+    const faixa = faixaDe(trabalho.tipo);
+    if (noAlcance(ctx, id, trabalho.alvo, faixa)) {
       if (loc.destino) pararNoLugar(ctx, id);
       const ehImpressora = getComponent(state, id, 'unit')!.tipo === 'printer';
       if (trabalho.tipo === 'construir' && ehImpressora) instalarCanteiro(ctx, trabalho.alvo);
     } else if (!loc.destino) {
-      aproximar(ctx, id, trabalho.alvo);
+      aproximar(ctx, id, trabalho.alvo, faixa);
+    }
+  }
+}
+
+/** ECO-28: recicla a `taxa_reciclagem_u_s`, na composição do destroço, até `carga_hover_u`. */
+function passoReciclagem(ctx: SystemContext): void {
+  const { state, dt } = ctx;
+  for (const id of entitiesWith(state, 'trabalho', 'coleta')) {
+    const trabalho = getComponent(state, id, 'trabalho')!;
+    if (trabalho.tipo !== 'reciclar' || !isAlive(state, trabalho.alvo)) continue;
+    const coleta = getComponent(state, id, 'coleta')!;
+    if (coleta.estado !== 'ocioso' || getComponent(state, id, 'fuga')) continue;
+    if (getComponent(state, id, 'locomotion')!.destino || emReserva(ctx, id)) continue;
+    if (!noAlcance(ctx, id, trabalho.alvo, faixaDe('reciclar'))) continue;
+    const destroco = getComponent(state, trabalho.alvo, 'destroco');
+    if (!destroco) continue;
+    const entradas = Object.entries(destroco.composicao) as Array<[RecursosId, number]>;
+    const restante = entradas.reduce((s, [, u]) => s + u, 0);
+    // ENE-10: reciclar gasta `en_reciclar_s`; sem energia, recicla na fração paga.
+    const pago = gastar(ctx, id, param('en_reciclar_s') * dt);
+    const u = Math.min(
+      param('taxa_reciclagem_u_s') * dt * pago,
+      param('carga_hover_u') - coleta.carga,
+      restante,
+    );
+    if (u > 1e-12) {
+      coleta.sucata ??= {};
+      for (const [r, q] of entradas) {
+        const parte = (u * q) / restante;
+        destroco.composicao[r] = q - parte;
+        coleta.sucata[r] = (coleta.sucata[r] ?? 0) + parte;
+      }
+      coleta.carga += u;
+      coleta.cargaRecurso = null;
+    }
+    const vazio = restante - u <= 1e-9;
+    if (vazio) destroyEntity(state, trabalho.alvo);
+    if (coleta.carga >= param('carga_hover_u') - 1e-9 || (vazio && coleta.carga > 0)) {
+      iniciarEntrega(ctx, id);
     }
   }
 }
@@ -156,6 +209,7 @@ function passoReparo(ctx: SystemContext): void {
 export function passoTrabalhos(ctx: SystemContext): void {
   passoTrabalho(ctx);
   reparoAutomatico(ctx);
+  passoReciclagem(ctx);
 }
 
 export { passoReparo };
@@ -196,6 +250,18 @@ export const comandosDeTrabalho: Record<string, CommandHandler> = {
       const impressora = getComponent(ctx.state, id, 'unit')!.tipo === 'printer';
       if (!obra.instalada && !impressora) continue;
       comecarTrabalho(ctx, id, 'construir', d.alvo, false);
+    }
+  },
+  /** ECO-28 (hover F, clique direito num destroço): reciclar — qualquer destroço, de qualquer nação. */
+  reciclar: (ctx, comando) => {
+    const d = (comando.dados ?? {}) as { ids?: unknown; alvo?: unknown };
+    if (typeof d.alvo !== 'number' || !getComponent(ctx.state, d.alvo, 'destroco')) return;
+    for (const id of trabalhadoresDa(ctx, comando.nacao, d.ids, d.alvo)) {
+      if (getComponent(ctx.state, id, 'unit')!.tipo !== 'hover_explorer') continue;
+      const coleta = getComponent(ctx.state, id, 'coleta')!;
+      comecarTrabalho(ctx, id, 'reciclar', d.alvo, false);
+      // Minério a bordo: entrega antes de reciclar.
+      if (coleta.carga > 0 && !coleta.sucata) iniciarEntrega(ctx, id);
     }
   },
   /** PRD-18 (hover G, clique direito em próprio danificado): reparar. */

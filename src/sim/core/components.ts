@@ -1,4 +1,4 @@
-import type { CustosId, EstruturasId, MoveisId, RecursosId } from '../data';
+import type { ArmasId, CustosId, EstruturasId, MoveisId, RecursosId } from '../data';
 import type { EntityId, NacaoId } from './types';
 
 /** Direção unitária a partir do centro do planeta (CEN-14): um ponto da superfície. */
@@ -41,8 +41,20 @@ export interface ComponentMap {
   };
   /** Ordem corrente de movimento (CTL-07, CMB-13). */
   order: {
-    /** `tarefa`: movimento conduzido por uma tarefa automática (coleta, ciclo do silo). */
-    tipo: 'nenhuma' | 'mover' | 'patrulhar' | 'manter' | 'tarefa';
+    /**
+     * `tarefa`: movimento conduzido por uma tarefa automática (coleta, ciclo do silo).
+     * `mover_ignorando`: M, move sem disparar (D-32). `atacar`: alvo direto (CMB-15).
+     * `atacar_mover`: A, ataque-movimento (CMB-14).
+     */
+    tipo:
+      | 'nenhuma'
+      | 'mover'
+      | 'mover_ignorando'
+      | 'patrulhar'
+      | 'manter'
+      | 'tarefa'
+      | 'atacar'
+      | 'atacar_mover';
     patrulha: [Ponto, Ponto] | null;
   };
   /** Drones (MOV-07). */
@@ -63,10 +75,77 @@ export interface ComponentMap {
     /** Construtores ativos no último tick (PRD-15). */
     construtores: EntityId[];
   };
-  /** Ordem direta de construir ou reparar (PRD-13, PRD-18); `auto` = reparo da PRD-19. */
-  trabalho: { tipo: 'construir' | 'reparar'; alvo: EntityId; auto: boolean };
-  /** Mina plantada (UNI-07); regras completas na T-064. */
-  mine: { armada: boolean };
+  /**
+   * Ordem direta de construir, reparar ou reciclar (PRD-13, PRD-18, ECO-28); `auto` = reparo
+   * da PRD-19.
+   */
+  trabalho: { tipo: 'construir' | 'reparar' | 'reciclar'; alvo: EntityId; auto: boolean };
+  /**
+   * Estado de combate de todo corpo com HP (ENE-15, ECO-13, CMB-12): tempos sem combate e sem
+   * dano, quem atacou por último e a nação que causou o último dano (pontuação, REG-22).
+   */
+  combate: {
+    semCombate_s: number;
+    semDano_s: number;
+    ultimoAtacante: EntityId | null;
+    ultimoDanoNacao: NacaoId | null;
+  };
+  /** Arma do corpo (§8.4) e o engajamento dela (§9.5). */
+  arma: {
+    id: ArmasId;
+    /** Segundos até poder disparar de novo. */
+    recarga_s: number;
+    alvo: EntityId | null;
+    /** CMB-13: postura (estruturas não têm e disparam em qualquer alvo no alcance). */
+    postura: 'agressiva' | 'defensiva' | 'manter' | 'passiva' | null;
+    /** CMB-13: âncora da coleira (onde o engajamento começou). */
+    origem: Ponto | null;
+    /** Último ponto de perseguição traçado. */
+    perseguindo: Ponto | null;
+    /** CMB-15: alvo da ordem de ataque direta. */
+    alvoDireto: EntityId | null;
+    /** CMB-14/patrulha: a ordem a retomar depois do engajamento. */
+    retomar: {
+      tipo: 'patrulhar' | 'atacar_mover';
+      patrulha: [Ponto, Ponto] | null;
+      destino: Ponto | null;
+    } | null;
+    /** ENE-03/ENE-04: armas da rede (Torre, Nave) — demanda e fração atendida. */
+    demanda_en_s: number;
+    atendido: number;
+  };
+  /** Projétil em voo (CMB-07, CMB-08). */
+  projetil: {
+    tipo: 'torpedo' | 'bomba';
+    arma: ArmasId;
+    atirador: EntityId;
+    nacao: NacaoId;
+    alvo: EntityId | null;
+    /** Última posição conhecida do alvo (torpedo) ou ponto de impacto (bomba). */
+    ponto: Ponto;
+    voo_s: number;
+    /** CMB-16: dano esperado no alvo. */
+    dano: number;
+  };
+  /** Destroço (ECO-27 a ECO-29). */
+  destroco: { composicao: Partial<Record<RecursosId, number>>; restante_s: number };
+  /** Zona de radiação da Usina Nuclear (CMB-24). */
+  radiacao: { restante_s: number };
+  /** ECO-13: hover em fuga; retoma após `fuga_hover_retorno_s` sem dano. */
+  fuga: { abrigo: EntityId };
+  /** Hover de Plantio de Minas (UNI-01, UNI-02). */
+  lancaMinas: {
+    carregador: number;
+    /** Progresso da fabricação da próxima mina (0..1), ou null. */
+    fabricando: number | null;
+    /** Minas a plantar, em ordem, e o tempo do plantio corrente. */
+    plantios: Ponto[];
+    plantio_s: number;
+  };
+  /** REG-10: nação eliminada; o corpo se desliga e explode sem dano em `em_s`. */
+  autodestruicao: { em_s: number };
+  /** Mina plantada (UNI-07): arma após `tempo_armar_mina_s`. */
+  mine: { armada: boolean; timer_s: number };
   /**
    * Jazida de recurso (ECO-04, ECO-05). `vagas` tem `slots_por_jazida` posições fixas em volta da
    * jazida, com o hover designado (indo ou minerando) ou null.
@@ -93,6 +172,8 @@ export interface ComponentMap {
     timer_s: number;
     /** ECO-20: designado pelo jogador (fica na jazida até esgotar). */
     manual: boolean;
+    /** ECO-28: carga de sucata (composição do destroço), ou null. */
+    sucata: Partial<Record<RecursosId, number>> | null;
   };
   /** ENE-08 a ENE-11: bateria de uma unidade móvel. */
   bateria: {

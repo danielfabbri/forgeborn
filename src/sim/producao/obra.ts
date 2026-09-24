@@ -158,6 +158,11 @@ function soltarConstrutores(ctx: SystemContext, obra: EntityId): void {
   }
 }
 
+/** Canteiro destruído (CMB-27): sai das filas e dos trabalhos, sem reembolso. */
+export function abandonarObra(ctx: SystemContext, obra: EntityId): void {
+  soltarConstrutores(ctx, obra);
+}
+
 /** PRD-14: cancela a obra, devolve os recursos (PRD-05) e remove o canteiro. */
 export function removerObra(ctx: SystemContext, obra: EntityId): void {
   const { state } = ctx;

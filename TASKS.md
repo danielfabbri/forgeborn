@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.10.0 |
+| Derivado de | `SPEC.md` v0.10.1 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -132,28 +132,28 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: carga em hover não pode ser gasta; descarregar na Nave ou num Armazém incrementa o estoque; o valor "em trânsito" é publicado para o HUD.
 - [x] **T-033 — Diretiva de Coleta** · M · Spec: ECO-18 – ECO-21 · Dep: T-031 · Feito: 2026-09-23
   - Aceite: 20 hovers ociosos com todas as jazidas conhecidas se distribuem conforme `diretiva_*_pct`, com erro ≤ 1 hover por recurso; recurso sem jazida elegível é ignorado e sinalizado; ordem manual prevalece.
-- [ ] **T-034 — Fuga de hovers** · P · Spec: ECO-13 · Dep: T-031, T-060
+- [x] **T-034 — Fuga de hovers** · P · Spec: ECO-13 · Dep: T-031, T-060 · Feito: 2026-09-24
   - Aceite: hover atingido foge para a estrutura armada mais próxima e retoma após `fuga_hover_retorno_s` sem dano; a chave nas Diretivas desliga o comportamento.
 - [x] **T-035 — Silo Móvel** · M · Spec: ECO-22 – ECO-26 · Dep: T-032 · Feito: 2026-09-23 (a ECO-26, carga no destroço, fica com a T-036)
   - Aceite: só recebe descargas ancorado; ciclo automático no `limiar_ciclo_silo_pct`; a carga só conta depois de descarregar num depósito; hovers se redirecionam enquanto o silo está fora.
-- [ ] **T-036 — Destroços e reciclagem** · M · Spec: ECO-27 – ECO-29 · Dep: T-032, T-060
+- [x] **T-036 — Destroços e reciclagem** · M · Spec: ECO-27 – ECO-29 · Dep: T-032, T-060 · Feito: 2026-09-24
   - Aceite: destroço = piso(receita × `rendimento_destroco_pct`%) por recurso; some no prazo; a sucata vira os recursos certos ao ser descarregada; o destroço do silo inclui `rendimento_carga_silo_pct`% da carga.
 
 ## M4 — Energia
 
 - [x] **T-040 — Rede de energia** · M · Spec: ENE-01 – ENE-05 · Dep: T-006 · Feito: 2026-09-23
   - Aceite: testes de geração, capacidade, excedente perdido e de cada nível de prioridade do racionamento, incluindo satélite offline.
-- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Mover, pairar, minerar, imprimir, auxiliar obra, reparar, Reserva e pouso do drone (D-28) prontos; reciclar, disparar, fabricar mina, Sentinela e impulso entram com as mecânicas
+- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Todos os custos de §6.3 prontos, menos Sentinela (T-072) e impulso (controle direto)
   - Aceite: custo de cada tarefa da tabela §6.3 verificado; unidade parada no solo gasta 0; Modo Reserva anda a `modo_reserva_vel_pct`% e não executa tarefas.
 - [x] **T-042 — Portas de recarga** · M · Spec: ENE-12 – ENE-14 · Dep: T-041 · Feito: 2026-09-23
   - Aceite: 1 unidade por porta; fila por ordem de chegada; escolha pelo menor tempo estimado; a recarga retira energia do banco.
-- [~] **T-043 — Auto-recarga** · M · Spec: ENE-15, ENE-16 · Dep: T-042 · Limiares, retorno (D-28), volta à coleta e Impressora (ENE-16) prontos; o combate espera a M6
+- [x] **T-043 — Auto-recarga** · M · Spec: ENE-15, ENE-16 · Dep: T-042 · Feito: 2026-09-24
   - Aceite: limiares `auto_recarga_*` por papel; militares não saem em combate; drones saem em `recarga_forcada_drone_pct` mesmo em combate; a Impressora pausa a impressão, recarrega e retoma.
 - [x] **T-044 — Usinas** · M · Spec: ENE-06, ENE-07 · Dep: T-040, T-053 · Feito: 2026-09-23 (usinas criadas por comando de depuração até a T-053)
   - Aceite: solar gera `geracao_en_s` × `fator_solar`; nuclear consome `nuclear_consumo_u` a cada `nuclear_intervalo_s`, gera 0 sem Urânio (AL-10) e religa em `nuclear_religar_s`.
 - [x] **T-045 — Bateria Móvel** · M · Spec: ENE-17 – ENE-21 · Dep: T-042 · Feito: 2026-09-23 (a ENE-21, explosão, fica com a CMB-23)
   - Aceite: atende até `bateria_movel_max_alvos` alvos a `bateria_movel_taxa_por_alvo_en_s` cada, começando pela menor %; volta para recarregar em `auto_recarga_bateria_movel_pct`; alvos não procuram porta enquanto recebem energia.
-- [ ] **T-046 — Invariantes de energia** · P · Spec: INV-09, INV-10 · Dep: T-043, T-061
+- [x] **T-046 — Invariantes de energia** · P · Spec: INV-09, INV-10 · Dep: T-043, T-061 · Feito: 2026-09-24 (INV-09 medido em 10 min de jogo)
   - Aceite: INV-09 e INV-10 verdes em `tests/balance/`.
 
 ## M5 — Produção e construção
@@ -175,24 +175,24 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M6 — Combate
 
-- [ ] **T-060 — Dano, HP e morte** · M · Spec: CMB-01 – CMB-03, CMB-27 · Dep: T-006
+- [x] **T-060 — Dano, HP e morte** · M · Spec: CMB-01 – CMB-03, CMB-27 · Dep: T-006 · Feito: 2026-09-24
   - Aceite: multiplicadores de `dados:multiplicadores` aplicados; dano mínimo 1; eventos de dano e morte publicados no barramento.
-- [ ] **T-061 — Armas hitscan** · M · Spec: CMB-04, CMB-06, ENE-03 · Dep: T-060, T-041, T-040
+- [x] **T-061 — Armas hitscan** · M · Spec: CMB-04, CMB-06, ENE-03 · Dep: T-060, T-041, T-040 · Feito: 2026-09-24
   - EX1, Drone Laser, Torre e defesa da Nave.
   - Aceite: camadas de alvo respeitadas; energia debitada da bateria ou da rede conforme `fonte_en`; torre em racionamento dispara mais devagar.
-- [ ] **T-062 — Torpedo, bomba e splash** · M · Spec: CMB-07, CMB-08, CMB-10, CMB-11 · Dep: T-061
+- [x] **T-062 — Torpedo, bomba e splash** · M · Spec: CMB-07, CMB-08, CMB-10, CMB-11 · Dep: T-061 · Feito: 2026-09-24
   - Aceite: torpedo guiado detona na última posição se o alvo morrer; bomba com mira preditiva erra alvo que muda de direção; curva de splash conforme `nucleo_splash_pct` e `splash_borda_pct`; sem fogo amigo.
-- [ ] **T-063 — Alvos, posturas e mente única** · G · Spec: CMB-12 – CMB-18 · Dep: T-061, T-023
+- [x] **T-063 — Alvos, posturas e mente única** · G · Spec: CMB-12 – CMB-18 · Dep: T-061, T-023 · Feito: 2026-09-24 (Q-08 aguarda resposta)
   - Aceite: prioridade de alvo coberta por teste; perseguição limitada por postura; ataque-movimento; sem desperdício de dano (CMB-16); resposta a ataques contra aliados na visão.
-- [ ] **T-064 — Minas** · M · Spec: UNI-01, UNI-02, UNI-07, CMB-09, CMB-19 – CMB-21, REG-18 · Dep: T-062
+- [x] **T-064 — Minas** · M · Spec: UNI-01, UNI-02, UNI-07, CMB-09, CMB-19 – CMB-21, REG-18 · Dep: T-062 · Feito: 2026-09-24 (minas inimigas ficam invisíveis até a detecção da T-065)
   - Aceite: fabricação automática consome a receita de `mine`; plantio, armar e Campo minado com os tempos e espaçamento das tabelas; só hovers inimigos acionam; limite de minas ativas.
 - [ ] **T-065 — Detecção e camuflagem** · M · Spec: VIS-05, CMB-22 · Dep: T-064, T-070
   - Aceite: minas e Sentinelas só aparecem para inimigos dentro de `deteccao_m` de um detector; mina revelada vira alvo e é evitada pelo pathfinding.
-- [ ] **T-066 — Explosões ambientais e radiação** · P · Spec: CMB-23 – CMB-26 · Dep: T-062
+- [x] **T-066 — Explosões ambientais e radiação** · P · Spec: CMB-23 – CMB-26 · Dep: T-062 · Feito: 2026-09-24
   - Aceite: explosões da Bateria Móvel, da Usina Nuclear e da Nave com dano e raio das tabelas, atingindo todas as nações; zona de radiação com duração e dano por segundo; drones em voo imunes.
-- [ ] **T-067 — Eliminação, vitória e derrota** · M · Spec: REG-09 – REG-15 · Dep: T-060, T-050
+- [x] **T-067 — Eliminação, vitória e derrota** · M · Spec: REG-09 – REG-15 · Dep: T-060, T-050 · Feito: 2026-09-24 (a tela de fim de partida completa fica com FLX-12)
   - Aceite: nação sem Nave e sem Impressoras é eliminada e se autodestrói sem dano; última nação vence; render-se; tempo limite decide por pontuação.
-- [ ] **T-068 — Invariantes de combate e relatório de balanceamento** · M · Spec: INV-03 – INV-08, INV-11, INV-13, §21.2 · Dep: T-063, T-064
+- [x] **T-068 — Invariantes de combate e relatório de balanceamento** · M · Spec: INV-03 – INV-08, INV-11, INV-13, §21.2 · Dep: T-063, T-064 · Feito: 2026-09-24
   - `npm run balance:report` recalcula as tabelas informativas de §21.2 a partir dos dados gerados.
   - Aceite: todos os INV citados verdes; o relatório bate com §21.2 da v0.1.0.
 
@@ -213,7 +213,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [~] **T-080 — Barra superior** · M · Spec: UI-01, ENE-22 · Dep: T-032, T-040 · Recursos com trânsito, energia com as três cores, corpos e relógio prontos; o menu entra com a T-105 e o clique nos recursos, com a T-083
   - Aceite: recursos com "em trânsito", energia com as três cores do indicador, corpos, relógio e menu.
-- [~] **T-081 — Painel de seleção e retrato 3D** · M · Spec: UI-03 · Dep: T-021 · Retrato 3D, nome, HP, EN, estado, carga, arma, grupos com mini-barras e filtro prontos; a postura entra com a T-063
+- [x] **T-081 — Painel de seleção e retrato 3D** · M · Spec: UI-03 · Dep: T-021 · Feito: 2026-09-24
 - [ ] **T-082 — Cartão de comandos e atalhos** · M · Spec: UI-04, §12.4 · Dep: T-050, T-025
   - Aceite: botões e teclas vêm de `dados:atalhos`; custo faltante em vermelho; menus B e U da Impressora.
 - [ ] **T-083 — Painel de Diretivas** · P · Spec: UI-02 · Dep: T-033, T-043

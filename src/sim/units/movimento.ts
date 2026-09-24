@@ -77,7 +77,9 @@ function chegou(ctx: SystemContext, g: Navegavel | null, id: EntityId, loc: Loco
   }
   loc.destino = null;
   loc.limiteVel = null;
-  if (ordem.tipo === 'mover') ordem.tipo = 'nenhuma';
+  if (ordem.tipo === 'mover' || ordem.tipo === 'mover_ignorando' || ordem.tipo === 'atacar_mover') {
+    ordem.tipo = 'nenhuma';
+  }
 }
 
 function proximoAlvo(

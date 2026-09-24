@@ -119,7 +119,7 @@ function ficarOcioso(ctx: SystemContext, hover: EntityId): void {
 }
 
 /** ECO-10: parte para o ponto de entrega mais próximo pelo caminho. */
-function iniciarEntrega(ctx: SystemContext, hover: EntityId): void {
+export function iniciarEntrega(ctx: SystemContext, hover: EntityId): void {
   const coleta = getComponent(ctx.state, hover, 'coleta')!;
   const nacao = getComponent(ctx.state, hover, 'owner')!.nacao;
   const dh = direcaoDe(getComponent(ctx.state, hover, 'position')!);
@@ -201,9 +201,34 @@ function voltarAoTrabalho(ctx: SystemContext, hover: EntityId, perto: Vec3 | nul
   else ficarOcioso(ctx, hover);
 }
 
+/** ECO-28: a sucata vira os recursos da composição ao ser descarregada. */
+function descarregarSucata(ctx: SystemContext, hover: EntityId): boolean {
+  const coleta = getComponent(ctx.state, hover, 'coleta')!;
+  if (!vivo(ctx.state, coleta.entrega)) return false;
+  const nacao = getComponent(ctx.state, hover, 'owner')!.nacao;
+  const silo = getComponent(ctx.state, coleta.entrega, 'silo');
+  if (silo && silo.estado !== 'ancorado') return false;
+  const espaco = silo ? param('capacidade_silo_u') - cargaDoSilo(silo) : Infinity;
+  const fracao = Math.min(1, espaco / Math.max(coleta.carga, 1e-9));
+  for (const [r, u] of Object.entries(coleta.sucata!) as Array<[RecursosId, number]>) {
+    const parte = u * fracao;
+    if (silo) silo.carga[r] = (silo.carga[r] ?? 0) + parte;
+    else creditar(ctx.state, nacao, r, parte);
+    coleta.sucata![r] = u - parte;
+  }
+  coleta.carga *= 1 - fracao;
+  if (!silo) ctx.emit('entrega', { nacao, recurso: 'sucata', u: coleta.carga, hover });
+  if (coleta.carga <= 1e-9) {
+    coleta.carga = 0;
+    coleta.sucata = null;
+  }
+  return true;
+}
+
 /** Descarrega a carga no ponto de entrega (ECO-14 ou ECO-22). */
 function descarregar(ctx: SystemContext, hover: EntityId): boolean {
   const coleta = getComponent(ctx.state, hover, 'coleta')!;
+  if (coleta.sucata) return descarregarSucata(ctx, hover);
   if (!vivo(ctx.state, coleta.entrega) || !coleta.cargaRecurso) return false;
   const nacao = getComponent(ctx.state, hover, 'owner')!.nacao;
   const silo = getComponent(ctx.state, coleta.entrega, 'silo');
@@ -243,6 +268,8 @@ function passo(ctx: SystemContext, hover: EntityId, dt: number): void {
   // Indo recarregar (ENE-15): a coleta espera; a recarga retoma depois (retomarColeta).
   const recarga = getComponent(state, hover, 'recarga');
   if (recarga && recarga.estado !== 'nenhuma') return;
+  // ECO-13: em fuga, a coleta espera; a fuga retoma depois.
+  if (getComponent(state, hover, 'fuga')) return;
   const loc = getComponent(state, hover, 'locomotion')!;
   const dh = direcaoDe(getComponent(state, hover, 'position')!);
   switch (coleta.estado) {
@@ -338,6 +365,12 @@ function passo(ctx: SystemContext, hover: EntityId, dt: number): void {
       if (coleta.timer_s > 1e-9) return;
       if (!descarregar(ctx, hover) || coleta.carga > 0) {
         iniciarEntrega(ctx, hover);
+        return;
+      }
+      // ECO-28: reciclando, o hover volta ao destroço (a reciclagem o leva).
+      if (getComponent(state, hover, 'trabalho')) {
+        coleta.estado = 'ocioso';
+        parar(ctx, hover);
         return;
       }
       const perto = jazidaViva(ctx, coleta.jazida)

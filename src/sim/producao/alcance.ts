@@ -16,7 +16,8 @@ import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 export function bordaDe(ctx: SystemContext, id: EntityId): number {
   const estrutura = getComponent(ctx.state, id, 'structure');
   if (estrutura) return raioDaPegada(estrutura.tipo);
-  return statsMovel(getComponent(ctx.state, id, 'unit')!.tipo).raio_m;
+  const unidade = getComponent(ctx.state, id, 'unit');
+  return unidade ? statsMovel(unidade.tipo).raio_m : 0;
 }
 
 /** Espaço entre o casco da unidade e a borda do alvo (m). */
@@ -26,16 +27,26 @@ export function folgaAte(ctx: SystemContext, unidade: EntityId, alvo: EntityId):
   return distanciaM(ctx, du, da) - bordaDe(ctx, alvo) - bordaDe(ctx, unidade);
 }
 
-export function noAlcance(ctx: SystemContext, unidade: EntityId, alvo: EntityId): boolean {
-  return folgaAte(ctx, unidade, alvo) <= param('raio_deposito_m');
+export function noAlcance(
+  ctx: SystemContext,
+  unidade: EntityId,
+  alvo: EntityId,
+  faixa = param('raio_deposito_m'),
+): boolean {
+  return folgaAte(ctx, unidade, alvo) <= faixa;
 }
 
 /** Leva a unidade até o meio da faixa de alcance, do lado de onde ela vem. */
-export function aproximar(ctx: SystemContext, unidade: EntityId, alvo: EntityId): void {
+export function aproximar(
+  ctx: SystemContext,
+  unidade: EntityId,
+  alvo: EntityId,
+  faixa = param('raio_deposito_m'),
+): void {
   const du = direcaoDe(getComponent(ctx.state, unidade, 'position')!);
   const da = direcaoDe(getComponent(ctx.state, alvo, 'position')!);
   const rumo = tangente(da, du) ?? norteEm(da);
-  const distancia = bordaDe(ctx, alvo) + bordaDe(ctx, unidade) + param('raio_deposito_m') / 2;
+  const distancia = bordaDe(ctx, alvo) + bordaDe(ctx, unidade) + faixa / 2;
   irPara(ctx, unidade, avancar(da, rumo, distancia / raioDoMundo(ctx)).p);
 }
 

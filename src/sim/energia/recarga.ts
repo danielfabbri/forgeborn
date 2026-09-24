@@ -18,6 +18,7 @@ import { tracarRota } from '../units/movimento';
 import { navegavel } from '../units/navegacao';
 import { statsEstrutura, statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
+import { emCombate } from '../combate/dano';
 import { limiarDeRecarga, papelDe, porcentagem } from './bateria';
 
 function raioDe(ctx: SystemContext, id: EntityId): number {
@@ -218,11 +219,6 @@ export function passoRecarga(ctx: SystemContext): void {
   }
 }
 
-/** Unidade em combate (ENE-15)? O combate chega na M6 (`estado_combate_s`); até lá, ninguém está. */
-function emCombate(): boolean {
-  return false;
-}
-
 /** ENE-15/ENE-16/ENE-20: dispara a auto-recarga pelos limiares de cada papel. */
 export function autoRecarga(ctx: SystemContext): void {
   const { state } = ctx;
@@ -238,7 +234,9 @@ export function autoRecarga(ctx: SystemContext): void {
     const pct = porcentagem(bateria);
     if (pct > limiarDeRecarga(papel)) continue;
     const forcada = papel === 'drone' && pct <= param('recarga_forcada_drone_pct');
-    if ((papel === 'militar' || papel === 'drone') && !forcada && emCombate()) continue;
+    if ((papel === 'militar' || papel === 'drone') && !forcada && emCombate(state, unidade)) {
+      continue;
+    }
     iniciarRecarga(ctx, unidade, true);
   }
 }

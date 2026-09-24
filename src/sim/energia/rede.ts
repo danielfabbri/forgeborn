@@ -99,6 +99,28 @@ function dividirIgualmente(pedidos: PedidoDePorta[], disponivel: number): Map<En
   return recebido;
 }
 
+interface ConsumidorDaRede {
+  prioridade: 1 | 2 | 3;
+  demanda_en_s: number;
+  /** Onde fica a fração atendida (e o offline dos satélites). */
+  registro: { atendido: number; offline?: boolean };
+}
+
+/**
+ * ENE-03: consumidores da rede na ordem de prioridade — os de `consumidor` (satélites,
+ * impressão na Nave) e as armas das estruturas (Torres e defesa da Nave, prioridade 1).
+ */
+function consumidoresDa(state: SimState, nacao: NacaoId): ConsumidorDaRede[] {
+  const lista: Array<ConsumidorDaRede & { id: EntityId }> = [];
+  for (const id of estruturasDa(state, nacao)) {
+    const c = getComponent(state, id, 'consumidor');
+    if (c) lista.push({ id, prioridade: c.prioridade, demanda_en_s: c.demanda_en_s, registro: c });
+    const arma = getComponent(state, id, 'arma');
+    if (arma) lista.push({ id, prioridade: 1, demanda_en_s: arma.demanda_en_s, registro: arma });
+  }
+  return lista.sort((a, b) => a.prioridade - b.prioridade || a.id - b.id);
+}
+
 /** Um tick da rede de cada nação (ENE-01 a ENE-05). */
 export function passoRede(ctx: SystemContext): void {
   const { state, dt } = ctx;
@@ -110,18 +132,9 @@ export function passoRede(ctx: SystemContext): void {
     // ENE-05: com estruturas a menos, o banco acima da capacidade se perde.
     rede.banco = Math.min(rede.banco, capacidade);
 
-    const consumidores = estruturasDa(state, nacao)
-      .filter((id) => getComponent(state, id, 'consumidor'))
-      .sort(
-        (a, b) =>
-          getComponent(state, a, 'consumidor')!.prioridade -
-            getComponent(state, b, 'consumidor')!.prioridade || a - b,
-      );
+    const consumidores = consumidoresDa(state, nacao);
     const portas = pedidosDePorta(ctx, nacao);
-    const demandaConsumidores = consumidores.reduce(
-      (s, id) => s + getComponent(state, id, 'consumidor')!.demanda_en_s * dt,
-      0,
-    );
+    const demandaConsumidores = consumidores.reduce((s, c) => s + c.demanda_en_s * dt, 0);
     const demandaPortas = portas.reduce((s, p) => s + p.pedido, 0);
     const disponivel = rede.banco + geracao * dt;
     const demanda = demandaConsumidores + demandaPortas;
@@ -129,10 +142,9 @@ export function passoRede(ctx: SystemContext): void {
     let entregue = 0;
     let recebido: Map<EntityId, number>;
     if (demanda <= disponivel + 1e-12) {
-      for (const id of consumidores) {
-        const c = getComponent(state, id, 'consumidor')!;
-        c.atendido = 1;
-        c.offline = false;
+      for (const c of consumidores) {
+        c.registro.atendido = 1;
+        if ('offline' in c.registro) c.registro.offline = false;
       }
       recebido = new Map(portas.map((p) => [p.unidade, p.pedido]));
       entregue = demanda;
@@ -142,18 +154,12 @@ export function passoRede(ctx: SystemContext): void {
       // ENE-04: racionamento por prioridade.
       let resta = disponivel;
       for (const prioridade of [1, 2, 3] as const) {
-        const doNivel = consumidores.filter(
-          (id) => getComponent(state, id, 'consumidor')!.prioridade === prioridade,
-        );
-        const pedido = doNivel.reduce(
-          (s, id) => s + getComponent(state, id, 'consumidor')!.demanda_en_s * dt,
-          0,
-        );
+        const doNivel = consumidores.filter((c) => c.prioridade === prioridade);
+        const pedido = doNivel.reduce((s, c) => s + c.demanda_en_s * dt, 0);
         const fracao = pedido > 0 ? Math.min(1, resta / pedido) : 1;
-        for (const id of doNivel) {
-          const c = getComponent(state, id, 'consumidor')!;
-          c.atendido = fracao;
-          c.offline = prioridade === 2 && fracao < 1 - 1e-12;
+        for (const c of doNivel) {
+          c.registro.atendido = fracao;
+          if ('offline' in c.registro) c.registro.offline = prioridade === 2 && fracao < 1 - 1e-12;
         }
         resta -= pedido * fracao;
         entregue += pedido * fracao;

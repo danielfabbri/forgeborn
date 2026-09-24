@@ -92,7 +92,12 @@ export function entregaMaisProxima(
 /** ECO-14: soma ao estoque global da nação. */
 export function creditar(state: SimState, nacao: NacaoId, recurso: RecursosId, u: number): void {
   state.estoques[nacao]![recurso] += u;
+  // REG-22: pontuação econômica pelo VR descarregado.
+  const placar = state.placar[nacao];
+  if (placar) placar.vrColetado += u * VR.get(recurso)!;
 }
+
+const VR = new Map(dados.recursos.map((r) => [r.id, r.vr]));
 
 /** ECO-15: material em trânsito (hovers e silos) de uma nação, por recurso. */
 export function emTransito(state: SimState, nacao: NacaoId): Record<RecursosId, number> {
@@ -103,7 +108,11 @@ export function emTransito(state: SimState, nacao: NacaoId): Record<RecursosId, 
   for (const id of entitiesWith(state, 'owner')) {
     if (getComponent(state, id, 'owner')!.nacao !== nacao) continue;
     const coleta = getComponent(state, id, 'coleta');
-    if (coleta && coleta.cargaRecurso && coleta.carga > 0) {
+    if (coleta?.sucata) {
+      for (const [recurso, u] of Object.entries(coleta.sucata)) {
+        total[recurso as RecursosId] += u ?? 0;
+      }
+    } else if (coleta && coleta.cargaRecurso && coleta.carga > 0) {
       total[coleta.cargaRecurso] += coleta.carga;
     }
     const silo = getComponent(state, id, 'silo');

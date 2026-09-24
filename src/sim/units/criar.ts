@@ -5,7 +5,7 @@
 import { createEntity, entitiesWith, getComponent, setComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId } from '../core/types';
-import { type EstruturasId, type MoveisId, param } from '../data';
+import { type ArmasId, type EstruturasId, type MoveisId, param } from '../data';
 import { norteEm, type Vec3 } from '../map/esfera';
 import { bateriaInicial } from '../energia/bateria';
 import { ALTURA_HOVER_M, altitudeDrone, ehAerea, statsEstrutura, statsMovel } from './stats';
@@ -33,6 +33,42 @@ export function dentroDoLimite(ctx: SystemContext, nacao: NacaoId, limite: Limit
   if (contar(ctx, nacao, limite) < param(limite)) return true;
   ctx.emit('alerta', { id: 'AL-11', nacao, limite });
   return false;
+}
+
+const NUNCA_S = 1e9;
+
+/** Estado de combate de todo corpo com HP (ENE-15, ECO-13, CMB-12). */
+function comecarCombate(ctx: SystemContext, id: EntityId): void {
+  // "Nunca": um tempo finito enorme, para o estado seguir serializável em JSON (TEC-08).
+  setComponent(ctx.state, id, 'combate', {
+    semCombate_s: NUNCA_S,
+    semDano_s: NUNCA_S,
+    ultimoAtacante: null,
+    ultimoDanoNacao: null,
+  });
+}
+
+/** §8.6: armadas começam Agressivas; estruturas não têm postura. */
+function armar(ctx: SystemContext, id: EntityId, arma: string | null, movel: boolean): void {
+  if (!arma) return;
+  setComponent(ctx.state, id, 'arma', {
+    id: arma as ArmasId,
+    recarga_s: 0,
+    alvo: null,
+    postura: movel ? 'agressiva' : null,
+    origem: null,
+    perseguindo: null,
+    alvoDireto: null,
+    retomar: null,
+    demanda_en_s: 0,
+    atendido: 1,
+  });
+}
+
+/** REG-09: a nação passa a contar para a eliminação quando tem Nave ou Impressora. */
+function marcarPresente(ctx: SystemContext, nacao: NacaoId): void {
+  const placar = ctx.state.placar[nacao];
+  if (placar) placar.presente = true;
 }
 
 function posicao(ctx: SystemContext, d: Vec3, altura: number): Posicao {
@@ -74,6 +110,17 @@ export function criarUnidade(
   setComponent(state, id, 'order', { tipo: 'nenhuma', patrulha: null });
   const hp = statsMovel(tipo).hp;
   setComponent(state, id, 'vida', { hp, max: hp });
+  comecarCombate(ctx, id);
+  armar(ctx, id, statsMovel(tipo).arma, true);
+  if (tipo === 'printer') marcarPresente(ctx, nacao);
+  if (tipo === 'hover_minelayer') {
+    setComponent(state, id, 'lancaMinas', {
+      carregador: 0,
+      fabricando: null,
+      plantios: [],
+      plantio_s: 0,
+    });
+  }
   // ENE-08: sai da impressão com a bateria cheia (a Bateria Móvel, com parte).
   setComponent(state, id, 'bateria', {
     ...bateriaInicial(tipo),
@@ -100,6 +147,7 @@ export function criarUnidade(
       entrega: null,
       timer_s: 0,
       manual: false,
+      sucata: null,
     });
     getComponent(state, id, 'order')!.tipo = 'tarefa';
   }
@@ -166,6 +214,7 @@ export function instalarEstrutura(ctx: SystemContext, id: EntityId): void {
   setComponent(state, id, 'obstacle', { raio: raioDaPegada(tipo) });
   const max = statsEstrutura(tipo).hp;
   setComponent(state, id, 'vida', { hp: (max * param('hp_inicial_canteiro_pct')) / 100, max });
+  comecarCombate(ctx, id);
   state.versaoObstaculos++;
 }
 
@@ -173,7 +222,10 @@ export function instalarEstrutura(ctx: SystemContext, id: EntityId): void {
 export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
   const { state } = ctx;
   const tipo = getComponent(state, id, 'structure')!.tipo;
+  // PRD-12: a arma só funciona com a estrutura pronta.
+  armar(ctx, id, statsEstrutura(tipo).arma, false);
   if (tipo === 'ship') {
+    marcarPresente(ctx, getComponent(state, id, 'owner')!.nacao);
     setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });
     // ENE-03/ENE-04: a impressão na Nave consome da rede com prioridade 3.
     setComponent(state, id, 'consumidor', {
@@ -207,7 +259,8 @@ export function criarMina(ctx: SystemContext, nacao: NacaoId, d: Vec3): EntityId
   const { state } = ctx;
   const id = createEntity(state);
   setComponent(state, id, 'owner', { nacao });
-  setComponent(state, id, 'mine', { armada: false });
+  setComponent(state, id, 'mine', { armada: false, timer_s: param('tempo_armar_mina_s') });
+  setComponent(state, id, 'vida', { hp: param('mina_hp'), max: param('mina_hp') });
   setComponent(state, id, 'position', posicao(ctx, d, chaoEm(ctx, d)));
   return id;
 }

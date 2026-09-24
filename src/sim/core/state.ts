@@ -29,6 +29,32 @@ export interface SimState {
   cenario: CenariosId;
   /** §6.2: rede de energia de cada nação. */
   energia: Record<NacaoId, EstadoDaRede>;
+  /** REG-09 a REG-12, REG-22: placar e situação de cada nação. */
+  placar: Record<NacaoId, PlacarDaNacao>;
+  /** UI-02: chaves globais das Diretivas. */
+  chaves: Record<NacaoId, ChavesDaNacao>;
+  /** REG-12: tempo limite (s) da partida, ou null. */
+  tempoLimite_s: number | null;
+  /** REG-11/REG-12: fim da partida, ou null. */
+  resultado: { vencedor: NacaoId | null; motivo: 'eliminacao' | 'tempo'; tick: number } | null;
+}
+
+export interface PlacarDaNacao {
+  /** VR descarregado (REG-22). */
+  vrColetado: number;
+  /** VR inimigo destruído (REG-22). */
+  vrDestruido: number;
+  navesDestruidas: number;
+  /** Já teve Nave ou Impressora (só assim pode ser eliminada). */
+  presente: boolean;
+  eliminada: boolean;
+}
+
+export interface ChavesDaNacao {
+  /** ECO-13: fuga de hovers. */
+  fuga: boolean;
+  /** UNI-01: fabricação automática de minas. */
+  fabricarMinas: boolean;
 }
 
 export interface EstadoDaRede {
@@ -90,5 +116,16 @@ export function createInitialState(
     diretivas: Object.fromEntries(
       nacoes.map((n) => [n, porRecurso((r) => param(`diretiva_${r}_pct` as never))]),
     ) as SimState['diretivas'],
+    placar: Object.fromEntries(
+      nacoes.map((n): [NacaoId, PlacarDaNacao] => [
+        n,
+        { vrColetado: 0, vrDestruido: 0, navesDestruidas: 0, presente: false, eliminada: false },
+      ]),
+    ) as SimState['placar'],
+    chaves: Object.fromEntries(
+      nacoes.map((n): [NacaoId, ChavesDaNacao] => [n, { fuga: true, fabricarMinas: true }]),
+    ) as SimState['chaves'],
+    tempoLimite_s: null,
+    resultado: null,
   };
 }

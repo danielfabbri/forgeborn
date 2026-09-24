@@ -2,6 +2,7 @@
  * Comando de depuração que cria corpos em posições dadas. Serve aos testes e à cena de
  * demonstração até existir o início de partida (T-056); a IA e o jogador não o usam.
  */
+import { getComponent } from '../core/entities';
 import type { CommandHandler } from '../core/pipeline';
 import type { NacaoId } from '../core/types';
 import { dados, type EstruturasId, type MoveisId } from '../data';
@@ -14,7 +15,13 @@ export const DEBUG_ESTOQUE_COMMAND = 'debug_estoque';
 
 /** `d` é a direção do ponto na superfície (normalizada aqui). */
 export type Criacao =
-  | { unidade: MoveisId; nacao?: NacaoId; d: Vec3 }
+  | {
+      unidade: MoveisId;
+      nacao?: NacaoId;
+      d: Vec3;
+      /** CMB-13: já nasce com esta postura (testes). */
+      postura?: 'agressiva' | 'defensiva' | 'manter' | 'passiva';
+    }
   | { estrutura: EstruturasId; nacao?: NacaoId; d: Vec3 }
   | { mina: true; nacao?: NacaoId; d: Vec3 };
 
@@ -23,8 +30,11 @@ export const debugCriarHandlers: Record<string, CommandHandler> = {
     for (const c of comando.dados as unknown as Criacao[]) {
       const nacao = c.nacao ?? comando.nacao;
       const d = normalizar(c.d);
-      if ('unidade' in c) criarUnidade(ctx, nacao, c.unidade, d);
-      else if ('estrutura' in c) criarEstrutura(ctx, nacao, c.estrutura, d);
+      if ('unidade' in c) {
+        const id = criarUnidade(ctx, nacao, c.unidade, d);
+        const arma = id !== null ? getComponent(ctx.state, id, 'arma') : undefined;
+        if (arma && c.postura) arma.postura = c.postura;
+      } else if ('estrutura' in c) criarEstrutura(ctx, nacao, c.estrutura, d);
       else criarMina(ctx, nacao, d);
     }
   },

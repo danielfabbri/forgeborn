@@ -4,6 +4,7 @@
  * faces emendam sem costura de iluminação). O detalhe do regolito é triplanar (em coordenadas
  * do mundo), porque coordenadas UV numa esfera teriam costura.
  */
+import { GLSL_NEVOA, type NevoaRender } from './nevoa';
 import {
   BufferAttribute,
   BufferGeometry,
@@ -202,7 +203,9 @@ function geometriaDoTile(
  * (32 m e, girada, ~10 m) e misturada; o detalhe fino (cor e normais) some com a distância da
  * câmera e mantém o regolito rico de perto.
  */
-export function criarMaterialRegolito(): MeshStandardMaterial & { texturas: Texture[] } {
+export function criarMaterialRegolito(
+  nevoa: NevoaRender | null = null,
+): MeshStandardMaterial & { texturas: Texture[] } {
   const texturas = criarTexturasRegolito();
   const material = new MeshStandardMaterial({
     vertexColors: true,
@@ -214,6 +217,10 @@ export function criarMaterialRegolito(): MeshStandardMaterial & { texturas: Text
     shader.uniforms.uDetalhe = { value: texturas.detalhe };
     shader.uniforms.uNormais = { value: texturas.normais };
     shader.uniforms.uEscala = { value: 1 / ESCALA_DETALHE_M };
+    // VIS-01/TEC-17: névoa do jogador amostrada no terreno.
+    shader.uniforms.uNevoa = { value: nevoa?.textura ?? null };
+    shader.uniforms.uNevoaN = { value: nevoa?.n ?? 1 };
+    shader.uniforms.uNevoaAtiva = { value: nevoa ? 1 : 0 };
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
@@ -236,6 +243,7 @@ uniform sampler2D uNormais;
 uniform float uEscala;
 varying vec3 vPosMundo;
 varying vec3 vNormalMundo;
+${GLSL_NEVOA}
 
 vec3 pesosTriplanar(vec3 n) {
   vec3 w = pow(abs(n), vec3(4.0));
@@ -255,6 +263,11 @@ vec3 pA = vPosMundo * uEscala;
 vec3 pB = vPosMundo * uEscala * 3.1 + vec3(0.37, 0.71, 0.13);
 vec3 detalhe = mix(triplanarCor(uDetalhe, pA, wTri), triplanarCor(uDetalhe, pB, wTri), 0.5);
 diffuseColor.rgb *= mix(vec3(0.9), detalhe, max(pertoDaCamera, 0.45));`,
+      )
+      .replace(
+        '#include <opaque_fragment>',
+        `#include <opaque_fragment>
+gl_FragColor.rgb = aplicarNevoa(gl_FragColor.rgb, vPosMundo);`,
       )
       .replace(
         '#include <normal_fragment_maps>',
@@ -284,8 +297,8 @@ function trechos(res: number, partes: number): Array<[number, number]> {
   );
 }
 
-export function criarTerreno(mapa: Heightmap): Terreno {
-  const material = criarMaterialRegolito();
+export function criarTerreno(mapa: Heightmap, nevoa: NevoaRender | null = null): Terreno {
+  const material = criarMaterialRegolito(nevoa);
   const objeto = new Group();
   objeto.name = 'terreno';
   const geometrias: BufferGeometry[] = [];

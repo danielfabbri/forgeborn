@@ -16,7 +16,8 @@ import { emReserva, gastar } from '../energia/bateria';
 import { avancar, norteEm, tangente, type Vec3 } from '../map/esfera';
 import { bordaDe, pararNoLugar } from '../producao/alcance';
 import { tracarRota } from '../units/movimento';
-import { navegavel } from '../units/navegacao';
+import { navegavelDe } from '../units/navegacao';
+import { visivelPara } from '../visao/nevoa';
 import { ALTURA_HOVER_M, statsMovel } from '../units/stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from '../units/superficie';
 import { aplicarDano, camadaDe, danoContra, type TipoDeDano } from './dano';
@@ -38,19 +39,21 @@ function nacaoDe(state: SimState, id: EntityId): NacaoId | undefined {
 
 /** Alvo que a arma pode atacar agora (inimigo vivo, na camada certa, visível). */
 export function alvoValido(
-  state: SimState,
+  ctx: SystemContext,
   atirador: EntityId,
   alvo: EntityId,
   arma: ArmasRow,
 ): boolean {
+  const { state } = ctx;
   if (!isAlive(state, alvo)) return false;
   const vida = getComponent(state, alvo, 'vida');
   if (!vida || vida.hp <= 0) return false;
   const dono = nacaoDe(state, alvo);
-  if (!dono || dono === nacaoDe(state, atirador)) return false;
-  // Minas só viram alvo reveladas (CMB-20), o que depende da detecção (T-065).
-  if (getComponent(state, alvo, 'mine')) return false;
-  return atingeCamada(arma, camadaDe(state, alvo));
+  const nacao = nacaoDe(state, atirador);
+  if (!dono || !nacao || dono === nacao) return false;
+  if (!atingeCamada(arma, camadaDe(state, alvo))) return false;
+  // Só o que a nação vê: furtivos só revelados (VIS-05, CMB-20, CMB-22).
+  return visivelPara(ctx, nacao, alvo);
 }
 
 /** CMB-12: classe de prioridade (menor = antes). */
@@ -115,7 +118,7 @@ function escolherAlvo(
   const { state } = ctx;
   const candidatos: Candidato[] = [];
   for (const id of entitiesWith(state, 'vida', 'owner', 'position')) {
-    if (!alvoValido(state, atirador, id, arma)) continue;
+    if (!alvoValido(ctx, atirador, id, arma)) continue;
     const distancia = distanciaAoAlvo(ctx, atirador, id);
     if (distancia > raio) continue;
     if (coleira) {
@@ -158,7 +161,7 @@ function perseguir(
   loc.limiteVel = null;
   loc.travado_s = 0;
   loc.ancora = null;
-  tracarRota(navegavel(ctx), loc, direcaoDe(getComponent(ctx.state, id, 'position')!), aerea);
+  tracarRota(navegavelDe(ctx, id), loc, direcaoDe(getComponent(ctx.state, id, 'position')!), aerea);
   arma.perseguindo = ponto;
 }
 
@@ -276,7 +279,7 @@ function retomarOrdem(ctx: SystemContext, id: EntityId, componente: ComponentMap
   ordem.patrulha = r.patrulha;
   loc.destino = r.destino;
   const aerea = statsMovel(getComponent(ctx.state, id, 'unit')!.tipo).camada === 'ar';
-  tracarRota(navegavel(ctx), loc, direcaoDe(getComponent(ctx.state, id, 'position')!), aerea);
+  tracarRota(navegavelDe(ctx, id), loc, direcaoDe(getComponent(ctx.state, id, 'position')!), aerea);
   componente.retomar = null;
   componente.origem = null;
   componente.perseguindo = null;
@@ -308,7 +311,7 @@ function passoUnidade(ctx: SystemContext, id: EntityId, pendente: Pendente): voi
   // CMB-15: ataque direto.
   if (ordem.tipo === 'atacar') {
     const alvo = componente.alvoDireto;
-    if (alvo === null || !alvoValido(state, id, alvo, arma)) {
+    if (alvo === null || !alvoValido(ctx, id, alvo, arma)) {
       ordem.tipo = 'nenhuma';
       componente.alvoDireto = null;
       componente.alvo = null;

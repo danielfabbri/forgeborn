@@ -186,7 +186,13 @@ export class CombateRender {
     }
   }
 
-  sync(state: SimState, corpos: (id: EntityId) => CorpoDesenhado | undefined, agora: number): void {
+  /** `explorado`: destroços e projéteis só em área explorada ou visível (VIS-01). */
+  sync(
+    state: SimState,
+    corpos: (id: EntityId) => CorpoDesenhado | undefined,
+    agora: number,
+    explorado: ((id: EntityId) => boolean) | null = null,
+  ): void {
     // Feixes: da posição desenhada do atirador à do alvo.
     let n = 0;
     for (let k = this.feixes.length - 1; k >= 0; k--) {
@@ -220,6 +226,7 @@ export class CombateRender {
     let p = 0;
     for (const id of entitiesWith(state, 'projetil', 'position')) {
       if (p >= MAX_INSTANCIAS) break;
+      if (explorado && !explorado(id)) continue;
       const pos = getComponent(state, id, 'position')!;
       this.matriz.makeTranslation(pos.x, pos.y, pos.z);
       this.projeteis.setMatrixAt(p++, this.matriz);
@@ -235,6 +242,7 @@ export class CombateRender {
     const lado = new Vector3();
     for (const id of entitiesWith(state, 'destroco', 'position')) {
       if (q >= MAX_INSTANCIAS) break;
+      if (explorado && !explorado(id)) continue;
       const pos = getComponent(state, id, 'position')!;
       const r = Math.hypot(pos.x, pos.y, pos.z);
       const d: Vec3 = [pos.x / r, pos.y / r, pos.z / r];

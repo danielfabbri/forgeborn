@@ -15,13 +15,24 @@ import { RetratoRender } from './render/retrato';
 import { alturaMaxima, criarEstadoCamera, poseDaCamera, rumoDaCamera } from './render/cameraRts';
 import { PositionHistory } from './render/interpolation';
 import { JazidasRender } from './render/jazidas';
+import { MemoriaDeFantasmas } from './render/fantasmas';
 import { HologramaRender } from './render/holograma';
+import { NevoaRender } from './render/nevoa';
+import { SinaisRender } from './render/sinais';
 import { pontoNoTerreno } from './render/picking';
 import { criarCeu } from './render/sky';
 import { criarTerreno } from './render/terrain';
 import { UnidadesRender } from './render/unidades';
 import { createView } from './render/view';
-import { createSim, dados, type EntityId, getComponent, type NacaoId, type SimEvent } from './sim';
+import {
+  createSim,
+  dados,
+  type EntityId,
+  getComponent,
+  type NacaoId,
+  param,
+  type SimEvent,
+} from './sim';
 import type { SystemContext } from './sim/core/pipeline';
 import { DEBUG_CRIAR_COMMAND, DEBUG_ESTOQUE_COMMAND, debugCriarHandlers } from './sim/debug/criar';
 import { emTransito, estoque, SEMEAR_JAZIDAS_COMMAND } from './sim/economia';
@@ -32,6 +43,9 @@ import { PRESETS_DE_MAPA } from './sim/map/presets';
 import { gerarMapaValido } from './sim/map/validacao';
 import { ATIVAR_IA_COMMAND } from './sim/ia';
 import { INICIAR_PARTIDA_COMMAND, validarPosicionamento } from './sim/producao';
+import { direcaoDe } from './sim/units/superficie';
+import { explorado, visivelPara } from './sim/visao/nevoa';
+import { satelitesAtivos } from './sim/visao/satelite';
 import { comandosDoJogo, sistemasDoJogo } from './sim/units';
 import { debugStats } from './ui/debugStats';
 import { mountUi } from './ui/mount';
@@ -91,7 +105,13 @@ mountUi(uiRoot);
 const preset = PRESETS_DE_MAPA.find((p) => p.id === 'mare_tranquillitatis')!;
 const pronto = gerarMapaValido(preset.seed, preset.tamanho, preset.zonas, preset.cenario);
 const R = pronto.mapa.raio_m;
-const terreno = criarTerreno(pronto.mapa);
+// VIS-01: névoa na tela na partida real; a cena de demonstração mostra tudo (`?nevoa=1` liga).
+const cenaDeDemonstracao =
+  parametros.has('demo') || parametros.has('e2e') || Number(parametros.get('estresse') ?? 0) > 0;
+const nevoaNaTela = !cenaDeDemonstracao || parametros.get('nevoa') === '1';
+const nevoa = nevoaNaTela ? new NevoaRender(pronto.grades.nevoa.esfera.n) : null;
+nevoa?.atualizar(undefined);
+const terreno = criarTerreno(pronto.mapa, nevoa);
 const ceu = criarCeu();
 view.scene.add(terreno.objeto, ceu.objeto);
 
@@ -125,7 +145,7 @@ const sim = createSim(seed, nacoes, {
 
 // `?demo` (e os testes E2E): cena de demonstração com uma unidade e uma estrutura de cada tipo.
 // Sem ela, o início de partida (T-056): Nave e 1 Hover por nação, estoque padrão.
-const demo = parametros.has('demo') || parametros.has('e2e') || estresse > 0;
+const demo = cenaDeDemonstracao;
 const zonas = pronto.mapa.zonasDePouso;
 const zonaDe = (k: number) => zonas[(k * zonas.length) / nacoes.length]!;
 const ID_PATRULHEIRO = 1;
@@ -193,6 +213,7 @@ if (demo) {
 const history = new PositionHistory();
 const unidades = new UnidadesRender(view.scene, jogador);
 const combate = new CombateRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+const marcas = new SinaisRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
 const jazidas = new JazidasRender(view.scene);
 const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
 const holograma = new HologramaRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
@@ -206,6 +227,15 @@ window.addEventListener('keydown', (e) => {
   barrasSempre = !barrasSempre;
 });
 /** Contexto só de leitura para a validação de posicionamento (PRD-10) na interface. */
+const fantasmas = new MemoriaDeFantasmas();
+/** VIS-01: o que o jogador vê (os próprios corpos sempre). */
+const visivelAoJogador = (id: EntityId): boolean => !nevoa || visivelPara(leitura(), jogador, id);
+/** Jazidas, destroços e projéteis só em área já explorada (VIS-01). */
+const exploradoPeloJogador = (id: EntityId): boolean => {
+  if (!nevoa) return true;
+  const p = getComponent(sim.state, id, 'position');
+  return p !== undefined && explorado(leitura(), jogador, direcaoDe(p));
+};
 const leitura = (): SystemContext => ({
   state: sim.state,
   tick: sim.state.tick,
@@ -396,11 +426,30 @@ const loop = createFixedLoop({
     tickCount++;
   },
   render: (alpha) => {
-    unidades.sync(sim.state, history, alpha);
-    jazidas.sync(sim.state);
+    unidades.sync(
+      sim.state,
+      history,
+      alpha,
+      nevoa ? visivelAoJogador : null,
+      nevoa ? fantasmas.visiveis(leitura(), jogador) : [],
+    );
+    jazidas.sync(sim.state, nevoa ? exploradoPeloJogador : null);
     aneis.sync(comandos ? comandos.selecionadosDesenhados() : [], jogador);
     sincronizarBarras();
-    combate.sync(sim.state, (id) => unidades.get(id), performance.now());
+    // VIS-06/VIS-08: sinais de radar e o círculo dos satélites do jogador.
+    marcas.sync(
+      sim.state.sinais[jogador] ?? [],
+      satelitesAtivos(leitura())
+        .filter((s) => s.nacao === jogador)
+        .map((s) => ({ ponto: s.ponto, raio: param('satelite_visao_m') })),
+      performance.now(),
+    );
+    combate.sync(
+      sim.state,
+      (id) => unidades.get(id),
+      performance.now(),
+      nevoa ? exploradoPeloJogador : null,
+    );
     view.render();
     const sel = painelSelecao.peek();
     if (sel.tipo === 'corpo') {
@@ -556,6 +605,11 @@ const frame = (agora: number): void => {
   if (agora - ultimoPainel >= 100) {
     atualizarPainel(agora);
     atualizarHud(agora);
+    // TEC-17: a textura da névoa acompanha a grade do jogador.
+    if (nevoa) {
+      nevoa.atualizar(sim.state.nevoa[jogador]);
+      fantasmas.atualizar(leitura(), jogador);
+    }
     ultimoPainel = agora;
   }
 

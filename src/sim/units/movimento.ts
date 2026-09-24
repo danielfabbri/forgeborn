@@ -23,7 +23,7 @@ import { celulaDe } from '../map/grids';
 import { aEstrela, linhaLivre, livre, type Navegavel, passoDoFluxo } from '../map/pathfinding';
 import { siloImovel } from '../economia/silo';
 import { emReserva, gastar } from '../energia/bateria';
-import { fluxoPara, navegavel } from './navegacao';
+import { fluxoPara, navegavel, navegavelDe } from './navegacao';
 import { ALTURA_HOVER_M, altitudeDrone, statsMovel } from './stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from './superficie';
 
@@ -72,7 +72,7 @@ function chegou(ctx: SystemContext, g: Navegavel | null, id: EntityId, loc: Loco
     const [a, b] = ordem.patrulha;
     ordem.patrulha = [b, a];
     loc.destino = a;
-    tracarRota(g, loc, d, ehAereaId(ctx, id));
+    tracarRota(navegavelDe(ctx, id) ?? g, loc, d, ehAereaId(ctx, id));
     return;
   }
   loc.destino = null;
@@ -172,8 +172,8 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
   // O rumo é mantido tangente (a separação e o arredondamento podem desviá-lo um pouco).
   let rumo: Vec3 = tangente(d, loc.rumo) ?? norteEm(d);
 
-  // ECO-22: silo ancorado (ou ancorando, desancorando, descarregando) não anda.
-  if (siloImovel(getComponent(state, id, 'silo'))) {
+  // ECO-22: silo ancorado não anda; UNI-03: nem a Sentinela.
+  if (siloImovel(getComponent(state, id, 'silo')) || getComponent(state, id, 'sentinela')) {
     loc.speed = 0;
     loc.rumo = rumo;
     return;
@@ -249,7 +249,7 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
     if (loc.travado_s >= TEMPO_TRAVADO_S) {
       loc.travado_s = 0;
       loc.ancora = d;
-      tracarRota(g, loc, novo, aerea);
+      tracarRota(navegavelDe(ctx, id) ?? g, loc, novo, aerea);
     }
   }
 }

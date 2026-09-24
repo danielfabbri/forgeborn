@@ -12,7 +12,7 @@ import type { EntityId } from '../core/types';
 import { dados, param, type RecursosId } from '../data';
 import { avancar, girar, normalizar, norteEm, tangente, TAU, type Vec3 } from '../map/esfera';
 import { tracarRota } from '../units/movimento';
-import { navegavel } from '../units/navegacao';
+import { navegavelDe } from '../units/navegacao';
 import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 import { emReserva, gastar } from '../energia/bateria';
@@ -36,7 +36,7 @@ export function irPara(ctx: SystemContext, id: EntityId, alvo: Vec3): void {
   loc.limiteVel = null;
   loc.travado_s = 0;
   loc.ancora = null;
-  tracarRota(navegavel(ctx), loc, direcaoDe(getComponent(ctx.state, id, 'position')!), false);
+  tracarRota(navegavelDe(ctx, id), loc, direcaoDe(getComponent(ctx.state, id, 'position')!), false);
 }
 
 /** Para o hover no lugar, mantendo a tarefa. */

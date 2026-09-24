@@ -9,7 +9,7 @@ import { type ArmasId, type EstruturasId, type MoveisId, param } from '../data';
 import { norteEm, type Vec3 } from '../map/esfera';
 import { bateriaInicial } from '../energia/bateria';
 import { ALTURA_HOVER_M, altitudeDrone, ehAerea, statsEstrutura, statsMovel } from './stats';
-import { chaoEm, type Posicao, posicionar } from './superficie';
+import { chaoEm, direcaoDe, type Posicao, posicionar } from './superficie';
 
 export type Limite = 'limite_corpos' | 'limite_bases_lancamento' | 'limite_minas_ativas';
 
@@ -241,6 +241,26 @@ export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
     setComponent(state, id, 'portas', {
       ocupantes: Array.from({ length: portas }, () => null),
       fila: [],
+    });
+  }
+  // UNI-04: a Base de Lançamento pronta começa a lançar o satélite (sobre a própria base).
+  if (tipo === 'satellite_uplink') {
+    const d = direcaoDe(getComponent(state, id, 'position')!);
+    setComponent(state, id, 'satelite', {
+      estado: 'lancando',
+      timer_s: param('tempo_lancamento_satelite_s'),
+      ponto: d,
+      destino: null,
+      recarga_s: 0,
+      varredura: null,
+      offlineAvisado: false,
+    });
+    // ENE-04: a manutenção entra na rede como satélite (prioridade 2), só com ele em órbita.
+    setComponent(state, id, 'consumidor', {
+      prioridade: 2,
+      demanda_en_s: 0,
+      atendido: 1,
+      offline: false,
     });
   }
   // ENE-06: a Usina Nuclear nasce ligada e se abastece no primeiro tick.

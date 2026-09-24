@@ -86,11 +86,13 @@ export class JazidasRender {
     }
   }
 
-  sync(state: SimState): void {
+  /** `explorado`: só as jazidas em área já explorada pelo jogador (VIS-01). */
+  sync(state: SimState, explorado: ((id: EntityId) => boolean) | null = null): void {
     this.desenhadas.length = 0;
     const usados = new Map<RecursosId, number>();
     const escalaMax = param('raio_jazida_max_m');
     for (const id of entitiesWith(state, 'jazida', 'position')) {
+      if (explorado && !explorado(id)) continue;
       const jazida = getComponent(state, id, 'jazida')!;
       const p = getComponent(state, id, 'position')!;
       const raio = getComponent(state, id, 'obstacle')?.raio ?? escalaMax;

@@ -12,7 +12,8 @@ import { param } from '../data';
 import { arco, type Vec3 } from '../map/esfera';
 import { celulaDe, centroDaCelula, type Grade } from '../map/grids';
 import { statsEstrutura, statsMovel } from '../units/stats';
-import { direcaoDe } from '../units/superficie';
+import { direcaoDe, distanciaM } from '../units/superficie';
+import { satelitesAtivos, varredurasAtivas } from './satelite';
 
 export const ESCURO = 0;
 export const NEVOA = 1;
@@ -67,7 +68,11 @@ function gradeDa(state: SimState, nacao: NacaoId, celulas: number): number[] {
 /** Raio de visão do corpo (VIS-02, VIS-03); canteiros e reservas não enxergam. */
 function visaoDe(state: SimState, id: EntityId): number {
   const unidade = getComponent(state, id, 'unit');
-  if (unidade) return statsMovel(unidade.tipo).visao_m;
+  if (unidade) {
+    // UNI-03: em Sentinela, a visão é `sentinela_visao_m`.
+    if (getComponent(state, id, 'sentinela')?.estado === 'ativo') return param('sentinela_visao_m');
+    return statsMovel(unidade.tipo).visao_m;
+  }
   const estrutura = getComponent(state, id, 'structure');
   if (estrutura && !getComponent(state, id, 'obra')) return statsEstrutura(estrutura.tipo).visao_m;
   return 0;
@@ -90,6 +95,16 @@ export function sistemaVisao(ctx: SystemContext): void {
     if (raio <= 0) continue;
     const estados = gradeDa(state, getComponent(state, id, 'owner')!.nacao, n);
     celulasNoRaio(g, direcaoDe(getComponent(state, id, 'position')!), raio, buffer);
+    for (const c of buffer) estados[c] = VISIVEL;
+  }
+  // VIS-08: visão persistente dos satélites e as Varreduras Orbitais.
+  const circulos = [
+    ...satelitesAtivos(ctx).map((s) => ({ ...s, raio: param('satelite_visao_m') })),
+    ...varredurasAtivas(ctx).map((v) => ({ ...v, raio: param('varredura_raio_m') })),
+  ];
+  for (const { nacao, ponto, raio } of circulos) {
+    const estados = gradeDa(state, nacao, n);
+    celulasNoRaio(g, ponto, raio, buffer);
     for (const c of buffer) estados[c] = VISIVEL;
   }
 }
@@ -115,12 +130,71 @@ export function explorado(ctx: SystemContext, nacao: NacaoId, d: Vec3): boolean 
   return estadoEm(ctx, nacao, d) !== ESCURO;
 }
 
-/** O corpo está visível para a nação agora? Os próprios, sempre. */
+/**
+ * O corpo está visível para a nação agora? Os próprios, sempre. Furtivos só revelados (VIS-05),
+ * e a Sentinela também de perto (CMB-22).
+ */
 export function visivelPara(ctx: SystemContext, nacao: NacaoId, id: EntityId): boolean {
   if (getComponent(ctx.state, id, 'owner')?.nacao === nacao) return true;
   const pos = getComponent(ctx.state, id, 'position');
-  return pos !== undefined && estadoEm(ctx, nacao, direcaoDe(pos)) === VISIVEL;
+  if (pos === undefined || estadoEm(ctx, nacao, direcaoDe(pos)) !== VISIVEL) return false;
+  if (!furtivo(ctx.state, id)) return true;
+  if (revelado(ctx, nacao, id)) return true;
+  return getComponent(ctx.state, id, 'sentinela') !== undefined && pertoDaSentinela(ctx, nacao, id);
 }
 
 /** Raio da área explorada inicial (REG-07). */
 export const raioExploradoInicial = (): number => param('raio_explorado_inicial_m');
+
+/** Raio de detecção do corpo (VIS-05): `deteccao_m`, ou `sentinela_deteccao_m` em Sentinela. */
+export function raioDeDeteccao(state: SimState, id: EntityId): number {
+  const unidade = getComponent(state, id, 'unit');
+  if (unidade) {
+    if (getComponent(state, id, 'sentinela')?.estado === 'ativo')
+      return param('sentinela_deteccao_m');
+    return statsMovel(unidade.tipo).deteccao_m;
+  }
+  const estrutura = getComponent(state, id, 'structure');
+  if (estrutura && !getComponent(state, id, 'obra'))
+    return statsEstrutura(estrutura.tipo).deteccao_m;
+  return 0;
+}
+
+/** Furtivo (CMB-19, CMB-22): mina plantada ou Hover de Observação em Sentinela. */
+export function furtivo(state: SimState, id: EntityId): boolean {
+  return (
+    getComponent(state, id, 'mine') !== undefined ||
+    getComponent(state, id, 'sentinela')?.estado === 'ativo'
+  );
+}
+
+/** VIS-05: algum detector da nação a até o seu raio de detecção, com o ponto visível. */
+export function revelado(ctx: SystemContext, nacao: NacaoId, id: EntityId): boolean {
+  const { state } = ctx;
+  const d = direcaoDe(getComponent(state, id, 'position')!);
+  if (estadoEm(ctx, nacao, d) !== VISIVEL) return false;
+  return entitiesWith(state, 'owner', 'position').some((det) => {
+    if (getComponent(state, det, 'owner')!.nacao !== nacao) return false;
+    const raio = raioDeDeteccao(state, det);
+    return raio > 0 && distanciaM(ctx, d, direcaoDe(getComponent(state, det, 'position')!)) <= raio;
+  });
+}
+
+/** CMB-22: a Sentinela aparece para quem chega a até `sentinela_camuflagem_m`. */
+function pertoDaSentinela(ctx: SystemContext, nacao: NacaoId, id: EntityId): boolean {
+  const { state } = ctx;
+  const d = direcaoDe(getComponent(state, id, 'position')!);
+  return entitiesWith(state, 'owner', 'position').some(
+    (outro) =>
+      getComponent(state, outro, 'owner')!.nacao === nacao &&
+      distanciaM(ctx, d, direcaoDe(getComponent(state, outro, 'position')!)) <=
+        param('sentinela_camuflagem_m'),
+  );
+}
+
+/** Minas inimigas que a nação vê agora (CMB-20: viram alvo e obstáculo para a rota). */
+export function minasReveladas(ctx: SystemContext, nacao: NacaoId): EntityId[] {
+  return entitiesWith(ctx.state, 'mine', 'owner', 'position').filter(
+    (id) => getComponent(ctx.state, id, 'owner')!.nacao !== nacao && revelado(ctx, nacao, id),
+  );
+}

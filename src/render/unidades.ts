@@ -20,6 +20,7 @@ import {
 import { dados, type EntityId, entitiesWith, getComponent, type SimState } from '../sim';
 import type { PositionHistory, Vec3 } from './interpolation';
 import { norteEm } from '../sim/map/esfera';
+import type { Fantasma } from './fantasmas';
 import { geometriaDoModelo, type TipoDeModelo } from './modelos';
 
 /** Corpo desenhado neste quadro, na posição interpolada; usado também pela seleção. */
@@ -140,6 +141,15 @@ export class UnidadesRender {
   });
   private readonly lotes = new Map<TipoDeModelo, Lote>();
   private readonly hologramas = new Map<TipoDeModelo, Lote>();
+  /** VIS-04: fantasmas em cinza translúcido. */
+  private readonly materialFantasma = new MeshStandardMaterial({
+    color: '#8a8f99',
+    transparent: true,
+    opacity: 0.45,
+    depthWrite: false,
+    roughness: 0.9,
+  });
+  private readonly fantasmas = new Map<TipoDeModelo, Lote>();
   private readonly corDaNacao = new Map<string, Color>();
   private readonly scratch: Vec3 = { x: 0, y: 0, z: 0 };
   private readonly scratchRumo: Vec3 = { x: 0, y: 0, z: 0 };
@@ -160,17 +170,53 @@ export class UnidadesRender {
     private readonly jogador: string | null = null,
   ) {}
 
-  sync(state: SimState, history: PositionHistory, alpha: number): void {
+  /**
+   * `visivel`: corpos que o jogador vê agora (VIS-01; os outros não são desenhados nem
+   * selecionáveis). `fantasmas`: estruturas inimigas lembradas (VIS-04).
+   */
+  sync(
+    state: SimState,
+    history: PositionHistory,
+    alpha: number,
+    visivel: ((id: EntityId) => boolean) | null = null,
+    fantasmas: readonly Fantasma[] = [],
+  ): void {
     this.corpos.length = 0;
     this.porId.clear();
     type Desenho = { corpo: CorpoDesenhado; frente: Vec3 | null; altura: number };
     const porTipo = new Map<TipoDeModelo, Desenho[]>();
     const emObra = new Map<TipoDeModelo, Desenho[]>();
+    const lembrados = new Map<TipoDeModelo, Desenho[]>();
+    for (const f of fantasmas) {
+      const r = Math.hypot(f.x, f.y, f.z) || 1;
+      const tipo = f.tipo as TipoDeModelo;
+      const corpo: CorpoDesenhado = {
+        id: f.id,
+        tipo,
+        nacao: f.nacao,
+        movel: false,
+        x: f.x,
+        y: f.y,
+        z: f.z,
+        cima: [f.x / r, f.y / r, f.z / r],
+        raio: raioDe(tipo),
+        altura: alturaDe(tipo),
+      };
+      let lista = lembrados.get(tipo);
+      if (!lista) lembrados.set(tipo, (lista = []));
+      lista.push({ corpo, frente: null, altura: 1 });
+    }
     for (const id of entitiesWith(state, 'position')) {
+      if (visivel && !visivel(id)) continue;
       const unidade = getComponent(state, id, 'unit');
       const estrutura = getComponent(state, id, 'structure');
       const mina = getComponent(state, id, 'mine');
-      if (mina && this.jogador && getComponent(state, id, 'owner')?.nacao !== this.jogador)
+      if (
+        mina &&
+        !visivel &&
+        this.jogador &&
+        getComponent(state, id, 'owner')?.nacao !== this.jogador
+      )
         continue;
       const tipo: TipoDeModelo | null = unidade
         ? unidade.tipo
@@ -216,6 +262,7 @@ export class UnidadesRender {
 
     this.preencher(this.lotes, porTipo, (tipo) => this.lote(tipo));
     this.preencher(this.hologramas, emObra, (tipo) => this.holograma(tipo));
+    this.preencher(this.fantasmas, lembrados, (tipo) => this.fantasma(tipo));
   }
 
   private preencher(
@@ -256,6 +303,15 @@ export class UnidadesRender {
 
   get(id: EntityId): CorpoDesenhado | undefined {
     return this.porId.get(id);
+  }
+
+  private fantasma(tipo: TipoDeModelo): Lote {
+    let lote = this.fantasmas.get(tipo);
+    if (!lote) {
+      lote = new Lote(this.scene, geometriaDoModelo(tipo), this.materialFantasma, 8, false);
+      this.fantasmas.set(tipo, lote);
+    }
+    return lote;
   }
 
   private holograma(tipo: TipoDeModelo): Lote {

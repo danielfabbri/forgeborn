@@ -142,6 +142,24 @@ export interface ComponentMap {
     plantios: Ponto[];
     plantio_s: number;
   };
+  /** Satélite da Base de Lançamento (UNI-04 a UNI-06, VIS-08). */
+  satelite: {
+    estado: 'lancando' | 'orbita';
+    timer_s: number;
+    /** Ponto de visão persistente e para onde está indo. */
+    ponto: Ponto;
+    destino: Ponto | null;
+    /** Recarga da Varredura Orbital e a varredura ativa. */
+    recarga_s: number;
+    varredura: { ponto: Ponto; restante_s: number } | null;
+    /** AL-17 já avisado nesta queda. */
+    offlineAvisado: boolean;
+  };
+  /**
+   * Modo Sentinela do Hover de Observação (UNI-03): implantando → ativo → recolhendo.
+   * Parado; visão, detecção e radar próprios; camuflado (CMB-22).
+   */
+  sentinela: { estado: 'implantando' | 'ativo' | 'recolhendo'; timer_s: number };
   /** REG-10: nação eliminada; o corpo se desliga e explode sem dano em `em_s`. */
   autodestruicao: { em_s: number };
   /** Mina plantada (UNI-07): arma após `tempo_armar_mina_s`. */

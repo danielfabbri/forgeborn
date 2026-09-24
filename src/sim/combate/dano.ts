@@ -11,6 +11,7 @@ import type { Vec3 } from '../map/esfera';
 import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM } from '../units/superficie';
 import { bordaDe } from '../producao/alcance';
+import { visivelPara } from '../visao/nevoa';
 
 export type TipoDeDano = 'laser' | 'explosivo' | 'ambiental';
 type Classe = 'leve' | 'blindada' | 'estrutura';
@@ -102,12 +103,14 @@ export interface Area {
 
 /**
  * CMB-10/CMB-11: dano em área. A distância é medida até o centro da unidade e, nas estruturas,
- * até a borda da pegada (D-33). Minas não reveladas não são atingidas (T-065).
+ * até a borda da pegada (D-33). Minas só são atingidas quando reveladas (CMB-20).
  */
 export function danoEmArea(ctx: SystemContext, area: Area): void {
   const { state } = ctx;
   for (const id of entitiesWith(state, 'vida', 'position')) {
-    if (getComponent(state, id, 'mine')) continue;
+    // Minas só são atingidas quando reveladas ao atacante (CMB-20).
+    if (getComponent(state, id, 'mine') && !(area.nacao && visivelPara(ctx, area.nacao, id)))
+      continue;
     if (area.nacao && getComponent(state, id, 'owner')?.nacao === area.nacao) continue;
     if (!area.camadas.includes(camadaDe(state, id))) continue;
     const d = direcaoDe(getComponent(state, id, 'position')!);

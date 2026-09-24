@@ -40,6 +40,10 @@ export interface SimState {
    * de `celula_nevoa_m`. Vazia até o primeiro passo de visão (ou sem mapa).
    */
   nevoa: Record<NacaoId, number[]>;
+  /** VIS-06: sinais de radar (posições sem tipo) que cada nação vê. */
+  sinais: Record<NacaoId, [number, number, number][]>;
+  /** VIS-07: quem estava no radar de cada Sentinela na última varredura (para o AL-03). */
+  radar: Record<string, number[]>;
   /** §13: estado de cada nação controlada pela IA. */
   ias: Partial<Record<NacaoId, EstadoDaIa>>;
   /** REG-11/REG-12: fim da partida, ou null. */
@@ -163,6 +167,10 @@ export function createInitialState(
     tempoLimite_s: null,
     nevoa: Object.fromEntries(nacoes.map((n) => [n, [] as number[]])) as SimState['nevoa'],
     ias: {},
+    sinais: Object.fromEntries(
+      nacoes.map((n): [NacaoId, [number, number, number][]] => [n, []]),
+    ) as SimState['sinais'],
+    radar: {},
     resultado: null,
   };
 }

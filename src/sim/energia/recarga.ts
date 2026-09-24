@@ -15,7 +15,7 @@ import { irPara, liberar, retomarColeta } from '../economia/coleta';
 import { distanciaPeloCaminho } from '../economia/estoque';
 import { siloImovel } from '../economia/silo';
 import { tracarRota } from '../units/movimento';
-import { navegavel } from '../units/navegacao';
+import { navegavelDe } from '../units/navegacao';
 import { statsEstrutura, statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 import { emCombate } from '../combate/dano';
@@ -143,7 +143,7 @@ function concluir(ctx: SystemContext, unidade: EntityId): void {
     loc.destino = retorno.ponto;
     loc.limiteVel = null;
     tracarRota(
-      navegavel(ctx),
+      navegavelDe(ctx, unidade),
       loc,
       direcaoDe(getComponent(ctx.state, unidade, 'position')!),
       false,

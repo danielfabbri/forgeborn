@@ -55,7 +55,9 @@ type Modo =
   | 'reparar'
   | 'plantar'
   | 'campo'
-  | 'reciclar';
+  | 'reciclar'
+  | 'satelite'
+  | 'varredura';
 
 /** Ordens de deslocamento que um clique no terreno pode dar. */
 type OrdemNoTerreno = 'mover' | 'mover_ignorando' | 'patrulhar' | 'atacar_mover';
@@ -402,6 +404,20 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       return;
     }
     // UNI-02: plantar mina ou Campo minado no ponto; ECO-28: reciclar o destroço.
+    if (modo === 'satelite' || modo === 'varredura') {
+      arrastando = false;
+      const ponto = pontoNoTerreno(o.camera, viewport, e.clientX, e.clientY, o.mapa);
+      if (ponto) {
+        enviar(modo === 'satelite' ? 'reposicionar_satelite' : 'varredura', {
+          ids: doTipo('satellite_uplink'),
+          x: ponto[0],
+          y: ponto[1],
+          z: ponto[2],
+        });
+      }
+      definirModo('normal');
+      return;
+    }
     if (modo === 'plantar' || modo === 'campo' || modo === 'reciclar') {
       arrastando = false;
       if (modo === 'reciclar') {
@@ -549,7 +565,21 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         const baterias = com('suporte');
         const usinas = minhas('structure').filter((id) => getComponent(sim.state, id, 'reator'));
         const plantadores = doTipo('hover_minelayer');
-        if (silos.length + baterias.length + usinas.length + plantadores.length === 0) return;
+        const observadores = doTipo('hover_scout');
+        const bases = doTipo('satellite_uplink');
+        if (
+          silos.length +
+            baterias.length +
+            usinas.length +
+            plantadores.length +
+            observadores.length +
+            bases.length ===
+          0
+        )
+          return;
+        // §12.4 (Hover de Observação) T: Modo Sentinela; (Base de Lançamento) T: reposicionar.
+        if (observadores.length > 0) enviar('sentinela', { ids: observadores });
+        if (bases.length > 0) definirModo('satelite');
         // §12.4 (Plantio de Minas) T: plantar mina no ponto.
         if (plantadores.length > 0) definirModo('plantar');
         if (silos.length > 0) enviar('ancorar_silo', { ids: silos });
@@ -562,7 +592,10 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         const silos = minhas('unit').filter((id) => getComponent(sim.state, id, 'silo'));
         const hovers = doTipo('hover_explorer');
         const plantadores = doTipo('hover_minelayer');
-        if (silos.length + hovers.length + plantadores.length === 0) return;
+        const bases = doTipo('satellite_uplink');
+        if (silos.length + hovers.length + plantadores.length + bases.length === 0) return;
+        // §12.4 (Base de Lançamento) G: Varredura Orbital no ponto.
+        if (bases.length > 0) definirModo('varredura');
         if (silos.length > 0) enviar('descarregar_silo', { ids: silos });
         if (hovers.length > 0) definirModo('reparar');
         // §12.4 (Plantio de Minas) G: Campo minado na direção indicada.

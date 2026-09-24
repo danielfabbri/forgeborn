@@ -247,7 +247,8 @@ describe('T-062 — CMB-07, CMB-08, CMB-10, CMB-11: torpedo, bomba e splash', ()
       const sim = partida(mundoLiso());
       const [bomber] = criar(sim, [{ unidade: 'drone_bomber', x: 0, z: 0 }]);
       // O mais rápido dos hovers: em bomba_tempo_queda_s ele sai do ponto previsto.
-      const [alvoId] = criar(sim, [{ unidade: 'hover_scout', x: 0, z: 20 }], 'usa');
+      // Dentro da visão do bombardeiro: só se ataca o que a nação vê (VIS-01).
+      const [alvoId] = criar(sim, [{ unidade: 'hover_scout', x: 0, z: 14 }], 'usa');
       ordenar(sim, 'mover', { ids: [alvoId], ...alvo(0, 90) }, 'usa');
       ordenar(sim, 'atacar', { ids: [bomber], alvo: alvoId });
       const inicio = hp(sim, alvoId!);
@@ -440,12 +441,16 @@ describe('T-063 — CMB-12 a CMB-18: alvos, posturas e mente única', () => {
       ],
       'usa',
     );
-    vida(sim, fraco!)!.hp = 10;
-    // Os dois OPQs disparam no tick em que nascem, um depois do outro.
-    criar(sim, [
-      { unidade: 'hover_opq', x: 0, z: 0, postura: 'manter' },
-      { unidade: 'hover_opq', x: 0, z: 2, postura: 'manter' },
+    const opqs = criar(sim, [
+      { unidade: 'hover_opq', x: 0, z: 0, postura: 'passiva' },
+      { unidade: 'hover_opq', x: 0, z: 2, postura: 'passiva' },
     ]);
+    // Um passo de visão: os alvos ficam visíveis (VIS-01).
+    rodar(sim, 0.2);
+    vida(sim, fraco!)!.hp = 10;
+    // Os dois OPQs disparam no mesmo tick, um depois do outro.
+    ordenar(sim, 'postura', { ids: opqs, postura: 'manter' });
+    sim.step();
     const torpedos = sim.state.entities
       .map((id) => getComponent(sim.state, id, 'projetil')?.alvo)
       .filter((a) => a !== undefined);

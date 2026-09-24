@@ -143,7 +143,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-040 — Rede de energia** · M · Spec: ENE-01 – ENE-05 · Dep: T-006 · Feito: 2026-09-23
   - Aceite: testes de geração, capacidade, excedente perdido e de cada nível de prioridade do racionamento, incluindo satélite offline.
-- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Todos os custos de §6.3 prontos, menos Sentinela (T-072) e impulso (controle direto)
+- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Todos os custos de §6.3 prontos, menos o impulso (controle direto)
   - Aceite: custo de cada tarefa da tabela §6.3 verificado; unidade parada no solo gasta 0; Modo Reserva anda a `modo_reserva_vel_pct`% e não executa tarefas.
 - [x] **T-042 — Portas de recarga** · M · Spec: ENE-12 – ENE-14 · Dep: T-041 · Feito: 2026-09-23
   - Aceite: 1 unidade por porta; fila por ordem de chegada; escolha pelo menor tempo estimado; a recarga retira energia do banco.
@@ -186,7 +186,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: prioridade de alvo coberta por teste; perseguição limitada por postura; ataque-movimento; sem desperdício de dano (CMB-16); resposta a ataques contra aliados na visão.
 - [x] **T-064 — Minas** · M · Spec: UNI-01, UNI-02, UNI-07, CMB-09, CMB-19 – CMB-21, REG-18 · Dep: T-062 · Feito: 2026-09-24 (minas inimigas ficam invisíveis até a detecção da T-065)
   - Aceite: fabricação automática consome a receita de `mine`; plantio, armar e Campo minado com os tempos e espaçamento das tabelas; só hovers inimigos acionam; limite de minas ativas.
-- [ ] **T-065 — Detecção e camuflagem** · M · Spec: VIS-05, CMB-22 · Dep: T-064, T-070
+- [x] **T-065 — Detecção e camuflagem** · M · Spec: VIS-05, CMB-22 · Dep: T-064, T-070 · Feito: 2026-09-24
   - Aceite: minas e Sentinelas só aparecem para inimigos dentro de `deteccao_m` de um detector; mina revelada vira alvo e é evitada pelo pathfinding.
 - [x] **T-066 — Explosões ambientais e radiação** · P · Spec: CMB-23 – CMB-26 · Dep: T-062 · Feito: 2026-09-24
   - Aceite: explosões da Bateria Móvel, da Usina Nuclear e da Nave com dano e raio das tabelas, atingindo todas as nações; zona de radiação com duração e dano por segundo; drones em voo imunes.
@@ -200,11 +200,11 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-070 — Névoa na simulação** · M · Spec: VIS-01 – VIS-03 · Dep: T-013, T-022 · Feito: 2026-09-24
   - Aceite: três estados por nação, atualizados a `nevoa_atualizacao_hz`; visão circular por unidade e estrutura; visão compartilhada na nação.
-- [ ] **T-071 — Névoa no render e fantasmas** · M · Spec: VIS-01, VIS-04, TEC-17 · Dep: T-070, T-014
+- [x] **T-071 — Névoa no render e fantasmas** · M · Spec: VIS-01, VIS-04, TEC-17 · Dep: T-070, T-014 · Feito: 2026-09-24 (sinais de radar e círculos de satélite também no mundo)
   - Aceite: escuro absoluto preto com céu visível; névoa dessaturada; fantasmas de estruturas com tipo e HP da última observação, removidos quando a área é revista.
-- [ ] **T-072 — Hover de Observação e Sentinela** · M · Spec: UNI-03, VIS-06, VIS-07 · Dep: T-070, T-065
+- [x] **T-072 — Hover de Observação e Sentinela** · M · Spec: UNI-03, VIS-06, VIS-07 · Dep: T-070, T-065 · Feito: 2026-09-24
   - Aceite: implantar e recolher com os tempos das tabelas; sinais de radar sem tipo; AL-03 com contagem e um dos 8 rumos corretos; camuflagem conforme CMB-22.
-- [ ] **T-073 — Satélite** · M · Spec: UNI-04 – UNI-06, VIS-08, ENE-04, REG-17 · Dep: T-053, T-070
+- [x] **T-073 — Satélite** · M · Spec: UNI-04 – UNI-06, VIS-08, ENE-04, REG-17 · Dep: T-053, T-070 · Feito: 2026-09-24 (T reposiciona, G faz a Varredura na Base de Lançamento)
   - Aceite: lançamento cancelável pela destruição da base; visão persistente reposicionável; Varredura com custo, duração e recarga; offline em racionamento (AL-17).
 - [ ] **T-074 — Minimapa** · M · Spec: VIS-09, UI-05, CTL-03 · Dep: T-071
   - Aceite: mostra os três estados, unidades, fantasmas, sinais, círculos de satélite e o campo da câmera; clique move a câmera e clique direito dá ordem.

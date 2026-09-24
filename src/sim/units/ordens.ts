@@ -20,7 +20,7 @@ import {
 import { celulaDe } from '../map/grids';
 import { celulaLivreProxima, centroDoIndice, livre, type Navegavel } from '../map/pathfinding';
 import { tracarRota } from './movimento';
-import { navegavel } from './navegacao';
+import { navegavel, navegavelDe } from './navegacao';
 import { statsMovel } from './stats';
 import { direcaoDe, direcaoDoComando, raioDoMundo } from './superficie';
 
@@ -148,7 +148,7 @@ function mandarMover(
       loc.fluxo = alvoFluxo;
       loc.rota = [];
     } else {
-      tracarRota(g, loc, d, aerea(id));
+      tracarRota(navegavelDe(ctx, id), loc, d, aerea(id));
     }
   });
 }

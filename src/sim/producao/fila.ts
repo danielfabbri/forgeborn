@@ -3,6 +3,7 @@
  * prioridade 3, ENE-04); a Impressora, parada, com a própria bateria. O item pronto nasce na
  * borda do produtor, do lado do ponto de encontro (D-29), e segue para ele.
  */
+import { contar } from '../core/estatisticas';
 import type { ItemDaFila } from '../core/components';
 import { entitiesWith, getComponent, isAlive } from '../core/entities';
 import type { CommandHandler, SystemContext } from '../core/pipeline';
@@ -122,7 +123,11 @@ export function nascer(
   const id = criarUnidade(ctx, nacao, tipo, passo.p);
   if (id === null) return null;
   getComponent(state, id, 'locomotion')!.rumo = passo.rumo;
-  if (impresso) ctx.emit('impresso', { id, tipo, nacao, produtor });
+  if (impresso) {
+    ctx.emit('impresso', { id, tipo, nacao, produtor });
+    const estatisticas = state.estatisticas[nacao];
+    if (estatisticas) contar(estatisticas.impressas, tipo);
+  }
   if (encontro) {
     const jazida = getComponent(state, id, 'coleta') ? jazidaEm(ctx, encontro) : null;
     if (jazida !== null) designar(ctx, id, jazida, true);

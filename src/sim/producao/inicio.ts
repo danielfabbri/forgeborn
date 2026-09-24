@@ -6,6 +6,7 @@
  * REG-07: a área em volta da Nave começa explorada (`raio_explorado_inicial_m`).
  */
 import type { CommandHandler, SystemContext } from '../core/pipeline';
+import type { ModoNevoa } from '../core/state';
 import type { NacaoId } from '../core/types';
 import { dados, type EstoqueInicialModo } from '../data';
 import { capacidadeDaRede } from '../energia/rede';
@@ -44,11 +45,25 @@ function ehModo(modo: unknown): modo is EstoqueInicialModo {
   return dados.estoque_inicial.some((linha) => linha.modo === modo);
 }
 
+const MODOS_DE_NEVOA: readonly ModoNevoa[] = ['normal', 'explorado', 'revelado'];
+
 export const comandosDeInicio: Record<string, CommandHandler> = {
-  /** Monta o início da partida para todas as nações listadas (enviado uma vez, no tick 0). */
+  /**
+   * Monta o início da partida para todas as nações listadas (enviado uma vez, no tick 0).
+   * Opcionais do Free Battle (§16): `nevoa` (FB-01) e `tempoLimite_s` (REG-12).
+   */
   [INICIAR_PARTIDA_COMMAND]: (ctx, comando) => {
-    const d = (comando.dados ?? {}) as { modo?: unknown; nacoes?: unknown };
+    const d = (comando.dados ?? {}) as {
+      modo?: unknown;
+      nacoes?: unknown;
+      nevoa?: unknown;
+      tempoLimite_s?: unknown;
+    };
     if (!ehModo(d.modo) || !Array.isArray(d.nacoes)) return;
+    if (MODOS_DE_NEVOA.includes(d.nevoa as ModoNevoa)) ctx.state.modoNevoa = d.nevoa as ModoNevoa;
+    if (typeof d.tempoLimite_s === 'number' && d.tempoLimite_s > 0) {
+      ctx.state.tempoLimite_s = d.tempoLimite_s;
+    }
     const inicios = d.nacoes.filter(
       (n): n is InicioDaNacao =>
         typeof n === 'object' &&

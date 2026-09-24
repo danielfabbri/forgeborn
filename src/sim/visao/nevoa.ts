@@ -55,11 +55,14 @@ function grade(ctx: SystemContext): Grade | null {
   return ctx.mundo?.grades.nevoa ?? null;
 }
 
-/** A grade da nação, criada escura na primeira vez. */
+/** Estado inicial das células pelo modo de névoa (REG-07, FB-01). */
+const INICIAL = { normal: ESCURO, explorado: NEVOA, revelado: VISIVEL } as const;
+
+/** A grade da nação, criada na primeira vez: escura, em névoa ou visível (FB-01). */
 function gradeDa(state: SimState, nacao: NacaoId, celulas: number): number[] {
   let g = state.nevoa[nacao];
   if (!g || g.length !== celulas) {
-    g = new Array<number>(celulas).fill(ESCURO);
+    g = new Array<number>(celulas).fill(INICIAL[state.modoNevoa ?? 'normal']);
     state.nevoa[nacao] = g;
   }
   return g;
@@ -86,6 +89,11 @@ export function sistemaVisao(ctx: SystemContext): void {
   if (!g) return;
   const { state } = ctx;
   const n = g.esfera.celulas;
+  // FB-01: revelado, tudo visível o tempo todo.
+  if (state.modoNevoa === 'revelado') {
+    for (const nacao of state.nacoes) gradeDa(state, nacao, n).fill(VISIVEL);
+    return;
+  }
   for (const nacao of state.nacoes) {
     const estados = gradeDa(state, nacao, n);
     for (let c = 0; c < n; c++) if (estados[c] === VISIVEL) estados[c] = NEVOA;

@@ -1,3 +1,4 @@
+import { COMANDOS_DE_SISTEMA } from './estatisticas';
 import { type CenariosId, param } from '../data';
 import { EventBus } from './events';
 import { hashValue } from './hash';
@@ -107,6 +108,15 @@ function buildSim(state: SimState, options: SimOptions): Sim {
       if (id === 'comandos') {
         for (const command of commands) {
           const handler = handlers[command.tipo];
+          // REG-23: ações por minuto (sem montagem nem depuração).
+          if (
+            handler &&
+            !COMANDOS_DE_SISTEMA.has(command.tipo) &&
+            !command.tipo.startsWith('debug')
+          ) {
+            const e = state.estatisticas?.[command.nacao];
+            if (e) e.acoes++;
+          }
           if (handler) handler(ctx, command);
           else ctx.emit('comando_desconhecido', { tipo: command.tipo, nacao: command.nacao });
         }

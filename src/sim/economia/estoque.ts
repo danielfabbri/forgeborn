@@ -3,6 +3,7 @@
  * Material só vira recurso ao ser descarregado num depósito (Nave ou Armazém); em hovers e
  * silos ele está em trânsito e não pode ser gasto.
  */
+import { contar } from '../core/estatisticas';
 import { entitiesWith, getComponent, isAlive } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import type { SimState } from '../core/state';
@@ -95,6 +96,8 @@ export function creditar(state: SimState, nacao: NacaoId, recurso: RecursosId, u
   // REG-22: pontuação econômica pelo VR descarregado.
   const placar = state.placar[nacao];
   if (placar) placar.vrColetado += u * VR.get(recurso)!;
+  const estatisticas = state.estatisticas[nacao];
+  if (estatisticas) contar(estatisticas.coletado, recurso, u);
 }
 
 const VR = new Map(dados.recursos.map((r) => [r.id, r.vr]));

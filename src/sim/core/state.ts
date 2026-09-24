@@ -1,3 +1,4 @@
+import { type EstatisticasDaPartida, novasEstatisticas } from './estatisticas';
 import { type CenariosId, dados, param, type RecursosId } from '../data';
 import type { ComponentMap, ComponentName } from './components';
 import { type RngState, seedRng } from './rng';
@@ -35,6 +36,10 @@ export interface SimState {
   chaves: Record<NacaoId, ChavesDaNacao>;
   /** REG-12: tempo limite (s) da partida, ou null. */
   tempoLimite_s: number | null;
+  /** FB-01: névoa normal, explorada (começa em névoa) ou revelada (sempre visível). */
+  modoNevoa: ModoNevoa;
+  /** REG-23: estatísticas de fim de partida. */
+  estatisticas: EstatisticasDaPartida;
   /**
    * VIS-01: grade de névoa de cada nação (0 escuro, 1 névoa, 2 visível), uma posição por célula
    * de `celula_nevoa_m`. Vazia até o primeiro passo de visão (ou sem mapa).
@@ -49,6 +54,8 @@ export interface SimState {
   /** REG-11/REG-12: fim da partida, ou null. */
   resultado: { vencedor: NacaoId | null; motivo: 'eliminacao' | 'tempo'; tick: number } | null;
 }
+
+export type ModoNevoa = 'normal' | 'explorado' | 'revelado';
 
 export interface PlacarDaNacao {
   /** VR descarregado (REG-22). */
@@ -165,6 +172,10 @@ export function createInitialState(
       nacoes.map((n): [NacaoId, ChavesDaNacao] => [n, { fuga: true, fabricarMinas: true }]),
     ) as SimState['chaves'],
     tempoLimite_s: null,
+    modoNevoa: 'normal',
+    estatisticas: Object.fromEntries(
+      nacoes.map((n) => [n, novasEstatisticas()]),
+    ) as EstatisticasDaPartida,
     nevoa: Object.fromEntries(nacoes.map((n) => [n, [] as number[]])) as SimState['nevoa'],
     ias: {},
     sinais: Object.fromEntries(

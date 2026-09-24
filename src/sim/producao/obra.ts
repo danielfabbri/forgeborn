@@ -6,6 +6,7 @@
  * `tempo_s`, e cada construtor paga da própria bateria a fração do seu PI. Hovers de
  * Exploração ajudam e podem continuar a obra sem a Impressora.
  */
+import { contar } from '../core/estatisticas';
 import {
   destroyEntity,
   entitiesWith,
@@ -182,10 +183,10 @@ function concluirObra(ctx: SystemContext, obra: EntityId): void {
   removeComponent(ctx.state, obra, 'obra');
   ativarEstrutura(ctx, obra);
   soltarConstrutores(ctx, obra);
-  ctx.emit('estrutura_concluida', {
-    id: obra,
-    tipo: getComponent(ctx.state, obra, 'structure')!.tipo,
-  });
+  const tipo = getComponent(ctx.state, obra, 'structure')!.tipo;
+  ctx.emit('estrutura_concluida', { id: obra, tipo });
+  const estatisticas = ctx.state.estatisticas[getComponent(ctx.state, obra, 'owner')!.nacao];
+  if (estatisticas) contar(estatisticas.construidas, tipo);
 }
 
 /** A Impressora pode ir à obra (sem ordem manual, recarga ou outro trabalho)? */

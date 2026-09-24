@@ -6,6 +6,7 @@
  * Nave e sem Impressora a nação é eliminada, e os corpos dela se desligam e explodem sem dano ao
  * longo de 5 s (REG-10). REG-11: vence a última; REG-12: no tempo limite, a maior pontuação.
  */
+import { contar } from '../core/estatisticas';
 import {
   createEntity,
   destroyEntity,
@@ -164,6 +165,14 @@ function morrer(ctx: SystemContext, id: EntityId): void {
     const placar = state.placar[por]!;
     placar.vrDestruido += vrDe(tipo);
     if (tipo === 'ship') placar.navesDestruidas++;
+  }
+  // REG-23: perdas e abates (a autodestruição da eliminação não conta; minas não são corpos).
+  if (tipo && nacao && !autodestruicao && !getComponent(state, id, 'mine')) {
+    const movel = getComponent(state, id, 'unit') !== undefined;
+    const dono = state.estatisticas[nacao];
+    if (dono) contar(movel ? dono.perdidas : dono.estruturasPerdidas, tipo);
+    const abatedor = por && por !== nacao ? state.estatisticas[por] : undefined;
+    if (abatedor && movel) contar(abatedor.destruidas, tipo);
   }
   ctx.emit('morte', { id, tipo, nacao, por });
   if (nacao && getComponent(state, id, 'unit') && !autodestruicao) {

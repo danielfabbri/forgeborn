@@ -174,6 +174,12 @@ export function passoRede(ctx: SystemContext): void {
       b.en = Math.min(b.max, b.en + en);
     }
     registrarConsumo(rede, entregue, ctx);
+    // REG-23: energia gerada e consumida.
+    const estatisticas = state.estatisticas[nacao];
+    if (estatisticas) {
+      estatisticas.energiaGerada += geracao * dt;
+      estatisticas.energiaConsumida += entregue;
+    }
   }
 }
 

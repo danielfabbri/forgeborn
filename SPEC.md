@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.7.0 — rascunho para aprovação |
+| Versão do SPEC | 0.8.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -755,13 +755,13 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ### 9.2 Camadas e alvos
 
-- **CMB-04** — Há duas camadas: **solo** (hovers, estruturas, minas, drones pousados) e **ar** (drones em voo). A coluna `alvos` da arma define quais camadas ela atinge.
+- **CMB-04** — Há duas camadas: **solo** (hovers, estruturas, minas, drones pousados) e **ar** (drones em voo). A coluna `alvos` da arma define quais camadas ela atinge. Disparos não exigem linha de visada: vale só o alcance (D-31).
 - **CMB-05** — Drones pousados são alvos de solo, mas não acionam minas.
 
 ### 9.3 Projéteis
 
 - **CMB-06** — `hitscan` (lasers): dano instantâneo; feixe visual de 0,15 s na cor da nação.
-- **CMB-07** — `guiado` (torpedo): persegue o alvo a `vel_projetil_m_s`. Se o alvo morrer, detona na última posição dele. Tempo máximo de voo: `torpedo_tempo_max_voo_s`.
+- **CMB-07** — `guiado` (torpedo): persegue o alvo a `vel_projetil_m_s`. Se o alvo morrer, detona na última posição dele. Ao chegar a `torpedo_tempo_max_voo_s` de voo, detona onde estiver, com o splash normal (D-31).
 - **CMB-08** — `balistico` (bomba): liberada quando o drone está a até `alcance_m` (na horizontal) do ponto previsto do alvo. Cai em `bomba_tempo_queda_s`. O ponto de impacto é a posição prevista do alvo no momento da liberação (mira preditiva), então alvos que mudam de direção podem escapar.
 - **CMB-09** — `gatilho` (mina): detona quando um hover inimigo entra no raio `alcance_m`.
 
@@ -773,7 +773,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 ### 9.5 Aquisição de alvo e posturas
 
 - **CMB-12** — Prioridade automática de alvo: (1) quem está atacando a unidade; (2) unidades armadas; (3) unidades desarmadas; (4) estruturas armadas; (5) demais estruturas; (6) minas reveladas. Desempate: menor distância, depois menor HP.
-- **CMB-13** — Posturas: **Agressiva** (persegue até `leash_agressivo_m` da posição de origem); **Defensiva** (persegue até `leash_defensivo_m`); **Manter posição** (não se move, só dispara no alcance); **Passiva** (nunca dispara; padrão das desarmadas).
+- **CMB-13** — Posturas: **Agressiva** (persegue até `leash_agressivo_m` da posição de origem); **Defensiva** (persegue até `leash_defensivo_m`); **Manter posição** (não se move, só dispara no alcance); **Passiva** (nunca dispara; padrão das desarmadas). Com o alvo mais perto que o `alcance_min_m` da arma, a unidade Agressiva ou Defensiva recua até poder disparar, dentro da coleira; em Manter posição, só não dispara (D-31).
 - **CMB-14** — **Ataque-movimento** (A + clique): a unidade se move e engaja inimigos no caminho; depois retoma o destino.
 - **CMB-15** — Ordem de ataque direta (clique direito num inimigo) sobrepõe a prioridade automática.
 
@@ -1448,6 +1448,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-28 | Recarga: acopla a até `raio_deposito_m` da borda; depois da auto-recarga as unidades voltam ao lugar de onde saíram; drone a 0 EN em voo pousa onde está. | Respostas do produto às lacunas de ENE-11, ENE-12 e ENE-15. | Aprovada |
 | D-29 | Obra e reparo a até `raio_deposito_m` da borda do alvo; a pegada fica reservada entre posicionar e instalar o canteiro; a unidade impressa nasce do lado do ponto de encontro. | Respostas do produto às lacunas de PRD-08, PRD-10, PRD-11, PRD-15 e PRD-18. | Aprovada |
 | D-30 | O estoque padrão traz o Cu e o Li da Impressora (Cu 10, Li 3); a INV-02 passa a 45–60 s. | Com Cu 5 e Li 0, os 2 hovers da abertura ficam em Fe e Si pela Diretiva e a Impressora nunca sai (medido na T-056). Com o Cu e o Li no estoque, ela sai em 49 s. | Aprovada |
+| D-31 | Torpedo detona ao fim do tempo máximo de voo; unidade recua quando o alvo está dentro do alcance mínimo; disparos sem linha de visada. | Respostas do produto às lacunas de CMB-04, CMB-07 e CMB-13. | Aprovada |
 
 ---
 
@@ -1514,3 +1515,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.5.0 | 2026-09-23 | D-29: alcance de obra e reparo (PRD-11, PRD-15), reserva da pegada (PRD-10) e lado de nascimento da unidade impressa (PRD-08). |
 | 0.6.0 | 2026-09-23 | D-30: `dados:estoque_inicial` padrão com Cu 10 e Li 3 (REG-05); INV-02 passa a 45–60 s. |
 | 0.7.0 | 2026-09-23 | UI-13: informação de jazidas (tooltip e seleção), a pedido do produto. |
+| 0.8.0 | 2026-09-24 | D-31: sem linha de visada (CMB-04), torpedo detona no tempo máximo (CMB-07), recuo no alcance mínimo (CMB-13). |

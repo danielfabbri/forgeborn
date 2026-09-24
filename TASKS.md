@@ -206,7 +206,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: implantar e recolher com os tempos das tabelas; sinais de radar sem tipo; AL-03 com contagem e um dos 8 rumos corretos; camuflagem conforme CMB-22.
 - [x] **T-073 — Satélite** · M · Spec: UNI-04 – UNI-06, VIS-08, ENE-04, REG-17 · Dep: T-053, T-070 · Feito: 2026-09-24 (T reposiciona, G faz a Varredura na Base de Lançamento)
   - Aceite: lançamento cancelável pela destruição da base; visão persistente reposicionável; Varredura com custo, duração e recarga; offline em racionamento (AL-17).
-- [ ] **T-074 — Minimapa** · M · Spec: VIS-09, UI-05, CTL-03 · Dep: T-071
+- [x] **T-074 — Minimapa** · M · Spec: VIS-09, UI-05, CTL-03 · Dep: T-071 · Feito: 2026-09-24 (o painel de produção foi para o canto inferior direito, lugar do cartão de comandos)
   - Aceite: mostra os três estados, unidades, fantasmas, sinais, círculos de satélite e o campo da câmera; clique move a câmera e clique direito dá ordem.
 
 ## M8 — HUD e UX

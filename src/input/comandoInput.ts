@@ -95,6 +95,8 @@ export interface EntradaComandos {
   cancelarObra(obra: EntityId): void;
   /** Corpos selecionados desenhados no quadro atual (para os anéis). */
   selecionadosDesenhados(): CorpoDesenhado[];
+  /** CTL-03: clique direito no minimapa dá ordem de movimento para a direção. */
+  ordenarEm(d: Vec3): void;
   dispose(): void;
 }
 
@@ -344,7 +346,11 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       }
     }
     const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
-    if (!ponto) return;
+    if (ponto) ordemNaDirecao(ponto, tipo);
+  };
+
+  /** Ordem para um ponto do mundo: unidades vão; produtores sem unidades ganham o encontro. */
+  const ordemNaDirecao = (ponto: Vec3, tipo: OrdemNoTerreno) => {
     // O comando leva a direção do ponto (a simulação normaliza).
     const [x, y, z] = ponto;
     const unidades = minhas('unit');
@@ -647,6 +653,9 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       if (vivos.length !== selecao.length) definirSelecao(vivos);
       const porId = new Map(o.corpos().map((c) => [c.id, c]));
       return vivos.map((id) => porId.get(id)).filter((c) => c !== undefined);
+    },
+    ordenarEm(d) {
+      ordemNaDirecao(d, 'mover');
     },
     dispose() {
       viewport.removeEventListener('pointerdown', apertou);

@@ -35,6 +35,12 @@ export function createView(container: HTMLElement): View {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFShadowMap;
   container.appendChild(renderer.domElement);
+  // Se o navegador derrubar o contexto (driver, falta de memória), pede que ele volte:
+  // sem o preventDefault o canvas fica preto ou branco para sempre.
+  renderer.domElement.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    console.warn('WebGL: contexto perdido; aguardando restauração.');
+  });
 
   const scene = new Scene();
   scene.background = new Color(0x000000);

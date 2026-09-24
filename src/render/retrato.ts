@@ -22,8 +22,14 @@ import { criarMaterial } from './unidades';
 const GIRO_RAD_S = (Math.PI * 2) / 8;
 
 export class RetratoRender {
+  /**
+   * Um só contexto WebGL para todos os retratos: o painel recria o canvas a cada seleção, e
+   * um renderer por canvas esgotava o limite de contextos do navegador (que então derrubava
+   * o do mapa). O quadro é copiado para o canvas do painel pelo contexto 2D.
+   */
   private renderer: WebGLRenderer | null = null;
   private canvas: HTMLCanvasElement | null = null;
+  private destino: CanvasRenderingContext2D | null = null;
   private readonly scene = new Scene();
   private readonly camera = new PerspectiveCamera(30, 1, 0.1, 200);
   private readonly material = criarMaterial();
@@ -42,17 +48,23 @@ export class RetratoRender {
   desenhar(canvas: HTMLCanvasElement | null, tipo: TipoDeModelo | null, cor: string, dt: number) {
     if (!canvas || !tipo) return;
     if (canvas !== this.canvas) {
-      this.renderer?.dispose();
       this.canvas = canvas;
-      this.renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
-      this.renderer.setPixelRatio(window.devicePixelRatio);
-      this.renderer.setSize(canvas.clientWidth || 96, canvas.clientHeight || 96, false);
+      this.destino = canvas.getContext('2d');
+      const escala = window.devicePixelRatio;
+      canvas.width = Math.round((canvas.clientWidth || 96) * escala);
+      canvas.height = Math.round((canvas.clientHeight || 96) * escala);
+      this.renderer ??= new WebGLRenderer({ alpha: true, antialias: true });
+      this.renderer.setPixelRatio(1);
+      this.renderer.setSize(canvas.width, canvas.height, false);
     }
+    if (!this.destino) return;
     const chave = `${tipo}|${cor}`;
     if (chave !== this.chave) this.trocarModelo(tipo, cor, chave);
     this.angulo += GIRO_RAD_S * dt;
     this.malha!.rotation.y = this.angulo;
     this.renderer!.render(this.scene, this.camera);
+    this.destino.clearRect(0, 0, canvas.width, canvas.height);
+    this.destino.drawImage(this.renderer!.domElement, 0, 0);
   }
 
   private trocarModelo(tipo: TipoDeModelo, cor: string, chave: string): void {

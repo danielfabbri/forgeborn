@@ -12,11 +12,18 @@ import { AneisDeSelecao } from './render/aneis';
 import { BarrasRender, type CorpoComBarras } from './render/barras';
 import { CombateRender } from './render/combate';
 import { RetratoRender } from './render/retrato';
-import { alturaMaxima, criarEstadoCamera, poseDaCamera, rumoDaCamera } from './render/cameraRts';
+import {
+  alturaMaxima,
+  centrarEm,
+  criarEstadoCamera,
+  poseDaCamera,
+  rumoDaCamera,
+} from './render/cameraRts';
 import { PositionHistory } from './render/interpolation';
 import { JazidasRender } from './render/jazidas';
 import { MemoriaDeFantasmas } from './render/fantasmas';
 import { HologramaRender } from './render/holograma';
+import { campoDaCamera, Minimapa } from './render/minimapa';
 import { NevoaRender } from './render/nevoa';
 import { SinaisRender } from './render/sinais';
 import { pontoNoTerreno } from './render/picking';
@@ -75,6 +82,8 @@ declare global {
       encontro?: (id: EntityId) => Vec3 | null;
       /** O raio sob o ponto de tela (px) toca o chão do planeta? */
       chaoNaTela?: (x: number, y: number) => boolean;
+      /** Ponto de tela (px) de uma direção no minimapa (CTL-03), ou null do outro lado. */
+      noMinimapa?: (d: Vec3) => { x: number; y: number } | null;
       coleta?: (id: EntityId) => { estado: string; jazida: EntityId | null } | null;
       silo?: (id: EntityId) => string | null;
       /** Jazidas desenhadas visíveis na tela (px), para os testes clicarem nelas. */
@@ -411,6 +420,37 @@ const atualizarPainel = (agora: number): void => {
   };
 };
 let ultimoPainel = 0;
+let versaoNevoa = 0;
+
+/** VIS-09/CTL-03: minimapa no canto inferior esquerdo (UI-05), só no modo RTS. */
+const minimapa = comandos
+  ? new Minimapa(uiRoot, pronto.grades.nevoa.esfera.n, {
+      centrar: (d) => centrarEm(camera, d),
+      ordenar: (d) => comandos.ordenarEm(d),
+    })
+  : null;
+const desenharMinimapa = (): void => {
+  if (!minimapa) return;
+  const ctx = leitura();
+  minimapa.desenhar({
+    foco: camera.foco,
+    frente: camera.frente,
+    estados: nevoa ? sim.state.nevoa[jogador] : undefined,
+    versaoNevoa,
+    corpos: unidades.corpos.map((c) => ({
+      d: [c.x, c.y, c.z],
+      cor: dados.nacoes.find((n) => n.id === c.nacao)?.cor ?? '#888888',
+      estrutura: !c.movel,
+    })),
+    fantasmas: nevoa ? fantasmas.visiveis(ctx, jogador).map((f) => [f.x, f.y, f.z]) : [],
+    sinais: sim.state.sinais[jogador] ?? [],
+    satelites: satelitesAtivos(ctx)
+      .filter((s) => s.nacao === jogador)
+      .map((s) => ({ ponto: s.ponto, angulo: param('satelite_visao_m') / R })),
+    campo: campoDaCamera(view.camera, R),
+    agora: performance.now(),
+  });
+};
 let tickTotalMs = 0;
 let tickCount = 0;
 
@@ -451,6 +491,7 @@ const loop = createFixedLoop({
       nevoa ? exploradoPeloJogador : null,
     );
     view.render();
+    desenharMinimapa();
     const sel = painelSelecao.peek();
     if (sel.tipo === 'corpo') {
       retrato.desenhar(canvasDoRetrato.peek(), sel.modelo as never, sel.cor, 1 / 60);
@@ -492,6 +533,7 @@ if (sonda) {
   sonda.nacao = (id) => getComponent(sim.state, id, 'owner')?.nacao ?? null;
   sonda.encontro = (id) => getComponent(sim.state, id, 'producer')?.pontoDeEncontro ?? null;
   sonda.chaoNaTela = (x, y) => pontoNoTerreno(view.camera, viewport, x, y, pronto.mapa) !== null;
+  sonda.noMinimapa = (d) => minimapa?.pontoDe(d) ?? null;
   sonda.coleta = (id) => {
     const c = getComponent(sim.state, id, 'coleta');
     return c ? { estado: c.estado, jazida: c.jazida } : null;
@@ -597,6 +639,15 @@ const posicionarCamera = (dt: number): void => {
 };
 
 const frame = (agora: number): void => {
+  // O próximo quadro é agendado mesmo se este lançar erro: um erro não congela a tela.
+  requestAnimationFrame(frame);
+  try {
+    quadro(agora);
+  } catch (erro) {
+    console.error(erro);
+  }
+};
+const quadro = (agora: number): void => {
   posicionarCamera(Math.min((agora - ultimoQuadro) / 1000, 0.1));
   loop.advance(agora - ultimoQuadro);
   ultimoQuadro = agora;
@@ -606,6 +657,7 @@ const frame = (agora: number): void => {
     atualizarPainel(agora);
     atualizarHud(agora);
     // TEC-17: a textura da névoa acompanha a grade do jogador.
+    versaoNevoa++;
     if (nevoa) {
       nevoa.atualizar(sim.state.nevoa[jogador]);
       fantasmas.atualizar(leitura(), jogador);
@@ -638,7 +690,6 @@ const frame = (agora: number): void => {
       if (sonda.amostras.length > 600) sonda.amostras.shift();
     }
   }
-  requestAnimationFrame(frame);
 };
 
 requestAnimationFrame((agora) => {

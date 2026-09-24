@@ -284,6 +284,8 @@ export class CombateRender {
     for (const [id, malha] of this.zonas) {
       if (vivas.has(id)) continue;
       this.scene.remove(malha);
+      malha.geometry.dispose();
+      (malha.material as MeshBasicMaterial).dispose();
       this.zonas.delete(id);
     }
     for (const id of vivas) {

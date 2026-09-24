@@ -63,6 +63,8 @@ body {
 
 .painel-producao {
   bottom: 8px;
+  left: auto;
+  right: 8px;
   min-width: 260px;
   max-width: 420px;
   pointer-events: auto;
@@ -278,4 +280,18 @@ body {
 
 .fim-de-partida.derrota {
   color: #ff6b6b;
+}
+
+/* UI-05: minimapa no canto inferior esquerdo. */
+.minimapa {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  width: 176px;
+  height: 176px;
+  border-radius: 50%;
+  background: rgba(5, 10, 18, 0.6);
+  box-shadow: 0 0 0 1px rgba(120, 160, 220, 0.35);
+  pointer-events: auto;
+  cursor: crosshair;
 }

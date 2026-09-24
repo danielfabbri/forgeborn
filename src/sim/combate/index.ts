@@ -4,6 +4,7 @@ import { sistemaCombate as armas } from './armas';
 import { comandosDeCombate } from './comandos';
 import { passoFuga } from './fuga';
 import { passoMinas } from './minas';
+import { comandosDePilotagem, passoPilotagem } from './pilotagem';
 import { comandosDeMorte } from './morte';
 import { comandosDeSatelite, passoSatelites } from '../visao/satelite';
 import { comandosDeSentinela, passoSentinelas } from '../visao/sentinela';
@@ -15,6 +16,7 @@ export { sistemaProjeteis } from './projeteis';
 
 /** Sistema `combate` (TEC-06). */
 export function sistemaCombate(ctx: SystemContext): void {
+  passoPilotagem(ctx);
   passoFuga(ctx);
   passoSentinelas(ctx);
   passoSatelites(ctx);
@@ -27,4 +29,5 @@ export const comandosDoCombate: Record<string, CommandHandler> = {
   ...comandosDeMorte,
   ...comandosDeSentinela,
   ...comandosDeSatelite,
+  ...comandosDePilotagem,
 };

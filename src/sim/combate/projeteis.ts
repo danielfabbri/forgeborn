@@ -47,9 +47,47 @@ export function detonar(
   ctx.emit('explosao', { d: centro, raio: arma.splash_m, arma: armaId });
 }
 
+/**
+ * D-40: torpedo sem trava voa reto no rumo e detona no primeiro corpo inimigo de solo em que
+ * encosta; sem acertar nada, no tempo máximo de voo (D-31).
+ */
+function passoTorpedoReto(ctx: SystemContext, id: EntityId): void {
+  const { state, dt } = ctx;
+  const p = getComponent(state, id, 'projetil')!;
+  const pos = getComponent(state, id, 'position')!;
+  const d = direcaoDe(pos);
+  const arma = armaDe(p.arma);
+  p.voo_s += dt;
+  const rumo = tangente(d, p.rumo!) ?? p.rumo!;
+  const metros = (arma.vel_projetil_m_s ?? 0) * dt;
+  const passo = avancar(d, rumo, metros / raioDoMundo(ctx));
+  // Encosta se o trecho percorrido no tick passa a até a borda do corpo (sem atravessá-lo).
+  const meio = avancar(d, rumo, metros / 2 / raioDoMundo(ctx)).p;
+  p.rumo = passo.rumo;
+  posicionar(ctx, pos, passo.p, chaoEm(ctx, passo.p) + ALTURA_HOVER_M);
+  for (const outro of entitiesWith(state, 'owner', 'position', 'vida')) {
+    if (getComponent(state, outro, 'owner')!.nacao === p.nacao) continue;
+    if (getComponent(state, outro, 'mine') || camadaDe(state, outro) !== 'solo') continue;
+    const onde = direcaoDe(getComponent(state, outro, 'position')!);
+    if (distanciaM(ctx, meio, onde) <= bordaDe(ctx, outro) + metros / 2) {
+      detonar(ctx, p.arma, passo.p, p.atirador, p.nacao, outro);
+      destroyEntity(state, id);
+      return;
+    }
+  }
+  if (p.voo_s >= param('torpedo_tempo_max_voo_s') - 1e-9) {
+    detonar(ctx, p.arma, passo.p, p.atirador, p.nacao, null);
+    destroyEntity(state, id);
+  }
+}
+
 function passoTorpedo(ctx: SystemContext, id: EntityId): void {
   const { state, dt } = ctx;
   const p = getComponent(state, id, 'projetil')!;
+  if (p.rumo && p.alvo === null) {
+    passoTorpedoReto(ctx, id);
+    return;
+  }
   const pos = getComponent(state, id, 'position')!;
   const d = direcaoDe(pos);
   const arma = armaDe(p.arma);

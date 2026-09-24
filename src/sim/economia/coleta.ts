@@ -52,7 +52,7 @@ function raioDoHover(ctx: SystemContext, id: EntityId): number {
 }
 
 /** Distância (m) entre o casco do hover e a borda da jazida. */
-function folgaAteJazida(ctx: SystemContext, hover: EntityId, jazida: EntityId): number {
+export function folgaAteJazida(ctx: SystemContext, hover: EntityId, jazida: EntityId): number {
   const dh = direcaoDe(getComponent(ctx.state, hover, 'position')!);
   const dj = direcaoDe(getComponent(ctx.state, jazida, 'position')!);
   const raioJ = getComponent(ctx.state, jazida, 'obstacle')!.raio;
@@ -227,7 +227,7 @@ function descarregarSucata(ctx: SystemContext, hover: EntityId): boolean {
 }
 
 /** Descarrega a carga no ponto de entrega (ECO-14 ou ECO-22). */
-function descarregar(ctx: SystemContext, hover: EntityId): boolean {
+export function descarregar(ctx: SystemContext, hover: EntityId): boolean {
   const coleta = getComponent(ctx.state, hover, 'coleta')!;
   if (coleta.sucata) return descarregarSucata(ctx, hover);
   if (!vivo(ctx.state, coleta.entrega) || !coleta.cargaRecurso) return false;
@@ -249,6 +249,41 @@ function descarregar(ctx: SystemContext, hover: EntityId): boolean {
     coleta.cargaRecurso = null;
   }
   return true;
+}
+
+/**
+ * ECO: um passo de mineração do hover na jazida (taxa do recurso, `en_minerar_s`, carga até
+ * `carga_hover_u`). No Modo Reserva não minera (ENE-11). Esgotada, a jazida some.
+ */
+export function extrair(
+  ctx: SystemContext,
+  hover: EntityId,
+  jazidaId: EntityId,
+  dt: number,
+): 'ok' | 'esgotada' | 'parado' {
+  const { state } = ctx;
+  const coleta = getComponent(state, hover, 'coleta')!;
+  const jazida = getComponent(state, jazidaId, 'jazida')!;
+  // ENE-10/ENE-11: minerar gasta `en_minerar_s`; no Modo Reserva o hover não minera.
+  if (emReserva(ctx, hover)) return 'parado';
+  // Carga de outro recurso não se mistura.
+  if (coleta.carga > 0 && coleta.cargaRecurso && coleta.cargaRecurso !== jazida.recurso) {
+    return 'parado';
+  }
+  // §13.2: `bonus_coleta_pct` da dificuldade da IA acelera a mineração.
+  const bonus =
+    1 + bonusDaNacao(state, getComponent(state, hover, 'owner')!.nacao, 'bonus_coleta_pct');
+  const taxa = TAXA[jazida.recurso] * bonus * gastar(ctx, hover, param('en_minerar_s') * dt);
+  const u = Math.min(taxa * dt, param('carga_hover_u') - coleta.carga, jazida.quantidade);
+  coleta.carga += u;
+  coleta.cargaRecurso = jazida.recurso;
+  jazida.quantidade -= u;
+  if (jazida.quantidade <= 1e-9) {
+    esgotar(ctx, jazidaId);
+    return 'esgotada';
+  }
+  atualizarRaio(ctx, jazidaId);
+  return 'ok';
 }
 
 function passo(ctx: SystemContext, hover: EntityId, dt: number): void {
@@ -317,26 +352,13 @@ function passo(ctx: SystemContext, hover: EntityId, dt: number): void {
         irPara(ctx, hover, posicaoDaVaga(ctx, coleta.jazida!, hover, vagaDe(jazida.vagas, hover)));
         return;
       }
-      const jazida = getComponent(state, coleta.jazida!, 'jazida')!;
-      // ENE-10/ENE-11: minerar gasta `en_minerar_s`; no Modo Reserva o hover não minera.
-      if (emReserva(ctx, hover)) return;
-      // §13.2: `bonus_coleta_pct` da dificuldade da IA acelera a mineração.
-      const bonus =
-        1 + bonusDaNacao(state, getComponent(state, hover, 'owner')!.nacao, 'bonus_coleta_pct');
-      const taxa = TAXA[jazida.recurso] * bonus * gastar(ctx, hover, param('en_minerar_s') * dt);
-      const u = Math.min(taxa * dt, param('carga_hover_u') - coleta.carga, jazida.quantidade);
-      coleta.carga += u;
-      coleta.cargaRecurso = jazida.recurso;
-      jazida.quantidade -= u;
-      if (jazida.quantidade <= 1e-9) {
-        const lugar = direcaoDe(getComponent(state, coleta.jazida!, 'position')!);
-        esgotar(ctx, coleta.jazida!);
+      const lugar = direcaoDe(getComponent(state, coleta.jazida!, 'position')!);
+      if (extrair(ctx, hover, coleta.jazida!, dt) === 'esgotada') {
         coleta.jazida = null;
         if (coleta.carga > 0) iniciarEntrega(ctx, hover);
         else voltarAoTrabalho(ctx, hover, lugar);
         return;
       }
-      atualizarRaio(ctx, coleta.jazida!);
       if (coleta.carga >= param('carga_hover_u') - 1e-9) iniciarEntrega(ctx, hover);
       return;
     }

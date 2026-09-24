@@ -18,7 +18,7 @@ import { criarMina } from '../units/criar';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 
 /** Chegou ao ponto de plantio (m). */
-const CHEGADA_PLANTIO_M = 0.6;
+export const CHEGADA_PLANTIO_M = 0.6;
 
 /** Sem recursos, a fabricação espera em silêncio (sem AL-06 a cada tick). */
 function podePagar(ctx: SystemContext, nacao: NacaoId): boolean {

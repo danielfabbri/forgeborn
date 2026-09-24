@@ -126,6 +126,35 @@ export interface ComponentMap {
     voo_s: number;
     /** CMB-16: dano esperado no alvo. */
     dano: number;
+    /** D-40: torpedo sem trava do controle direto voa reto neste rumo. */
+    rumo?: Ponto;
+  };
+  /**
+   * Controle direto (CTL-08 a CTL-12): a entrada do jogador, atualizada pelo comando `pilotar`.
+   * Enquanto existir, a unidade não age sozinha (D-44).
+   */
+  pilotado: {
+    /** W/S e A/D, de -1 a 1. */
+    frente: number;
+    lateral: number;
+    /** Para onde a mira aponta (tangente no chão): o corpo gira até ela. */
+    rumo: Ponto;
+    impulso: boolean;
+    /** Clique esquerdo pressionado. */
+    gatilho: boolean;
+    /** Corpo ou jazida sob a mira, e o ponto do chão sob ela. */
+    alvo: EntityId | null;
+    ponto: Ponto | null;
+    /** CTL-11: alvo sendo travado pelo torpedo e há quanto tempo. */
+    travando: EntityId | null;
+    trava_s: number;
+    segurando: boolean;
+    /** D-42: drone pedido no chão (clique direito pousa ou decola). */
+    pousar: boolean;
+    /** Direção do último deslocamento (a unidade freia nela sem entrada). */
+    deslocamento: Ponto | null;
+    /** D-42: plantio de mina em andamento (ponto e segundos). */
+    plantio: { ponto: Ponto; timer_s: number } | null;
   };
   /** Destroço (ECO-27 a ECO-29). */
   destroco: { composicao: Partial<Record<RecursosId, number>>; restante_s: number };

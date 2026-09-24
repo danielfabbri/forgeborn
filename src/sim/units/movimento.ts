@@ -179,6 +179,12 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
     return;
   }
 
+  // CTL-10: em controle direto, o jogador conduz (D-44: sem rota nem ordens).
+  if (getComponent(state, id, 'pilotado')) {
+    passoPilotado(ctx, g, id, dt);
+    return;
+  }
+
   if (aerea && !atualizarAr(ctx, id, loc, dt)) {
     loc.speed = 0;
     loc.rumo = rumo;
@@ -251,6 +257,114 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
       loc.ancora = d;
       tracarRota(navegavelDe(ctx, id) ?? g, loc, novo, aerea);
     }
+  }
+}
+
+/** D-42: pouso e decolagem do drone em controle direto; devolve se ele pode se deslocar. */
+function arPilotado(ctx: SystemContext, id: EntityId, pousar: boolean, dt: number): boolean {
+  const ar = getComponent(ctx.state, id, 'air')!;
+  const semEnergia = emReserva(ctx, id);
+  switch (ar.estado) {
+    case 'voando':
+      // D-28: sem energia, pousa onde está.
+      if (pousar || semEnergia) {
+        ar.estado = 'pousando';
+        ar.timer_s = param('tempo_pouso_s');
+        return false;
+      }
+      return true;
+    case 'pousando':
+      ar.timer_s -= dt;
+      if (ar.timer_s <= 0) ar.estado = 'pousado';
+      return false;
+    case 'pousado':
+      if (!pousar && !semEnergia) {
+        ar.estado = 'decolando';
+        ar.timer_s = param('tempo_decolagem_s');
+      }
+      return false;
+    case 'decolando':
+      ar.timer_s -= dt;
+      if (ar.timer_s <= 0) ar.estado = 'voando';
+      return false;
+  }
+}
+
+/**
+ * CTL-10/CTL-12: movimento do controle direto. O corpo gira até a mira no ritmo de
+ * `giro_graus_s`; W/S e A/D deslocam no rumo do corpo. Sincronia e Impulso somam bônus de
+ * velocidade (D-41); o Impulso multiplica o gasto de movimento por `impulso_mult_en`.
+ */
+function passoPilotado(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number): void {
+  const { state } = ctx;
+  const s = statsMovel(getComponent(state, id, 'unit')!.tipo);
+  const aerea = s.camada === 'ar';
+  const loc = getComponent(state, id, 'locomotion')!;
+  const pos = getComponent(state, id, 'position')!;
+  const p = getComponent(state, id, 'pilotado')!;
+  const R = raioDoMundo(ctx);
+  const d = direcaoDe(pos);
+  let rumo: Vec3 = tangente(d, loc.rumo) ?? norteEm(d);
+  loc.destino = null;
+  loc.rota = [];
+
+  const desejado = tangente(d, p.rumo);
+  if (desejado) {
+    const giro = ((s.giro_graus_s * Math.PI) / 180) * dt;
+    const delta = anguloNoPlano(d, rumo, desejado);
+    rumo = normalizar(girar(rumo, d, Math.max(-giro, Math.min(giro, delta))));
+  }
+  loc.rumo = rumo;
+  if (aerea && !arPilotado(ctx, id, p.pousar, dt)) {
+    loc.speed = 0;
+    return;
+  }
+
+  const direita = normalizar(produtoVetorial(rumo, d));
+  const entrada = Math.min(1, Math.hypot(p.frente, p.lateral));
+  const desejo: Vec3 = [
+    rumo[0] * p.frente + direita[0] * p.lateral,
+    rumo[1] * p.frente + direita[1] * p.lateral,
+    rumo[2] * p.frente + direita[2] * p.lateral,
+  ];
+  if (entrada > 1e-6) p.deslocamento = normalizar(desejo);
+  const impulso = p.impulso && entrada > 1e-6;
+  const reserva = emReserva(ctx, id) ? param('modo_reserva_vel_pct') / 100 : 1;
+  const bonus =
+    1 +
+    param('controle_direto_bonus_vel_pct') / 100 +
+    (impulso ? param('impulso_bonus_vel_pct') / 100 : 0);
+  const velAlvo = s.vel_m_s * reserva * bonus * entrada;
+  const aceleracao = s.vel_m_s / param(aerea ? 'aceleracao_ar_s' : 'aceleracao_solo_s');
+  const dv = aceleracao * bonus * dt;
+  loc.speed =
+    loc.speed < velAlvo ? Math.min(velAlvo, loc.speed + dv) : Math.max(velAlvo, loc.speed - dv);
+
+  const direcao = p.deslocamento ? tangente(d, p.deslocamento) : null;
+  let novo = d;
+  const angulo = (loc.speed * dt) / R;
+  if (direcao && angulo > 0) {
+    const cheio = avancar(d, direcao, angulo);
+    // MOV-01: o terreno intransponível barra o hover; ele desliza pela borda quando dá.
+    if (aerea || livreEm(g, cheio.p)) {
+      novo = cheio.p;
+    } else {
+      const lateral = [Math.PI / 4, -Math.PI / 4]
+        .map((a) => avancar(d, normalizar(girar(direcao, d, a)), angulo * Math.SQRT1_2))
+        .find((t) => livreEm(g, t.p));
+      if (lateral) novo = lateral.p;
+      else loc.speed = 0;
+    }
+  }
+  const avancou = R * arco(d, novo);
+  posicionar(ctx, pos, novo, 0);
+  loc.rumo = tangente(novo, rumo) ?? rumo;
+  if (p.deslocamento) p.deslocamento = tangente(novo, p.deslocamento) ?? p.deslocamento;
+  // ENE-10 e CTL-12: o Impulso multiplica o gasto de movimento.
+  if (avancou > 1e-9) {
+    gastar(ctx, id, s.mov_en_s * (impulso ? param('impulso_mult_en') : 1) * dt);
+  } else if (aerea) {
+    gastar(ctx, id, s.pairar_en_s * dt);
   }
 }
 

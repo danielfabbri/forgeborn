@@ -226,6 +226,8 @@ export function autoRecarga(ctx: SystemContext): void {
     const bateria = getComponent(state, unidade, 'bateria')!;
     const recarga = getComponent(state, unidade, 'recarga')!;
     if (!bateria.autoRecarga || recarga.estado !== 'nenhuma' || bateria.recebendo) continue;
+    // D-44: em controle direto, o jogador decide quando recarregar.
+    if (getComponent(state, unidade, 'pilotado')) continue;
     // O silo ancorado não sai do lugar; recarrega quando estiver solto.
     if (siloImovel(getComponent(state, unidade, 'silo'))) continue;
     const ordem = getComponent(state, unidade, 'order')!.tipo;

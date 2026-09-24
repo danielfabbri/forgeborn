@@ -32,6 +32,8 @@ function abrigoMaisProximo(ctx: SystemContext, hover: EntityId): EntityId | null
 export function passoFuga(ctx: SystemContext): void {
   const { state } = ctx;
   for (const id of entitiesWith(state, 'coleta', 'combate')) {
+    // D-44: em controle direto, o hover não foge sozinho.
+    if (getComponent(state, id, 'pilotado')) continue;
     const combate = getComponent(state, id, 'combate')!;
     const fuga = getComponent(state, id, 'fuga');
     const nacao = getComponent(state, id, 'owner')!.nacao;

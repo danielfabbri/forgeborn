@@ -60,6 +60,10 @@ export function aplicarDano(
   const { state } = ctx;
   const vida = getComponent(state, alvo, 'vida');
   if (!vida || vida.hp <= 0) return;
+  // CTL-12: Sincronia, bônus de dano de quem está em controle direto.
+  if (atacante !== null && getComponent(state, atacante, 'pilotado')) {
+    dano *= 1 + param('controle_direto_bonus_dano_pct') / 100;
+  }
   const aplicado = continuo
     ? dano * multiplicadores.get(tipo)![classeDe(state, alvo)]
     : danoContra(state, alvo, dano, tipo);

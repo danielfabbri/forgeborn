@@ -210,6 +210,86 @@ function disparar(
   pendente.set(alvo, (pendente.get(alvo) ?? 0) + dano);
 }
 
+/** CTL-11: disparo do controle direto no alvo (já pago). */
+export function dispararEm(
+  ctx: SystemContext,
+  atirador: EntityId,
+  arma: ArmasRow,
+  alvo: EntityId,
+): void {
+  disparar(ctx, atirador, arma, alvo, danoPendente(ctx.state));
+}
+
+/** D-40: torpedo sem trava, reto no rumo, a partir do atirador. */
+export function dispararReto(
+  ctx: SystemContext,
+  atirador: EntityId,
+  arma: ArmasRow,
+  rumo: Vec3,
+): void {
+  const { state } = ctx;
+  const nacao = nacaoDe(state, atirador)!;
+  const da = direcaoDe(getComponent(state, atirador, 'position')!);
+  const id = createEntity(state);
+  const pos = { x: 0, y: 0, z: 0 };
+  posicionar(ctx, pos, da, chaoEm(ctx, da) + ALTURA_HOVER_M);
+  setComponent(state, id, 'position', pos);
+  setComponent(state, id, 'projetil', {
+    tipo: 'torpedo',
+    arma: arma.id,
+    atirador,
+    nacao,
+    alvo: null,
+    ponto: da,
+    voo_s: 0,
+    dano: arma.dano,
+    rumo,
+  });
+  ctx.emit('disparo', { atirador, alvo: null, arma: arma.id });
+}
+
+/** CTL-11: bomba do controle direto no ponto de impacto previsto. */
+export function soltarBomba(
+  ctx: SystemContext,
+  atirador: EntityId,
+  arma: ArmasRow,
+  ponto: Vec3,
+): void {
+  const { state } = ctx;
+  const nacao = nacaoDe(state, atirador)!;
+  const origem = getComponent(state, atirador, 'position')!;
+  const id = createEntity(state);
+  const pos = { x: 0, y: 0, z: 0 };
+  posicionar(
+    ctx,
+    pos,
+    direcaoDe(origem),
+    Math.hypot(origem.x, origem.y, origem.z) - raioDoMundo(ctx),
+  );
+  setComponent(state, id, 'position', pos);
+  setComponent(state, id, 'projetil', {
+    tipo: 'bomba',
+    arma: arma.id,
+    atirador,
+    nacao,
+    alvo: null,
+    ponto,
+    voo_s: 0,
+    dano: arma.dano,
+  });
+  ctx.emit('disparo', { atirador, alvo: null, arma: arma.id, ponto });
+}
+
+/** Alvo dentro do alcance da arma (CTL-11 usa a mesma regra). */
+export function noAlcance(
+  ctx: SystemContext,
+  id: EntityId,
+  arma: ArmasRow,
+  alvo: EntityId,
+): boolean {
+  return noAlcanceDeTiro(ctx, id, arma, alvo);
+}
+
 /** Paga e dispara, se a arma está pronta e o alvo no alcance. */
 function tentarDisparo(
   ctx: SystemContext,
@@ -295,6 +375,11 @@ function passoUnidade(ctx: SystemContext, id: EntityId, pendente: Pendente): voi
   const recarga = getComponent(state, id, 'recarga');
   const ar = getComponent(state, id, 'air');
   const d = direcaoDe(getComponent(state, id, 'position')!);
+  // D-44: em controle direto, só o jogador dispara (pilotagem.ts).
+  if (getComponent(state, id, 'pilotado')) {
+    componente.alvo = null;
+    return;
+  }
   // CMB-15: a ordem de ataque direta vale mesmo na postura Passiva.
   const inativa =
     (componente.postura === 'passiva' && ordem.tipo !== 'atacar') ||

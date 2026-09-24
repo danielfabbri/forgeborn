@@ -18,9 +18,10 @@ function fatorSolar(state: SimState): number {
   return dados.cenarios.find((c) => c.id === state.cenario)?.fator_solar ?? 1;
 }
 
+/** Estruturas prontas da nação: em obra não geram nem guardam energia (PRD-12). */
 function estruturasDa(state: SimState, nacao: NacaoId): EntityId[] {
   return entitiesWith(state, 'structure', 'owner').filter(
-    (id) => getComponent(state, id, 'owner')!.nacao === nacao,
+    (id) => getComponent(state, id, 'owner')!.nacao === nacao && !getComponent(state, id, 'obra'),
   );
 }
 

@@ -4,11 +4,13 @@
  */
 import type { CommandHandler } from '../core/pipeline';
 import type { NacaoId } from '../core/types';
-import type { EstruturasId, MoveisId } from '../data';
+import { dados, type EstruturasId, type MoveisId } from '../data';
 import { normalizar, type Vec3 } from '../map/esfera';
 import { criarEstrutura, criarMina, criarUnidade } from '../units/criar';
 
 export const DEBUG_CRIAR_COMMAND = 'debug_criar';
+/** Aplica à nação que envia o estoque inicial de um modo (REG-05), para a cena de demonstração. */
+export const DEBUG_ESTOQUE_COMMAND = 'debug_estoque';
 
 /** `d` é a direção do ponto na superfície (normalizada aqui). */
 export type Criacao =
@@ -25,5 +27,12 @@ export const debugCriarHandlers: Record<string, CommandHandler> = {
       else if ('estrutura' in c) criarEstrutura(ctx, nacao, c.estrutura, d);
       else criarMina(ctx, nacao, d);
     }
+  },
+  [DEBUG_ESTOQUE_COMMAND]: (ctx, comando) => {
+    const modo = (comando.dados as { modo?: unknown } | null)?.modo;
+    const linha = dados.estoque_inicial.find((e) => e.modo === modo);
+    const estoque = ctx.state.estoques[comando.nacao];
+    if (!linha || !estoque) return;
+    for (const r of dados.recursos) estoque[r.id] = linha[r.id];
   },
 };

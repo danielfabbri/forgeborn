@@ -1,4 +1,4 @@
-import type { EstruturasId, MoveisId, RecursosId } from '../data';
+import type { CustosId, EstruturasId, MoveisId, RecursosId } from '../data';
 import type { EntityId, NacaoId } from './types';
 
 /** Direção unitária a partir do centro do planeta (CEN-14): um ponto da superfície. */
@@ -47,8 +47,24 @@ export interface ComponentMap {
   };
   /** Drones (MOV-07). */
   air: { estado: 'voando' | 'pousando' | 'pousado' | 'decolando'; timer_s: number };
-  /** Produtores de unidades (PRD-08). */
-  producer: { pontoDeEncontro: Ponto | null };
+  /** Produtores (Nave e Impressora): fila única (PRD-03) e ponto de encontro (PRD-08). */
+  producer: { pontoDeEncontro: Ponto | null; fila: ItemDaFila[] };
+  /** HP corrente e máximo (CMB-01); o canteiro cresce com a obra (PRD-11). */
+  vida: { hp: number; max: number };
+  /**
+   * Estrutura em construção (PRD-10 a PRD-14). Antes de `instalada`, a pegada só está reservada
+   * (D-29): não é obstáculo nem tem HP. Até 100% não funciona (PRD-12).
+   */
+  obra: {
+    progresso: number;
+    instalada: boolean;
+    /** Recursos pagos ao posicionar (PRD-04), base do reembolso (PRD-05, PRD-14). */
+    pago: Partial<Record<RecursosId, number>>;
+    /** Construtores ativos no último tick (PRD-15). */
+    construtores: EntityId[];
+  };
+  /** Ordem direta de construir ou reparar (PRD-13, PRD-18); `auto` = reparo da PRD-19. */
+  trabalho: { tipo: 'construir' | 'reparar'; alvo: EntityId; auto: boolean };
   /** Mina plantada (UNI-07); regras completas na T-064. */
   mine: { armada: boolean };
   /**
@@ -142,3 +158,13 @@ export interface ComponentMap {
 }
 
 export type ComponentName = keyof ComponentMap;
+
+/** Item da fila de um produtor (PRD-03 a PRD-06). */
+export interface ItemDaFila {
+  item: CustosId;
+  /** 0..1 (unidades); estruturas guardam o progresso na `obra`. */
+  progresso: number;
+  pago: Partial<Record<RecursosId, number>>;
+  /** Canteiro da estrutura (itens de estrutura da Impressora). */
+  obra: EntityId | null;
+}

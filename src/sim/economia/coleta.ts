@@ -6,7 +6,7 @@
  * `raio_busca_jazida_m`; se não houver, espera na fila. A vaga é liberada quando o hover sai
  * para entregar. Qualquer ordem manual de movimento interrompe a coleta (a carga fica a bordo).
  */
-import { entitiesWith, getComponent } from '../core/entities';
+import { entitiesWith, getComponent, removeComponent } from '../core/entities';
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { EntityId } from '../core/types';
 import { dados, param, type RecursosId } from '../data';
@@ -150,6 +150,7 @@ export function designar(
 ): void {
   const coleta = getComponent(ctx.state, hover, 'coleta')!;
   const alvo = getComponent(ctx.state, jazida, 'jazida')!;
+  removeComponent(ctx.state, hover, 'trabalho');
   liberar(ctx, hover);
   coleta.jazida = jazida;
   coleta.recurso = alvo.recurso;

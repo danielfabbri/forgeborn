@@ -6,7 +6,7 @@
  * com 100% ou ao receber outra ordem. Depois da auto-recarga: o hover volta à coleta, a
  * Impressora à impressão (M5) e as demais unidades ao lugar (e à patrulha) de onde saíram.
  */
-import { entitiesWith, getComponent, isAlive } from '../core/entities';
+import { entitiesWith, getComponent, isAlive, removeComponent } from '../core/entities';
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { EntityId } from '../core/types';
 import { param } from '../data';
@@ -94,7 +94,8 @@ export function iniciarRecarga(
   if (estrutura === null) return false;
   const tipo = getComponent(ctx.state, unidade, 'unit')!.tipo;
   const ordem = getComponent(ctx.state, unidade, 'order')!;
-  const volta = automatica && tipo !== 'hover_explorer' && tipo !== 'printer';
+  // ENE-16: a Impressora também volta ao lugar e retoma a fila de onde parou.
+  const volta = automatica && tipo !== 'hover_explorer';
   recarga.retorno = volta
     ? {
         ponto: direcaoDe(getComponent(ctx.state, unidade, 'position')!),
@@ -102,6 +103,7 @@ export function iniciarRecarga(
       }
     : null;
   if (getComponent(ctx.state, unidade, 'coleta')) liberar(ctx, unidade);
+  removeComponent(ctx.state, unidade, 'trabalho');
   recarga.estado = 'indo';
   recarga.estrutura = estrutura;
   recarga.automatica = automatica;

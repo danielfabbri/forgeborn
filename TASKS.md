@@ -143,11 +143,11 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-040 — Rede de energia** · M · Spec: ENE-01 – ENE-05 · Dep: T-006 · Feito: 2026-09-23
   - Aceite: testes de geração, capacidade, excedente perdido e de cada nível de prioridade do racionamento, incluindo satélite offline.
-- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Mover, pairar, minerar, Reserva e pouso do drone (D-28) prontos; os demais custos de §6.3 entram com as mecânicas (M5, M6)
+- [~] **T-041 — Baterias e estados** · M · Spec: ENE-08 – ENE-11 · Dep: T-040, T-022 · Mover, pairar, minerar, imprimir, auxiliar obra, reparar, Reserva e pouso do drone (D-28) prontos; reciclar, disparar, fabricar mina, Sentinela e impulso entram com as mecânicas
   - Aceite: custo de cada tarefa da tabela §6.3 verificado; unidade parada no solo gasta 0; Modo Reserva anda a `modo_reserva_vel_pct`% e não executa tarefas.
 - [x] **T-042 — Portas de recarga** · M · Spec: ENE-12 – ENE-14 · Dep: T-041 · Feito: 2026-09-23
   - Aceite: 1 unidade por porta; fila por ordem de chegada; escolha pelo menor tempo estimado; a recarga retira energia do banco.
-- [~] **T-043 — Auto-recarga** · M · Spec: ENE-15, ENE-16 · Dep: T-042 · Limiares, retorno (D-28) e volta à coleta prontos; combate espera a M6 e a Impressora, a M5
+- [~] **T-043 — Auto-recarga** · M · Spec: ENE-15, ENE-16 · Dep: T-042 · Limiares, retorno (D-28), volta à coleta e Impressora (ENE-16) prontos; o combate espera a M6
   - Aceite: limiares `auto_recarga_*` por papel; militares não saem em combate; drones saem em `recarga_forcada_drone_pct` mesmo em combate; a Impressora pausa a impressão, recarrega e retoma.
 - [x] **T-044 — Usinas** · M · Spec: ENE-06, ENE-07 · Dep: T-040, T-053 · Feito: 2026-09-23 (usinas criadas por comando de depuração até a T-053)
   - Aceite: solar gera `geracao_en_s` × `fator_solar`; nuclear consome `nuclear_consumo_u` a cada `nuclear_intervalo_s`, gera 0 sem Urânio (AL-10) e religa em `nuclear_religar_s`.
@@ -158,19 +158,19 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M5 — Produção e construção
 
-- [ ] **T-050 — Filas e pagamento** · M · Spec: PRD-01 – PRD-06 · Dep: T-032, T-041
+- [x] **T-050 — Filas e pagamento** · M · Spec: PRD-01 – PRD-06 · Dep: T-032, T-041 · Feito: 2026-09-23
   - Aceite: matriz de produção respeitada (a Impressora não imprime Impressora); pagamento ao enfileirar; AL-06 lista o que falta; cancelar devolve `reembolso_cancelamento_pct`%; energia consumida durante a impressão (rede na Nave, bateria na Impressora).
-- [ ] **T-051 — Impressão de unidades** · M · Spec: PRD-07 – PRD-09 · Dep: T-050
+- [x] **T-051 — Impressão de unidades** · M · Spec: PRD-07 – PRD-09 · Dep: T-050 · Feito: 2026-09-23
   - Aceite: a Impressora só imprime parada e retoma ao parar; a unidade nasce ao lado e vai ao ponto de encontro; hover com ponto de encontro numa jazida começa a minerar.
-- [ ] **T-052 — Posicionamento de estruturas** · M · Spec: PRD-10, UI-08 · Dep: T-013, T-050
+- [x] **T-052 — Posicionamento de estruturas** · M · Spec: PRD-10, UI-08 · Dep: T-013, T-050 · Feito: 2026-09-23 (terreno explorado entra com a névoa, T-070; o planeta não tem limites de mapa, D-24)
   - Aceite: holograma verde ou vermelho com o motivo; regras de inclinação, folga de jazida, terreno explorado e limites do mapa.
-- [ ] **T-053 — Canteiro e obra** · M · Spec: PRD-11 – PRD-14, ART-06 (versão simples) · Dep: T-052
+- [x] **T-053 — Canteiro e obra** · M · Spec: PRD-11 – PRD-14, ART-06 (versão simples) · Dep: T-052 · Feito: 2026-09-23
   - Aceite: HP inicial `hp_inicial_canteiro_pct`% e crescente; dano descontado do HP final; nada funciona antes de 100%; canteiro retomável; cancelamento devolve recursos.
-- [ ] **T-054 — Poder de Impressão e assistência** · M · Spec: PRD-15 – PRD-17 · Dep: T-053
+- [x] **T-054 — Poder de Impressão e assistência** · M · Spec: PRD-15 – PRD-17 · Dep: T-053 · Feito: 2026-09-23
   - Aceite: velocidade = Σ PI ÷ `tempo_s` (com os valores atuais, 1 Impressora + 2 hovers = 2,0 PI, metade do tempo); energia dividida por PI; hovers continuam um canteiro sem a Impressora; no máximo `max_assistentes`.
-- [ ] **T-055 — Reparo** · P · Spec: PRD-18, PRD-19 · Dep: T-054
+- [x] **T-055 — Reparo** · P · Spec: PRD-18, PRD-19 · Dep: T-054 · Feito: 2026-09-23
   - Aceite: taxas por reparador e tipo de alvo; no máximo `max_reparadores`; drones só pousados; Impressora ociosa repara dentro de `raio_reparo_auto_m`.
-- [ ] **T-056 — Início de partida** · M · Spec: REG-04 – REG-08, FLX-09 (versão simples) · Dep: T-050, T-033
+- [x] **T-056 — Início de partida** · M · Spec: REG-04 – REG-08, FLX-09 (versão simples) · Dep: T-050, T-033 · Feito: 2026-09-23 (a área explorada inicial, REG-07, entra com a névoa, T-070; o pouso é o hover saindo pela rampa, sem cinemática)
   - Aceite: cada nação começa com Nave e 1 hover; estoque inicial por modo; área explorada inicial; o hover inicial coleta sozinho; INV-02 verde.
 
 ## M6 — Combate

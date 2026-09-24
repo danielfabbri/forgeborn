@@ -26,7 +26,9 @@ export interface PontoDeEntrega {
 
 export function ehDeposito(state: SimState, id: EntityId): boolean {
   const estrutura = getComponent(state, id, 'structure');
-  return estrutura !== undefined && statsEstrutura(estrutura.tipo).deposito;
+  // PRD-12: em obra não recebe descargas.
+  if (!estrutura || getComponent(state, id, 'obra')) return false;
+  return statsEstrutura(estrutura.tipo).deposito;
 }
 
 export function cargaDoSilo(silo: { carga: Partial<Record<RecursosId, number>> }): number {

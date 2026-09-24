@@ -153,6 +153,11 @@ function mandarMover(
   });
 }
 
+/** Ordem de mover dada pela simulação (ponto de encontro, PRD-08). */
+export function moverPara(ctx: SystemContext, ids: EntityId[], alvo: Ponto): void {
+  mandarMover(ctx, ids, alvo, false, false);
+}
+
 function parar(ctx: SystemContext, ids: EntityId[], manter: boolean): void {
   for (const id of ids) {
     const loc = getComponent(ctx.state, id, 'locomotion')!;

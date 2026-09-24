@@ -8,7 +8,7 @@ import type { EntityId, NacaoId } from '../core/types';
 import { type EstruturasId, type MoveisId, param } from '../data';
 import { norteEm, type Vec3 } from '../map/esfera';
 import { bateriaInicial } from '../energia/bateria';
-import { ALTURA_HOVER_M, altitudeDrone, ehAerea, statsEstrutura } from './stats';
+import { ALTURA_HOVER_M, altitudeDrone, ehAerea, statsEstrutura, statsMovel } from './stats';
 import { chaoEm, type Posicao, posicionar } from './superficie';
 
 export type Limite = 'limite_corpos' | 'limite_bases_lancamento' | 'limite_minas_ativas';
@@ -72,6 +72,8 @@ export function criarUnidade(
     ancora: null,
   });
   setComponent(state, id, 'order', { tipo: 'nenhuma', patrulha: null });
+  const hp = statsMovel(tipo).hp;
+  setComponent(state, id, 'vida', { hp, max: hp });
   // ENE-08: sai da impressão com a bateria cheia (a Bateria Móvel, com parte).
   setComponent(state, id, 'bateria', {
     ...bateriaInicial(tipo),
@@ -86,7 +88,7 @@ export function criarUnidade(
   });
   if (tipo === 'mobile_battery') setComponent(state, id, 'suporte', { ligado: true, alvos: [] });
   if (aerea) setComponent(state, id, 'air', { estado: 'voando', timer_s: 0 });
-  if (tipo === 'printer') setComponent(state, id, 'producer', { pontoDeEncontro: null });
+  if (tipo === 'printer') setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });
   if (tipo === 'hover_explorer') {
     // Recém-impresso: ocioso para a Diretiva de Coleta (ECO-19).
     setComponent(state, id, 'coleta', {
@@ -115,7 +117,32 @@ export function criarUnidade(
   return id;
 }
 
+/** Círculo que cobre a pegada quadrada (MOV-04); é a borda usada nas distâncias (D-28, D-29). */
+export function raioDaPegada(tipo: EstruturasId): number {
+  return (statsEstrutura(tipo).pegada_m / 2) * Math.SQRT2;
+}
+
+/** Estrutura pronta (cena de depuração, início de partida). */
 export function criarEstrutura(
+  ctx: SystemContext,
+  nacao: NacaoId,
+  tipo: EstruturasId,
+  d: Vec3,
+): EntityId | null {
+  const id = reservarEstrutura(ctx, nacao, tipo, d);
+  if (id === null) return null;
+  instalarEstrutura(ctx, id);
+  const vida = getComponent(ctx.state, id, 'vida')!;
+  vida.hp = vida.max;
+  ativarEstrutura(ctx, id);
+  return id;
+}
+
+/**
+ * Corpo da estrutura sem obstáculo, HP nem funções: a pegada reservada entre posicionar e
+ * instalar o canteiro (D-29).
+ */
+export function reservarEstrutura(
   ctx: SystemContext,
   nacao: NacaoId,
   tipo: EstruturasId,
@@ -129,9 +156,33 @@ export function criarEstrutura(
   setComponent(state, id, 'owner', { nacao });
   setComponent(state, id, 'structure', { tipo });
   setComponent(state, id, 'position', posicao(ctx, d, chaoEm(ctx, d)));
-  // Círculo que cobre a pegada quadrada (MOV-04).
-  setComponent(state, id, 'obstacle', { raio: (statsEstrutura(tipo).pegada_m / 2) * Math.SQRT2 });
-  if (tipo === 'ship') setComponent(state, id, 'producer', { pontoDeEncontro: null });
+  return id;
+}
+
+/** Canteiro instalado (PRD-11): vira obstáculo e ganha `hp_inicial_canteiro_pct`% do HP. */
+export function instalarEstrutura(ctx: SystemContext, id: EntityId): void {
+  const { state } = ctx;
+  const tipo = getComponent(state, id, 'structure')!.tipo;
+  setComponent(state, id, 'obstacle', { raio: raioDaPegada(tipo) });
+  const max = statsEstrutura(tipo).hp;
+  setComponent(state, id, 'vida', { hp: (max * param('hp_inicial_canteiro_pct')) / 100, max });
+  state.versaoObstaculos++;
+}
+
+/** Estrutura a 100% ganha as funções (PRD-12). */
+export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
+  const { state } = ctx;
+  const tipo = getComponent(state, id, 'structure')!.tipo;
+  if (tipo === 'ship') {
+    setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });
+    // ENE-03/ENE-04: a impressão na Nave consome da rede com prioridade 3.
+    setComponent(state, id, 'consumidor', {
+      prioridade: 3,
+      demanda_en_s: 0,
+      atendido: 1,
+      offline: false,
+    });
+  }
   // ENE-12: portas de recarga (Nave e usinas).
   const portas = statsEstrutura(tipo).portas;
   if (portas > 0) {
@@ -149,8 +200,6 @@ export function criarEstrutura(
       semUranio: false,
     });
   }
-  state.versaoObstaculos++;
-  return id;
 }
 
 export function criarMina(ctx: SystemContext, nacao: NacaoId, d: Vec3): EntityId | null {

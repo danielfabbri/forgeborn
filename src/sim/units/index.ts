@@ -1,6 +1,7 @@
 import type { CommandHandler, GameSystemId, SystemFn } from '../core/pipeline';
 import { comandosDaEconomia, sistemaEconomia } from '../economia';
 import { comandosDaEnergia, sistemaEnergia } from '../energia';
+import { comandosDaProducao, sistemaProducao } from '../producao';
 import { sistemaMovimento } from './movimento';
 import { comandosDeMovimento } from './ordens';
 
@@ -10,6 +11,7 @@ export { comandosDeMovimento, formacao } from './ordens';
 
 /** Sistemas de jogo já implementados, no encaixe da TEC-06. */
 export const sistemasDoJogo: Partial<Record<GameSystemId, SystemFn>> = {
+  producao: sistemaProducao,
   energia: sistemaEnergia,
   movimento: sistemaMovimento,
   economia: sistemaEconomia,
@@ -20,4 +22,5 @@ export const comandosDoJogo: Record<string, CommandHandler> = {
   ...comandosDeMovimento,
   ...comandosDaEconomia,
   ...comandosDaEnergia,
+  ...comandosDaProducao,
 };

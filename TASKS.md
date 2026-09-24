@@ -228,15 +228,15 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M9 — IA
 
-- [ ] **T-090 — Arquitetura de IA** · M · Spec: IA-01, IA-02, IA-06, IA-07 · Dep: T-056, T-063, T-070
+- [x] **T-090 — Arquitetura de IA** · M · Spec: IA-01, IA-02, IA-06, IA-07 · Dep: T-056, T-063, T-070 · Feito: 2026-09-24
   - Aceite: módulos emitem apenas Comandos (TEC-07); a IA só lê o que a própria névoa permite (teste com unidade escondida).
-- [ ] **T-091 — Economia e energia da IA** · M · Spec: IA-01, §13.2 · Dep: T-090
+- [x] **T-091 — Economia e energia da IA** · M · Spec: IA-01, §13.2 · Dep: T-090 · Feito: 2026-09-24
   - Aceite: atinge `meta_hovers` da dificuldade; mantém saldo de energia ≥ 0 na maior parte da partida; expande até `expansoes_max`.
-- [ ] **T-092 — Produção e composição** · M · Spec: IA-03, §13.3 · Dep: T-091
+- [x] **T-092 — Produção e composição** · M · Spec: IA-03, §13.3 · Dep: T-091 · Feito: 2026-09-24
   - Aceite: a composição converge para os pesos da personalidade, redistribuindo tiers bloqueados; a adaptação reage ao exército inimigo observado.
-- [ ] **T-093 — Militar e dificuldades** · G · Spec: IA-04, IA-05, §13.2 · Dep: T-092
+- [~] **T-093 — Militar e dificuldades** · G · Spec: IA-04, IA-05, §13.2 · Dep: T-092 · Ondas, recuo, defesa e ataque entre IAs prontos e testados; os níveis de micro estão implementados, mas sem teste por nível; as partidas entre IAs iguais ainda empatam (ver T-095)
   - Aceite: ondas respeitam `primeiro_ataque_min` e `vr_exercito_ataque`; recuo abaixo de `ia_recuo_vr_pct`; níveis de `micro` implementados; IAs se atacam entre si.
-- [ ] **T-094 — Batedor e Sentinelas** · P · Spec: IA-01 · Dep: T-072, T-090
+- [~] **T-094 — Batedor e Sentinelas** · P · Spec: IA-01 · Dep: T-072, T-090 · Batedor com Hover de Observação pronto; Sentinelas esperam a T-072
 - [ ] **T-095 — Estabilidade e hierarquia de dificuldade** · M · Spec: INV-12, INV-14 · Dep: T-093, T-007
   - Aceite: INV-12 e INV-14 verdes com `sim:match` em 20 seeds.
 

@@ -16,6 +16,7 @@ import { navegavel } from '../units/navegacao';
 import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 import { emReserva, gastar } from '../energia/bateria';
+import { bonusDaNacao } from '../ia/base';
 import { cargaDoSilo, creditar, entregaMaisProxima, vivo } from './estoque';
 import { atualizarRaio, esgotar, jazidaViva, todasAsJazidas, vagasLivres } from './jazidas';
 
@@ -319,7 +320,10 @@ function passo(ctx: SystemContext, hover: EntityId, dt: number): void {
       const jazida = getComponent(state, coleta.jazida!, 'jazida')!;
       // ENE-10/ENE-11: minerar gasta `en_minerar_s`; no Modo Reserva o hover não minera.
       if (emReserva(ctx, hover)) return;
-      const taxa = TAXA[jazida.recurso] * gastar(ctx, hover, param('en_minerar_s') * dt);
+      // §13.2: `bonus_coleta_pct` da dificuldade da IA acelera a mineração.
+      const bonus =
+        1 + bonusDaNacao(state, getComponent(state, hover, 'owner')!.nacao, 'bonus_coleta_pct');
+      const taxa = TAXA[jazida.recurso] * bonus * gastar(ctx, hover, param('en_minerar_s') * dt);
       const u = Math.min(taxa * dt, param('carga_hover_u') - coleta.carga, jazida.quantidade);
       coleta.carga += u;
       coleta.cargaRecurso = jazida.recurso;

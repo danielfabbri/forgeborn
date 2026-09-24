@@ -45,6 +45,7 @@ import { aproximar, bordaDe, noAlcance, pararNoLugar } from './alcance';
 import { custoDe, pagar, produz, reembolsar } from './custos';
 import { cabeNaFila, enfileirar } from './fila';
 import { explorado } from '../visao/nevoa';
+import { bonusDaNacao } from '../ia/base';
 import { encerrarTrabalho } from './trabalho';
 
 /** PRD-10: por que o local não serve (UI-08), ou null se serve. */
@@ -262,9 +263,12 @@ function passoObras(ctx: SystemContext): void {
     estado.construtores = [];
     if (!estado.instalada) continue;
     const custo = custoDe(getComponent(state, obra, 'structure')!.tipo as EstruturaImpressa);
+    // §13.2: `bonus_impressao_pct` da IA acelera a obra (a energia total não muda).
+    const nacao = getComponent(state, obra, 'owner')!.nacao;
+    const ritmo = 1 + bonusDaNacao(state, nacao, 'bonus_impressao_pct');
     let avanco = 0;
     for (const id of construtoresDe(ctx, obra)) {
-      const pi = piDe(ctx, id);
+      const pi = piDe(ctx, id) * ritmo;
       const pago = gastar(ctx, id, ((custo.en_impressao * pi) / custo.tempo_s) * dt);
       if (pago <= 0) continue;
       avanco += (pi * pago * dt) / custo.tempo_s;

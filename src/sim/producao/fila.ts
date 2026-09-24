@@ -11,6 +11,7 @@ import { type CustosId, type MoveisId, param } from '../data';
 import { designar } from '../economia/coleta';
 import { todasAsJazidas } from '../economia/jazidas';
 import { emReserva, gastar } from '../energia/bateria';
+import { bonusDaNacao } from '../ia/base';
 import { avancar, escalar, norteEm, tangente, type Vec3 } from '../map/esfera';
 import { criarUnidade } from '../units/criar';
 import { moverPara } from '../units/ordens';
@@ -152,19 +153,32 @@ function concluirUnidade(ctx: SystemContext, produtor: EntityId): void {
   if (nascer(ctx, produtor, item.item as MoveisId) !== null) producer.fila.shift();
 }
 
+/** §13.2: `bonus_impressao_pct` da IA encurta o tempo (a energia total não muda). */
+function aceleracao(ctx: SystemContext, produtor: EntityId): number {
+  return (
+    1 +
+    bonusDaNacao(
+      ctx.state,
+      getComponent(ctx.state, produtor, 'owner')!.nacao,
+      'bonus_impressao_pct',
+    )
+  );
+}
+
 /** Nave: o progresso do tick usa a energia que a rede entregou no tick anterior. */
 function passoNave(ctx: SystemContext, nave: EntityId): void {
   const producer = getComponent(ctx.state, nave, 'producer')!;
   const consumidor = getComponent(ctx.state, nave, 'consumidor')!;
+  const ritmo = aceleracao(ctx, nave);
   const item = producer.fila[0];
   if (item && consumidor.demanda_en_s > 0) {
     const tempo = custoDe(item.item).tempo_s;
-    item.progresso = Math.min(1, item.progresso + (consumidor.atendido * ctx.dt) / tempo);
+    item.progresso = Math.min(1, item.progresso + (consumidor.atendido * ritmo * ctx.dt) / tempo);
   }
   if (item && item.progresso >= 1 - 1e-9) concluirUnidade(ctx, nave);
   const proximo = producer.fila[0];
   consumidor.demanda_en_s = proximo
-    ? custoDe(proximo.item).en_impressao / custoDe(proximo.item).tempo_s
+    ? (custoDe(proximo.item).en_impressao / custoDe(proximo.item).tempo_s) * ritmo
     : 0;
 }
 
@@ -176,8 +190,9 @@ function passoImpressora(ctx: SystemContext, impressora: EntityId): void {
   if (item.progresso < 1 - 1e-9) {
     if (!impressoraLivre(ctx, impressora) || emReserva(ctx, impressora)) return;
     const custo = custoDe(item.item);
-    const pago = gastar(ctx, impressora, (custo.en_impressao / custo.tempo_s) * ctx.dt);
-    item.progresso = Math.min(1, item.progresso + (pago * ctx.dt) / custo.tempo_s);
+    const ritmo = aceleracao(ctx, impressora);
+    const pago = gastar(ctx, impressora, (custo.en_impressao / custo.tempo_s) * ritmo * ctx.dt);
+    item.progresso = Math.min(1, item.progresso + (pago * ritmo * ctx.dt) / custo.tempo_s);
   }
   if (item.progresso >= 1 - 1e-9) concluirUnidade(ctx, impressora);
 }

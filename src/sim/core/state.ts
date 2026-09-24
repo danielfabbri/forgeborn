@@ -40,6 +40,8 @@ export interface SimState {
    * de `celula_nevoa_m`. Vazia até o primeiro passo de visão (ou sem mapa).
    */
   nevoa: Record<NacaoId, number[]>;
+  /** §13: estado de cada nação controlada pela IA. */
+  ias: Partial<Record<NacaoId, EstadoDaIa>>;
   /** REG-11/REG-12: fim da partida, ou null. */
   resultado: { vencedor: NacaoId | null; motivo: 'eliminacao' | 'tempo'; tick: number } | null;
 }
@@ -53,6 +55,34 @@ export interface PlacarDaNacao {
   /** Já teve Nave ou Impressora (só assim pode ser eliminada). */
   presente: boolean;
   eliminada: boolean;
+}
+
+/** IA de uma nação (§13). */
+export interface EstadoDaIa {
+  nivel: 'facil' | 'normal' | 'dificil' | 'brutal';
+  /** Próxima decisão (s de jogo), a cada `reacao_s`. */
+  proxima_s: number;
+  /** Próxima rodada do Estrategista (s de jogo), a cada `ia_intervalo_estrategista_s`. */
+  proximoEstrategista_s: number;
+  /** IA-01: postura global escolhida pelo Estrategista. */
+  postura: 'expandir' | 'economia' | 'armar' | 'atacar' | 'defender';
+  /** VIS-04: estruturas inimigas já vistas (por ID), com a última posição. */
+  conhecidas: Record<
+    string,
+    { nacao: NacaoId; tipo: string; d: [number, number, number]; tick: number }
+  >;
+  /** IA-03: exército inimigo observado (VR por tipo), acumulado com decaimento. */
+  observado: Record<string, number>;
+  /** IA-04: onda de ataque em curso. */
+  onda: {
+    vrInicial: number;
+    alvo: NacaoId;
+    ponto: [number, number, number];
+    /** Quem partiu na onda; os que nascem depois esperam a próxima. */
+    membros: number[];
+  } | null;
+  /** Batedor: índices dos pontos de exploração já visitados. */
+  visitados: number[];
 }
 
 export interface ChavesDaNacao {
@@ -132,6 +162,7 @@ export function createInitialState(
     ) as SimState['chaves'],
     tempoLimite_s: null,
     nevoa: Object.fromEntries(nacoes.map((n) => [n, [] as number[]])) as SimState['nevoa'],
+    ias: {},
     resultado: null,
   };
 }

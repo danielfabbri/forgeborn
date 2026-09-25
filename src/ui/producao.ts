@@ -44,3 +44,6 @@ export interface AcoesDoPainel {
 }
 
 export const acoesDoPainel: { atual: AcoesDoPainel | null } = { atual: null };
+
+/** UI-04: foto de cada item do cartão (ligada pela partida ao renderer do retrato). */
+export const fotosDoPainel: { de: ((item: string) => string | null) | null } = { de: null };

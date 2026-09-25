@@ -317,5 +317,7 @@
   "config.daltonismo.protanopia": "Protanopia",
   "config.daltonismo.deuteranopia": "Deuteranopia",
   "config.daltonismo.tritanopia": "Tritanopia",
-  "pouso.pular": "Esc, Espaço ou clique: pular o pouso"
+  "pouso.pular": "Esc, Espaço ou clique: pular o pouso",
+  "producao.energia": "{n} EN",
+  "producao.tempo": "{n} s"
 }

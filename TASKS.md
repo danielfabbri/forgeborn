@@ -214,7 +214,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-080 — Barra superior** · M · Spec: UI-01, ENE-22 · Dep: T-032, T-040 · Feito: 2026-09-25 (o clique nos recursos abre as Diretivas com a T-083)
   - Aceite: recursos com "em trânsito", energia com as três cores do indicador, corpos, relógio e menu.
 - [x] **T-081 — Painel de seleção e retrato 3D** · M · Spec: UI-03 · Dep: T-021 · Feito: 2026-09-24
-- [ ] **T-082 — Cartão de comandos e atalhos** · M · Spec: UI-04, §12.4 · Dep: T-050, T-025
+- [~] **T-082 — Cartão de comandos e atalhos** · M · Spec: UI-04, §12.4 · Dep: T-050, T-025 · Cartão de produção com foto de cada item e dica com receita, energia e tempo (o que falta em vermelho); falta a grade 4×3 com os comandos das unidades
   - Aceite: botões e teclas vêm de `dados:atalhos`; custo faltante em vermelho; menus B e U da Impressora.
 - [ ] **T-083 — Painel de Diretivas** · P · Spec: UI-02 · Dep: T-033, T-043
 - [x] **T-084 — Alertas** · M · Spec: UI-06, AUD-05, `dados:alertas` · Dep: T-060 · Feito: 2026-09-25 (AL-15 dispara com os eventos de cenário, CEN-03, que a Lua não tem; som e voz com a T-126)

@@ -43,6 +43,7 @@ import { AneisDeSelecao } from '../render/aneis';
 import { BarrasRender, type CorpoComBarras } from '../render/barras';
 import { CombateRender } from '../render/combate';
 import { RetratoRender } from '../render/retrato';
+import type { TipoDeModelo } from '../render/modelos';
 import {
   alturaMaxima,
   centrarEm,
@@ -111,7 +112,7 @@ import {
   pausado,
   tooltip,
 } from '../ui/hud';
-import { acoesDoPainel, avisoProducao, painelProducao } from '../ui/producao';
+import { acoesDoPainel, avisoProducao, fotosDoPainel, painelProducao } from '../ui/producao';
 
 /** D-42: a habilidade do clique direito de cada unidade (chave de i18n). */
 const HABILIDADES: Record<string, string> = {
@@ -349,6 +350,8 @@ export function iniciarPartida(): void {
   const barras = new BarrasRender(view.scene);
   const emblemas = new EmblemasRender(view.scene);
   const retrato = new RetratoRender();
+  // UI-04: fotos dos itens do cartão de produção, na cor da nação do jogador.
+  fotosDoPainel.de = (item) => retrato.miniatura(item as TipoDeModelo, corDaNacao(jogador));
   /** UI-07: Tab alterna as barras entre automático e "sempre" (a mesma opção das Configurações). */
   window.addEventListener('keydown', (e) => {
     if (e.code !== 'Tab' || e.repeat) return;

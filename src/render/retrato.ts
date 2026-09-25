@@ -12,11 +12,15 @@ import {
   Mesh,
   PerspectiveCamera,
   Scene,
+  Vector2,
   Vector3,
   WebGLRenderer,
 } from 'three';
 import { geometriaDoModelo, type TipoDeModelo } from './modelos';
 import { criarMaterial } from './unidades';
+
+/** Lado (px) das fotos do cartão de produção (apresentação). */
+const LADO_MINIATURA_PX = 128;
 
 /** Uma volta a cada 8 s (apresentação). */
 const GIRO_RAD_S = (Math.PI * 2) / 8;
@@ -65,6 +69,31 @@ export class RetratoRender {
     this.renderer!.render(this.scene, this.camera);
     this.destino.clearRect(0, 0, canvas.width, canvas.height);
     this.destino.drawImage(this.renderer!.domElement, 0, 0);
+  }
+
+  private readonly miniaturas = new Map<string, string>();
+
+  /**
+   * UI-04: foto do modelo para o cartão de produção (imagem PNG, feita uma vez e guardada),
+   * no mesmo contexto WebGL do retrato. Ângulo fixo de três quartos.
+   */
+  miniatura(tipo: TipoDeModelo, cor: string): string {
+    const chave = `${tipo}|${cor}`;
+    const pronta = this.miniaturas.get(chave);
+    if (pronta) return pronta;
+    this.renderer ??= new WebGLRenderer({ alpha: true, antialias: true });
+    const tamanho = this.renderer.getSize(new Vector2());
+    this.renderer.setPixelRatio(1);
+    this.renderer.setSize(LADO_MINIATURA_PX, LADO_MINIATURA_PX, false);
+    this.trocarModelo(tipo, cor, chave);
+    this.malha!.rotation.y = -0.7;
+    this.renderer.render(this.scene, this.camera);
+    const url = this.renderer.domElement.toDataURL('image/png');
+    this.miniaturas.set(chave, url);
+    // O retrato volta ao tamanho do seu canvas e recarrega o modelo no próximo quadro.
+    if (tamanho.x > 0) this.renderer.setSize(tamanho.x, tamanho.y, false);
+    this.chave = '';
+    return url;
   }
 
   private trocarModelo(tipo: TipoDeModelo, cor: string, chave: string): void {

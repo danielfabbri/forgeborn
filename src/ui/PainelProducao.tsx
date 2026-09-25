@@ -1,7 +1,61 @@
 import { t, type TextKey } from '../i18n';
-import { acoesDoPainel, avisoProducao, painelProducao } from './producao';
+import { configuracoes } from '../game/configuracoes';
+import { clipPathDe, corDoRecurso, FORMA_DO_RECURSO } from '../game/paleta';
+import { dados } from '../sim';
+import { acoesDoPainel, avisoProducao, fotosDoPainel, painelProducao } from './producao';
 
 const nome = (item: string) => t(`item.${item}` as TextKey);
+
+/** UI-04: a foto do modelo no botão do cartão. */
+function Foto({ item }: { item: string }) {
+  const url = fotosDoPainel.de?.(item) ?? null;
+  return url ? (
+    <img class="foto-item" src={url} alt="" draggable={false} />
+  ) : (
+    <span class="foto-item vazia">{nome(item)}</span>
+  );
+}
+
+/**
+ * UI-04: ao passar o mouse, o nome e a receita completa (o que falta em vermelho), a energia
+ * e o tempo de impressão.
+ */
+function Custo({ item, estoque }: { item: string; estoque: Record<string, number> }) {
+  const custo = dados.custos.find((c) => c.id === item);
+  if (!custo) return null;
+  const daltonico = configuracoes.value.daltonismo !== 'nenhum';
+  return (
+    <div class="dica-item" data-testid="dica-item">
+      <strong>{nome(item)}</strong>
+      <div class="receita">
+        {dados.recursos
+          .filter((r) => (custo[r.id as 'fe'] as number) > 0)
+          .map((r) => {
+            const precisa = custo[r.id as 'fe'] as number;
+            const falta = (estoque[r.id] ?? 0) < precisa;
+            return (
+              <span key={r.id} class={falta ? 'falta' : ''} data-recurso={r.id}>
+                <span
+                  class="icone"
+                  style={{
+                    background: corDoRecurso(r.id),
+                    ...(daltonico
+                      ? { clipPath: clipPathDe(FORMA_DO_RECURSO[r.id] ?? 'quadrado') }
+                      : {}),
+                  }}
+                />
+                {t(`recurso.${r.id}` as TextKey)} {precisa}
+              </span>
+            );
+          })}
+      </div>
+      <div class="discreto">
+        {t('producao.energia', { n: custo.en_impressao })} ·{' '}
+        {t('producao.tempo', { n: custo.tempo_s })}
+      </div>
+    </div>
+  );
+}
 
 /** Painel de produção: fila do produtor, menus da Impressora e posicionamento (UI-08). */
 export function PainelProducao() {
@@ -67,15 +121,19 @@ export function PainelProducao() {
                   </button>
                 </div>
               )}
-              <div class="opcoes" data-testid="opcoes">
+              <div class="opcoes cartao" data-testid="opcoes">
                 {estado.opcoes.map((opcao) => (
                   <button
                     type="button"
                     key={opcao.item}
+                    class="opcao-cartao"
                     onClick={() => acoes?.escolher(opcao.item)}
                     data-item={opcao.item}
+                    aria-label={nome(opcao.item)}
                   >
-                    <kbd>{opcao.tecla}</kbd> {nome(opcao.item)}
+                    <Foto item={opcao.item} />
+                    <kbd>{opcao.tecla}</kbd>
+                    <Custo item={opcao.item} estoque={estado.estoque} />
                   </button>
                 ))}
               </div>

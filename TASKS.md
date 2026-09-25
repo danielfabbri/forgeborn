@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.14.0 |
+| Derivado de | `SPEC.md` v0.15.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -264,13 +264,14 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M12 — Arte e áudio
 
-- [ ] **T-120 — Modelos finais das unidades móveis** · G · Spec: ART-01 – ART-03, ART-05 · Dep: Q-02, T-020
-- [ ] **T-121 — Modelos finais das estruturas e da Nave** · G · Spec: ART-01 – ART-04 · Dep: Q-02, T-020
+- [ ] **T-120 — Modelos finais das unidades móveis** · G · Spec: ART-01 – ART-03, ART-05, D-45 · Dep: T-020
+- [ ] **T-121 — Modelos finais das estruturas e da Nave** · G · Spec: ART-01 – ART-04, D-45 · Dep: T-020
 - [ ] **T-122 — Efeito de impressão 3D** · M · Spec: ART-06 · Dep: T-053
 - [ ] **T-123 — VFX de combate** · M · Spec: ART-07 · Dep: T-062, T-066
 - [ ] **T-124 — Iluminação, pós-processamento e presets** · M · Spec: ART-08, TEC-19 · Dep: T-014
 - [ ] **T-125 — Cinemática de pouso** · M · Spec: FLX-09 · Dep: T-121
-- [ ] **T-126 — Áudio** · G · Spec: AUD-01 – AUD-05 · Dep: T-084, Q-03
+- [ ] **T-126 — Áudio** · G · Spec: AUD-01 – AUD-05, D-46, D-47 · Dep: T-084
+  - Aceite: trilhas por contexto com transição cruzada e arquivos faltando pulados; SFX sintetizados por unidade e interface; voz TTS pt-BR com legenda; volumes por canal nas Configurações.
 - [ ] **T-127 — Acessibilidade** · M · Spec: UI-11, UI-12 · Dep: T-080
 
 ## M13 — Campanha (v1.0)

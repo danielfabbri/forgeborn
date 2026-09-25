@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.14.0 — rascunho para aprovação |
+| Versão do SPEC | 0.15.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1264,10 +1264,10 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 ## 19. Áudio
 
-- **AUD-01** — Música adaptativa em 3 camadas: **Exploração** (sintetizadores ambientes); **Tensão** (entra com sinais de radar ou inimigos visíveis); **Combate** (percussão, quando há combate próprio). Transições de 4 s.
+- **AUD-01** — Música em arquivos na pasta `public/audio/trilhas/` (D-47): `trilha_abertura.mp3` na Tela de Abertura, `trilha_menu.mp3` nos menus e `trilha1.mp3`, `trilha2.mp3`… na partida, tocadas em ordem embaralhada sem repetir a última, com transição cruzada de 4 s. Arquivo que falta é pulado; sem nenhum, o jogo segue sem música.
 - **AUD-02** — Conceito sonoro: sem atmosfera (Lua), os sons do mundo são "percebidos" pela mente, como impactos graves e abafados, vibração do solo. Em 1ª pessoa ficam ainda mais internos (filtro passa-baixa). Cenários com atmosfera (Marte, Vênus, Titã) têm vento e sons mais abertos.
-- **AUD-03** — A voz da IA do jogador (alertas e tutorial) é sintética, calma e em pt-BR, sempre com legenda. Escolha de TTS ou dublagem: Q-03.
-- **AUD-04** — SFX por unidade: movimento (zumbido do hover), mineração, impressão (servos e deposição), disparos por arma, explosões por porte, interface (clique, erro, confirmação).
+- **AUD-03** — A voz da IA do jogador (alertas e tutorial) é sintética, calma e em pt-BR, sempre com legenda: a síntese de voz do navegador (Web Speech API) com uma voz pt-BR do sistema; sem voz pt-BR disponível, fica só a legenda (D-46).
+- **AUD-04** — SFX sintetizados em tempo real pela Web Audio API, sem arquivos (D-47), por unidade: movimento (zumbido do hover), mineração, impressão (servos e deposição), disparos por arma, explosões por porte, interface (clique, erro, confirmação).
 - **AUD-05** — Canais de mixagem: geral, música, efeitos, voz e ambiente, com volume por canal nas Configurações. Alertas repetidos respeitam o `cooldown_s`.
 
 ---
@@ -1311,7 +1311,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **TEC-15** — Metas: 60 fps a 1080p no preset Médio num notebook intermediário (GPU integrada recente, ex.: Iris Xe ou Radeon 680M) com 400 unidades móveis e 160 estruturas; ≥ 30 fps no preset Baixo em hardware de 2020. Tick da simulação ≤ 8 ms no pior caso, com 4 nações.
 - **TEC-16** — Instancing por tipo de unidade, com a cor da nação como atributo de instância. No máximo 300 draw calls na visão RTS; sombras só para objetos na área visível; 3 níveis de LOD por modelo.
 - **TEC-17** — A névoa é uma textura atualizada a `nevoa_atualizacao_hz`, amostrada no shader do terreno e aplicada aos objetos. O minimapa usa a mesma textura.
-- **TEC-18** — Assets em glTF 2.0 (.glb) com meshopt e texturas KTX2 (Basis). Download inicial ≤ 40 MB e tela de abertura interativa em ≤ 8 s numa conexão de 50 Mbps; outros cenários carregam sob demanda. Até existir arte final, modelos placeholder procedurais com as mesmas silhuetas e proporções (ART-03).
+- **TEC-18** — Assets em glTF 2.0 (.glb) com meshopt e texturas KTX2 (Basis). Download inicial ≤ 40 MB e tela de abertura interativa em ≤ 8 s numa conexão de 50 Mbps; outros cenários carregam sob demanda. Até existir arte final, modelos placeholder procedurais com as mesmas silhuetas e proporções (ART-03). Os modelos do v1 são procedurais refinados, gerados em código (D-45); o carregamento de .glb fica para quando houver arte modelada.
 - **TEC-19** — Presets gráficos (Baixo, Médio, Alto, Ultra) controlam escala de resolução, sombras, SSAO, partículas e distância de LOD. Escala de resolução (limitada à densidade da tela) e mapa de sombras: Baixo 0,75× e sem sombras; Médio 1× e 1024 px; Alto 1,5× e 2048 px (padrão); Ultra 2× e 4096 px. SSAO, partículas e LOD entram com a T-124.
 
 ### 20.6 Plataforma e persistência
@@ -1475,6 +1475,9 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-42 | Habilidade do clique direito por unidade (lista em CTL-10). | Resposta do produto à lacuna de CTL-10. | Aprovada |
 | D-43 | Na 3ª pessoa o botão do meio orbita a câmera; o mouse gira a unidade. | Resposta do produto à lacuna de CTL-15. | Aprovada |
 | D-44 | Disparo sem alvo sob a mira se perde (gasta energia e recarga); a unidade em controle direto não age sozinha. | Lacunas de CTL-10 e CTL-11: o disparo é do jogador, e a autonomia não pode disputar o controle com ele. | Proposta |
+| D-45 | Modelos finais procedurais refinados, gerados em código (chanfros, painéis, desgaste por shader, PBR), com as silhuetas de ART-03. | Resposta do produto à Q-02. | Aprovada |
+| D-46 | Voz da IA pela síntese de voz do navegador (pt-BR), sempre com legenda. | Resposta do produto à Q-03. | Aprovada |
+| D-47 | Trilhas musicais em arquivos fornecidos pelo produto, alternadas por contexto (AUD-01); efeitos sonoros sintetizados em código (AUD-04). Substitui a música adaptativa em camadas. | Resposta do produto: a música deve ser composta, não sintetizada. | Aprovada |
 
 ---
 
@@ -1485,8 +1488,8 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | ID | Questão | Padrão adotado |
 |---|---|---|
 | Q-01 | Multiplayer online entra no roadmap? Afeta a exigência de determinismo entre navegadores diferentes. | Não no v1; determinismo garantido só na mesma build e navegador. |
-| Q-02 | Pipeline de arte 3D: modelagem própria (Blender), assets comprados ou geração por IA? | Placeholders procedurais até a decisão. |
-| Q-03 | Voz da IA: TTS ou dublagem? | TTS + legendas. |
+| Q-02 | Pipeline de arte 3D: modelagem própria (Blender), assets comprados ou geração por IA? | Respondida em 0.15.0: procedurais refinados em código (D-45). |
+| Q-03 | Voz da IA: TTS ou dublagem? | Respondida em 0.15.0: TTS do navegador e legendas (D-46). |
 | Q-04 | Lançamento só em pt-BR ou pt-BR + inglês? | pt-BR no v1.0; inglês no v1.x. |
 | Q-05 | Distribuição: site próprio, itch.io, outra? | Site estático gratuito. |
 | Q-06 | Raio de colisão da jazida (MOV-04): fixo ou acompanha o tamanho visual (ECO-05)? | Respondida em 0.3.0: acompanha o visual (D-27). |
@@ -1550,3 +1553,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.12.0 | 2026-09-24 | D-35: `dados:jazidas` com mais Cu (inicial 2000 u, expansão 1500 u). |
 | 0.13.0 | 2026-09-24 | D-36 a D-39: conteúdo do MVP das Configurações (FLX-13), camuflagem na névoa revelada (FB-01), botão da Campanha (FLX-03) e troca de tela por recarga (nova FLX-14); valores dos presets gráficos em TEC-19. |
 | 0.14.0 | 2026-09-24 | D-40 a D-44: torpedo sem trava, soma dos bônus de velocidade, habilidades do clique direito, órbita da 3ª pessoa e disparo sem alvo no controle direto (CTL-10, CTL-11, CTL-12, CTL-15). |
+| 0.15.0 | 2026-09-25 | D-45 a D-47 respondem Q-02 e Q-03: modelos procedurais refinados, voz por TTS do navegador, trilhas em arquivos alternadas por contexto (AUD-01 reescrita) e SFX sintetizados (AUD-03, AUD-04, TEC-18). |

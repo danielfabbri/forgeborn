@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.15.0 — rascunho para aprovação |
+| Versão do SPEC | 0.15.1 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1264,9 +1264,9 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 ## 19. Áudio
 
-- **AUD-01** — Música em arquivos na pasta `public/audio/trilhas/` (D-47): `trilha_abertura.mp3` na Tela de Abertura, `trilha_menu.mp3` nos menus e `trilha1.mp3`, `trilha2.mp3`… na partida, tocadas em ordem embaralhada sem repetir a última, com transição cruzada de 4 s. Arquivo que falta é pulado; sem nenhum, o jogo segue sem música.
+- **AUD-01** — Música em arquivos na pasta `public/audio/trilhas/` (D-47): `trilha_abertura.mp3` na Tela de Abertura e na Seleção de Modo (o mesmo fundo, FLX-03), `trilha_menu.mp3` nos demais menus e `trilha1.mp3`, `trilha2.mp3`… na partida, tocadas em ordem embaralhada sem repetir a última, com transição cruzada de 4 s. Arquivo que falta é pulado; sem nenhum, o jogo segue sem música.
 - **AUD-02** — Conceito sonoro: sem atmosfera (Lua), os sons do mundo são "percebidos" pela mente, como impactos graves e abafados, vibração do solo. Em 1ª pessoa ficam ainda mais internos (filtro passa-baixa). Cenários com atmosfera (Marte, Vênus, Titã) têm vento e sons mais abertos.
-- **AUD-03** — A voz da IA do jogador (alertas e tutorial) é sintética, calma e em pt-BR, sempre com legenda: a síntese de voz do navegador (Web Speech API) com uma voz pt-BR do sistema; sem voz pt-BR disponível, fica só a legenda (D-46).
+- **AUD-03** — A voz da IA do jogador (alertas e tutorial) é sintética, calma e em pt-BR, sempre com legenda: a síntese de voz do navegador (Web Speech API) com uma voz pt-BR do sistema; sem voz pt-BR disponível, fica só a legenda (D-46). Uma fala por vez; um alerta mais urgente interrompe um menos urgente, e o de urgência igual ou menor não é falado (D-48).
 - **AUD-04** — SFX sintetizados em tempo real pela Web Audio API, sem arquivos (D-47), por unidade: movimento (zumbido do hover), mineração, impressão (servos e deposição), disparos por arma, explosões por porte, interface (clique, erro, confirmação).
 - **AUD-05** — Canais de mixagem: geral, música, efeitos, voz e ambiente, com volume por canal nas Configurações. Alertas repetidos respeitam o `cooldown_s`.
 
@@ -1478,6 +1478,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-45 | Modelos finais procedurais refinados, gerados em código (chanfros, painéis, desgaste por shader, PBR), com as silhuetas de ART-03. | Resposta do produto à Q-02. | Aprovada |
 | D-46 | Voz da IA pela síntese de voz do navegador (pt-BR), sempre com legenda. | Resposta do produto à Q-03. | Aprovada |
 | D-47 | Trilhas musicais em arquivos fornecidos pelo produto, alternadas por contexto (AUD-01); efeitos sonoros sintetizados em código (AUD-04). Substitui a música adaptativa em camadas. | Resposta do produto: a música deve ser composta, não sintetizada. | Aprovada |
+| D-48 | A trilha da abertura segue na Seleção de Modo; a voz fala um alerta por vez e só um mais urgente interrompe. | Detalhes de AUD-01 e AUD-03 na implementação da T-126: a Seleção de Modo tem o mesmo fundo da abertura, e vozes sobrepostas não se entendem. | Proposta |
 
 ---
 
@@ -1554,3 +1555,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.13.0 | 2026-09-24 | D-36 a D-39: conteúdo do MVP das Configurações (FLX-13), camuflagem na névoa revelada (FB-01), botão da Campanha (FLX-03) e troca de tela por recarga (nova FLX-14); valores dos presets gráficos em TEC-19. |
 | 0.14.0 | 2026-09-24 | D-40 a D-44: torpedo sem trava, soma dos bônus de velocidade, habilidades do clique direito, órbita da 3ª pessoa e disparo sem alvo no controle direto (CTL-10, CTL-11, CTL-12, CTL-15). |
 | 0.15.0 | 2026-09-25 | D-45 a D-47 respondem Q-02 e Q-03: modelos procedurais refinados, voz por TTS do navegador, trilhas em arquivos alternadas por contexto (AUD-01 reescrita) e SFX sintetizados (AUD-03, AUD-04, TEC-18). |
+| 0.15.1 | 2026-09-25 | D-48: trilha da abertura na Seleção de Modo e fila da voz dos alertas (AUD-01, AUD-03). |

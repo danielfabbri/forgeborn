@@ -69,10 +69,15 @@ export function criarMaterial(): MeshStandardMaterial {
 attribute float aEmis;
 attribute vec3 aCorNacao;
 attribute float aCorte;
+attribute vec3 aMat;
+attribute float aDesgaste;
 varying float vEmis;
 varying vec3 vCorNacao;
 varying float vCorte;
-varying float vYLocal;`,
+varying float vYLocal;
+varying vec3 vMat;
+varying float vDesgaste;
+varying vec3 vPosLocal;`,
       )
       .replace(
         '#include <begin_vertex>',
@@ -80,7 +85,10 @@ varying float vYLocal;`,
 vEmis = aEmis;
 vCorNacao = aCorNacao;
 vCorte = aCorte;
-vYLocal = position.y;`,
+vYLocal = position.y;
+vMat = aMat;
+vDesgaste = aDesgaste;
+vPosLocal = position;`,
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
@@ -89,7 +97,48 @@ vYLocal = position.y;`,
 varying float vEmis;
 varying vec3 vCorNacao;
 varying float vCorte;
-varying float vYLocal;`,
+varying float vYLocal;
+varying vec3 vMat;
+varying float vDesgaste;
+varying vec3 vPosLocal;
+// Ruído de valor 3D barato para o desgaste (D-45).
+float ruido3(vec3 p) {
+  vec3 i = floor(p);
+  vec3 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float n = dot(i, vec3(1.0, 57.0, 113.0));
+  vec4 a = fract(sin(vec4(n, n + 1.0, n + 57.0, n + 58.0)) * 43758.5453);
+  vec4 b = fract(sin(vec4(n + 113.0, n + 114.0, n + 170.0, n + 171.0)) * 43758.5453);
+  vec4 c = mix(a, b, f.z);
+  vec2 d = mix(c.xy, c.zw, f.y);
+  return mix(d.x, d.y, f.x);
+}`,
+      )
+      // ART-02/D-45: PBR por parte, juntas de painel e desgaste nas bordas chanfradas.
+      .replace(
+        '#include <roughnessmap_fragment>',
+        `#include <roughnessmap_fragment>
+float desgaste = 0.0;
+if (vEmis < 0.5 && vMat.x > 0.0) {
+  roughnessFactor = vMat.x;
+  desgaste = vDesgaste * smoothstep(0.35, 0.6, ruido3(vPosLocal * 4.0));
+  roughnessFactor = mix(roughnessFactor, 0.3, desgaste);
+}`,
+      )
+      .replace(
+        '#include <metalnessmap_fragment>',
+        `#include <metalnessmap_fragment>
+if (vEmis < 0.5 && vMat.x > 0.0) {
+  metalnessFactor = mix(vMat.y, 0.95, desgaste);
+  // Metal exposto nas bordas gastas.
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.62, 0.63, 0.66), desgaste * 0.8);
+  // Juntas de painel: linhas finas a cada 0,6 m nas superfícies pintadas.
+  if (vMat.z > 0.5) {
+    vec3 g = abs(fract(vPosLocal / 0.6) - 0.5);
+    float junta = 1.0 - smoothstep(0.0, 0.025, 0.5 - max(max(g.x, g.y), g.z));
+    diffuseColor.rgb *= 1.0 - junta * 0.35;
+  }
+}`,
       )
       // ART-06: plano de corte da impressão (aCorte > 0; 0 = peça inteira).
       .replace(

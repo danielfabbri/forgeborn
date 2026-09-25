@@ -93,7 +93,7 @@
     "id": "wall",
     "nome": "Muro",
     "hp": 800,
-    "pegada_m": 4,
+    "pegada_m": 6,
     "visao_m": 4,
     "deteccao_m": 0,
     "geracao_en_s": 0,

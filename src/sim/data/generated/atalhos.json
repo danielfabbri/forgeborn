@@ -161,6 +161,11 @@
   },
   {
     "contexto": "satellite_uplink",
+    "tecla": "S",
+    "acao": "Imprimir Satélite"
+  },
+  {
+    "contexto": "satellite_uplink",
     "tecla": "T",
     "acao": "Reposicionar satélite"
   },

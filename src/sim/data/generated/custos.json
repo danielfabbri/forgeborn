@@ -254,21 +254,39 @@
   },
   {
     "id": "satellite_uplink",
-    "nome": "Base de Lançamento + Satélite",
+    "nome": "Base de Lançamento",
     "categoria": "estrutura",
     "produzido_por": [
       "printer"
     ],
-    "fe": 100,
-    "si": 80,
+    "fe": 120,
+    "si": 100,
     "cu": 40,
     "li": 30,
     "ti": 40,
-    "u": 6,
-    "vr": 450,
+    "u": 0,
+    "vr": 460,
     "ref_x": 45,
-    "en_impressao": 270,
-    "tempo_s": 75
+    "en_impressao": 300,
+    "tempo_s": 80
+  },
+  {
+    "id": "satellite",
+    "nome": "Satélite",
+    "categoria": "orbital",
+    "produzido_por": [
+      "satellite_uplink"
+    ],
+    "fe": 120,
+    "si": 90,
+    "cu": 75,
+    "li": 60,
+    "ti": 90,
+    "u": 15,
+    "vr": 787.5,
+    "ref_x": null,
+    "en_impressao": 525,
+    "tempo_s": 90
   },
   {
     "id": "wall",

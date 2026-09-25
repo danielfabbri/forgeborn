@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.17.0 |
+| Derivado de | `SPEC.md` v0.18.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -30,13 +30,13 @@
 | M1 Mundo | T-010 – T-016 | Planeta lunar gerado por seed, grades, câmera RTS |
 | M2 Entidades e movimento | T-020 – T-026 | Selecionar e mover unidades placeholder com pathfinding |
 | M3 Economia | T-030 – T-036 | Coleta → entrega → estoque, com diretiva, silo e reciclagem |
-| M4 Energia | T-040 – T-046 | Rede, baterias, recarga, usinas e Bateria Móvel |
-| M5 Produção | T-050 – T-056 | Filas, construção, assistência, reparo e início de partida |
+| M4 Energia | T-040 – T-047 | Rede, baterias, recarga, usinas e Bateria Móvel |
+| M5 Produção | T-050 – T-058 | Filas, construção, assistência, reparo e início de partida |
 | M6 Combate | T-060 – T-068 | Armas, dano, minas, explosões, eliminação e invariantes |
-| M7 Visão | T-070 – T-074 | Névoa de 3 estados, Sentinela, satélite, minimapa |
+| M7 Visão | T-070 – T-076 | Névoa de 3 estados, Sentinela, satélite, minimapa |
 | M8 HUD | T-080 – T-087 | Interface completa em pt-BR |
 | M9 IA | T-090 – T-095 | 4 dificuldades × 4 personalidades; IA × IA estável |
-| M10 Telas e Free Battle | T-100 – T-106 | **MVP: Free Battle Lua jogável do início ao fim** |
+| M10 Telas e Free Battle | T-100 – T-107 | **MVP: Free Battle Lua jogável do início ao fim** |
 | M11 Controle direto | T-110 – T-113 | 1ª e 3ª pessoa com Sincronia |
 | M12 Arte e áudio | T-120 – T-127 | Visual e som finais da Lua |
 | M13 Campanha | T-130 – T-135 | Universo + missões 1–2 → **v1.0** |
@@ -155,6 +155,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: atende até `bateria_movel_max_alvos` alvos a `bateria_movel_taxa_por_alvo_en_s` cada, começando pela menor %; volta para recarregar em `auto_recarga_bateria_movel_pct`; alvos não procuram porta enquanto recebem energia.
 - [x] **T-046 — Invariantes de energia** · P · Spec: INV-09, INV-10 · Dep: T-043, T-061 · Feito: 2026-09-24 (INV-09 medido em 10 min de jogo)
   - Aceite: INV-09 e INV-10 verdes em `tests/balance/`.
+- [ ] **T-047 — Recarga na Bateria Móvel pelo clique direito** · P · Spec: CTL-07, ENE-18, D-57 · Dep: T-045
+  - Aceite: clique direito na Bateria Móvel própria leva as unidades selecionadas até ela e as recarrega com qualquer nível, até 100%, antes das demais.
 
 ## M5 — Produção e construção
 
@@ -174,6 +176,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: cada nação começa com Nave e 1 hover; estoque inicial por modo; área explorada inicial; o hover inicial coleta sozinho; INV-02 verde.
 - [x] **T-057 — Muro e Portão** · M · Spec: UNI-08, UNI-09, D-53, D-54 · Dep: T-052 · Feito: 2026-09-25
   - Aceite: Muro bloqueia hovers e deixa drones passarem; posicionamento em linha arrastando; Portão abre sozinho para unidades próprias no raio e fecha depois do tempo, deixa qualquer um passar aberto, e trancado não abre; inimigos atacam o muro que fecha o caminho.
+- [ ] **T-058 — Giro e encaixe de Muro e Portão** · M · Spec: UNI-08, UNI-09, D-56 · Dep: T-057
+  - Aceite: apertar e arrastar gira o segmento livremente; apertar perto da ponta livre de outro segmento encaixa nela; o obstáculo segue o segmento girado; as unidades do dono planejam caminho pelo próprio portão destrancado e as inimigas não.
 
 ## M6 — Combate
 
@@ -214,6 +218,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: mostra os três estados, unidades, fantasmas, sinais, círculos de satélite e o campo da câmera; clique move a câmera e clique direito dá ordem.
 - [x] **T-075 — Satélite em órbita e combate orbital** · M · Spec: UNI-05, ENE-04, D-51 · Dep: T-073 · Feito: 2026-09-25
   - Aceite: satélite visível no céu e selecionável; clique direito reposiciona a `satelite_vel_m_s` ou ataca satélite inimigo; `sat_laser` só atinge satélites e nada atinge satélite além dele; sem gasto de energia; cai com a base.
+- [ ] **T-076 — Satélite impresso pela Base** · P · Spec: UNI-04, PRD-01, PRD-06, D-55 · Dep: T-075
+  - Aceite: a Base pronta não lança sozinha; S imprime o Satélite com a energia da rede, um por base de cada vez; pronto, lança em `tempo_lancamento_satelite_s`; custo e velocidade de `dados`.
 
 ## M8 — HUD e UX
 
@@ -261,6 +267,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-105 — Pausa, pausa tática e render-se** · P · Spec: FLX-11, REG-13, REG-21 · Dep: T-104 · Feito: 2026-09-24 (a ordem dada na pausa tática entra ao retomar)
 - [~] **T-106 — Fim de partida e pontuação** · M · Spec: FLX-12, REG-22, REG-23 · Dep: T-067 · E2E do marco MVP pronto; falta a sessão manual de 20 min contra IA Normal
   - Aceite (**marco MVP**): teste E2E (Playwright) abre o jogo, inicia um Free Battle na Lua contra IA Fácil, confere o HUD, se rende e vê a tela de derrota com estatísticas; sessão manual de 20 min contra IA Normal sem erros no console.
+- [ ] **T-107 — Botões de parados e barras só do jogador** · P · Spec: UI-07, UI-15, D-58 · Dep: T-084
+  - Aceite: botões fixos contam mineradores e impressoras parados e o clique seleciona e centraliza o próximo; unidades de outras nações não mostram barras; AL-10 respeita a recarga de 120 s.
 
 ## M11 — Controle direto
 

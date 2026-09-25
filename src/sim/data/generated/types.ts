@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.17.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.18.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -106,6 +106,7 @@ export type CustosId =
   | 'solar_plant'
   | 'nuclear_plant'
   | 'satellite_uplink'
+  | 'satellite'
   | 'wall'
   | 'gate'
   | 'mine';
@@ -400,6 +401,7 @@ export type ParametrosChave =
   | 'satelite_visao_m'
   | 'satelite_vel_m_s'
   | 'satelite_hp'
+  | 'muro_espessura_m'
   | 'abrigo_vagas'
   | 'portao_raio_abertura_m'
   | 'portao_tempo_abrir_s'

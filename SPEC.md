@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.17.0 — rascunho para aprovação |
+| Versão do SPEC | 0.18.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -414,7 +414,7 @@ flowchart LR
 - **ENE-01** — Geração da rede = reator da Nave + Σ usinas solares × `fator_solar` do cenário (× eventos) + Σ usinas nucleares ligadas e abastecidas. Valores em `dados:estruturas`.
 - **ENE-02** — Capacidade do banco = Σ `banco_en` das estruturas vivas. Geração excedente com o banco cheio é perdida.
 - **ENE-03** — A rede alimenta: disparos de Torres e da defesa da Nave (`en_disparo`), manutenção de satélites em órbita, impressão feita pela Nave e portas de recarga.
-- **ENE-04** — **Racionamento.** Se o banco chega a 0 e a demanda do tick excede a geração, a energia disponível é distribuída nesta ordem de prioridade: (1) defesas; (2) impressão na Nave; (3) portas de recarga, divididas igualmente entre as unidades acopladas. Consumidor atendido em parte funciona proporcionalmente mais devagar (a torre dispara mais devagar, a porta carrega mais devagar). O satélite não consome da rede (UNI-05, D-51).
+- **ENE-04** — **Racionamento.** Se o banco chega a 0 e a demanda do tick excede a geração, a energia disponível é distribuída nesta ordem de prioridade: (1) defesas; (2) impressão na Nave e na Base de Lançamento; (3) portas de recarga, divididas igualmente entre as unidades acopladas. Consumidor atendido em parte funciona proporcionalmente mais devagar (a torre dispara mais devagar, a porta carrega mais devagar). O satélite não consome da rede (UNI-05, D-51).
 - **ENE-05** — Destruir estruturas reduz geração e capacidade na hora. Se o banco passar da nova capacidade, o excedente se perde.
 - **ENE-06** — A **Usina Nuclear** consome `nuclear_consumo_u` de Urânio do estoque a cada `nuclear_intervalo_s` enquanto está ligada, mesmo com o banco cheio. Sem Urânio gera 0 e dispara AL-10. O jogador PODE desligá-la e religá-la (religar leva `nuclear_religar_s`).
 - **ENE-07** — A **Usina Solar** gera `geracao_en_s` × `fator_solar` do cenário. Eventos de cenário (ex.: tempestade em Marte) aplicam multiplicadores temporários.
@@ -450,7 +450,7 @@ flowchart LR
 ### 6.5 Bateria Móvel
 
 - **ENE-17** — A Bateria Móvel enche o próprio estoque (`bateria_en`) em portas de recarga, como qualquer unidade.
-- **ENE-18** — **Modo suporte** (ligado por padrão): transfere energia para até `bateria_movel_max_alvos` unidades próprias no raio `bateria_movel_raio_m`, a `bateria_movel_taxa_por_alvo_en_s` cada. Atende unidades abaixo de `bateria_movel_limiar_alvo_pct`, começando pela de menor %. Não há perdas. Funciona com a Bateria Móvel parada ou em movimento.
+- **ENE-18** — **Modo suporte** (ligado por padrão): transfere energia para até `bateria_movel_max_alvos` unidades próprias no raio `bateria_movel_raio_m`, a `bateria_movel_taxa_por_alvo_en_s` cada. Atende unidades abaixo de `bateria_movel_limiar_alvo_pct`, começando pela de menor %; a unidade mandada a ela pelo clique direito vem antes e é atendida com qualquer nível, até 100% (D-57). Não há perdas. Funciona com a Bateria Móvel parada ou em movimento.
 - **ENE-19** — O movimento da Bateria Móvel consome do mesmo estoque. Em `auto_recarga_bateria_movel_pct` ela interrompe o suporte e volta para recarregar.
 - **ENE-20** — Unidade recebendo energia de uma Bateria Móvel não procura porta de recarga enquanto a carga sobe.
 - **ENE-21** — Bateria Móvel destruída explode (CMB-23).
@@ -495,6 +495,7 @@ flowchart LR
   - **Nave Inicial:** Hover de Exploração e Impressora 3D Móvel, e nada mais (regra do briefing).
   - **Impressora 3D Móvel:** todas as demais unidades móveis, inclusive o Hover de Exploração, e todas as estruturas. **Não** imprime Impressoras nem Naves.
   - **Hover de Plantio de Minas:** fabrica as próprias minas.
+  - **Base de Lançamento:** imprime o Satélite, um por base de cada vez (UNI-04, D-55).
 - **PRD-02** — Só a Nave gera novas Impressoras. Perder a Nave não é derrota imediata, mas deixa a nação dependente das Impressoras que restam (REG-09).
 
 ### 7.2 Fila e pagamento
@@ -502,7 +503,7 @@ flowchart LR
 - **PRD-03** — A Nave tem fila de até `fila_max_nave` itens. A Impressora tem uma fila única de até `fila_max_impressora` ordens (unidades ou estruturas), executadas em sequência, uma por vez.
 - **PRD-04** — Os recursos são pagos por inteiro ao **enfileirar** (ou ao posicionar a estrutura). Sem recursos suficientes a ordem é recusada, e AL-06 lista o que falta.
 - **PRD-05** — Cancelar devolve `reembolso_cancelamento_pct`% dos recursos. A energia já gasta não volta.
-- **PRD-06** — A energia é consumida **durante** a impressão, na razão `en_impressao` ÷ tempo efetivo. A Nave consome da rede; a Impressora, da própria bateria. Sem energia a impressão pausa, e o progresso fica guardado.
+- **PRD-06** — A energia é consumida **durante** a impressão, na razão `en_impressao` ÷ tempo efetivo. A Nave e a Base de Lançamento consomem da rede; a Impressora, da própria bateria. Sem energia a impressão pausa, e o progresso fica guardado.
 
 ### 7.3 Impressão de unidades
 
@@ -573,7 +574,8 @@ flowchart LR
 | storage | Armazém | estrutura | printer | 110 | 40 | 20 | 0 | 0 | 0 | 180 | 18 | 100 | 35 |
 | solar_plant | Usina Solar Pequena | estrutura | printer | 30 | 60 | 20 | 15 | 0 | 0 | 150 | 15 | 80 | 30 |
 | nuclear_plant | Usina Nuclear | estrutura | printer | 60 | 20 | 30 | 10 | 15 | 8 | 230 | 23 | 140 | 50 |
-| satellite_uplink | Base de Lançamento + Satélite | estrutura | printer | 100 | 80 | 40 | 30 | 40 | 6 | 450 | 45 | 270 | 75 |
+| satellite_uplink | Base de Lançamento | estrutura | printer | 120 | 100 | 40 | 30 | 40 | 0 | 460 | 45 | 300 | 80 |
+| satellite | Satélite | orbital | satellite_uplink | 120 | 90 | 75 | 60 | 90 | 15 | 787,5 | — | 525 | 90 |
 | wall | Muro | estrutura | printer | 20 | 5 | 0 | 0 | 0 | 0 | 25 | 2 | 10 | 8 |
 | gate | Portão | estrutura | printer | 40 | 15 | 10 | 0 | 0 | 0 | 70 | 7 | 25 | 12 |
 | mine | Mina | municao | hover_minelayer | 6 | 0 | 2 | 1 | 0 | 0 | 11 | — | 20 | 6 |
@@ -611,7 +613,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | solar_plant | Usina Solar Pequena | 350 | 6 | 12 | 0 | 3 | 150 | 1 | 6 | 0 | nao | — |
 | nuclear_plant | Usina Nuclear | 700 | 8 | 12 | 0 | 12 | 300 | 3 | 12 | 0 | nao | — |
 | satellite_uplink | Base de Lançamento | 800 | 10 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
-| wall | Muro | 800 | 4 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
+| wall | Muro | 800 | 6 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | gate | Portão | 1000 | 6 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 
 ### 8.4 Armas
@@ -721,7 +723,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **Visual:** reator compacto com aletas de dissipação incandescentes.
 
 #### Base de Lançamento + Satélite de Visualização — `satellite_uplink`
-- **UNI-04** — Concluída a obra, a base lança o satélite em `tempo_lancamento_satelite_s` (animação). Se a base for destruída durante o lançamento, o satélite se perde.
+- **UNI-04** — A Base de Lançamento pronta imprime o Satélite (item `satellite`, tecla S no cartão), um por base de cada vez: só aceita a ordem sem satélite vivo nem outro na fila. Impresso, o satélite sobe em `tempo_lancamento_satelite_s` (animação). Se a base for destruída durante a impressão ou o lançamento, o satélite se perde (D-55).
 - **UNI-05** — O satélite em órbita é um corpo que o jogador vê no céu e seleciona: tem `satelite_hp` de HP e o laser orbital `sat_laser`, que só atinge outro satélite (camada `orbita`); não atira em nada no solo nem no ar, e só outro satélite o atinge. Dá visão persistente e Varredura Orbital (VIS-08). Não gasta energia (painéis próprios) e fica fora do racionamento. Selecionado, o clique direito no terreno o reposiciona e num satélite inimigo o ataca. Destruir a base derruba o satélite (D-51).
 - **UNI-06** — O satélite não detecta furtivos.
 - **Visual:** plataforma com trilho de lançamento. Em órbita: ícone no minimapa e círculo de visão no chão.
@@ -731,8 +733,8 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 #### Muro e Portão
 
-- **UNI-08** — **Muro:** segmento fixo de bloqueio, sem arma nem energia. Bloqueia a passagem de unidades de solo; drones passam por cima. Posiciona-se em linha arrastando o mouse (um segmento a cada `pegada_m`). Pode ser atacado; unidades inimigas atacam o muro que fecha o caminho até o alvo (D-53).
-- **UNI-09** — **Portão:** segmento que bloqueia como o muro, mas abre sozinho em `portao_tempo_abrir_s` quando uma unidade móvel própria chega a `portao_raio_abertura_m` e fecha `portao_tempo_fechar_apos_s` depois que a última unidade própria sai do raio. Aberto, qualquer unidade passa, inclusive as inimigas. O dono pode trancá-lo pelo cartão (trancado, não abre) (D-54).
+- **UNI-08** — **Muro:** segmento fixo de bloqueio, sem arma nem energia. Bloqueia a passagem de unidades de solo; drones passam por cima. O segmento tem `pegada_m` de comprimento e `muro_espessura_m` de espessura e gira livremente: ao posicionar, o jogador aperta no ponto e arrasta para apontar o segmento; clicar sem arrastar mantém a última direção. Apertar perto da ponta livre de um Muro ou Portão próprio encaixa o novo segmento nela, e o arrasto gira o segmento em volta dessa ponta, formando uma muralha contínua; segmentos só se tocam pelas pontas (D-56). Pode ser atacado; unidades inimigas atacam o muro que fecha o caminho até o alvo (D-53).
+- **UNI-09** — **Portão:** segmento que bloqueia, gira e encaixa como o muro, mas abre sozinho em `portao_tempo_abrir_s` quando uma unidade móvel própria chega a `portao_raio_abertura_m` e fecha `portao_tempo_fechar_apos_s` depois que a última unidade própria sai do raio. Aberto, qualquer unidade passa, inclusive as inimigas. O dono pode trancá-lo pelo cartão (trancado, não abre). As unidades do dono planejam o caminho através do portão destrancado (D-54, D-56).
 
 ### 8.6 Autonomia padrão (resumo)
 
@@ -868,8 +870,9 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 | tempo_recolher_sentinela_s | 1 | s | Sair de Sentinela |
 | radar_atualizacao_s | 1 | s | Atualização dos sinais |
 | satelite_visao_m | 60 | m | Visão persistente do satélite |
-| satelite_vel_m_s | 15 | m/s | Reposicionamento do satélite |
+| satelite_vel_m_s | 8 | m/s | Reposicionamento do satélite |
 | satelite_hp | 300 | HP | HP do satélite em órbita (UNI-05) |
+| muro_espessura_m | 1,5 | m | Espessura do segmento de Muro e de Portão (D-56) |
 | abrigo_vagas | 6 | hovers | Vagas de abrigo por Nave ou Armazém (CMB-28) |
 | portao_raio_abertura_m | 8 | m | Distância em que uma unidade própria abre o portão |
 | portao_tempo_abrir_s | 1 | s | Tempo para o portão abrir |
@@ -926,7 +929,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ### 12.3 Clique direito contextual
 
-- **CTL-07** — Com unidades selecionadas, o clique direito em: terreno → mover (as armadas disparam no que estiver no alcance, sem desviar; M move sem disparar, D-32); inimigo → atacar; jazida → coletar (hovers); ponto de entrega → descarregar; canteiro próprio → auxiliar; unidade ou estrutura própria danificada → reparar (hovers e impressoras); porta de recarga → recarregar naquela estrutura, com qualquer nível de bateria, até 100% (D-50); destroço → reciclar; Bateria Móvel → seguir (suporte). Com um produtor selecionado, o clique direito define o ponto de encontro.
+- **CTL-07** — Com unidades selecionadas, o clique direito em: terreno → mover (as armadas disparam no que estiver no alcance, sem desviar; M move sem disparar, D-32); inimigo → atacar; jazida → coletar (hovers); ponto de entrega → descarregar; canteiro próprio → auxiliar; unidade ou estrutura própria danificada → reparar (hovers e impressoras); porta de recarga → recarregar naquela estrutura, com qualquer nível de bateria, até 100% (D-50); destroço → reciclar; Bateria Móvel própria → seguir e recarregar nela até 100%, com qualquer nível de bateria (D-57). Com um produtor selecionado, o clique direito define o ponto de encontro.
 
 ### 12.4 Atalhos
 
@@ -967,6 +970,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | mobile_silo | T | Ancorar ou desancorar |
 | mobile_silo | G | Descarregar agora |
 | mobile_battery | T | Modo suporte liga/desliga |
+| satellite_uplink | S | Imprimir Satélite |
 | satellite_uplink | T | Reposicionar satélite |
 | satellite_uplink | G | Varredura Orbital |
 | gate | T | Trancar ou destrancar o portão |
@@ -1213,12 +1217,13 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **UI-04** — Cartão de comandos: grade 4×3 com ícone, tecla e custo. O tooltip mostra receita completa, energia e tempo. Item sem recursos mostra em vermelho o que falta.
 - **UI-05** — Minimapa no canto inferior esquerdo (VIS-09). Clique move a câmera; alertas piscam no ponto.
 - **UI-06** — Alertas: pilha à esquerda com até 5 visíveis, clicáveis (levam ao local), com som e voz conforme `dados:alertas`.
-- **UI-07** — Barras sobre as unidades: HP (verde → amarelo → vermelho) e EN (ciano). No modo automático aparecem em unidades selecionadas, danificadas ou com bateria Baixa; Tab alterna para "sempre".
+- **UI-07** — Barras sobre as unidades do jogador (as de outras nações não mostram barras, D-58): HP (verde → amarelo → vermelho) e EN (ciano). No modo automático aparecem em unidades selecionadas, danificadas ou com bateria Baixa; Tab alterna para "sempre".
 - **UI-08** — Posicionamento de estrutura: holograma da pegada em verde (válido) ou vermelho (inválido, com o motivo); raio de alcance e de visão desenhado no chão.
 - **UI-09** — Tooltips com atraso de 0,4 s. Toda unidade tem descrição do papel e "forte contra / fraco contra" (§8.5).
 - **UI-10** — A fila de impressão aparece sobre a Impressora ou a Nave selecionada e no painel.
 - **UI-13** — Jazidas: passar o mouse mostra, após o atraso de UI-09, o recurso e a quantidade restante. Clicar numa jazida a seleciona sozinha e o painel de seleção mostra o recurso, a quantidade restante sobre a inicial e os hovers designados. A jazida selecionada não recebe ordens.
 - **UI-14** — Cada ordem do clique direito mostra no ponto um sinalizador com forma e cor próprias e toca um som próprio: mover, atacar, coletar, descarregar, recarregar, construir ou reparar, reciclar, patrulhar e reposicionar satélite.
+- **UI-15** — Dois botões fixos ao lado do minimapa: **mineradores parados** (Hovers de Exploração ociosos, ECO-19) e **impressoras paradas** (Impressoras sem item na fila, sem obra, reparo ou recarga e sem ordem de movimento). Cada botão mostra quantos há e fica em destaque quando há algum; o clique seleciona o próximo parado (em ciclo) e centraliza a câmera nele (D-58).
 
 ### 17.2 Alertas
 
@@ -1234,7 +1239,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | AL-07 | Jazida de {recurso} esgotada. | Jazida chega a 0 | baixa | 0 |
 | AL-08 | {n} corpos sem energia. | Unidades entram em Modo Reserva | media | 30 |
 | AL-09 | Tenho hovers ociosos. | Hover ocioso (ECO-19) | baixa | 30 |
-| AL-10 | Usina nuclear sem combustível. | Nuclear ligada sem Urânio (ENE-06) | alta | 30 |
+| AL-10 | Usina nuclear sem combustível. | Nuclear ligada sem Urânio (ENE-06) | alta | 120 |
 | AL-11 | Limite atingido: {limite}. | Ordem recusada por limite (REG-19) | media | 10 |
 | AL-12 | Satélite em órbita. | Lançamento concluído (UNI-04) | media | 0 |
 | AL-13 | Nação {nacao} eliminada. | Eliminação (REG-09) | alta | 0 |
@@ -1505,6 +1510,10 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-52 | Recolher mineradores: abrigo na Nave ou Armazém mais próximo, até 6 por estrutura; cada abrigado soma um laser de 10 de dano, alcance 14 m, a cada 1 s. | Pedido do produto: defender a base com os mineradores. | Aprovada |
 | D-53 | Muro: segmento de 4 m, HP 800, Fe 20 e Si 5, 8 s de obra; posiciona em linha; drones passam por cima; inimigos o atacam quando fecha o caminho. | Pedido do produto: bloqueio visual espacial. | Aprovada |
 | D-54 | Portão: segmento de 6 m, HP 1000, Fe 40, Si 15 e Cu 10, 12 s de obra; abre sozinho para unidades próprias (qualquer um passa enquanto aberto) e pode ser trancado. | Pedido do produto. | Aprovada |
+| D-55 | Satélite separado da Base: a Base de Lançamento (Fe 120, Si 100, Cu 40, Li 30, Ti 40; 300 EN; 80 s) imprime o Satélite (Fe 120, Si 90, Cu 75, Li 60, Ti 90, U 15; 525 EN; 90 s), um por base de cada vez, com energia da rede; `satelite_vel_m_s` 8. | Pedido do produto: o satélite era vantagem demais pelo preço. | Aprovada |
+| D-56 | Muro de 6 m e Portão giram livremente ao posicionar (apertar e arrastar) e encaixam pela ponta em outro segmento próprio, formando muralhas; espessura `muro_espessura_m`. O dono planeja caminho através do próprio portão destrancado. Substitui o posicionamento em linha de D-53. | Pedido do produto: cercar um perímetro com portão. | Aprovada |
+| D-57 | Clique direito na Bateria Móvel própria: as unidades selecionadas vão até ela e recarregam com qualquer nível, até 100%, com prioridade no suporte. | Pedido do produto: completar a bateria antes de uma caravana. | Aprovada |
+| D-58 | Barras de HP e EN só nas unidades do jogador; botões fixos de mineradores e impressoras parados (UI-15); AL-10 com recarga de 120 s (o aviso se repetia a cada ciclo curto de Urânio). | Pedido do produto. | Aprovada |
 
 ---
 
@@ -1585,3 +1594,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.15.2 | 2026-09-25 | TEC-19: SSAO, fatores de LOD e de partículas por preset e 2 cascatas de sombra. |
 | 0.16.0 | 2026-09-25 | D-49: `bateria_en` ×2 em `dados:moveis`, `banco_en` da Nave 1000 (INV-09) e coluna Fácil de `dados:dificuldade` (reacao_s, meta_hovers, primeiro_ataque_min, vr_exercito_ataque, bonus_coleta_pct, bonus_impressao_pct). D-50: recarga pelo clique direito na estrutura (CTL-07). |
 | 0.17.0 | 2026-09-25 | D-51 a D-54: satélite com HP e laser orbital, sem energia (UNI-05, ENE-04; `sat_laser`, `satelite_hp`, `satelite_vel_m_s` 15; manutenção da Base 0; AL-17 sem uso); Recolher mineradores (CMB-28, `abrigo_laser`, `abrigo_vagas`); Muro e Portão (UNI-08, UNI-09, `wall`, `gate`, `portao_*`); sinalizadores do clique direito (UI-14); atalhos Q, M, P e T. |
+| 0.18.0 | 2026-09-25 | D-55 a D-58: Satélite como item da Base de Lançamento (`dados:custos` `satellite`, categoria `orbital`; Base mais cara; `satelite_vel_m_s` 8; UNI-04, PRD-01, PRD-06, ENE-04, atalho S); Muro de 6 m e Portão com giro livre e encaixe pela ponta (UNI-08, UNI-09, `muro_espessura_m`); recarga na Bateria Móvel pelo clique direito (CTL-07, ENE-18); barras só do jogador (UI-07); botões de parados (UI-15); AL-10 com recarga 120 s. |

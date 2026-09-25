@@ -667,7 +667,7 @@
   },
   {
     "chave": "satelite_vel_m_s",
-    "valor": 15,
+    "valor": 8,
     "unidade": "m/s",
     "descricao": "Reposicionamento do satélite"
   },
@@ -676,6 +676,12 @@
     "valor": 300,
     "unidade": "HP",
     "descricao": "HP do satélite em órbita (UNI-05)"
+  },
+  {
+    "chave": "muro_espessura_m",
+    "valor": 1.5,
+    "unidade": "m",
+    "descricao": "Espessura do segmento de Muro e de Portão (D-56)"
   },
   {
     "chave": "abrigo_vagas",

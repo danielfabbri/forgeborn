@@ -67,7 +67,7 @@
     "texto": "Usina nuclear sem combustível.",
     "gatilho": "Nuclear ligada sem Urânio (ENE-06)",
     "prioridade": "alta",
-    "cooldown_s": 30
+    "cooldown_s": 120
   },
   {
     "id": "AL-11",

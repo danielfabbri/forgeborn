@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.15.1 — rascunho para aprovação |
+| Versão do SPEC | 0.15.2 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1312,7 +1312,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **TEC-16** — Instancing por tipo de unidade, com a cor da nação como atributo de instância. No máximo 300 draw calls na visão RTS; sombras só para objetos na área visível; 3 níveis de LOD por modelo.
 - **TEC-17** — A névoa é uma textura atualizada a `nevoa_atualizacao_hz`, amostrada no shader do terreno e aplicada aos objetos. O minimapa usa a mesma textura.
 - **TEC-18** — Assets em glTF 2.0 (.glb) com meshopt e texturas KTX2 (Basis). Download inicial ≤ 40 MB e tela de abertura interativa em ≤ 8 s numa conexão de 50 Mbps; outros cenários carregam sob demanda. Até existir arte final, modelos placeholder procedurais com as mesmas silhuetas e proporções (ART-03). Os modelos do v1 são procedurais refinados, gerados em código (D-45); o carregamento de .glb fica para quando houver arte modelada.
-- **TEC-19** — Presets gráficos (Baixo, Médio, Alto, Ultra) controlam escala de resolução, sombras, SSAO, partículas e distância de LOD. Escala de resolução (limitada à densidade da tela) e mapa de sombras: Baixo 0,75× e sem sombras; Médio 1× e 1024 px; Alto 1,5× e 2048 px (padrão); Ultra 2× e 4096 px. SSAO, partículas e LOD entram com a T-124.
+- **TEC-19** — Presets gráficos (Baixo, Médio, Alto, Ultra) controlam escala de resolução, sombras, SSAO, partículas e distância de LOD. Escala de resolução (limitada à densidade da tela) e mapa de sombras: Baixo 0,75× e sem sombras; Médio 1× e 1024 px; Alto 1,5× e 2048 px (padrão); Ultra 2× e 4096 px. SSAO no Alto e no Ultra. Fator das distâncias de LOD: 0,6 / 0,8 / 1 / 1,4; fator de partículas: 0,25 / 0,5 / 1 / 1,5 (Baixo, Médio, Alto, Ultra). As sombras do sol usam 2 cascatas, e o SSAO reaproveita a profundidade do passe principal, para caber no teto de draw calls de TEC-16.
 
 ### 20.6 Plataforma e persistência
 
@@ -1556,3 +1556,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.14.0 | 2026-09-24 | D-40 a D-44: torpedo sem trava, soma dos bônus de velocidade, habilidades do clique direito, órbita da 3ª pessoa e disparo sem alvo no controle direto (CTL-10, CTL-11, CTL-12, CTL-15). |
 | 0.15.0 | 2026-09-25 | D-45 a D-47 respondem Q-02 e Q-03: modelos procedurais refinados, voz por TTS do navegador, trilhas em arquivos alternadas por contexto (AUD-01 reescrita) e SFX sintetizados (AUD-03, AUD-04, TEC-18). |
 | 0.15.1 | 2026-09-25 | D-48: trilha da abertura na Seleção de Modo e fila da voz dos alertas (AUD-01, AUD-03). |
+| 0.15.2 | 2026-09-25 | TEC-19: SSAO, fatores de LOD e de partículas por preset e 2 cascatas de sombra. |

@@ -164,7 +164,9 @@ describe('T-092 — IA-03, §13.3: produção e composição', () => {
 
 describe('T-093 — IA-04, IA-05, §13.2: militar e dificuldades', () => {
   it('IA-04/IA-05: a primeira onda respeita primeiro_ataque_min e vr_exercito_ataque; as IAs se atacam', () => {
-    const { sim, nacoes } = criarPartida({ seed: 1, ias: ['normal', 'normal'], maxMin: 30 });
+    // Seed em que as duas IAs chegam a atacar (com D-49, na seed 1 a China vence a primeira
+    // onda e os EUA não contra-atacam em 30 min).
+    const { sim, nacoes } = criarPartida({ seed: 3, ias: ['normal', 'normal'], maxMin: 30 });
     const primeira: Record<string, { minuto: number; vr: number }> = {};
     for (let t = 0; t < 30 * 60 * sim.tickHz && Object.keys(primeira).length < 2; t++) {
       sim.step();

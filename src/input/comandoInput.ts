@@ -333,9 +333,22 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     return false;
   };
 
+  /** CTL-07/D-50: estrutura própria com portas de recarga → recarregar ali. */
+  const recargaNoPonto = (px: number, py: number): boolean => {
+    const unidades = minhas('unit').filter((id) => getComponent(sim.state, id, 'recarga'));
+    if (unidades.length === 0) return false;
+    const alvo = corpoNoPonto(naTela(), px, py);
+    if (!alvo || alvo.nacao !== jogador || !getComponent(sim.state, alvo.id, 'portas'))
+      return false;
+    if (getComponent(sim.state, alvo.id, 'obra')) return false;
+    enviar('recarregar', { ids: unidades, estrutura: alvo.id });
+    return true;
+  };
+
   const ordemNoPonto = (px: number, py: number, tipo: OrdemNoTerreno) => {
     if (tipo === 'mover' && alvoDeCombateNoPonto(px, py)) return;
     if (tipo === 'mover' && trabalhoNoPonto(px, py)) return;
+    if (tipo === 'mover' && recargaNoPonto(px, py)) return;
     if (tipo === 'mover') {
       const jazida = corpoNoPonto(jazidasNaTela(), px, py);
       const hovers = coletores();

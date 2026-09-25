@@ -91,8 +91,8 @@ describe('TEC-11: spec:check', () => {
   it.each([
     [
       'arma inexistente',
-      '| 150 | 0,5 | 0 | ex1_laser |',
-      '| 150 | 0,5 | 0 | laser_x |',
+      '| 300 | 0,5 | 0 | ex1_laser |',
+      '| 300 | 0,5 | 0 | laser_x |',
       'moveis',
       'arma "laser_x"',
     ],

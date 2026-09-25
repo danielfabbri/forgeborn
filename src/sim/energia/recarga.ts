@@ -88,10 +88,16 @@ export function iniciarRecarga(
   ctx: SystemContext,
   unidade: EntityId,
   automatica: boolean,
+  /** D-50: estrutura escolhida pelo jogador (clique direito); sem ela, a de menor tempo. */
+  escolhida: EntityId | null = null,
 ): boolean {
   const recarga = getComponent(ctx.state, unidade, 'recarga');
-  if (!recarga || recarga.estado !== 'nenhuma') return false;
-  const estrutura = estruturaDeRecarga(ctx, unidade);
+  if (!recarga) return false;
+  // Uma ordem nova de recarga troca o destino de quem já ia recarregar.
+  if (recarga.estado !== 'nenhuma' && !(escolhida !== null && recarga.estado === 'indo')) {
+    return false;
+  }
+  const estrutura = escolhida ?? estruturaDeRecarga(ctx, unidade);
   if (estrutura === null) return false;
   const tipo = getComponent(ctx.state, unidade, 'unit')!.tipo;
   const ordem = getComponent(ctx.state, unidade, 'order')!;
@@ -263,8 +269,17 @@ function daNacao(
 export const comandosDeRecarga: Record<string, CommandHandler> = {
   /** §12.4 R: recarregar agora. */
   recarregar: (ctx, comando) => {
-    const d = (comando.dados ?? {}) as { ids?: unknown };
-    for (const id of daNacao(ctx, comando.nacao, d.ids, 'recarga')) iniciarRecarga(ctx, id, false);
+    const d = (comando.dados ?? {}) as { ids?: unknown; estrutura?: unknown };
+    // D-50: com `estrutura` (própria, com portas), recarrega ali, com qualquer nível de bateria.
+    const alvo =
+      typeof d.estrutura === 'number' &&
+      getComponent(ctx.state, d.estrutura, 'portas') &&
+      getComponent(ctx.state, d.estrutura, 'owner')?.nacao === comando.nacao
+        ? d.estrutura
+        : null;
+    for (const id of daNacao(ctx, comando.nacao, d.ids, 'recarga')) {
+      iniciarRecarga(ctx, id, false, alvo);
+    }
   },
   /** ENE-15: liga ou desliga a auto-recarga por unidade. */
   auto_recarga: (ctx, comando) => {

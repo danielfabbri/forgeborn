@@ -153,6 +153,8 @@ declare global {
       obra?: (id: EntityId) => { instalada: boolean; progresso: number } | null;
       /** Cria um corpo no chão sob o ponto de tela (px), pelo comando de depuração. */
       criarNaTela?: (tipo: string, nacao: string, x: number, y: number) => boolean;
+      /** Estado da recarga de uma unidade e a estrutura (D-50). */
+      recarga?: (id: EntityId) => { estado: string; estrutura: EntityId | null } | null;
       /** Destrói um corpo (comando de depuração), para os testes de perda (CTL-13). */
       destruir?: (id: EntityId) => void;
       /** Corpos com barras desenhadas neste quadro (UI-07). */
@@ -958,6 +960,10 @@ export function iniciarPartida(): void {
       return o ? { instalada: o.instalada, progresso: o.progresso } : null;
     };
     sonda.barras = () => corposComBarras.length;
+    sonda.recarga = (id) => {
+      const r = getComponent(sim.state, id, 'recarga');
+      return r ? { estado: r.estado, estrutura: r.estrutura } : null;
+    };
     sonda.destruir = (id) =>
       sim.enqueue({
         tick: sim.state.tick,

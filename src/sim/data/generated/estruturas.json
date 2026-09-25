@@ -7,7 +7,7 @@
     "visao_m": 32,
     "deteccao_m": 16,
     "geracao_en_s": 5,
-    "banco_en": 500,
+    "banco_en": 1000,
     "portas": 2,
     "taxa_porta_en_s": 10,
     "manutencao_en_s": 0,

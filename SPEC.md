@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.15.2 — rascunho para aprovação |
+| Versão do SPEC | 0.16.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -585,16 +585,16 @@ Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação
 <!-- dados:moveis -->
 | id | hp | blindagem | camada | vel_m_s | giro_graus_s | raio_m | visao_m | deteccao_m | bateria_en | mov_en_s | pairar_en_s | arma |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hover_explorer | 60 | leve | solo | 6,0 | 360 | 1,0 | 18 | 0 | 100 | 0,4 | 0 | — |
-| printer | 240 | blindada | solo | 4,0 | 180 | 1,8 | 16 | 0 | 400 | 0,8 | 0 | — |
-| hover_ex1 | 150 | blindada | solo | 5,5 | 270 | 1,3 | 22 | 0 | 150 | 0,5 | 0 | ex1_laser |
-| hover_opq | 230 | blindada | solo | 4,5 | 180 | 1,6 | 22 | 0 | 200 | 0,7 | 0 | opq_torpedo |
-| hover_minelayer | 90 | leve | solo | 5,0 | 240 | 1,3 | 18 | 0 | 150 | 0,5 | 0 | — |
-| hover_scout | 70 | leve | solo | 7,5 | 360 | 1,0 | 28 | 14 | 120 | 0,3 | 0 | — |
-| drone_bomber | 90 | leve | ar | 11,0 | 240 | 1,2 | 18 | 0 | 200 | 1,6 | 0,4 | bomb |
-| drone_laser | 130 | blindada | ar | 12,0 | 300 | 1,0 | 22 | 0 | 180 | 1,4 | 0,4 | drone_laser_gun |
-| mobile_silo | 320 | blindada | solo | 4,0 | 150 | 2,2 | 14 | 0 | 250 | 1,0 | 0 | — |
-| mobile_battery | 200 | blindada | solo | 4,5 | 180 | 1,8 | 14 | 0 | 600 | 0,6 | 0 | — |
+| hover_explorer | 60 | leve | solo | 6,0 | 360 | 1,0 | 18 | 0 | 200 | 0,4 | 0 | — |
+| printer | 240 | blindada | solo | 4,0 | 180 | 1,8 | 16 | 0 | 800 | 0,8 | 0 | — |
+| hover_ex1 | 150 | blindada | solo | 5,5 | 270 | 1,3 | 22 | 0 | 300 | 0,5 | 0 | ex1_laser |
+| hover_opq | 230 | blindada | solo | 4,5 | 180 | 1,6 | 22 | 0 | 400 | 0,7 | 0 | opq_torpedo |
+| hover_minelayer | 90 | leve | solo | 5,0 | 240 | 1,3 | 18 | 0 | 300 | 0,5 | 0 | — |
+| hover_scout | 70 | leve | solo | 7,5 | 360 | 1,0 | 28 | 14 | 240 | 0,3 | 0 | — |
+| drone_bomber | 90 | leve | ar | 11,0 | 240 | 1,2 | 18 | 0 | 400 | 1,6 | 0,4 | bomb |
+| drone_laser | 130 | blindada | ar | 12,0 | 300 | 1,0 | 22 | 0 | 360 | 1,4 | 0,4 | drone_laser_gun |
+| mobile_silo | 320 | blindada | solo | 4,0 | 150 | 2,2 | 14 | 0 | 500 | 1,0 | 0 | — |
+| mobile_battery | 200 | blindada | solo | 4,5 | 180 | 1,8 | 14 | 0 | 1200 | 0,6 | 0 | — |
 
 ### 8.3 Estruturas
 
@@ -603,7 +603,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 <!-- dados:estruturas -->
 | id | nome | hp | pegada_m | visao_m | deteccao_m | geracao_en_s | banco_en | portas | taxa_porta_en_s | manutencao_en_s | deposito | arma |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| ship | Nave Inicial | 5000 | 16 | 32 | 16 | 5 | 500 | 2 | 10 | 0 | sim | ship_pd |
+| ship | Nave Inicial | 5000 | 16 | 32 | 16 | 5 | 1000 | 2 | 10 | 0 | sim | ship_pd |
 | laser_tower | Torre de Defesa | 450 | 3 | 20 | 0 | 0 | 0 | 0 | 0 | 0 | nao | tower_laser |
 | storage | Armazém | 900 | 8 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | sim | — |
 | solar_plant | Usina Solar Pequena | 350 | 6 | 12 | 0 | 3 | 150 | 1 | 6 | 0 | nao | — |
@@ -909,7 +909,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ### 12.3 Clique direito contextual
 
-- **CTL-07** — Com unidades selecionadas, o clique direito em: terreno → mover (as armadas disparam no que estiver no alcance, sem desviar; M move sem disparar, D-32); inimigo → atacar; jazida → coletar (hovers); ponto de entrega → descarregar; canteiro próprio → auxiliar; unidade ou estrutura própria danificada → reparar (hovers e impressoras); porta de recarga → recarregar; destroço → reciclar; Bateria Móvel → seguir (suporte). Com um produtor selecionado, o clique direito define o ponto de encontro.
+- **CTL-07** — Com unidades selecionadas, o clique direito em: terreno → mover (as armadas disparam no que estiver no alcance, sem desviar; M move sem disparar, D-32); inimigo → atacar; jazida → coletar (hovers); ponto de entrega → descarregar; canteiro próprio → auxiliar; unidade ou estrutura própria danificada → reparar (hovers e impressoras); porta de recarga → recarregar naquela estrutura, com qualquer nível de bateria, até 100% (D-50); destroço → reciclar; Bateria Móvel → seguir (suporte). Com um produtor selecionado, o clique direito define o ponto de encontro.
 
 ### 12.4 Atalhos
 
@@ -1023,16 +1023,16 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 <!-- dados:dificuldade -->
 | parametro | facil | normal | dificil | brutal |
 |---|---|---|---|---|
-| reacao_s | 3,0 | 1,5 | 0,8 | 0,4 |
-| meta_hovers | 10 | 18 | 26 | 32 |
-| primeiro_ataque_min | 11 | 7 | 5 | 4 |
-| vr_exercito_ataque | 400 | 700 | 1000 | 1200 |
+| reacao_s | 4,0 | 1,5 | 0,8 | 0,4 |
+| meta_hovers | 6 | 18 | 26 | 32 |
+| primeiro_ataque_min | 18 | 7 | 5 | 4 |
+| vr_exercito_ataque | 250 | 700 | 1000 | 1200 |
 | expansoes_max | 1 | 2 | 3 | 4 |
 | tiers_permitidos | 1 | 2 | 3 | 3 |
 | micro | 0 | 1 | 2 | 3 |
 | adapta_composicao | 0 | 1 | 1 | 1 |
-| bonus_coleta_pct | -20 | 0 | 0 | 20 |
-| bonus_impressao_pct | 0 | 0 | 0 | 10 |
+| bonus_coleta_pct | -40 | 0 | 0 | 20 |
+| bonus_impressao_pct | -30 | 0 | 0 | 10 |
 
 ### 13.3 Personalidades por nação
 
@@ -1479,6 +1479,8 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-46 | Voz da IA pela síntese de voz do navegador (pt-BR), sempre com legenda. | Resposta do produto à Q-03. | Aprovada |
 | D-47 | Trilhas musicais em arquivos fornecidos pelo produto, alternadas por contexto (AUD-01); efeitos sonoros sintetizados em código (AUD-04). Substitui a música adaptativa em camadas. | Resposta do produto: a música deve ser composta, não sintetizada. | Aprovada |
 | D-48 | A trilha da abertura segue na Seleção de Modo; a voz fala um alerta por vez e só um mais urgente interrompe. | Detalhes de AUD-01 e AUD-03 na implementação da T-126: a Seleção de Modo tem o mesmo fundo da abertura, e vozes sobrepostas não se entendem. | Proposta |
+| D-49 | Baterias de todas as unidades móveis dobradas (`bateria_en`), e o banco da Nave também (`banco_en` 1000), para a Nave seguir sustentando 8 hovers (INV-09); IA Fácil bem mais fácil (1º ataque aos 18 min, exército de 250 VR, meta de 6 hovers, coleta −40%, impressão −30%, reação de 4 s). | Pedido do produto: autonomia curta demais e a IA Fácil invadia cedo com exército grande. | Aprovada |
+| D-50 | O clique direito numa estrutura com portas de recarga manda as unidades selecionadas recarregar ali, com qualquer nível de bateria, até 100%. | Pedido do produto: encher as baterias antes de montar uma caravana. | Aprovada |
 
 ---
 
@@ -1557,3 +1559,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.15.0 | 2026-09-25 | D-45 a D-47 respondem Q-02 e Q-03: modelos procedurais refinados, voz por TTS do navegador, trilhas em arquivos alternadas por contexto (AUD-01 reescrita) e SFX sintetizados (AUD-03, AUD-04, TEC-18). |
 | 0.15.1 | 2026-09-25 | D-48: trilha da abertura na Seleção de Modo e fila da voz dos alertas (AUD-01, AUD-03). |
 | 0.15.2 | 2026-09-25 | TEC-19: SSAO, fatores de LOD e de partículas por preset e 2 cascatas de sombra. |
+| 0.16.0 | 2026-09-25 | D-49: `bateria_en` ×2 em `dados:moveis`, `banco_en` da Nave 1000 (INV-09) e coluna Fácil de `dados:dificuldade` (reacao_s, meta_hovers, primeiro_ataque_min, vr_exercito_ataque, bonus_coleta_pct, bonus_impressao_pct). D-50: recarga pelo clique direito na estrutura (CTL-07). |

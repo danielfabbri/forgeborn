@@ -9,7 +9,7 @@
     "raio_m": 1,
     "visao_m": 18,
     "deteccao_m": 0,
-    "bateria_en": 100,
+    "bateria_en": 200,
     "mov_en_s": 0.4,
     "pairar_en_s": 0,
     "arma": null
@@ -24,7 +24,7 @@
     "raio_m": 1.8,
     "visao_m": 16,
     "deteccao_m": 0,
-    "bateria_en": 400,
+    "bateria_en": 800,
     "mov_en_s": 0.8,
     "pairar_en_s": 0,
     "arma": null
@@ -39,7 +39,7 @@
     "raio_m": 1.3,
     "visao_m": 22,
     "deteccao_m": 0,
-    "bateria_en": 150,
+    "bateria_en": 300,
     "mov_en_s": 0.5,
     "pairar_en_s": 0,
     "arma": "ex1_laser"
@@ -54,7 +54,7 @@
     "raio_m": 1.6,
     "visao_m": 22,
     "deteccao_m": 0,
-    "bateria_en": 200,
+    "bateria_en": 400,
     "mov_en_s": 0.7,
     "pairar_en_s": 0,
     "arma": "opq_torpedo"
@@ -69,7 +69,7 @@
     "raio_m": 1.3,
     "visao_m": 18,
     "deteccao_m": 0,
-    "bateria_en": 150,
+    "bateria_en": 300,
     "mov_en_s": 0.5,
     "pairar_en_s": 0,
     "arma": null
@@ -84,7 +84,7 @@
     "raio_m": 1,
     "visao_m": 28,
     "deteccao_m": 14,
-    "bateria_en": 120,
+    "bateria_en": 240,
     "mov_en_s": 0.3,
     "pairar_en_s": 0,
     "arma": null
@@ -99,7 +99,7 @@
     "raio_m": 1.2,
     "visao_m": 18,
     "deteccao_m": 0,
-    "bateria_en": 200,
+    "bateria_en": 400,
     "mov_en_s": 1.6,
     "pairar_en_s": 0.4,
     "arma": "bomb"
@@ -114,7 +114,7 @@
     "raio_m": 1,
     "visao_m": 22,
     "deteccao_m": 0,
-    "bateria_en": 180,
+    "bateria_en": 360,
     "mov_en_s": 1.4,
     "pairar_en_s": 0.4,
     "arma": "drone_laser_gun"
@@ -129,7 +129,7 @@
     "raio_m": 2.2,
     "visao_m": 14,
     "deteccao_m": 0,
-    "bateria_en": 250,
+    "bateria_en": 500,
     "mov_en_s": 1,
     "pairar_en_s": 0,
     "arma": null
@@ -144,7 +144,7 @@
     "raio_m": 1.8,
     "visao_m": 14,
     "deteccao_m": 0,
-    "bateria_en": 600,
+    "bateria_en": 1200,
     "mov_en_s": 0.6,
     "pairar_en_s": 0,
     "arma": null

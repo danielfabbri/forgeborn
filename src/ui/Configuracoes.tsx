@@ -2,6 +2,7 @@
  * Configurações (FLX-13, D-36): Gráficos, Jogo, Controles e Acessibilidade. A mesma tela abre
  * da Seleção de Modo e do Menu de Pausa; cada mudança vale na hora e fica salva (TEC-21).
  */
+import { MODOS_DALTONICOS } from '../game/paleta';
 import { useState } from 'preact/hooks';
 import {
   alterarConfiguracoes,
@@ -114,6 +115,22 @@ export function Configuracoes({ aoVoltar }: { aoVoltar: () => void }) {
               ))}
             </tbody>
           </table>
+        )}
+        {aba === 'acessibilidade' && (
+          <label class="campo">
+            <span>{t('config.daltonismo')}</span>
+            <select
+              data-testid="daltonismo"
+              value={c.daltonismo}
+              onChange={(e) => alterarConfiguracoes({ daltonismo: e.currentTarget.value as never })}
+            >
+              {MODOS_DALTONICOS.map((m) => (
+                <option key={m} value={m}>
+                  {t(`config.daltonismo.${m}` as TextKey)}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
         {aba === 'acessibilidade' && (
           <label class="campo">

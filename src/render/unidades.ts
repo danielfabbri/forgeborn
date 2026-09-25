@@ -4,6 +4,8 @@
  * Estrutura em obra (ART-06, versão simples): o modelo cresce de baixo para cima com o
  * progresso, dentro do holograma em wireframe da estrutura final.
  */
+import { configuracoes } from '../game/configuracoes';
+import { corDaNacao } from '../game/paleta';
 import {
   type BufferGeometry,
   Color,
@@ -409,12 +411,12 @@ export class UnidadesRender {
     return lote;
   }
 
+  /** ART-04/UI-11: a cor da nação na paleta das Configurações (o cache segue o modo). */
   private cor(nacao: string | null): Color {
-    const chave = nacao ?? '';
+    const chave = `${configuracoes.value.daltonismo}|${nacao ?? ''}`;
     let cor = this.corDaNacao.get(chave);
     if (!cor) {
-      const hex = dados.nacoes.find((n) => n.id === nacao)?.cor ?? '#888888';
-      cor = new Color(hex);
+      cor = new Color(corDaNacao(nacao));
       this.corDaNacao.set(chave, cor);
     }
     return cor;

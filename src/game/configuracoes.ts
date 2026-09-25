@@ -15,6 +15,8 @@ export interface Configuracoes {
   escalaInterface: number;
   /** AUD-05: volume de cada canal de mixagem, de 0 a 100. */
   volumes: Record<CanalDeAudio, number>;
+  /** UI-11: modo daltônico. */
+  daltonismo: 'nenhum' | 'protanopia' | 'deuteranopia' | 'tritanopia';
 }
 
 export type CanalDeAudio = 'geral' | 'musica' | 'efeitos' | 'voz' | 'ambiente';
@@ -45,6 +47,7 @@ export const PADRAO: Configuracoes = {
   escalaInterface: 100,
   // Apresentação: volumes iniciais da mixagem.
   volumes: { geral: 80, musica: 60, efeitos: 80, voz: 90, ambiente: 60 },
+  daltonismo: 'nenhum',
 };
 
 const CHAVE = 'configuracoes';
@@ -69,6 +72,9 @@ export function normalizar(bruto: unknown): Configuracoes {
         ];
       }),
     ) as Record<CanalDeAudio, number>,
+    daltonismo: ['nenhum', 'protanopia', 'deuteranopia', 'tritanopia'].includes(c.daltonismo)
+      ? c.daltonismo
+      : 'nenhum',
   };
 }
 

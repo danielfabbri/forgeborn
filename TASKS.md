@@ -272,7 +272,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [ ] **T-125 — Cinemática de pouso** · M · Spec: FLX-09 · Dep: T-121
 - [x] **T-126 — Áudio** · G · Spec: AUD-01 – AUD-05, D-46, D-47 · Dep: T-084 · Feito: 2026-09-25 (as trilhas são arquivos do produto em public/audio/trilhas/; a pasta tem um LEIA-ME)
   - Aceite: trilhas por contexto com transição cruzada e arquivos faltando pulados; SFX sintetizados por unidade e interface; voz TTS pt-BR com legenda; volumes por canal nas Configurações.
-- [ ] **T-127 — Acessibilidade** · M · Spec: UI-11, UI-12 · Dep: T-080
+- [x] **T-127 — Acessibilidade** · M · Spec: UI-11, UI-12 · Dep: T-080 · Feito: 2026-09-25 (paletas daltônicas a partir da Okabe-Ito; legendas pela pilha de alertas; escala, 0,75× e pausa tática já existiam)
 
 ## M13 — Campanha (v1.0)
 

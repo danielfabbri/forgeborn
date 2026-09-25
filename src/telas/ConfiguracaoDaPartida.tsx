@@ -3,6 +3,7 @@
  * padrões, opções inválidas desabilitadas com explicação (FB-03), pré-visualização do mapa com
  * as zonas de pouso (FB-02) e as últimas opções lembradas (TEC-21).
  */
+import { corDaNacao } from '../game/paleta';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { gravar, ler } from '../game/armazenamento';
 import {
@@ -37,7 +38,7 @@ async function ultimaConfig(cenario: CenariosId): Promise<ConfigFreeBattle> {
   return validar(c).length === 0 ? c : padrao;
 }
 
-const corDe = (nacao: string) => dados.nacoes.find((n) => n.id === nacao)?.cor ?? '#1FBF5B';
+const corDe = (nacao: string) => corDaNacao(nacao);
 
 export function ConfiguracaoDaPartida({
   cenario,

@@ -4,6 +4,7 @@
  * textura do terreno (TEC-17) e, por cima, unidades visíveis, fantasmas, sinais de radar,
  * círculos de satélite e o campo da câmera. Clique move a câmera; clique direito dá ordem.
  */
+import { contornoDe, type Emblema } from '../game/paleta';
 import { type PerspectiveCamera, Raycaster, Vector2 } from 'three';
 import {
   avancar,
@@ -132,6 +133,8 @@ export interface MarcaDeCorpo {
   d: Vec3;
   cor: string;
   estrutura: boolean;
+  /** UI-11: no modo daltônico, o emblema da nação vira a forma do marcador. */
+  forma?: Emblema | null;
 }
 
 export interface ConteudoDoMinimapa {
@@ -281,7 +284,18 @@ export class Minimapa {
       if (!p) continue;
       g.fillStyle = corpo.cor;
       const t = corpo.estrutura ? 4 : 2.5;
-      g.fillRect(p.x - t / 2, p.y - t / 2, t, t);
+      if (corpo.forma) {
+        // Forma do emblema, um pouco maior para ser lida.
+        const r = t * 0.9;
+        g.beginPath();
+        contornoDe(corpo.forma).forEach(([x, y], k) =>
+          k === 0 ? g.moveTo(p.x + x * r, p.y - y * r) : g.lineTo(p.x + x * r, p.y - y * r),
+        );
+        g.closePath();
+        g.fill();
+      } else {
+        g.fillRect(p.x - t / 2, p.y - t / 2, t, t);
+      }
     }
 
     // Sinais de radar: vermelhos, pulsantes (VIS-06).

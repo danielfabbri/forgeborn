@@ -2,6 +2,8 @@
  * Jazidas desenhadas (ECO-04, ECO-05): afloramentos cristalinos na cor do recurso, um
  * InstancedMesh por recurso, com a escala acompanhando o raio (que encolhe com a quantidade).
  */
+import { configuracoes } from '../game/configuracoes';
+import { corDoRecurso } from '../game/paleta';
 import {
   type BufferGeometry,
   Color,
@@ -63,6 +65,7 @@ export class JazidasRender {
   private readonly lado = new Vector3();
   private readonly geometria = geometriaDeCristais();
   readonly desenhadas: JazidaDesenhada[] = [];
+  private modo = '';
 
   constructor(private readonly scene: Scene) {
     for (const r of dados.recursos) {
@@ -88,6 +91,16 @@ export class JazidasRender {
 
   /** `explorado`: só as jazidas em área já explorada pelo jogador (VIS-01). */
   sync(state: SimState, explorado: ((id: EntityId) => boolean) | null = null): void {
+    // UI-11: a cor do recurso segue a paleta (muda com o modo daltônico).
+    const modo = configuracoes.value.daltonismo;
+    if (modo !== this.modo) {
+      this.modo = modo;
+      for (const [recurso, malha] of this.lotes) {
+        const material = malha.material as MeshStandardMaterial;
+        material.color.set(corDoRecurso(recurso));
+        material.emissive.set(corDoRecurso(recurso));
+      }
+    }
     this.desenhadas.length = 0;
     const usados = new Map<RecursosId, number>();
     const escalaMax = param('raio_jazida_max_m');

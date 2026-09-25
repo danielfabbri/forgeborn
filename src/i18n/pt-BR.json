@@ -311,5 +311,10 @@
   "config.volume.musica": "Música",
   "config.volume.efeitos": "Efeitos",
   "config.volume.voz": "Voz",
-  "config.volume.ambiente": "Ambiente"
+  "config.volume.ambiente": "Ambiente",
+  "config.daltonismo": "Modo daltônico",
+  "config.daltonismo.nenhum": "Desligado",
+  "config.daltonismo.protanopia": "Protanopia",
+  "config.daltonismo.deuteranopia": "Deuteranopia",
+  "config.daltonismo.tritanopia": "Tritanopia"
 }

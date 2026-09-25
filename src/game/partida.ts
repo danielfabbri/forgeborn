@@ -1,3 +1,4 @@
+import { corDaNacao, corDoRecurso, emblemaDe, modoDaltonico } from './paleta';
 import { effect } from '@preact/signals';
 import { Vector3 } from 'three';
 import { cenaDaNacao, destinoDaPatrulha, patrulheiro } from './cenaDemo';
@@ -52,6 +53,7 @@ import { PositionHistory } from '../render/interpolation';
 import { JazidasRender } from '../render/jazidas';
 import { MemoriaDeFantasmas } from '../render/fantasmas';
 import { MarcadorDeImpacto } from '../render/marcadorImpacto';
+import { EmblemasRender } from '../render/emblemas';
 import { Particulas } from '../render/particulas';
 import { Efeitos } from '../render/vfx';
 import { HologramaRender } from '../render/holograma';
@@ -332,6 +334,7 @@ export function iniciarPartida(): void {
   const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
   const holograma = new HologramaRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
   const barras = new BarrasRender(view.scene);
+  const emblemas = new EmblemasRender(view.scene);
   const retrato = new RetratoRender();
   /** UI-07: Tab alterna as barras entre automático e "sempre" (a mesma opção das Configurações). */
   window.addEventListener('keydown', (e) => {
@@ -534,7 +537,7 @@ export function iniciarPartida(): void {
     barraSuperior.value = {
       recursos: dados.recursos.map((r) => ({
         id: r.id,
-        cor: r.cor,
+        cor: corDoRecurso(r.id),
         quantidade: noEstoque[r.id] ?? 0,
         transito: transito[r.id] ?? 0,
       })),
@@ -672,7 +675,8 @@ export function iniciarPartida(): void {
       versaoNevoa,
       corpos: unidades.corpos.map((c) => ({
         d: [c.x, c.y, c.z],
-        cor: dados.nacoes.find((n) => n.id === c.nacao)?.cor ?? '#888888',
+        cor: corDaNacao(c.nacao),
+        forma: modoDaltonico() ? emblemaDe(c.nacao) : null,
         estrutura: !c.movel,
       })),
       fantasmas: nevoa ? fantasmas.visiveis(ctx, jogador).map((f) => [f.x, f.y, f.z]) : [],
@@ -840,6 +844,8 @@ export function iniciarPartida(): void {
         nevoa ? fantasmas.visiveis(leitura(), jogador) : [],
       );
       jazidas.sync(sim.state, nevoa ? exploradoPeloJogador : null);
+      // UI-11: emblemas das nações sobre os corpos no modo daltônico.
+      emblemas.sync(unidades.corpos, modoDaltonico());
       unidades.oculto = direto?.ativo != null && direto.modo === '1p' ? direto.ativo : null;
       aneis.sync(
         comandos && direto?.ativo == null ? comandos.selecionadosDesenhados() : [],

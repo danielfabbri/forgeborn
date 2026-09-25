@@ -2,6 +2,7 @@
  * Resumo da seleção para o painel (UI-03, UI-13): um corpo (retrato, HP, EN, estado, carga,
  * arma), vários corpos agrupados por tipo com mini-barras, ou uma jazida.
  */
+import { corDaNacao } from './paleta';
 import { dados, type EntityId, getComponent, param, type SimState } from '../sim';
 import { cargaDoSilo } from '../sim/economia/estoque';
 import type { EstadoDaSelecao } from '../ui/hud';
@@ -47,7 +48,7 @@ export function resumoDaSelecao(state: SimState, selecao: readonly EntityId[]): 
       tipo: 'corpo',
       id,
       modelo,
-      cor: dados.nacoes.find((n) => n.id === nacao)?.cor ?? '#888888',
+      cor: corDaNacao(nacao),
       hp: vida.hp,
       hpMax: vida.max,
       en: bateria ? { atual: bateria.en, max: bateria.max } : null,

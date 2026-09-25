@@ -1,6 +1,7 @@
 /**
  * Menu de Pausa (FLX-11), aviso da pausa tática (REG-21) e Fim de Partida (FLX-12, REG-23).
  */
+import { corDaNacao } from '../game/paleta';
 import { t, type TextKey } from '../i18n';
 import { dados } from '../sim';
 import { type LinhaDoFim, total } from '../game/fimDePartida';
@@ -55,7 +56,7 @@ const duracao = (s: number) => {
   return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 };
 const nomeDaNacao = (n: string) => t(`nacao.${n}` as TextKey);
-const corDaNacao = (n: string) => dados.nacoes.find((x) => x.id === n)?.cor ?? '#888';
+
 const inteiro = (v: number) => Math.round(v).toLocaleString('pt-BR');
 
 /** REG-23: as linhas da tabela (uma estatística por linha, uma nação por coluna). */

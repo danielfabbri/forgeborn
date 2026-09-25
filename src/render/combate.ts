@@ -3,6 +3,8 @@
  * torpedos e bombas em voo, explosões (ART-07, versão simples), destroços (ECO-27) e zonas de
  * radiação (CMB-24). Só lê o estado e os eventos da simulação.
  */
+import { configuracoes } from '../game/configuracoes';
+import { corDaNacao } from '../game/paleta';
 import {
   AdditiveBlending,
   BoxGeometry,
@@ -141,10 +143,10 @@ export class CombateRender {
   }
 
   private cor(nacao: string | undefined): Color {
-    const chave = nacao ?? '';
+    const chave = `${configuracoes.value.daltonismo}|${nacao ?? ''}`;
     let cor = this.corDaNacao.get(chave);
     if (!cor) {
-      cor = new Color(dados.nacoes.find((n) => n.id === nacao)?.cor ?? '#ffffff');
+      cor = new Color(corDaNacao(nacao));
       this.corDaNacao.set(chave, cor);
     }
     return cor;

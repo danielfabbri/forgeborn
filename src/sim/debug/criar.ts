@@ -39,11 +39,16 @@ export const debugCriarHandlers: Record<string, CommandHandler> = {
       const nacao = c.nacao ?? comando.nacao;
       const d = normalizar(c.d);
       if ('unidade' in c) {
+        if (!dados.moveis.some((m) => m.id === c.unidade)) continue;
         const id = criarUnidade(ctx, nacao, c.unidade, d);
         const arma = id !== null ? getComponent(ctx.state, id, 'arma') : undefined;
         if (arma && c.postura) arma.postura = c.postura;
-      } else if ('estrutura' in c) criarEstrutura(ctx, nacao, c.estrutura, d);
-      else criarMina(ctx, nacao, d);
+      } else if ('estrutura' in c) {
+        // Tipo desconhecido é ignorado (a depuração não cria corpos inválidos).
+        if (dados.estruturas.some((e) => e.id === c.estrutura)) {
+          criarEstrutura(ctx, nacao, c.estrutura, d);
+        }
+      } else criarMina(ctx, nacao, d);
     }
   },
   [DEBUG_ESTOQUE_COMMAND]: (ctx, comando) => {

@@ -76,7 +76,9 @@ function geometriaDeEntulho(): BufferGeometry {
 
 interface Feixe {
   de: EntityId;
-  para: EntityId;
+  /** O alvo; ou, no disparo perdido do controle direto (D-44), o ponto do chão (mundo). */
+  para: EntityId | null;
+  ponto: Vec3 | null;
   cor: Color;
   ate: number;
 }
@@ -152,13 +154,26 @@ export class CombateRender {
   registrar(state: SimState, eventos: readonly SimEvent[], agora: number): void {
     for (const e of eventos) {
       if (e.tipo === 'disparo') {
-        const d = e.dados as { atirador: EntityId; alvo: EntityId; arma: string };
+        const d = e.dados as {
+          atirador: EntityId;
+          alvo: EntityId | null;
+          arma: string;
+          ponto?: Vec3 | null;
+        };
         const arma = dados.armas.find((a) => a.id === d.arma);
         if (arma?.projetil !== 'hitscan') continue;
+        if (d.alvo === null && !d.ponto) continue;
         const nacao = getComponent(state, d.atirador, 'owner')?.nacao;
+        const ponto = d.ponto
+          ? ((): Vec3 => {
+              const r = this.raio + this.chao(d.ponto!) + 0.3;
+              return [d.ponto![0] * r, d.ponto![1] * r, d.ponto![2] * r];
+            })()
+          : null;
         this.feixes.push({
           de: d.atirador,
           para: d.alvo,
+          ponto,
           cor: this.cor(nacao),
           ate: agora + FEIXE_S * 1000,
         });
@@ -200,17 +215,24 @@ export class CombateRender {
     }
     for (const f of this.feixes) {
       const a = corpos(f.de);
-      const b = corpos(f.para);
-      if (!a || !b || n >= MAX_FEIXES) continue;
+      const b = f.para !== null ? corpos(f.para) : undefined;
+      const fim: Vec3 | null = b
+        ? [
+            b.x + b.cima[0] * b.altura * 0.6,
+            b.y + b.cima[1] * b.altura * 0.6,
+            b.z + b.cima[2] * b.altura * 0.6,
+          ]
+        : f.ponto;
+      if (!a || !fim || n >= MAX_FEIXES) continue;
       const alto = (c: CorpoDesenhado) => c.altura * 0.6;
       this.posicoesFeixe.set(
         [
           a.x + a.cima[0] * alto(a),
           a.y + a.cima[1] * alto(a),
           a.z + a.cima[2] * alto(a),
-          b.x + b.cima[0] * alto(b),
-          b.y + b.cima[1] * alto(b),
-          b.z + b.cima[2] * alto(b),
+          fim[0],
+          fim[1],
+          fim[2],
         ],
         n * 6,
       );

@@ -52,6 +52,8 @@ import { PositionHistory } from '../render/interpolation';
 import { JazidasRender } from '../render/jazidas';
 import { MemoriaDeFantasmas } from '../render/fantasmas';
 import { MarcadorDeImpacto } from '../render/marcadorImpacto';
+import { Particulas } from '../render/particulas';
+import { Efeitos } from '../render/vfx';
 import { HologramaRender } from '../render/holograma';
 import { campoDaCamera, Minimapa } from '../render/minimapa';
 import { NevoaRender } from '../render/nevoa';
@@ -319,6 +321,12 @@ export function iniciarPartida(): void {
   const history = new PositionHistory();
   const unidades = new UnidadesRender(view.scene, jogador);
   const combate = new CombateRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+  // ART-07: partículas e efeitos, na quantidade do preset (TEC-19).
+  const particulas = new Particulas(
+    view.scene,
+    () => PRESETS_GRAFICOS[configuracoes.value.grafico].particulas,
+  );
+  const efeitos = new Efeitos(view.scene, R, (d) => alturaEm(pronto.mapa, d), particulas);
   const marcas = new SinaisRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
   const jazidas = new JazidasRender(view.scene);
   const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
@@ -644,6 +652,7 @@ export function iniciarPartida(): void {
     };
   };
   let ultimoPainel = 0;
+  let ultimoEfeito = performance.now();
   let versaoNevoa = 0;
 
   /** VIS-09/CTL-03: minimapa no canto inferior esquerdo (UI-05), só no modo RTS. */
@@ -816,6 +825,9 @@ export function iniciarPartida(): void {
         aoAlertar(alerta);
       }
       combate.registrar(sim.state, eventos, performance.now());
+      efeitos.registrar(sim.state, eventos, performance.now(), (d) =>
+        nevoa ? explorado(leitura(), jogador, d) : true,
+      );
       tickCount++;
     },
     render: (alpha) => {
@@ -847,6 +859,15 @@ export function iniciarPartida(): void {
         performance.now(),
         nevoa ? exploradoPeloJogador : null,
       );
+      const agoraEfeitos = performance.now();
+      efeitos.sync(
+        sim.state,
+        unidades.corpos,
+        agoraEfeitos,
+        Math.min(0.1, (agoraEfeitos - ultimoEfeito) / 1000),
+        nevoa ? exploradoPeloJogador : () => true,
+      );
+      ultimoEfeito = agoraEfeitos;
       view.render();
       desenharMinimapa();
       const sel = painelSelecao.peek();

@@ -266,7 +266,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [ ] **T-120 — Modelos finais das unidades móveis** · G · Spec: ART-01 – ART-03, ART-05, D-45 · Dep: T-020
 - [ ] **T-121 — Modelos finais das estruturas e da Nave** · G · Spec: ART-01 – ART-04, D-45 · Dep: T-020
-- [ ] **T-122 — Efeito de impressão 3D** · M · Spec: ART-06 · Dep: T-053
+- [x] **T-122 — Efeito de impressão 3D** · M · Spec: ART-06 · Dep: T-053 · Feito: 2026-09-25
 - [x] **T-123 — VFX de combate** · M · Spec: ART-07 · Dep: T-062, T-066 · Feito: 2026-09-25 (o rastro de dobra da abertura veio com a T-101)
 - [x] **T-124 — Iluminação, pós-processamento e presets** · M · Spec: ART-08, TEC-19 · Dep: T-014 · Feito: 2026-09-25 (o fator de partículas é usado pelos VFX da T-123)
 - [ ] **T-125 — Cinemática de pouso** · M · Spec: FLX-09 · Dep: T-121

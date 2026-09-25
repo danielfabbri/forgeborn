@@ -180,14 +180,45 @@ export class Efeitos {
     }
   }
 
-  /** Por quadro: rastros, poeira dos hovers e o fim dos efeitos temporários. */
+  /** Por quadro: rastros, poeira dos hovers, faíscas da impressão e o fim dos temporários. */
   sync(
     state: SimState,
     corpos: readonly CorpoDesenhado[],
     agora: number,
     dt: number,
     explorado: (id: EntityId) => boolean,
+    linhasDeImpressao: ReadonlyArray<{
+      x: number;
+      y: number;
+      z: number;
+      cima: [number, number, number];
+      raio: number;
+    }> = [],
   ): void {
+    // ART-06: faíscas na linha de impressão.
+    for (const l of linhasDeImpressao) {
+      if (Math.random() > dt * 20) continue;
+      const a = Math.random() * Math.PI * 2;
+      const lado: Vec3 = [Math.cos(a), Math.sin(a), Math.cos(a + 1)];
+      this.particulas.emitir(
+        {
+          origem: [
+            l.x + lado[0] * l.raio * 0.6,
+            l.y + lado[1] * l.raio * 0.6,
+            l.z + lado[2] * l.raio * 0.6,
+          ],
+          cima: l.cima,
+          n: 2,
+          velocidade: [0.5, 2],
+          espalhamento: 1,
+          vida_s: [0.2, 0.5],
+          cor: [1, 0.8, 0.5],
+          tamanho: 0.18,
+          gravidade: GRAVIDADE_LUA,
+        },
+        'faisca',
+      );
+    }
     // Rastro do torpedo e fumaça da bomba.
     for (const id of entitiesWith(state, 'projetil', 'position')) {
       if (!explorado(id)) continue;

@@ -17,7 +17,14 @@ import {
   type Scene,
   Vector3,
 } from 'three';
-import { dados, type EntityId, entitiesWith, getComponent, type SimState } from '../sim';
+import {
+  dados,
+  type EntityId,
+  entitiesWith,
+  getComponent,
+  type SimEvent,
+  type SimState,
+} from '../sim';
 import type { PositionHistory, Vec3 } from './interpolation';
 import { norteEm } from '../sim/map/esfera';
 import type { Fantasma } from './fantasmas';
@@ -41,9 +48,10 @@ export interface CorpoDesenhado {
 }
 
 const CAPACIDADE_INICIAL = 32;
-/** Altura mínima desenhada de um canteiro recém-instalado (fração do modelo). */
-const ALTURA_MINIMA_OBRA = 0.03;
 const INTENSIDADE_EMISSIVA = 1.8;
+/** ART-06 (apresentação): duração da impressão de uma unidade na tela e a faixa da linha. */
+const IMPRESSAO_MS = 1200;
+const FAIXA_DA_LINHA_M = 0.07;
 
 export function criarMaterial(): MeshStandardMaterial {
   const material = new MeshStandardMaterial({
@@ -58,25 +66,41 @@ export function criarMaterial(): MeshStandardMaterial {
         `#include <common>
 attribute float aEmis;
 attribute vec3 aCorNacao;
+attribute float aCorte;
 varying float vEmis;
-varying vec3 vCorNacao;`,
+varying vec3 vCorNacao;
+varying float vCorte;
+varying float vYLocal;`,
       )
       .replace(
         '#include <begin_vertex>',
         `#include <begin_vertex>
 vEmis = aEmis;
-vCorNacao = aCorNacao;`,
+vCorNacao = aCorNacao;
+vCorte = aCorte;
+vYLocal = position.y;`,
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
         `#include <common>
 varying float vEmis;
-varying vec3 vCorNacao;`,
+varying vec3 vCorNacao;
+varying float vCorte;
+varying float vYLocal;`,
+      )
+      // ART-06: plano de corte da impressão (aCorte > 0; 0 = peça inteira).
+      .replace(
+        '#include <clipping_planes_fragment>',
+        `#include <clipping_planes_fragment>
+if (vCorte > 0.0 && vYLocal > vCorte) discard;`,
       )
       .replace(
         '#include <emissivemap_fragment>',
         `#include <emissivemap_fragment>
+if (vCorte > 0.0 && vCorte - vYLocal < ${FAIXA_DA_LINHA_M.toFixed(2)}) {
+  totalEmissiveRadiance += mix(vCorNacao, vec3(1.0, 0.85, 0.6), 0.5) * 1.4;
+}
 if (vEmis > 0.5) {
   vec3 brilho = vEmis > 1.5 ? vColor.rgb : vCorNacao;
   diffuseColor.rgb = brilho * 0.35;
@@ -90,6 +114,7 @@ if (vEmis > 0.5) {
 class Lote {
   malha: InstancedMesh;
   cores: InstancedBufferAttribute;
+  cortes!: InstancedBufferAttribute;
   usados = 0;
 
   constructor(
@@ -108,6 +133,10 @@ class Lote {
     const cores = new InstancedBufferAttribute(new Float32Array(capacidade * 3), 3);
     cores.setUsage(DynamicDrawUsage);
     geometria.setAttribute('aCorNacao', cores);
+    // ART-06: altura do corte da impressão por instância (0 = inteira).
+    this.cortes = new InstancedBufferAttribute(new Float32Array(capacidade), 1);
+    this.cortes.setUsage(DynamicDrawUsage);
+    geometria.setAttribute('aCorte', this.cortes);
     const malha = new InstancedMesh(geometria, this.material, capacidade);
     malha.instanceMatrix.setUsage(DynamicDrawUsage);
     malha.castShadow = this.sombras;
@@ -141,6 +170,16 @@ export class UnidadesRender {
   });
   private readonly lotes = new Map<TipoDeModelo, Lote>();
   private readonly hologramas = new Map<TipoDeModelo, Lote>();
+  /** ART-06: unidades impressas e quando a impressão começou na tela (ms). */
+  private readonly impressoes = new Map<EntityId, number>();
+  /** Onde está a linha de impressão de cada peça em impressão neste quadro (mundo). */
+  readonly linhasDeImpressao: Array<{
+    x: number;
+    y: number;
+    z: number;
+    cima: [number, number, number];
+    raio: number;
+  }> = [];
   /** Corpo que não é desenhado (o pilotado em 1ª pessoa). */
   oculto: EntityId | null = null;
   /** VIS-04: fantasmas em cinza translúcido. */
@@ -184,8 +223,9 @@ export class UnidadesRender {
     fantasmas: readonly Fantasma[] = [],
   ): void {
     this.corpos.length = 0;
+    this.linhasDeImpressao.length = 0;
     this.porId.clear();
-    type Desenho = { corpo: CorpoDesenhado; frente: Vec3 | null; altura: number };
+    type Desenho = { corpo: CorpoDesenhado; frente: Vec3 | null; corte: number };
     const porTipo = new Map<TipoDeModelo, Desenho[]>();
     const emObra = new Map<TipoDeModelo, Desenho[]>();
     const lembrados = new Map<TipoDeModelo, Desenho[]>();
@@ -206,7 +246,7 @@ export class UnidadesRender {
       };
       let lista = lembrados.get(tipo);
       if (!lista) lembrados.set(tipo, (lista = []));
-      lista.push({ corpo, frente: null, altura: 1 });
+      lista.push({ corpo, frente: null, corte: 0 });
     }
     for (const id of entitiesWith(state, 'position')) {
       if (visivel && !visivel(id)) continue;
@@ -252,7 +292,7 @@ export class UnidadesRender {
       if (obra) {
         let holos = emObra.get(tipo);
         if (!holos) emObra.set(tipo, (holos = []));
-        holos.push({ corpo, frente, altura: 1 });
+        holos.push({ corpo, frente, corte: 0 });
         // Só reservada: só o holograma.
         if (!obra.instalada) continue;
       }
@@ -260,8 +300,25 @@ export class UnidadesRender {
       if (id === this.oculto) continue;
       let lista = porTipo.get(tipo);
       if (!lista) porTipo.set(tipo, (lista = []));
-      const altura = obra ? Math.max(ALTURA_MINIMA_OBRA, obra.progresso) : 1;
-      lista.push({ corpo, frente, altura });
+      // ART-06: canteiro e unidade recém-impressa surgem de baixo para cima.
+      const inicio = this.impressoes.get(id);
+      const fracao = obra
+        ? obra.progresso
+        : inicio !== undefined
+          ? Math.min(1, (performance.now() - inicio) / IMPRESSAO_MS)
+          : 1;
+      if (inicio !== undefined && fracao >= 1) this.impressoes.delete(id);
+      const corte = fracao < 1 ? Math.max(0.02, fracao * corpo.altura) + 0.001 : 0;
+      if (corte > 0) {
+        this.linhasDeImpressao.push({
+          x: corpo.x + corpo.cima[0] * corte,
+          y: corpo.y + corpo.cima[1] * corte,
+          z: corpo.z + corpo.cima[2] * corte,
+          cima: corpo.cima,
+          raio: corpo.raio,
+        });
+      }
+      lista.push({ corpo, frente, corte });
     }
 
     this.preencher(this.lotes, porTipo, (tipo) => this.lote(tipo));
@@ -273,7 +330,7 @@ export class UnidadesRender {
     lotes: Map<TipoDeModelo, Lote>,
     porTipo: Map<
       TipoDeModelo,
-      Array<{ corpo: CorpoDesenhado; frente: Vec3 | null; altura: number }>
+      Array<{ corpo: CorpoDesenhado; frente: Vec3 | null; corte: number }>
     >,
     obter: (tipo: TipoDeModelo) => Lote,
   ): void {
@@ -281,7 +338,7 @@ export class UnidadesRender {
     for (const [tipo, lista] of porTipo) {
       const lote = obter(tipo);
       lote.garantir(lista.length);
-      lista.forEach(({ corpo, frente, altura }, k) => {
+      lista.forEach(({ corpo, frente, corte }, k) => {
         // Base do modelo: +x = frente (rumo, ou o norte local para estruturas e minas, PRD-10),
         // +y = vertical local, +z = x × y.
         this.cima.set(...corpo.cima);
@@ -291,10 +348,11 @@ export class UnidadesRender {
         // Garante a frente tangente (a interpolação pode tirá-la um pouco do plano).
         this.frente.addScaledVector(this.cima, -this.frente.dot(this.cima)).normalize();
         this.lado.crossVectors(this.frente, this.cima);
-        this.matriz.makeBasis(this.frente, this.cima.multiplyScalar(altura), this.lado);
+        this.matriz.makeBasis(this.frente, this.cima, this.lado);
         this.matriz.setPosition(corpo.x, corpo.y, corpo.z);
         lote.malha.setMatrixAt(k, this.matriz);
         this.cor(corpo.nacao).toArray(lote.cores.array, k * 3);
+        lote.cortes.array[k] = corte;
       });
       lote.usados = lista.length;
     }
@@ -302,6 +360,15 @@ export class UnidadesRender {
       lote.malha.count = lote.usados;
       lote.malha.instanceMatrix.needsUpdate = true;
       lote.cores.needsUpdate = true;
+      lote.cortes.needsUpdate = true;
+    }
+  }
+
+  /** ART-06: as unidades impressas neste tick começam a animação de impressão. */
+  registrar(eventos: readonly SimEvent[]): void {
+    for (const e of eventos) {
+      if (e.tipo !== 'impresso') continue;
+      this.impressoes.set((e.dados as { id: EntityId }).id, performance.now());
     }
   }
 

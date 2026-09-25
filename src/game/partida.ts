@@ -825,6 +825,7 @@ export function iniciarPartida(): void {
         aoAlertar(alerta);
       }
       combate.registrar(sim.state, eventos, performance.now());
+      unidades.registrar(eventos);
       efeitos.registrar(sim.state, eventos, performance.now(), (d) =>
         nevoa ? explorado(leitura(), jogador, d) : true,
       );
@@ -866,6 +867,7 @@ export function iniciarPartida(): void {
         agoraEfeitos,
         Math.min(0.1, (agoraEfeitos - ultimoEfeito) / 1000),
         nevoa ? exploradoPeloJogador : () => true,
+        unidades.linhasDeImpressao,
       );
       ultimoEfeito = agoraEfeitos;
       view.render();

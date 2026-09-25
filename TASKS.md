@@ -268,7 +268,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [ ] **T-121 — Modelos finais das estruturas e da Nave** · G · Spec: ART-01 – ART-04, D-45 · Dep: T-020
 - [ ] **T-122 — Efeito de impressão 3D** · M · Spec: ART-06 · Dep: T-053
 - [ ] **T-123 — VFX de combate** · M · Spec: ART-07 · Dep: T-062, T-066
-- [ ] **T-124 — Iluminação, pós-processamento e presets** · M · Spec: ART-08, TEC-19 · Dep: T-014
+- [x] **T-124 — Iluminação, pós-processamento e presets** · M · Spec: ART-08, TEC-19 · Dep: T-014 · Feito: 2026-09-25 (o fator de partículas é usado pelos VFX da T-123)
 - [ ] **T-125 — Cinemática de pouso** · M · Spec: FLX-09 · Dep: T-121
 - [x] **T-126 — Áudio** · G · Spec: AUD-01 – AUD-05, D-46, D-47 · Dep: T-084 · Feito: 2026-09-25 (as trilhas são arquivos do produto em public/audio/trilhas/; a pasta tem um LEIA-ME)
   - Aceite: trilhas por contexto com transição cruzada e arquivos faltando pulados; SFX sintetizados por unidade e interface; voz TTS pt-BR com legenda; volumes por canal nas Configurações.

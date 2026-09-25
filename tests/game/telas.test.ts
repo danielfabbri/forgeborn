@@ -30,7 +30,11 @@ describe('T-102 — FLX-13, TEC-19: configurações', () => {
     for (let k = 1; k < ordem.length; k++) {
       expect(ordem[k]!.escala).toBeGreaterThan(ordem[k - 1]!.escala);
       expect(ordem[k]!.sombra).toBeGreaterThan(ordem[k - 1]!.sombra);
+      expect(ordem[k]!.lod).toBeGreaterThan(ordem[k - 1]!.lod);
+      expect(ordem[k]!.particulas).toBeGreaterThan(ordem[k - 1]!.particulas);
     }
+    // ART-08: SSAO a partir do Alto.
+    expect(ordem.map((p) => p.ssao)).toEqual([false, false, true, true]);
   });
 });
 

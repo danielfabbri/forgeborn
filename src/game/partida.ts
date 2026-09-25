@@ -158,6 +158,9 @@ declare global {
 }
 
 /** Monta e roda a partida da página (FLX-14): chamada pela entrada depois do carregamento. */
+/** O terreno da partida, para o preset gráfico ajustar o LOD (TEC-19). */
+let terrenoAtual: { aplicarLod(fator: number): void } | null = null;
+
 export function iniciarPartida(): void {
   const viewport = document.getElementById('viewport');
   const uiRoot = document.getElementById('ui');
@@ -172,7 +175,8 @@ export function iniciarPartida(): void {
   effect(() => {
     const c = configuracoes.value;
     const preset = PRESETS_GRAFICOS[c.grafico];
-    view.aplicarGraficos(preset.escala, preset.sombra);
+    view.aplicarGraficos(preset.escala, preset.sombra, preset.ssao);
+    terrenoAtual?.aplicarLod(preset.lod);
     aplicarEscalaDaInterface(document.documentElement, c.escalaInterface);
   });
 
@@ -211,6 +215,8 @@ export function iniciarPartida(): void {
   const nevoa = nevoaNaTela ? new NevoaRender(pronto.grades.nevoa.esfera.n) : null;
   nevoa?.atualizar(undefined);
   const terreno = criarTerreno(pronto.mapa, nevoa);
+  terrenoAtual = terreno;
+  terreno.aplicarLod(PRESETS_GRAFICOS[configuracoes.value.grafico].lod);
   const ceu = criarCeu();
   view.scene.add(terreno.objeto, ceu.objeto);
 

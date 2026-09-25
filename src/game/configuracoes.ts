@@ -21,11 +21,16 @@ export type CanalDeAudio = 'geral' | 'musica' | 'efeitos' | 'voz' | 'ambiente';
 export const CANAIS: readonly CanalDeAudio[] = ['geral', 'musica', 'efeitos', 'voz', 'ambiente'];
 
 /** TEC-19: escala de resolução (limitada à densidade da tela) e lado do mapa de sombras. */
-export const PRESETS_GRAFICOS: Record<PresetGrafico, { escala: number; sombra: number }> = {
-  baixo: { escala: 0.75, sombra: 0 },
-  medio: { escala: 1, sombra: 1024 },
-  alto: { escala: 1.5, sombra: 2048 },
-  ultra: { escala: 2, sombra: 4096 },
+export const PRESETS_GRAFICOS: Record<
+  PresetGrafico,
+  { escala: number; sombra: number; ssao: boolean; lod: number; particulas: number }
+> = {
+  // `lod`: fator das distâncias de LOD; `particulas`: fator da quantidade de partículas.
+  baixo: { escala: 0.75, sombra: 0, ssao: false, lod: 0.6, particulas: 0.25 },
+  medio: { escala: 1, sombra: 1024, ssao: false, lod: 0.8, particulas: 0.5 },
+  // ART-08: SSAO a partir do preset Alto.
+  alto: { escala: 1.5, sombra: 2048, ssao: true, lod: 1, particulas: 1 },
+  ultra: { escala: 2, sombra: 4096, ssao: true, lod: 1.4, particulas: 1.5 },
 };
 export const PRESETS: readonly PresetGrafico[] = ['baixo', 'medio', 'alto', 'ultra'];
 

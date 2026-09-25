@@ -35,6 +35,8 @@ export const NIVEIS_LOD = [
 export interface Terreno {
   objeto: Group;
   tiles: number;
+  /** TEC-19: distâncias de LOD multiplicadas pelo fator do preset gráfico. */
+  aplicarLod(fator: number): void;
   dispose(): void;
 }
 
@@ -335,6 +337,14 @@ export function criarTerreno(mapa: Heightmap, nevoa: NevoaRender | null = null):
   return {
     objeto,
     tiles,
+    aplicarLod: (fator) => {
+      objeto.traverse((o) => {
+        if (!(o instanceof LOD)) return;
+        o.levels.forEach((nivel, k) => {
+          nivel.distance = (NIVEIS_LOD[k]?.distancia ?? nivel.distance) * fator;
+        });
+      });
+    },
     dispose: () => {
       for (const g of geometrias) g.dispose();
       for (const t of material.texturas) t.dispose();

@@ -118,7 +118,7 @@ export function iniciarRecarga(
   return true;
 }
 
-function sairDaEstrutura(ctx: SystemContext, unidade: EntityId): void {
+export function sairDaEstrutura(ctx: SystemContext, unidade: EntityId): void {
   const recarga = getComponent(ctx.state, unidade, 'recarga')!;
   if (recarga.estrutura !== null && isAlive(ctx.state, recarga.estrutura)) {
     const portas = getComponent(ctx.state, recarga.estrutura, 'portas');
@@ -232,8 +232,9 @@ export function autoRecarga(ctx: SystemContext): void {
     const bateria = getComponent(state, unidade, 'bateria')!;
     const recarga = getComponent(state, unidade, 'recarga')!;
     if (!bateria.autoRecarga || recarga.estado !== 'nenhuma' || bateria.recebendo) continue;
-    // CMB-28: hover recolhido não sai para recarregar.
-    if (getComponent(state, unidade, 'abrigo')) continue;
+    // CMB-28: hover recolhido não sai para recarregar; D-57: quem segue a Bateria Móvel, também não.
+    if (getComponent(state, unidade, 'abrigo') || getComponent(state, unidade, 'seguirBateria'))
+      continue;
     // D-44: em controle direto, o jogador decide quando recarregar.
     if (getComponent(state, unidade, 'pilotado')) continue;
     // O silo ancorado não sai do lugar; recarrega quando estiver solto.

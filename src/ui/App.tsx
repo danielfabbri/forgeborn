@@ -5,6 +5,7 @@ import { PainelSelecao, Tooltip } from './PainelSelecao';
 import { FimDePartida, MenuDePausa } from './TelasDaPartida';
 import { HudControleDireto } from './ControleDireto';
 import { PilhaDeAlertas } from './Alertas';
+import { BotoesDeParados } from './Parados';
 
 export function App() {
   return (
@@ -14,6 +15,7 @@ export function App() {
       <PainelProducao />
       <Tooltip />
       <PilhaDeAlertas />
+      <BotoesDeParados />
       <HudControleDireto />
       <MenuDePausa />
       <FimDePartida />

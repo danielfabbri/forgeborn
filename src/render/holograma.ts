@@ -17,7 +17,8 @@ import {
   type Scene,
   Vector3,
 } from 'three';
-import { dados, type EstruturasId } from '../sim/data';
+import { dados, type EstruturasId, param } from '../sim/data';
+import { geometriaDoModelo } from './modelos';
 import { avancar, girar, norteEm, produtoVetorial, type Vec3 } from '../sim/map/esfera';
 
 const VERDE = new Color('#46e08a');
@@ -42,6 +43,15 @@ export class HologramaRender {
   private readonly visao: LineLoop;
   private readonly alcance: LineLoop;
   private readonly matriz = new Matrix4();
+  /** Silhueta em wireframe do modelo, girada como a estrutura ficará. */
+  private readonly materialSilhueta = new MeshBasicMaterial({
+    wireframe: true,
+    transparent: true,
+    opacity: 0.45,
+    depthWrite: false,
+  });
+  private readonly silhueta = new Mesh(new BufferGeometry(), this.materialSilhueta);
+  private tipoDaSilhueta: EstruturasId | null = null;
 
   constructor(
     scene: Scene,
@@ -61,24 +71,35 @@ export class HologramaRender {
     const base = new Group();
     base.add(this.pegada, this.borda);
     base.matrixAutoUpdate = false;
-    this.grupo.add(base, this.visao, this.alcance);
+    this.silhueta.matrixAutoUpdate = false;
+    this.silhueta.frustumCulled = false;
+    this.grupo.add(base, this.visao, this.alcance, this.silhueta);
     this.grupo.visible = false;
     scene.add(this.grupo);
   }
 
-  mostrar(tipo: EstruturasId, d: Vec3, valido: boolean): void {
+  /** `rumo`: frente de Muro e Portão (D-56); as demais seguem o norte local. */
+  mostrar(tipo: EstruturasId, d: Vec3, valido: boolean, rumo: Vec3 | null = null): void {
     const estrutura = dados.estruturas.find((e) => e.id === tipo)!;
     const cor = valido ? VERDE : VERMELHO;
     this.materialPegada.color.copy(cor);
     this.materialBorda.color.copy(cor);
+    this.materialSilhueta.color.copy(cor);
 
-    // Base local: +x = norte (a pegada se alinha ao norte local, PRD-10), +y = vertical.
-    const norte = norteEm(d);
-    const lado = produtoVetorial(norte, d);
+    // Base local: +x = norte (a pegada se alinha ao norte local, PRD-10) ou o rumo do segmento
+    // (D-56), +y = vertical.
+    const frente = rumo ?? norteEm(d);
+    const lado = produtoVetorial(frente, d);
     const r = this.raio + this.chao(d) + ELEVACAO_M;
-    this.matriz.makeBasis(new Vector3(...norte), new Vector3(...d), new Vector3(...lado));
-    this.matriz.scale(new Vector3(estrutura.pegada_m, 1, estrutura.pegada_m));
+    this.matriz.makeBasis(new Vector3(...frente), new Vector3(...d), new Vector3(...lado));
     this.matriz.setPosition(d[0] * r, d[1] * r, d[2] * r);
+    this.silhueta.matrix.copy(this.matriz);
+    if (this.tipoDaSilhueta !== tipo) {
+      this.silhueta.geometry = geometriaDoModelo(tipo);
+      this.tipoDaSilhueta = tipo;
+    }
+    const largura = rumo ? param('muro_espessura_m') : estrutura.pegada_m;
+    this.matriz.scale(new Vector3(estrutura.pegada_m, 1, largura));
     const base = this.grupo.children[0]!;
     base.matrix.copy(this.matriz);
 

@@ -15,6 +15,7 @@ import {
   ToqueDuplo,
 } from '../game/selecao';
 import {
+  MENU_BASE,
   MENU_ESTRUTURAS,
   MENU_NAVE,
   MENU_UNIDADES,
@@ -26,10 +27,17 @@ import type { DestrocoDesenhado } from '../render/combate';
 import type { JazidaDesenhada } from '../render/jazidas';
 import type { SinalDeOrdem } from '../render/sinalizadores';
 import type { CorpoDesenhado } from '../render/unidades';
-import { dados, type EntityId, getComponent, isAlive, type NacaoId, type Sim } from '../sim';
+import { type EntityId, getComponent, isAlive, type NacaoId, type Sim } from '../sim';
 import type { CustosId, EstruturasId } from '../sim/data';
-import { normalizar, type Vec3 } from '../sim/map/esfera';
-import { segmentosDaLinha } from '../game/linhaDeMuro';
+import { arco, normalizar, tangente, type Vec3 } from '../sim/map/esfera';
+import {
+  anguloDoRumo,
+  centroDoSegmento,
+  encaixeEm,
+  pontasLivres,
+  rumoDoAngulo,
+} from '../game/encaixeDeMuro';
+import { ehSegmento } from '../sim/units/segmentos';
 import type { Heightmap } from '../sim/map/heightmap';
 
 /** Corpo ou jazida que pode ser apontado na tela. */
@@ -48,6 +56,8 @@ interface Projetavel {
 
 /** Distância (px) a partir da qual o arrasto vira caixa de seleção. */
 const LIMIAR_ARRASTO_PX = 6;
+/** D-56 (apresentação): o arrasto só gira o segmento depois disso (m), contra tremidas. */
+const GIRO_MINIMO_M = 0.8;
 
 type Modo =
   | 'normal'
@@ -77,7 +87,7 @@ export interface EstadoDaEntrada {
 
 /** Holograma da pegada sob o cursor (UI-08). */
 export interface HologramaDePosicionamento {
-  mostrar(tipo: EstruturasId, d: Vec3, valido: boolean): void;
+  mostrar(tipo: EstruturasId, d: Vec3, valido: boolean, rumo?: Vec3 | null): void;
   esconder(): void;
 }
 
@@ -119,7 +129,7 @@ export interface OpcoesEntradaComandos {
   destrocos?: () => readonly DestrocoDesenhado[];
   aoMudarSelecao?: (ids: readonly EntityId[]) => void;
   /** PRD-10: por que o local não serve, ou null (a validação da simulação). */
-  validarLocal?: (tipo: EstruturasId, d: Vec3) => string | null;
+  validarLocal?: (tipo: EstruturasId, d: Vec3, rumo?: Vec3 | null) => string | null;
   holograma?: HologramaDePosicionamento;
   /** UI-14: sinalizador e som da ordem no ponto (direção). */
   sinalizar?: (tipo: SinalDeOrdem, d: Vec3) => void;
@@ -160,6 +170,8 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     menuAberto = null;
     posicionando = null;
     motivo = null;
+    giro = null;
+    segmentoAtual = null;
     o.holograma?.esconder();
     definirModo(modo);
   };
@@ -282,6 +294,12 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       definirModo('normal');
       return;
     }
+    // UNI-04 (D-55): a Base de Lançamento imprime o Satélite.
+    const bases = doTipo('satellite_uplink');
+    if (bases.length > 0 && MENU_BASE.some((opcao) => opcao.item === item)) {
+      enviar('imprimir', { ids: bases, item });
+      return;
+    }
     const naves = doTipo('ship');
     if (naves.length > 0 && MENU_NAVE.some((opcao) => opcao.item === item)) {
       enviar('imprimir', { ids: naves, item });
@@ -289,6 +307,23 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     }
     const impressoras = doTipo('printer');
     if (impressoras.length > 0) enviar('imprimir', { ids: impressoras, item });
+  };
+
+  /**
+   * D-56: Muro e Portão. `giro` existe enquanto o botão está apertado: o segmento gira em volta
+   * do pivô (o centro, ou a ponta encaixada) apontando para o cursor.
+   */
+  let giro: { pivo: Vec3; encaixado: boolean; rumo: Vec3 } | null = null;
+  /** Último giro usado (ângulo a partir do norte local), para o próximo segmento livre. */
+  let ultimoAngulo = 0;
+  /** O segmento sob o cursor agora (centro e rumo), para o holograma e a confirmação. */
+  let segmentoAtual: { centro: Vec3; rumo: Vec3 } | null = null;
+
+  const segmentoSob = (d: Vec3): { pivo: Vec3; encaixado: boolean; rumo: Vec3 } => {
+    const encaixe = encaixeEm(pontasLivres(sim.state, jogador, o.mapa.raio_m), d, o.mapa.raio_m);
+    return encaixe
+      ? { pivo: encaixe.ponta, encaixado: true, rumo: encaixe.saida }
+      : { pivo: d, encaixado: false, rumo: rumoDoAngulo(d, ultimoAngulo) };
   };
 
   /** UI-08: holograma verde ou vermelho sob o cursor. */
@@ -300,49 +335,61 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       return;
     }
     const d = normalizar(ponto);
-    motivo = o.validarLocal?.(posicionando, d) ?? null;
-    o.holograma?.mostrar(posicionando, d, motivo === null);
+    if (!ehSegmento(posicionando)) {
+      motivo = o.validarLocal?.(posicionando, d) ?? null;
+      o.holograma?.mostrar(posicionando, d, motivo === null);
+      return;
+    }
+    let base = giro ?? segmentoSob(d);
+    if (giro) {
+      // Arrastando: o segmento aponta do pivô para o cursor.
+      const rumo =
+        arco(giro.pivo, d) * o.mapa.raio_m > GIRO_MINIMO_M ? tangente(giro.pivo, d) : null;
+      if (rumo) giro = base = { ...giro, rumo };
+    }
+    segmentoAtual = centroDoSegmento(
+      posicionando,
+      base.pivo,
+      base.rumo,
+      base.encaixado,
+      o.mapa.raio_m,
+    );
+    motivo = o.validarLocal?.(posicionando, segmentoAtual.centro, segmentoAtual.rumo) ?? null;
+    o.holograma?.mostrar(posicionando, segmentoAtual.centro, motivo === null, segmentoAtual.rumo);
   };
 
-  /**
-   * UNI-08: Muro arrastado vira uma linha de segmentos do ponto inicial ao final, um a cada
-   * pegada (medida na grade local, para as pegadas quadradas se tocarem sem se sobrepor).
-   */
-  const posicionarLinha = (origem: { x: number; y: number }, px: number, py: number): boolean => {
-    if (posicionando !== 'wall') return false;
-    if (Math.hypot(px - origem.x, py - origem.y) <= LIMIAR_ARRASTO_PX) return false;
-    const a = pontoNoTerreno(o.camera, viewport, origem.x, origem.y, o.mapa);
-    const b = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
-    const impressora = impressoraLivre();
-    if (!a || !b || impressora === null) return false;
-    const pegada = dados.estruturas.find((e) => e.id === 'wall')!.pegada_m;
-    const linha = segmentosDaLinha(normalizar(a), normalizar(b), pegada, o.mapa.raio_m);
-    if (!linha) return false;
-    // Os segmentos se repartem entre as Impressoras selecionadas (a de menor fila primeiro).
-    const impressoras = doTipo('printer');
-    const carga = new Map(
-      impressoras.map((id) => [id, getComponent(sim.state, id, 'producer')!.fila.length]),
-    );
-    for (const d of linha.pontos) {
-      if (o.validarLocal?.('wall', d)) continue;
-      const quem = impressoras.reduce((a, b) => (carga.get(b)! < carga.get(a)! ? b : a));
-      carga.set(quem, carga.get(quem)! + 1);
-      enviar('posicionar_estrutura', {
-        id: quem,
-        tipo: 'wall',
-        x: d[0],
-        y: d[1],
-        z: d[2],
-        rumo: linha.frente,
-      });
-    }
+  /** D-56: apertar começa o giro do segmento (no centro, ou na ponta encaixada). */
+  const comecarGiro = (px: number, py: number): boolean => {
+    if (!posicionando || !ehSegmento(posicionando)) return false;
+    const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
+    if (!ponto) return false;
+    giro = segmentoSob(normalizar(ponto));
+    atualizarHolograma(px, py);
     return true;
   };
 
   const confirmarPosicionamento = (px: number, py: number, manter: boolean) => {
     if (!posicionando) return;
-    const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
     const impressora = impressoraLivre();
+    if (ehSegmento(posicionando)) {
+      atualizarHolograma(px, py);
+      const seg = segmentoAtual;
+      giro = null;
+      if (!seg || impressora === null) return;
+      if (o.validarLocal?.(posicionando, seg.centro, seg.rumo)) return;
+      ultimoAngulo = anguloDoRumo(seg.centro, seg.rumo);
+      enviar('posicionar_estrutura', {
+        id: impressora,
+        tipo: posicionando,
+        x: seg.centro[0],
+        y: seg.centro[1],
+        z: seg.centro[2],
+        rumo: seg.rumo,
+      });
+      if (!manter) sairDaProducao();
+      return;
+    }
+    const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
     if (!ponto || impressora === null) return;
     const d = normalizar(ponto);
     if (o.validarLocal?.(posicionando, d)) return;
@@ -401,14 +448,34 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     return false;
   };
 
-  /** CTL-07/D-50: estrutura própria com portas de recarga → recarregar ali. */
+  /**
+   * CTL-07: estrutura própria com portas de recarga → recarregar ali (D-50); Bateria Móvel
+   * própria → ir até ela e encher (D-57). Só vale para quem não está com a bateria cheia (as
+   * cheias seguem para reparar ou mover).
+   */
   const recargaNoPonto = (px: number, py: number): boolean => {
-    const unidades = minhas('unit').filter((id) => getComponent(sim.state, id, 'recarga'));
-    if (unidades.length === 0) return false;
     const alvo = corpoNoPonto(naTela(), px, py);
+    const naoCheias = (ids: EntityId[]) =>
+      ids.filter((id) => {
+        const b = getComponent(sim.state, id, 'bateria');
+        return b !== undefined && b.en < b.max - 1e-9;
+      });
+    if (alvo && alvo.nacao === jogador && getComponent(sim.state, alvo.id, 'suporte')) {
+      const unidades = naoCheias(minhas('unit').filter((id) => id !== alvo.id));
+      if (unidades.length === 0) return false;
+      enviar('recarregar_na_bateria', { ids: unidades, bateria: alvo.id });
+      sinal('recarregar', px, py, alvo.id);
+      return true;
+    }
     if (!alvo || alvo.nacao !== jogador || !getComponent(sim.state, alvo.id, 'portas'))
       return false;
     if (getComponent(sim.state, alvo.id, 'obra')) return false;
+    // Estrutura danificada: quem já está cheio vai reparar (trabalhoNoPonto), não recarregar.
+    const vida = getComponent(sim.state, alvo.id, 'vida');
+    const danificada = vida !== undefined && vida.hp < vida.max;
+    const comRecarga = minhas('unit').filter((id) => getComponent(sim.state, id, 'recarga'));
+    const unidades = danificada ? naoCheias(comRecarga) : comRecarga;
+    if (unidades.length === 0) return false;
     enviar('recarregar', { ids: unidades, estrutura: alvo.id });
     sinal('recarregar', px, py, alvo.id);
     return true;
@@ -434,8 +501,8 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     if (tipo === 'mover') ordemDosSatelites(px, py);
     if (minhas('unit').length + minhas('producer').length === 0) return;
     if (tipo === 'mover' && alvoDeCombateNoPonto(px, py)) return;
-    if (tipo === 'mover' && trabalhoNoPonto(px, py)) return;
     if (tipo === 'mover' && recargaNoPonto(px, py)) return;
+    if (tipo === 'mover' && trabalhoNoPonto(px, py)) return;
     if (tipo === 'mover') {
       const jazida = corpoNoPonto(jazidasNaTela(), px, py);
       const hovers = coletores();
@@ -486,6 +553,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     if (e.button !== 0) return;
     inicio = { x: e.clientX, y: e.clientY };
     arrastando = false;
+    comecarGiro(e.clientX, e.clientY);
   };
   const moveu = (e: PointerEvent) => {
     mouse = { x: e.clientX, y: e.clientY };
@@ -509,10 +577,6 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     caixaDiv.hidden = true;
     if (posicionando) {
       arrastando = false;
-      if (posicionarLinha(origem, e.clientX, e.clientY)) {
-        if (!e.shiftKey) sairDaProducao();
-        return;
-      }
       confirmarPosicionamento(e.clientX, e.clientY, e.shiftKey);
       return;
     }
@@ -634,6 +698,13 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     const daNave = doTipo('ship').length > 0 ? MENU_NAVE.find((x) => x.codigo === e.code) : null;
     if (daNave) {
       escolher(daNave.item);
+      e.preventDefault();
+      return;
+    }
+    const daBase =
+      doTipo('satellite_uplink').length > 0 ? MENU_BASE.find((x) => x.codigo === e.code) : null;
+    if (daBase) {
+      escolher(daBase.item);
       e.preventDefault();
       return;
     }

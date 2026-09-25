@@ -105,7 +105,7 @@ export function mundoLua(seed?: number): ReturnType<typeof gerarMapaValido> {
 /** Criação em coordenadas locais (x, z) ou numa direção `d`. */
 export type Criacao = (
   | { unidade: MoveisId; postura?: 'agressiva' | 'defensiva' | 'manter' | 'passiva' }
-  | { estrutura: EstruturasId }
+  | { estrutura: EstruturasId; comSatelite?: boolean; rumo?: Vec3 }
   | { mina: true }
 ) & {
   nacao?: NacaoId;

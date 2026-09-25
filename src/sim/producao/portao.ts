@@ -16,7 +16,8 @@ import type { CommandHandler, SystemContext } from '../core/pipeline';
 import { param } from '../data';
 import { raioDaPegada } from '../units/criar';
 import { statsMovel } from '../units/stats';
-import { direcaoDe, distanciaM } from '../units/superficie';
+import { distanciaAoObstaculo, obstaculoDaEstrutura } from '../units/segmentos';
+import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 
 export const TRANCAR_PORTAO_COMMAND = 'trancar_portao';
 
@@ -27,6 +28,8 @@ export function passoPortoes(ctx: SystemContext): void {
     const portao = getComponent(state, id, 'portao')!;
     const nacao = getComponent(state, id, 'owner')!.nacao;
     const d = direcaoDe(getComponent(state, id, 'position')!);
+    const obstaculo = obstaculoDaEstrutura(state, id, raioDaPegada('gate'));
+    const R = raioDoMundo(ctx);
     let proprioPerto = false;
     let alguemNoVao = false;
     for (const u of entitiesWith(state, 'unit', 'owner', 'position')) {
@@ -38,9 +41,9 @@ export function passoPortoes(ctx: SystemContext): void {
       ) {
         proprioPerto = true;
       }
-      if (dist <= raioDaPegada('gate') + statsMovel(getComponent(state, u, 'unit')!.tipo).raio_m) {
-        alguemNoVao = true;
-      }
+      // D-56: alguém sobre o segmento do portão impede o fechamento.
+      const r = statsMovel(getComponent(state, u, 'unit')!.tipo).raio_m;
+      if (distanciaAoObstaculo(R, d, obstaculo, du) <= r) alguemNoVao = true;
     }
     const passo = dt / param('portao_tempo_abrir_s');
     if (proprioPerto && !portao.trancado) {
@@ -56,7 +59,7 @@ export function passoPortoes(ctx: SystemContext): void {
     const bloqueia = portao.abertura < 1 - 1e-9;
     const temObstaculo = getComponent(state, id, 'obstacle') !== undefined;
     if (bloqueia && !temObstaculo) {
-      setComponent(state, id, 'obstacle', { raio: raioDaPegada('gate') });
+      setComponent(state, id, 'obstacle', obstaculo);
       state.versaoObstaculos++;
     } else if (!bloqueia && temObstaculo) {
       removeComponent(state, id, 'obstacle');

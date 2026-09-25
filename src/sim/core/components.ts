@@ -22,7 +22,15 @@ export interface ComponentMap {
     rumo?: Ponto;
   };
   /** Obstáculo rígido circular (MOV-04): estruturas e jazidas. */
-  obstacle: { raio: number };
+  obstacle: {
+    raio: number;
+    /**
+     * D-56: obstáculo em segmento (Muro, Portão): meio comprimento (m) do eixo que passa pelo
+     * centro na direção tangente `eixo`; o obstáculo é tudo a até `raio` desse eixo.
+     */
+    meio?: number;
+    eixo?: Ponto;
+  };
   /** Estado de deslocamento de uma unidade móvel. */
   locomotion: {
     /** Rumo: vetor unitário tangente à superfície na posição atual (CEN-14). */
@@ -164,6 +172,8 @@ export interface ComponentMap {
   destroco: { composicao: Partial<Record<RecursosId, number>>; restante_s: number };
   /** Zona de radiação da Usina Nuclear (CMB-24). */
   radiacao: { restante_s: number };
+  /** D-57: unidade mandada à Bateria Móvel `bateria` para encher até 100%. */
+  seguirBateria: { bateria: EntityId };
   /** ECO-13: hover em fuga; retoma após `fuga_hover_retorno_s` sem dano. */
   fuga: { abrigo: EntityId };
   /** Hover de Plantio de Minas (UNI-01, UNI-02). */

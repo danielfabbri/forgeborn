@@ -36,7 +36,7 @@
   "item.storage": "Armazém",
   "item.solar_plant": "Usina Solar Pequena",
   "item.nuclear_plant": "Usina Nuclear",
-  "item.satellite_uplink": "Base de Lançamento + Satélite",
+  "item.satellite_uplink": "Base de Lançamento",
   "item.ship": "Nave Inicial",
   "producao.fila": "Fila",
   "producao.vazia": "Fila vazia",
@@ -334,5 +334,7 @@
   "producao.recolher_mineradores": "Recolher mineradores",
   "producao.liberar_mineradores": "Liberar mineradores",
   "producao.trancar_portao": "Trancar portão",
-  "producao.destrancar_portao": "Destrancar portão"
+  "producao.destrancar_portao": "Destrancar portão",
+  "parados.mineradores": "Mineradores parados: clique para ir ao próximo",
+  "parados.impressoras": "Impressoras paradas: clique para ir à próxima"
 }

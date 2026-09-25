@@ -6,6 +6,13 @@
  * `tempo_s`, e cada construtor paga da própria bateria a fração do seu PI. Hovers de
  * Exploração ajudam e podem continuar a obra sem a Impressora.
  */
+import {
+  distanciaSegmentos2d,
+  ehSegmento,
+  pontas,
+  pontoSegmento2d,
+  rumoDoSegmento,
+} from '../units/segmentos';
 import { contar } from '../core/estatisticas';
 import {
   destroyEntity,
@@ -68,40 +75,92 @@ function noPlano(R: number, d: Vec3, p: Vec3): [number, number] {
 /** Metade do lado da pegada quadrada (m). */
 const meiaPegada = (tipo: string): number => statsEstrutura(tipo).pegada_m / 2;
 
-/** PRD-10: valida o local da estrutura `tipo` com centro em `d` (para `nacao`, se dada). */
+/** Segmento (Muro/Portão) no plano tangente em `d`: pontas (m) e meia espessura. */
+interface SegmentoNoPlano {
+  a: [number, number];
+  b: [number, number];
+}
+
+/** Pontas do segmento `tipo` com centro `c` e rumo, no plano em `d`; `apara` encurta as pontas. */
+function segmentoNoPlano(
+  R: number,
+  d: Vec3,
+  tipo: string,
+  c: Vec3,
+  rumo: Vec3,
+  apara = 0,
+): SegmentoNoPlano {
+  const meio = Math.max(0, meiaPegada(tipo) - apara);
+  const [p0, p1] = pontas(R, c, rumo, meio);
+  return { a: noPlano(R, d, p0), b: noPlano(R, d, p1) };
+}
+
+/**
+ * PRD-10: valida o local da estrutura `tipo` com centro em `d` (para `nacao`, se dada). Muro e
+ * Portão são segmentos com `rumo` (D-56): encostam em outros segmentos só pelas pontas.
+ */
 export function validarPosicionamento(
   ctx: SystemContext,
   tipo: EstruturasId,
   d: Vec3,
   nacao?: NacaoId,
+  rumo?: Vec3 | null,
 ): MotivoRecusa | null {
   const { state } = ctx;
   const R = raioDoMundo(ctx);
   const h = meiaPegada(tipo);
+  const segmento = ehSegmento(tipo);
+  const esp = param('muro_espessura_m');
+  const direcao = segmento
+    ? (tangente(d, soma(d, escalar(rumo ?? norteEm(d), 1e-3))) ?? norteEm(d))
+    : null;
+  // Eixos da área a conferir: a pegada quadrada, ou o retângulo do segmento.
+  const eixoA = direcao ?? baseLocal(d).leste;
+  const eixoB = direcao ? produtoVetorial(direcao, d) : baseLocal(d).norte;
+  const meioA = h;
+  const meioB = segmento ? esp / 2 : h;
   if (ctx.mundo) {
     const grade = ctx.mundo.grades.construcao;
-    const { leste, norte } = baseLocal(d);
     const passo = grade.celula_m;
-    const n = Math.max(1, Math.ceil((2 * h) / passo));
-    for (let i = 0; i <= n; i++) {
-      for (let j = 0; j <= n; j++) {
-        const e = -h + (2 * h * i) / n;
-        const s = -h + (2 * h * j) / n;
-        const p = normalizar(soma(d, soma(escalar(leste, e / R), escalar(norte, s / R))));
+    const na = Math.max(1, Math.ceil((2 * meioA) / passo));
+    const nb = Math.max(1, Math.ceil((2 * meioB) / passo));
+    for (let i = 0; i <= na; i++) {
+      for (let j = 0; j <= nb; j++) {
+        const e = -meioA + (2 * meioA * i) / na;
+        const s = -meioB + (2 * meioB * j) / nb;
+        const p = normalizar(soma(d, soma(escalar(eixoA, e / R), escalar(eixoB, s / R))));
         // Terreno explorado pela nação (VIS-01).
         if (nacao && !explorado(ctx, nacao, p)) return 'inexplorado';
         if (!ehConstruivel(grade, celulaDe(grade, p))) return 'inclinacao';
       }
     }
   }
+  const nosso = direcao ? segmentoNoPlano(R, d, tipo, d, direcao) : null;
   // Pegadas (prontas, em obra ou reservadas) não se sobrepõem.
   for (const id of entitiesWith(state, 'structure', 'position')) {
     const outra = getComponent(state, id, 'structure')!.tipo;
     const dc = direcaoDe(getComponent(state, id, 'position')!);
     const limite = h + meiaPegada(outra);
     if (distanciaM(ctx, d, dc) > limite * Math.SQRT2 + 1) continue;
-    const [e, s] = noPlano(R, d, dc);
-    if (Math.abs(e) < limite && Math.abs(s) < limite) return 'ocupado';
+    const outroSegmento = ehSegmento(outra);
+    if (!segmento && !outroSegmento) {
+      const [e, s] = noPlano(R, d, dc);
+      if (Math.abs(e) < limite && Math.abs(s) < limite) return 'ocupado';
+      continue;
+    }
+    const rumoOutro = rumoDoSegmento(state, id, dc);
+    if (segmento && outroSegmento) {
+      // D-56: só se tocam pelas pontas (aparadas, as partes de dentro não podem se encostar).
+      const a = segmentoNoPlano(R, d, tipo, d, direcao!, esp);
+      const b = segmentoNoPlano(R, d, outra, dc, rumoOutro, esp);
+      if (distanciaSegmentos2d(a.a, a.b, b.a, b.b) < esp / 2) return 'ocupado';
+      continue;
+    }
+    // Segmento contra pegada quadrada: o eixo não entra na pegada (mais a meia espessura).
+    const seg = segmento ? nosso! : segmentoNoPlano(R, d, outra, dc, rumoOutro);
+    const centro: [number, number] = segmento ? noPlano(R, d, dc) : [0, 0];
+    const quadrado = segmento ? meiaPegada(outra) : h;
+    if (pontoSegmento2d(centro, seg.a, seg.b) < quadrado + esp / 2) return 'ocupado';
   }
   // Folga de `distancia_min_jazida_m` entre a pegada e a jazida.
   for (const id of todasAsJazidas(ctx)) {
@@ -109,9 +168,10 @@ export function validarPosicionamento(
     const raio = (getComponent(state, id, 'obstacle')?.raio ?? 0) + param('distancia_min_jazida_m');
     if (distanciaM(ctx, d, dj) > h * Math.SQRT2 + raio + 1) continue;
     const [e, s] = noPlano(R, d, dj);
-    if (Math.hypot(Math.max(Math.abs(e) - h, 0), Math.max(Math.abs(s) - h, 0)) < raio) {
-      return 'jazida';
-    }
+    const folga = nosso
+      ? pontoSegmento2d([e, s], nosso.a, nosso.b) - esp / 2
+      : Math.hypot(Math.max(Math.abs(e) - h, 0), Math.max(Math.abs(s) - h, 0));
+    if (folga < raio) return 'jazida';
   }
   return null;
 }
@@ -335,16 +395,16 @@ export const comandosDeObra: Record<string, CommandHandler> = {
     const alvo = direcaoDoComando(d);
     if (impressora === null || !alvo || !ehEstrutura(d.tipo) || !produz('printer', d.tipo)) return;
     if (!cabeNaFila(ctx, impressora, d.tipo)) return;
-    const motivo = validarPosicionamento(ctx, d.tipo, alvo, comando.nacao);
+    const rumo = rumoDoComando(d.rumo, alvo);
+    const motivo = validarPosicionamento(ctx, d.tipo, alvo, comando.nacao, rumo);
     if (motivo) {
       ctx.emit('posicionamento_recusado', { nacao: comando.nacao, tipo: d.tipo, motivo });
       return;
     }
     const obra = reservarEstrutura(ctx, comando.nacao, d.tipo, alvo);
     if (obra === null) return;
-    // UNI-08: o segmento em linha guarda a frente (só visual; a pegada segue a grade).
-    const rumo = rumoDoComando(d.rumo, alvo);
-    if (rumo) getComponent(ctx.state, obra, 'structure')!.rumo = rumo;
+    // D-56: Muro e Portão guardam o rumo do segmento.
+    if (rumo && ehSegmento(d.tipo)) getComponent(ctx.state, obra, 'structure')!.rumo = rumo;
     const pago = pagar(ctx, comando.nacao, d.tipo);
     if (!pago) {
       destroyEntity(ctx.state, obra);

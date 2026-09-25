@@ -19,6 +19,9 @@ const opcao = (tecla: string, item: CustosId): OpcaoDeMenu => ({
 
 export const MENU_NAVE: OpcaoDeMenu[] = [opcao('E', 'hover_explorer'), opcao('I', 'printer')];
 
+/** §12.4 (Base de Lançamento) S: Satélite (UNI-04, D-55). */
+export const MENU_BASE: OpcaoDeMenu[] = [opcao('S', 'satellite')];
+
 export const MENU_UNIDADES: OpcaoDeMenu[] = [
   opcao('E', 'hover_explorer'),
   opcao('1', 'hover_ex1'),

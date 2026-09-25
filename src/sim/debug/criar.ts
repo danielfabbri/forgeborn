@@ -6,8 +6,9 @@ import { getComponent } from '../core/entities';
 import type { CommandHandler } from '../core/pipeline';
 import type { NacaoId } from '../core/types';
 import { dados, type EstruturasId, type MoveisId } from '../data';
-import { normalizar, type Vec3 } from '../map/esfera';
+import { escalar, normalizar, soma, tangente, type Vec3 } from '../map/esfera';
 import { criarEstrutura, criarMina, criarUnidade } from '../units/criar';
+import { lancarSatelite } from '../visao/satelite';
 
 export const DEBUG_CRIAR_COMMAND = 'debug_criar';
 /** Aplica à nação que envia o estoque inicial de um modo (REG-05), para a cena de demonstração. */
@@ -24,7 +25,15 @@ export type Criacao =
       /** CMB-13: já nasce com esta postura (testes). */
       postura?: 'agressiva' | 'defensiva' | 'manter' | 'passiva';
     }
-  | { estrutura: EstruturasId; nacao?: NacaoId; d: Vec3 }
+  | {
+      estrutura: EstruturasId;
+      nacao?: NacaoId;
+      d: Vec3;
+      /** Base de Lançamento já com o satélite impresso, subindo (cena e testes, D-55). */
+      comSatelite?: boolean;
+      /** D-56: rumo (tangente) de Muro e Portão. */
+      rumo?: Vec3;
+    }
   | { mina: true; nacao?: NacaoId; d: Vec3 };
 
 export const debugCriarHandlers: Record<string, CommandHandler> = {
@@ -46,7 +55,11 @@ export const debugCriarHandlers: Record<string, CommandHandler> = {
       } else if ('estrutura' in c) {
         // Tipo desconhecido é ignorado (a depuração não cria corpos inválidos).
         if (dados.estruturas.some((e) => e.id === c.estrutura)) {
-          criarEstrutura(ctx, nacao, c.estrutura, d);
+          const rumo = c.rumo ? (tangente(d, soma(d, escalar(c.rumo, 1e-3))) ?? null) : null;
+          const id = criarEstrutura(ctx, nacao, c.estrutura, d, rumo);
+          if (id !== null && c.comSatelite && c.estrutura === 'satellite_uplink') {
+            lancarSatelite(ctx, id, nacao, d);
+          }
         }
       } else criarMina(ctx, nacao, d);
     }

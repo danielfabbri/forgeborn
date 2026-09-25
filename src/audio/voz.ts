@@ -8,9 +8,12 @@ import { configuracoes } from '../game/configuracoes';
 const ORDEM = { baixa: 0, media: 1, alta: 2, critica: 3 } as const;
 export type PrioridadeDaVoz = keyof typeof ORDEM;
 
-/** Apresentação: fala um pouco mais lenta e grave (calma). */
-const RITMO = 0.95;
+/** Apresentação: fala calma e grave, mas no ritmo do jogo (D-58: a de antes era lenta). */
+const RITMO = 1.2;
 const TOM = 0.9;
+/** Apresentação: a mesma frase não é repetida em voz antes disso (a legenda segue na pilha). */
+const REPETIR_APOS_MS = 20_000;
+const faladas = new Map<string, number>();
 
 let vozPtBr: SpeechSynthesisVoice | null | undefined;
 let falando: PrioridadeDaVoz | null = null;
@@ -30,6 +33,9 @@ function escolherVoz(): SpeechSynthesisVoice | null {
 export function falar(texto: string, prioridade: PrioridadeDaVoz): boolean {
   const voz = escolherVoz();
   if (!voz) return false;
+  const agora = performance.now();
+  const antes = faladas.get(texto);
+  if (antes !== undefined && agora - antes < REPETIR_APOS_MS) return false;
   if (falando !== null && speechSynthesis.speaking) {
     // Só um alerta mais urgente interrompe; os outros esperam a vez ou se perdem.
     if (ORDEM[prioridade] <= ORDEM[falando]) return false;
@@ -44,6 +50,7 @@ export function falar(texto: string, prioridade: PrioridadeDaVoz): boolean {
   fala.volume = (geral / 100) * (volumeVoz / 100);
   fala.onend = () => (falando = null);
   falando = prioridade;
+  faladas.set(texto, agora);
   speechSynthesis.speak(fala);
   return true;
 }

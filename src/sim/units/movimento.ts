@@ -4,6 +4,7 @@
  * drones e altura final (solo ou voo).
  */
 import { abrigado } from '../combate/abrigo';
+import { maisPertoNoEixo } from './segmentos';
 import type { ComponentMap, Ponto } from '../core/components';
 import { entitiesWith, getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
@@ -448,18 +449,20 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
   // Obstáculos rígidos empurram unidades de solo para fora.
   const obstaculos = entitiesWith(state, 'obstacle', 'position').map((o) => ({
     d: direcaoDe(getComponent(state, o, 'position')!),
-    raio: getComponent(state, o, 'obstacle')!.raio,
+    o: getComponent(state, o, 'obstacle')!,
   }));
   for (const id of ids) {
     if (!noSolo(ctx, id)) continue;
     const r = statsMovel(getComponent(state, id, 'unit')!.tipo).raio_m;
     for (const o of obstaculos) {
       const p = dirs.get(id)!;
-      const raio = o.raio + r;
-      const dist = R * arco(p, o.d);
+      const raio = o.o.raio + r;
+      // D-56: Muro e Portão empurram a partir do ponto mais perto do eixo.
+      const c = maisPertoNoEixo(R, o.d, o.o, p);
+      const dist = R * arco(p, c);
       if (dist >= raio) continue;
-      const fora = tangente(o.d, p) ?? norteEm(o.d);
-      dirs.set(id, avancar(o.d, fora, raio / R).p);
+      const fora = tangente(c, p) ?? norteEm(c);
+      dirs.set(id, avancar(c, fora, raio / R).p);
     }
   }
   for (const id of ids) posicionar(ctx, getComponent(state, id, 'position')!, dirs.get(id)!, 0);

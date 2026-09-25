@@ -504,18 +504,19 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     m.caixa(8.5, 0.06, 0.2, 'nacao', { y: 0.82, z: -4.5 });
     return olho(m, 4.9, 1.0, 3.8, 0.3).pronta();
   },
-  // D-53: segmento de muro espacial de 4 m (comprimento em x), com pilares nas pontas.
+  // D-53/D-56: segmento de muro espacial de 6 m (comprimento em x), com pilares nas pontas
+  // (as pontas coincidem com as do segmento vizinho encaixado).
   wall: () => {
     const m = new Montagem();
-    m.caixa(3.9, 0.35, 1.5, GRAFITE);
-    m.caixa(3.6, 2.4, 0.9, PAINEL, { y: 0.35 });
-    m.caixa(3.4, 0.5, 1.1, GRAFITE, { y: 2.75 });
-    for (const x of [-1.85, 1.85]) {
-      m.cilindro(0.35, 3.4, METAL, { x }, 8);
-      m.cilindro(0.22, 0.12, 'nacao', { x, y: 3.4 }, 8);
+    m.caixa(5.4, 0.35, 1.5, GRAFITE);
+    m.caixa(5.2, 2.4, 0.9, PAINEL, { y: 0.35 });
+    m.caixa(5.0, 0.5, 1.1, GRAFITE, { y: 2.75 });
+    for (const x of [-2.75, 2.75]) {
+      m.cilindro(0.55, 3.5, METAL, { x }, 10);
+      m.cilindro(0.3, 0.12, 'nacao', { x, y: 3.5 }, 10);
     }
-    m.caixa(3.2, 0.08, 0.95, 'nacao', { y: 1.4 });
-    for (const x of [-0.9, 0, 0.9]) m.caixa(0.08, 1.6, 0.95, GRAFITE, { x, y: 0.6 });
+    m.caixa(4.6, 0.08, 0.95, 'nacao', { y: 1.4 });
+    for (const x of [-1.5, -0.5, 0.5, 1.5]) m.caixa(0.08, 1.6, 0.95, GRAFITE, { x, y: 0.6 });
     return olho(m, 0, 3.1, 0.45, 0.12).pronta();
   },
   // D-54: portão de 6 m: pilares e verga; as folhas são peças à parte (geometriaDaFolha).

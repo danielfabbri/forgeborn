@@ -543,7 +543,7 @@ export class UnidadesRender {
   /** UNI-09: as duas folhas de cada Portão descem para dentro do chão com a abertura. */
   private desenharFolhas(
     state: SimState,
-    portoes: ReadonlyArray<{ corpo: CorpoDesenhado; corte: number }>,
+    portoes: ReadonlyArray<{ corpo: CorpoDesenhado; frente: Vec3 | null; corte: number }>,
   ): void {
     this.loteDaFolha ??= new Lote(this.scene, geometriaDaFolha(), this.material, 8);
     const lote = this.loteDaFolha;
@@ -551,10 +551,12 @@ export class UnidadesRender {
     lote.garantir(Math.max(1, prontos.length * 2));
     const peca = new Matrix4();
     let k = 0;
-    for (const { corpo } of prontos) {
+    for (const { corpo, frente } of prontos) {
       const abertura = getComponent(state, corpo.id, 'portao')?.abertura ?? 0;
       this.cima.set(...corpo.cima);
-      this.frente.set(...norteEm(corpo.cima));
+      // D-56: as folhas seguem o rumo do portão.
+      if (frente) this.frente.set(frente.x, frente.y, frente.z);
+      else this.frente.set(...norteEm(corpo.cima));
       this.frente.addScaledVector(this.cima, -this.frente.dot(this.cima)).normalize();
       this.lado.crossVectors(this.frente, this.cima);
       const y = ALTURA_DA_SOLEIRA_M - ALTURA_DA_FOLHA_M * abertura;

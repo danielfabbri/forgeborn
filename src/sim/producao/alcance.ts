@@ -9,12 +9,15 @@ import { param } from '../data';
 import { irPara } from '../economia/coleta';
 import { avancar, norteEm, tangente } from '../map/esfera';
 import { raioDaPegada } from '../units/criar';
-import { statsMovel } from '../units/stats';
+import { ehSegmento } from '../units/segmentos';
+import { statsEstrutura, statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 
 /** Raio da borda: a pegada da estrutura (mesmo reservada) ou o casco da unidade. */
 export function bordaDe(ctx: SystemContext, id: EntityId): number {
   const estrutura = getComponent(ctx.state, id, 'structure');
+  // D-56: Muro e Portão medem pelo meio comprimento do segmento.
+  if (estrutura && ehSegmento(estrutura.tipo)) return statsEstrutura(estrutura.tipo).pegada_m / 2;
   if (estrutura) return raioDaPegada(estrutura.tipo);
   const unidade = getComponent(ctx.state, id, 'unit');
   return unidade ? statsMovel(unidade.tipo).raio_m : 0;

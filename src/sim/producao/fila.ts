@@ -15,6 +15,7 @@ import { emReserva, gastar } from '../energia/bateria';
 import { bonusDaNacao } from '../ia/base';
 import { avancar, escalar, norteEm, tangente, type Vec3 } from '../map/esfera';
 import { criarUnidade } from '../units/criar';
+import { lancarSatelite } from '../visao/satelite';
 import { moverPara } from '../units/ordens';
 import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
@@ -30,6 +31,8 @@ export function filaMaxima(tipoProdutor: string): number {
 }
 
 export const ehMovel = (item: CustosId): item is MoveisId => custoDe(item).categoria === 'movel';
+/** Itens que a fila imprime (unidades móveis e o Satélite, D-55). */
+const ehImprimivel = (item: CustosId) => ehMovel(item) || custoDe(item).categoria === 'orbital';
 
 /** REG-19: corpos vivos mais unidades já pagas nas filas da nação. */
 function corposComFila(ctx: SystemContext, nacao: NacaoId): number {
@@ -49,7 +52,16 @@ function corposComFila(ctx: SystemContext, nacao: NacaoId): number {
 export function cabeNaFila(ctx: SystemContext, produtor: EntityId, item: CustosId): boolean {
   const tipo = tipoDoProdutor(ctx, produtor);
   if (!tipo || !produz(tipo, item)) return false;
-  return getComponent(ctx.state, produtor, 'producer')!.fila.length < filaMaxima(tipo);
+  const fila = getComponent(ctx.state, produtor, 'producer')!.fila;
+  // UNI-04 (D-55): um satélite por base de cada vez (nem vivo nem outro na fila).
+  if (item === 'satellite') {
+    if (fila.some((i) => i.item === 'satellite')) return false;
+    const temSatelite = entitiesWith(ctx.state, 'satelite').some(
+      (id) => getComponent(ctx.state, id, 'satelite')!.base === produtor,
+    );
+    if (temSatelite) return false;
+  }
+  return fila.length < filaMaxima(tipo);
 }
 
 /**
@@ -155,6 +167,15 @@ function impressoraLivre(ctx: SystemContext, id: EntityId): boolean {
 function concluirUnidade(ctx: SystemContext, produtor: EntityId): void {
   const producer = getComponent(ctx.state, produtor, 'producer')!;
   const item = producer.fila[0]!;
+  // UNI-04 (D-55): o Satélite impresso sobe sobre a base.
+  if (item.item === 'satellite') {
+    const nacao = getComponent(ctx.state, produtor, 'owner')!.nacao;
+    const d = direcaoDe(getComponent(ctx.state, produtor, 'position')!);
+    const id = lancarSatelite(ctx, produtor, nacao, d);
+    producer.fila.shift();
+    ctx.emit('impresso', { id, tipo: 'satellite', nacao, produtor });
+    return;
+  }
   if (nascer(ctx, produtor, item.item as MoveisId) !== null) producer.fila.shift();
 }
 
@@ -225,7 +246,7 @@ export const comandosDeFila: Record<string, CommandHandler> = {
   /** §12.4 (Nave E/I, Impressora U): imprime uma unidade em cada produtor. */
   imprimir: (ctx, comando) => {
     const d = (comando.dados ?? {}) as { ids?: unknown; item?: unknown };
-    if (!ehItem(d.item) || !ehMovel(d.item)) return;
+    if (!ehItem(d.item) || !ehImprimivel(d.item)) return;
     for (const id of produtoresDa(ctx, comando.nacao, d.ids)) enfileirar(ctx, id, d.item);
   },
   /** PRD-05: cancela o item de índice `indice` da fila do produtor. */

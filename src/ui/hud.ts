@@ -100,6 +100,11 @@ export const acoesDosAlertas: { irPara: (a: Alerta) => void } = { irPara: () => 
 /** Canvas do retrato 3D (UI-03), montado pelo painel e desenhado pelo render. */
 export const canvasDoRetrato = signal<HTMLCanvasElement | null>(null);
 
+/** UI-15: quantos mineradores e impressoras estão parados, e a ação de ir ao próximo. */
+export type TipoDeParado = 'mineradores' | 'impressoras';
+export const parados = signal<Record<TipoDeParado, number>>({ mineradores: 0, impressoras: 0 });
+export const acoesDosParados: { proximo: (tipo: TipoDeParado) => void } = { proximo: () => {} };
+
 /** Clicar num grupo filtra a seleção (UI-03). */
 export const acoesDaSelecao: {
   filtrar: ((ids: EntityId[]) => void) | null;

@@ -2,7 +2,7 @@
  * Criação de corpos com os limites da nação (REG-16 a REG-19). Toda criação passa por aqui:
  * uma ordem que excede um limite é recusada e emite o alerta AL-11.
  */
-import { lancarSatelite } from '../visao/satelite';
+import { obstaculoDaEstrutura } from './segmentos';
 import { createEntity, entitiesWith, getComponent, setComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId } from '../core/types';
@@ -10,7 +10,7 @@ import { type ArmasId, type EstruturasId, type MoveisId, param } from '../data';
 import { norteEm, type Vec3 } from '../map/esfera';
 import { bateriaInicial } from '../energia/bateria';
 import { ALTURA_HOVER_M, altitudeDrone, ehAerea, statsEstrutura, statsMovel } from './stats';
-import { chaoEm, direcaoDe, type Posicao, posicionar } from './superficie';
+import { chaoEm, type Posicao, posicionar } from './superficie';
 
 export type Limite = 'limite_corpos' | 'limite_bases_lancamento' | 'limite_minas_ativas';
 
@@ -177,9 +177,12 @@ export function criarEstrutura(
   nacao: NacaoId,
   tipo: EstruturasId,
   d: Vec3,
+  /** D-56: rumo do segmento (Muro, Portão). */
+  rumo: Vec3 | null = null,
 ): EntityId | null {
   const id = reservarEstrutura(ctx, nacao, tipo, d);
   if (id === null) return null;
+  if (rumo) getComponent(ctx.state, id, 'structure')!.rumo = rumo;
   instalarEstrutura(ctx, id);
   const vida = getComponent(ctx.state, id, 'vida')!;
   vida.hp = vida.max;
@@ -212,7 +215,7 @@ export function reservarEstrutura(
 export function instalarEstrutura(ctx: SystemContext, id: EntityId): void {
   const { state } = ctx;
   const tipo = getComponent(state, id, 'structure')!.tipo;
-  setComponent(state, id, 'obstacle', { raio: raioDaPegada(tipo) });
+  setComponent(state, id, 'obstacle', obstaculoDaEstrutura(state, id, raioDaPegada(tipo)));
   const max = statsEstrutura(tipo).hp;
   setComponent(state, id, 'vida', { hp: (max * param('hp_inicial_canteiro_pct')) / 100, max });
   comecarCombate(ctx, id);
@@ -244,15 +247,15 @@ export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
       fila: [],
     });
   }
-  // UNI-04: a Base de Lançamento pronta começa a lançar o satélite (sobre a própria base).
+  // UNI-04 (D-55): a Base de Lançamento imprime o Satélite com a energia da rede (PRD-06).
   if (tipo === 'satellite_uplink') {
-    // D-51: o satélite é um corpo próprio e não consome da rede.
-    lancarSatelite(
-      ctx,
-      id,
-      getComponent(state, id, 'owner')!.nacao,
-      direcaoDe(getComponent(state, id, 'position')!),
-    );
+    setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });
+    setComponent(state, id, 'consumidor', {
+      prioridade: 3,
+      demanda_en_s: 0,
+      atendido: 1,
+      offline: false,
+    });
   }
   // UNI-09: o Portão nasce fechado e destrancado.
   if (tipo === 'gate') {

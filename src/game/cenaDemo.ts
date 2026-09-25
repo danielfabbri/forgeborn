@@ -75,7 +75,15 @@ export function cenaDaNacao(
 ): Criacao[] {
   const em = emVoltaDa(zona, raio);
   const criacoes: Criacao[] = [{ estrutura: 'ship', nacao, ...em(0, 0) }];
-  for (const [tipo, u, v] of ESTRUTURAS) criacoes.push({ estrutura: tipo, nacao, ...em(u, v) });
+  // A Base da cena já vem com o satélite impresso (D-55), para mostrar a órbita.
+  for (const [tipo, u, v] of ESTRUTURAS) {
+    criacoes.push({
+      estrutura: tipo,
+      nacao,
+      ...em(u, v),
+      ...(tipo === 'satellite_uplink' ? { comSatelite: true } : {}),
+    });
+  }
   for (const [u, v] of EXPLORADORES)
     criacoes.push({ unidade: 'hover_explorer', nacao, ...em(u, v) });
   UNIDADES.forEach((tipo, k) => {

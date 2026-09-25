@@ -35,9 +35,10 @@ import { fimDaPartida } from './fimDePartida';
 import { irParaMenu, irParaPartida, lerPartidaDaUrl, novaSeed } from './navegacao';
 import { ligarEntradaCamera } from '../input/cameraInput';
 import { ligarEntradaComandos } from '../input/comandoInput';
-import { MENU_ESTRUTURAS, MENU_NAVE, MENU_UNIDADES } from './atalhosProducao';
+import { MENU_ESTRUTURAS, MENU_BASE, MENU_NAVE, MENU_UNIDADES } from './atalhosProducao';
 import { barrasDe, corpos as corposDa, relogio, resumoDaJazida } from './hud';
 import { resumoDaSelecao } from './painelSelecao';
+import { ociosos } from '../sim/economia/diretiva';
 import { t, type TextKey } from '../i18n';
 import { AneisDeSelecao } from '../render/aneis';
 import { BarrasRender, type CorpoComBarras } from '../render/barras';
@@ -113,6 +114,9 @@ import {
   painelSelecao,
   pausado,
   tooltip,
+  acoesDosParados,
+  parados,
+  type TipoDeParado,
 } from '../ui/hud';
 import { acoesDoPainel, avisoProducao, fotosDoPainel, painelProducao } from '../ui/producao';
 
@@ -167,6 +171,8 @@ declare global {
       satelites?: () => Array<{ id: EntityId; nacao: string; estado: string; indo: boolean }>;
       /** Sinalizadores do clique direito ativos (UI-14), pelo tipo. */
       sinalizadores?: () => string[];
+      /** Rumo guardado de uma estrutura (D-56), ou null. */
+      rumo?: (id: EntityId) => Vec3 | null;
     };
   }
 }
@@ -399,7 +405,7 @@ export function iniciarPartida(): void {
           corpos: () => unidades.corpos,
           jazidas: () => jazidas.desenhadas,
           destrocos: () => combate.destrocosDesenhados,
-          validarLocal: (tipo, d) => validarPosicionamento(leitura(), tipo, d, jogador),
+          validarLocal: (tipo, d, rumo) => validarPosicionamento(leitura(), tipo, d, jogador, rumo),
           holograma,
           sinalizar: (tipo, d) => {
             sinalizadores.mostrar(tipo, d, performance.now());
@@ -468,6 +474,39 @@ export function iniciarPartida(): void {
       });
   }
 
+  /** UI-15: mineradores (ECO-19) e impressoras parados do jogador, em ordem de ID. */
+  const paradosAgora = (): Record<TipoDeParado, EntityId[]> => {
+    const ctx = leitura();
+    const impressoras = entitiesWith(sim.state, 'producer', 'unit', 'owner').filter((id) => {
+      if (getComponent(sim.state, id, 'owner')!.nacao !== jogador) return false;
+      if (getComponent(sim.state, id, 'unit')!.tipo !== 'printer') return false;
+      if (getComponent(sim.state, id, 'producer')!.fila.length > 0) return false;
+      if (getComponent(sim.state, id, 'trabalho')) return false;
+      const recarga = getComponent(sim.state, id, 'recarga');
+      if (recarga && recarga.estado !== 'nenhuma') return false;
+      return !getComponent(sim.state, id, 'locomotion')!.destino;
+    });
+    return { mineradores: ociosos(ctx, jogador), impressoras };
+  };
+  const cicloDosParados: Record<TipoDeParado, number> = { mineradores: 0, impressoras: 0 };
+  let paradosEm = 0;
+  const atualizarParados = (agora: number): void => {
+    if (agora - paradosEm < 250) return;
+    paradosEm = agora;
+    const p = paradosAgora();
+    const atual = parados.peek();
+    if (atual.mineradores !== p.mineradores.length || atual.impressoras !== p.impressoras.length) {
+      parados.value = { mineradores: p.mineradores.length, impressoras: p.impressoras.length };
+    }
+  };
+  acoesDosParados.proximo = (tipo) => {
+    const lista = paradosAgora()[tipo];
+    if (lista.length === 0 || !comandos || direto?.ativo != null) return;
+    const id = lista[cicloDosParados[tipo]++ % lista.length]!;
+    comandos.selecionar([id]);
+    centrarEm(camera, direcaoDe(getComponent(sim.state, id, 'position')!));
+  };
+
   /** UI-07: barras dos corpos visíveis (do lado da câmera). */
   const corposComBarras: CorpoComBarras[] = [];
   const sincronizarBarras = (): void => {
@@ -477,6 +516,8 @@ export function iniciarPartida(): void {
     for (const c of unidades.corpos) {
       // No controle direto, o corpo pilotado mostra HP e EN no HUD (CTL-14), não na barra.
       if (c.id === direto?.ativo) continue;
+      // UI-07 (D-58): só as unidades do jogador mostram barras.
+      if (c.nacao !== jogador) continue;
       const doLado =
         (olho.x - c.x) * c.cima[0] + (olho.y - c.y) * c.cima[1] + (olho.z - c.z) * c.cima[2] > 0;
       if (!doLado) continue;
@@ -654,11 +695,13 @@ export function iniciarPartida(): void {
     const opcoes =
       tipoProdutor === 'ship'
         ? MENU_NAVE
-        : entrada.menu === 'unidades'
-          ? MENU_UNIDADES
-          : entrada.menu === 'estruturas'
-            ? MENU_ESTRUTURAS
-            : [];
+        : tipoProdutor === 'satellite_uplink'
+          ? MENU_BASE
+          : entrada.menu === 'unidades'
+            ? MENU_UNIDADES
+            : entrada.menu === 'estruturas'
+              ? MENU_ESTRUTURAS
+              : [];
     const obra = obraId !== undefined ? getComponent(sim.state, obraId, 'obra')! : null;
     painelProducao.value = {
       produtor:
@@ -896,6 +939,7 @@ export function iniciarPartida(): void {
         jogador,
       );
       sincronizarBarras();
+      atualizarParados(performance.now());
       // VIS-06/VIS-08: sinais de radar e o círculo dos satélites do jogador.
       marcas.sync(
         sim.state.sinais[jogador] ?? [],
@@ -974,6 +1018,7 @@ export function iniciarPartida(): void {
         };
       });
     sonda.sinalizadores = () => sinalizadores.tipos;
+    sonda.rumo = (id) => getComponent(sim.state, id, 'structure')?.rumo ?? null;
     sonda.tipo = (id) =>
       (getComponent(sim.state, id, 'satelite') ? 'satellite' : null) ??
       getComponent(sim.state, id, 'unit')?.tipo ??
@@ -1018,7 +1063,11 @@ export function iniciarPartida(): void {
         tick: sim.state.tick,
         nacao: nacao as NacaoId,
         tipo: DEBUG_CRIAR_COMMAND,
-        dados: [unidade ? { unidade: tipo, d: p } : { estrutura: tipo, d: p }] as never,
+        dados: [
+          unidade
+            ? { unidade: tipo, d: p }
+            : { estrutura: tipo, d: p, comSatelite: tipo === 'satellite_uplink' },
+        ] as never,
       });
       return true;
     };

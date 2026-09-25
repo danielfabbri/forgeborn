@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getComponent, param, type Sim, type SimEvent } from '../../src/sim';
+import { dados, getComponent, param, type Sim, type SimEvent } from '../../src/sim';
 import type { SystemContext } from '../../src/sim/core/pipeline';
 import { navegavelDa } from '../../src/sim/units/navegacao';
 import { celulaDe } from '../../src/sim/map/grids';
@@ -167,7 +167,7 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
   function base(sim: Sim) {
     const [nave, uplink] = criar(sim, [
       { estrutura: 'ship', x: -40, z: 0 },
-      { estrutura: 'satellite_uplink', x: 0, z: 0 },
+      { estrutura: 'satellite_uplink', x: 0, z: 0, comSatelite: true },
     ]);
     ordenar(sim, 'debug_encher_banco', {});
     sim.step();
@@ -246,7 +246,8 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
     const sim = partida(mundoLiso());
     const { uplink } = base(sim);
     rodar(sim, param('tempo_lancamento_satelite_s') + 0.5);
-    expect(getComponent(sim.state, uplink, 'consumidor')).toBeUndefined();
+    // A Base só consome da rede enquanto imprime (PRD-06); o satélite em órbita, nunca.
+    expect(getComponent(sim.state, uplink, 'consumidor')!.demanda_en_s).toBe(0);
     sim.state.energia.bra.banco = 0;
     rodar(sim, 5);
     const sat = satelitesDe(sim, 'bra')[0]!;
@@ -258,7 +259,7 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
     const sim = partida(mundoLiso());
     criar(sim, [
       { estrutura: 'ship', x: -40, z: 0 },
-      { estrutura: 'satellite_uplink', x: 0, z: 0 },
+      { estrutura: 'satellite_uplink', x: 0, z: 0, comSatelite: true },
       // Alvo de solo sob o satélite: nunca é atingido pelo laser orbital.
       { unidade: 'hover_ex1', x: 30, z: 30, postura: 'passiva' },
     ]);
@@ -266,7 +267,7 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
       sim,
       [
         { estrutura: 'ship', x: 40, z: 200 },
-        { estrutura: 'satellite_uplink', x: 0, z: 200 },
+        { estrutura: 'satellite_uplink', x: 0, z: 200, comSatelite: true },
       ],
       'usa',
     );
@@ -300,5 +301,38 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
     expect(eventos).toContainEqual(
       expect.objectContaining({ dados: expect.objectContaining({ id: 'AL-18', nacao: 'usa' }) }),
     );
+  });
+});
+
+describe('T-076 — UNI-04, PRD-01, PRD-06, D-55: Satélite impresso pela Base', () => {
+  it('UNI-04: a Base pronta não lança sozinha; S imprime com a rede e lança; um por base', () => {
+    const sim = partida(mundoLiso());
+    const [, base] = criar(sim, [
+      { estrutura: 'ship', x: -40, z: 0 },
+      { estrutura: 'satellite_uplink', x: 0, z: 0 },
+    ]);
+    ordenar(sim, 'debug_encher_banco', {});
+    sim.step();
+    Object.assign(sim.state.estoques.bra!, { fe: 500, si: 500, cu: 500, li: 500, ti: 500, u: 50 });
+    rodar(sim, 5);
+    expect(satelitesDe(sim, 'bra')).toHaveLength(0);
+    const custo = dados.custos.find((c) => c.id === 'satellite')!;
+    const fe = sim.state.estoques.bra!.fe;
+    ordenar(sim, 'imprimir', { ids: [base], item: 'satellite' });
+    // O segundo pedido é recusado (um por base de cada vez).
+    ordenar(sim, 'imprimir', { ids: [base], item: 'satellite' });
+    sim.step();
+    expect(fe - sim.state.estoques.bra!.fe).toBe(custo.fe);
+    expect(getComponent(sim.state, base!, 'producer')!.fila).toHaveLength(1);
+    rodar(sim, custo.tempo_s + 1);
+    const [sat] = satelitesDe(sim, 'bra');
+    expect(sat).toBeDefined();
+    expect(getComponent(sim.state, sat!, 'satelite')!.estado).toBe('lancando');
+    rodar(sim, param('tempo_lancamento_satelite_s') + 0.5);
+    expect(getComponent(sim.state, sat!, 'satelite')!.estado).toBe('orbita');
+    // Com o satélite vivo, a base não imprime outro.
+    ordenar(sim, 'imprimir', { ids: [base], item: 'satellite' });
+    rodar(sim, 0.2);
+    expect(getComponent(sim.state, base!, 'producer')!.fila).toHaveLength(0);
   });
 });

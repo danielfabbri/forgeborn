@@ -937,6 +937,47 @@ body.em-controle-direto .minimapa {
   text-shadow: 0 0 12px rgba(255, 90, 79, 0.7);
 }
 
+/* UI-15: botões de parados ao lado do minimapa. */
+.parados {
+  position: absolute;
+  left: 192px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: auto;
+}
+.parado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 64px;
+  padding: 6px 10px;
+  font:
+    14px/1 ui-monospace,
+    Consolas,
+    monospace;
+  color: #8fa3bf;
+  background: rgba(5, 10, 18, 0.8);
+  border: 1px solid rgba(120, 160, 220, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.parado .icone {
+  font-size: 16px;
+}
+.parado.com-parados {
+  color: #ffd27a;
+  border-color: #ffb84a;
+  box-shadow: 0 0 8px rgba(255, 184, 74, 0.45);
+}
+.parado:hover {
+  background: rgba(20, 32, 52, 0.9);
+}
+body.em-controle-direto .parados {
+  display: none;
+}
+
 /* UI-06: pilha de alertas à esquerda, acima do minimapa. */
 .alertas {
   position: absolute;

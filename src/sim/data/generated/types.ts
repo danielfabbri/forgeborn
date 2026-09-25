@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.16.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.17.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -36,7 +36,9 @@ export type ArmasId =
   | 'bomb'
   | 'tower_laser'
   | 'ship_pd'
-  | 'mine_blast';
+  | 'mine_blast'
+  | 'sat_laser'
+  | 'abrigo_laser';
 
 export interface ArmasRow {
   id: ArmasId;
@@ -104,6 +106,8 @@ export type CustosId =
   | 'solar_plant'
   | 'nuclear_plant'
   | 'satellite_uplink'
+  | 'wall'
+  | 'gate'
   | 'mine';
 
 export interface CustosRow {
@@ -163,7 +167,9 @@ export type EstruturasId =
   | 'storage'
   | 'solar_plant'
   | 'nuclear_plant'
-  | 'satellite_uplink';
+  | 'satellite_uplink'
+  | 'wall'
+  | 'gate';
 
 export interface EstruturasRow {
   id: EstruturasId;
@@ -393,6 +399,11 @@ export type ParametrosChave =
   | 'radar_atualizacao_s'
   | 'satelite_visao_m'
   | 'satelite_vel_m_s'
+  | 'satelite_hp'
+  | 'abrigo_vagas'
+  | 'portao_raio_abertura_m'
+  | 'portao_tempo_abrir_s'
+  | 'portao_tempo_fechar_apos_s'
   | 'tempo_lancamento_satelite_s'
   | 'varredura_raio_m'
   | 'varredura_duracao_s'

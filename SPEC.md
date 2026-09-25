@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.16.0 — rascunho para aprovação |
+| Versão do SPEC | 0.17.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -414,7 +414,7 @@ flowchart LR
 - **ENE-01** — Geração da rede = reator da Nave + Σ usinas solares × `fator_solar` do cenário (× eventos) + Σ usinas nucleares ligadas e abastecidas. Valores em `dados:estruturas`.
 - **ENE-02** — Capacidade do banco = Σ `banco_en` das estruturas vivas. Geração excedente com o banco cheio é perdida.
 - **ENE-03** — A rede alimenta: disparos de Torres e da defesa da Nave (`en_disparo`), manutenção de satélites em órbita, impressão feita pela Nave e portas de recarga.
-- **ENE-04** — **Racionamento.** Se o banco chega a 0 e a demanda do tick excede a geração, a energia disponível é distribuída nesta ordem de prioridade: (1) defesas; (2) satélites; (3) impressão na Nave; (4) portas de recarga, divididas igualmente entre as unidades acopladas. Consumidor atendido em parte funciona proporcionalmente mais devagar (a torre dispara mais devagar, a porta carrega mais devagar). Satélite que não é atendido por inteiro fica **offline** (sem visão) até voltar a ser atendido.
+- **ENE-04** — **Racionamento.** Se o banco chega a 0 e a demanda do tick excede a geração, a energia disponível é distribuída nesta ordem de prioridade: (1) defesas; (2) impressão na Nave; (3) portas de recarga, divididas igualmente entre as unidades acopladas. Consumidor atendido em parte funciona proporcionalmente mais devagar (a torre dispara mais devagar, a porta carrega mais devagar). O satélite não consome da rede (UNI-05, D-51).
 - **ENE-05** — Destruir estruturas reduz geração e capacidade na hora. Se o banco passar da nova capacidade, o excedente se perde.
 - **ENE-06** — A **Usina Nuclear** consome `nuclear_consumo_u` de Urânio do estoque a cada `nuclear_intervalo_s` enquanto está ligada, mesmo com o banco cheio. Sem Urânio gera 0 e dispara AL-10. O jogador PODE desligá-la e religá-la (religar leva `nuclear_religar_s`).
 - **ENE-07** — A **Usina Solar** gera `geracao_en_s` × `fator_solar` do cenário. Eventos de cenário (ex.: tempestade em Marte) aplicam multiplicadores temporários.
@@ -574,9 +574,11 @@ flowchart LR
 | solar_plant | Usina Solar Pequena | estrutura | printer | 30 | 60 | 20 | 15 | 0 | 0 | 150 | 15 | 80 | 30 |
 | nuclear_plant | Usina Nuclear | estrutura | printer | 60 | 20 | 30 | 10 | 15 | 8 | 230 | 23 | 140 | 50 |
 | satellite_uplink | Base de Lançamento + Satélite | estrutura | printer | 100 | 80 | 40 | 30 | 40 | 6 | 450 | 45 | 270 | 75 |
+| wall | Muro | estrutura | printer | 20 | 5 | 0 | 0 | 0 | 0 | 25 | 2 | 10 | 8 |
+| gate | Portão | estrutura | printer | 40 | 15 | 10 | 0 | 0 | 0 | 70 | 7 | 25 | 12 |
 | mine | Mina | municao | hover_minelayer | 6 | 0 | 2 | 1 | 0 | 0 | 11 | — | 20 | 6 |
 
-Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação, Silo, Bateria Móvel, Torre, Armazém, Solar. **T2** (exige Ti) = OPQ, Plantio de Minas, Drones. **T3** (exige U) = Usina Nuclear, Base de Lançamento.
+Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação, Silo, Bateria Móvel, Torre, Armazém, Solar, Muro, Portão. **T2** (exige Ti) = OPQ, Plantio de Minas, Drones. **T3** (exige U) = Usina Nuclear, Base de Lançamento.
 
 ### 8.2 Unidades móveis
 
@@ -598,7 +600,7 @@ Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação
 
 ### 8.3 Estruturas
 
-Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quadrada. `geracao_en_s` da solar é multiplicada pelo `fator_solar` do cenário. A nuclear só gera se abastecida (ENE-06). `manutencao_en_s` da Base de Lançamento só vale com o satélite em órbita. `deposito` = aceita descargas contáveis (ECO-14).
+Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quadrada. `geracao_en_s` da solar é multiplicada pelo `fator_solar` do cenário. A nuclear só gera se abastecida (ENE-06). `deposito` = aceita descargas contáveis (ECO-14).
 
 <!-- dados:estruturas -->
 | id | nome | hp | pegada_m | visao_m | deteccao_m | geracao_en_s | banco_en | portas | taxa_porta_en_s | manutencao_en_s | deposito | arma |
@@ -608,7 +610,9 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | storage | Armazém | 900 | 8 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | sim | — |
 | solar_plant | Usina Solar Pequena | 350 | 6 | 12 | 0 | 3 | 150 | 1 | 6 | 0 | nao | — |
 | nuclear_plant | Usina Nuclear | 700 | 8 | 12 | 0 | 12 | 300 | 3 | 12 | 0 | nao | — |
-| satellite_uplink | Base de Lançamento | 800 | 10 | 16 | 0 | 0 | 0 | 0 | 0 | 2 | nao | — |
+| satellite_uplink | Base de Lançamento | 800 | 10 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
+| wall | Muro | 800 | 4 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
+| gate | Portão | 1000 | 6 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 
 ### 8.4 Armas
 
@@ -624,6 +628,8 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | tower_laser | laser | 15 | 1,0 | 13 | 0 | 0 | — | solo+ar | 2 | rede | hitscan | — |
 | ship_pd | laser | 10 | 1,0 | 14 | 0 | 0 | — | solo+ar | 1 | rede | hitscan | — |
 | mine_blast | explosivo | 150 | — | 2 | 0 | 4 | 40 | solo | 0 | — | gatilho | — |
+| sat_laser | laser | 20 | 2,0 | 60 | 0 | 0 | — | orbita | 0 | — | hitscan | — |
+| abrigo_laser | laser | 10 | 1,0 | 14 | 0 | 0 | — | solo+ar | 1 | rede | hitscan | — |
 
 ### 8.5 Fichas das unidades
 
@@ -716,12 +722,17 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 #### Base de Lançamento + Satélite de Visualização — `satellite_uplink`
 - **UNI-04** — Concluída a obra, a base lança o satélite em `tempo_lancamento_satelite_s` (animação). Se a base for destruída durante o lançamento, o satélite se perde.
-- **UNI-05** — O satélite em órbita não pode ser atacado e dá visão persistente e Varredura Orbital (VIS-08). A base paga `manutencao_en_s` enquanto o satélite está em órbita. Destruir a base derruba o satélite.
+- **UNI-05** — O satélite em órbita é um corpo que o jogador vê no céu e seleciona: tem `satelite_hp` de HP e o laser orbital `sat_laser`, que só atinge outro satélite (camada `orbita`); não atira em nada no solo nem no ar, e só outro satélite o atinge. Dá visão persistente e Varredura Orbital (VIS-08). Não gasta energia (painéis próprios) e fica fora do racionamento. Selecionado, o clique direito no terreno o reposiciona e num satélite inimigo o ataca. Destruir a base derruba o satélite (D-51).
 - **UNI-06** — O satélite não detecta furtivos.
 - **Visual:** plataforma com trilho de lançamento. Em órbita: ícone no minimapa e círculo de visão no chão.
 
 #### Mina — `mine`
 - **UNI-07** — Invisível para inimigos sem detecção (CMB-19). Arma após `tempo_armar_mina_s` e detona quando um **hover** inimigo entra no raio de gatilho (`alcance_m` de `mine_blast`). Não afeta unidades do dono e não expira. Quando revelada, tem `mina_hp` e pode ser alvo.
+
+#### Muro e Portão
+
+- **UNI-08** — **Muro:** segmento fixo de bloqueio, sem arma nem energia. Bloqueia a passagem de unidades de solo; drones passam por cima. Posiciona-se em linha arrastando o mouse (um segmento a cada `pegada_m`). Pode ser atacado; unidades inimigas atacam o muro que fecha o caminho até o alvo (D-53).
+- **UNI-09** — **Portão:** segmento que bloqueia como o muro, mas abre sozinho em `portao_tempo_abrir_s` quando uma unidade móvel própria chega a `portao_raio_abertura_m` e fecha `portao_tempo_fechar_apos_s` depois que a última unidade própria sai do raio. Aberto, qualquer unidade passa, inclusive as inimigas. O dono pode trancá-lo pelo cartão (trancado, não abre) (D-54).
 
 ### 8.6 Autonomia padrão (resumo)
 
@@ -801,6 +812,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 ### 9.9 Morte
 
 - **CMB-27** — Com HP ≤ 0, a destruição é imediata: VFX de explosão, destroço (§5.7) e alerta ao dono.
+- **CMB-28** — **Recolher mineradores** (Nave): todos os Hovers de Exploração vão ao abrigo mais próximo (a Nave ou um Armazém próprio, até `abrigo_vagas` por estrutura). Abrigado, o hover sai do mapa e não pode ser atingido, e cada um soma à estrutura um disparo de `abrigo_laser`. O mesmo comando, de novo, libera todos para a coleta. Se a estrutura for destruída, os abrigados saem ao lado dela (D-52).
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -856,7 +868,12 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 | tempo_recolher_sentinela_s | 1 | s | Sair de Sentinela |
 | radar_atualizacao_s | 1 | s | Atualização dos sinais |
 | satelite_visao_m | 60 | m | Visão persistente do satélite |
-| satelite_vel_m_s | 25 | m/s | Reposicionamento do satélite |
+| satelite_vel_m_s | 15 | m/s | Reposicionamento do satélite |
+| satelite_hp | 300 | HP | HP do satélite em órbita (UNI-05) |
+| abrigo_vagas | 6 | hovers | Vagas de abrigo por Nave ou Armazém (CMB-28) |
+| portao_raio_abertura_m | 8 | m | Distância em que uma unidade própria abre o portão |
+| portao_tempo_abrir_s | 1 | s | Tempo para o portão abrir |
+| portao_tempo_fechar_apos_s | 2 | s | O portão fecha depois disso sem unidade própria no raio |
 | tempo_lancamento_satelite_s | 20 | s | Lançamento após a obra |
 | varredura_raio_m | 120 | m | Raio da Varredura Orbital |
 | varredura_duracao_s | 6 | s | Duração da Varredura |
@@ -937,7 +954,8 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | unidades | R | Recarregar agora |
 | ship | E | Imprimir Hover de Exploração |
 | ship | I | Imprimir Impressora 3D |
-| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento |
+| ship | Q | Recolher ou liberar os mineradores (CMB-28) |
+| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão |
 | printer | U | Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, B Bombardeiro, L Drone Laser, V Silo, C Bateria |
 | hover_explorer | C | Coletar |
 | hover_explorer | G | Reparar |
@@ -951,6 +969,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | mobile_battery | T | Modo suporte liga/desliga |
 | satellite_uplink | T | Reposicionar satélite |
 | satellite_uplink | G | Varredura Orbital |
+| gate | T | Trancar ou destrancar o portão |
 | nuclear_plant | T | Ligar ou desligar |
 | controle_direto | W A S D | Mover e deslocar lateralmente |
 | controle_direto | Mouse | Mirar e orientar |
@@ -1199,6 +1218,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **UI-09** — Tooltips com atraso de 0,4 s. Toda unidade tem descrição do papel e "forte contra / fraco contra" (§8.5).
 - **UI-10** — A fila de impressão aparece sobre a Impressora ou a Nave selecionada e no painel.
 - **UI-13** — Jazidas: passar o mouse mostra, após o atraso de UI-09, o recurso e a quantidade restante. Clicar numa jazida a seleciona sozinha e o painel de seleção mostra o recurso, a quantidade restante sobre a inicial e os hovers designados. A jazida selecionada não recebe ordens.
+- **UI-14** — Cada ordem do clique direito mostra no ponto um sinalizador com forma e cor próprias e toca um som próprio: mover, atacar, coletar, descarregar, recarregar, construir ou reparar, reciclar, patrulhar e reposicionar satélite.
 
 ### 17.2 Alertas
 
@@ -1221,7 +1241,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | AL-14 | Minha Nave está sob ataque! | Nave Inicial sofre dano | critica | 8 |
 | AL-15 | Tempestade de poeira se aproximando. | Evento de cenário (CEN-03) | media | 0 |
 | AL-16 | Mina detonada. | Mina própria detona | baixa | 5 |
-| AL-17 | Satélite offline. | Satélite sem energia (ENE-04) | alta | 20 |
+| AL-17 | Satélite offline. | Sem uso desde a 0.17.0: o satélite não gasta energia (D-51) | alta | 20 |
 | AL-18 | Perdi um corpo: {unidade}. | Unidade própria destruída | media | 3 |
 
 ### 17.3 Acessibilidade
@@ -1481,6 +1501,10 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-48 | A trilha da abertura segue na Seleção de Modo; a voz fala um alerta por vez e só um mais urgente interrompe. | Detalhes de AUD-01 e AUD-03 na implementação da T-126: a Seleção de Modo tem o mesmo fundo da abertura, e vozes sobrepostas não se entendem. | Proposta |
 | D-49 | Baterias de todas as unidades móveis dobradas (`bateria_en`), e o banco da Nave também (`banco_en` 1000), para a Nave seguir sustentando 8 hovers (INV-09); IA Fácil bem mais fácil (1º ataque aos 18 min, exército de 250 VR, meta de 6 hovers, coleta −40%, impressão −30%, reação de 4 s). | Pedido do produto: autonomia curta demais e a IA Fácil invadia cedo com exército grande. | Aprovada |
 | D-50 | O clique direito numa estrutura com portas de recarga manda as unidades selecionadas recarregar ali, com qualquer nível de bateria, até 100%. | Pedido do produto: encher as baterias antes de montar uma caravana. | Aprovada |
+| D-51 | Satélite visível e selecionável, com HP e laser orbital que só atinge satélites; não gasta energia; cai com a base; reposiciona a 15 m/s. | Pedido do produto. A velocidade de reposicionamento baixou de 25 para 15 m/s junto com a proposta aprovada. | Aprovada |
+| D-52 | Recolher mineradores: abrigo na Nave ou Armazém mais próximo, até 6 por estrutura; cada abrigado soma um laser de 10 de dano, alcance 14 m, a cada 1 s. | Pedido do produto: defender a base com os mineradores. | Aprovada |
+| D-53 | Muro: segmento de 4 m, HP 800, Fe 20 e Si 5, 8 s de obra; posiciona em linha; drones passam por cima; inimigos o atacam quando fecha o caminho. | Pedido do produto: bloqueio visual espacial. | Aprovada |
+| D-54 | Portão: segmento de 6 m, HP 1000, Fe 40, Si 15 e Cu 10, 12 s de obra; abre sozinho para unidades próprias (qualquer um passa enquanto aberto) e pode ser trancado. | Pedido do produto. | Aprovada |
 
 ---
 
@@ -1560,3 +1584,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.15.1 | 2026-09-25 | D-48: trilha da abertura na Seleção de Modo e fila da voz dos alertas (AUD-01, AUD-03). |
 | 0.15.2 | 2026-09-25 | TEC-19: SSAO, fatores de LOD e de partículas por preset e 2 cascatas de sombra. |
 | 0.16.0 | 2026-09-25 | D-49: `bateria_en` ×2 em `dados:moveis`, `banco_en` da Nave 1000 (INV-09) e coluna Fácil de `dados:dificuldade` (reacao_s, meta_hovers, primeiro_ataque_min, vr_exercito_ataque, bonus_coleta_pct, bonus_impressao_pct). D-50: recarga pelo clique direito na estrutura (CTL-07). |
+| 0.17.0 | 2026-09-25 | D-51 a D-54: satélite com HP e laser orbital, sem energia (UNI-05, ENE-04; `sat_laser`, `satelite_hp`, `satelite_vel_m_s` 15; manutenção da Base 0; AL-17 sem uso); Recolher mineradores (CMB-28, `abrigo_laser`, `abrigo_vagas`); Muro e Portão (UNI-08, UNI-09, `wall`, `gate`, `portao_*`); sinalizadores do clique direito (UI-14); atalhos Q, M, P e T. |

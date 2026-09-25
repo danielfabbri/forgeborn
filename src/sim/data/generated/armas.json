@@ -121,5 +121,40 @@
     "fonte_en": null,
     "projetil": "gatilho",
     "vel_projetil_m_s": null
+  },
+  {
+    "id": "sat_laser",
+    "tipo_dano": "laser",
+    "dano": 20,
+    "recarga_s": 2,
+    "alcance_m": 60,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "orbita"
+    ],
+    "en_disparo": 0,
+    "fonte_en": null,
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
+    "id": "abrigo_laser",
+    "tipo_dano": "laser",
+    "dano": 10,
+    "recarga_s": 1,
+    "alcance_m": 14,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "solo",
+      "ar"
+    ],
+    "en_disparo": 1,
+    "fonte_en": "rede",
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
   }
 ]

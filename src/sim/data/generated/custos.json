@@ -271,6 +271,42 @@
     "tempo_s": 75
   },
   {
+    "id": "wall",
+    "nome": "Muro",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 20,
+    "si": 5,
+    "cu": 0,
+    "li": 0,
+    "ti": 0,
+    "u": 0,
+    "vr": 25,
+    "ref_x": 2,
+    "en_impressao": 10,
+    "tempo_s": 8
+  },
+  {
+    "id": "gate",
+    "nome": "Portão",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 40,
+    "si": 15,
+    "cu": 10,
+    "li": 0,
+    "ti": 0,
+    "u": 0,
+    "vr": 70,
+    "ref_x": 7,
+    "en_impressao": 25,
+    "tempo_s": 12
+  },
+  {
     "id": "mine",
     "nome": "Mina",
     "categoria": "municao",

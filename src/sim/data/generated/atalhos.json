@@ -95,9 +95,14 @@
     "acao": "Imprimir Impressora 3D"
   },
   {
+    "contexto": "ship",
+    "tecla": "Q",
+    "acao": "Recolher ou liberar os mineradores (CMB-28)"
+  },
+  {
     "contexto": "printer",
     "tecla": "B",
-    "acao": "Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento"
+    "acao": "Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão"
   },
   {
     "contexto": "printer",
@@ -163,6 +168,11 @@
     "contexto": "satellite_uplink",
     "tecla": "G",
     "acao": "Varredura Orbital"
+  },
+  {
+    "contexto": "gate",
+    "tecla": "T",
+    "acao": "Trancar ou destrancar o portão"
   },
   {
     "contexto": "nuclear_plant",

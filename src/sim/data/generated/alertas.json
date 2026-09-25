@@ -114,7 +114,7 @@
   {
     "id": "AL-17",
     "texto": "Satélite offline.",
-    "gatilho": "Satélite sem energia (ENE-04)",
+    "gatilho": "Sem uso desde a 0.17.0: o satélite não gasta energia (D-51)",
     "prioridade": "alta",
     "cooldown_s": 20
   },

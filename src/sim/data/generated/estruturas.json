@@ -85,7 +85,37 @@
     "banco_en": 0,
     "portas": 0,
     "taxa_porta_en_s": 0,
-    "manutencao_en_s": 2,
+    "manutencao_en_s": 0,
+    "deposito": false,
+    "arma": null
+  },
+  {
+    "id": "wall",
+    "nome": "Muro",
+    "hp": 800,
+    "pegada_m": 4,
+    "visao_m": 4,
+    "deteccao_m": 0,
+    "geracao_en_s": 0,
+    "banco_en": 0,
+    "portas": 0,
+    "taxa_porta_en_s": 0,
+    "manutencao_en_s": 0,
+    "deposito": false,
+    "arma": null
+  },
+  {
+    "id": "gate",
+    "nome": "Portão",
+    "hp": 1000,
+    "pegada_m": 6,
+    "visao_m": 6,
+    "deteccao_m": 0,
+    "geracao_en_s": 0,
+    "banco_en": 0,
+    "portas": 0,
+    "taxa_porta_en_s": 0,
+    "manutencao_en_s": 0,
     "deposito": false,
     "arma": null
   }

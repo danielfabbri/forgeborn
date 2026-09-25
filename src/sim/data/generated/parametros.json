@@ -667,9 +667,39 @@
   },
   {
     "chave": "satelite_vel_m_s",
-    "valor": 25,
+    "valor": 15,
     "unidade": "m/s",
     "descricao": "Reposicionamento do satélite"
+  },
+  {
+    "chave": "satelite_hp",
+    "valor": 300,
+    "unidade": "HP",
+    "descricao": "HP do satélite em órbita (UNI-05)"
+  },
+  {
+    "chave": "abrigo_vagas",
+    "valor": 6,
+    "unidade": "hovers",
+    "descricao": "Vagas de abrigo por Nave ou Armazém (CMB-28)"
+  },
+  {
+    "chave": "portao_raio_abertura_m",
+    "valor": 8,
+    "unidade": "m",
+    "descricao": "Distância em que uma unidade própria abre o portão"
+  },
+  {
+    "chave": "portao_tempo_abrir_s",
+    "valor": 1,
+    "unidade": "s",
+    "descricao": "Tempo para o portão abrir"
+  },
+  {
+    "chave": "portao_tempo_fechar_apos_s",
+    "valor": 2,
+    "unidade": "s",
+    "descricao": "O portão fecha depois disso sem unidade própria no raio"
   },
   {
     "chave": "tempo_lancamento_satelite_s",

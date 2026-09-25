@@ -1,0 +1,214 @@
+/**
+ * AUD-02/AUD-04 (D-47): efeitos sonoros sintetizados em tempo real pela Web Audio API, sem
+ * arquivos. Sem atmosfera na Lua, os sons do mundo são "percebidos": graves e abafados (filtro
+ * passa-baixa), e mais internos ainda em 1ª pessoa. Todos os números aqui são de apresentação.
+ */
+import { audio } from './contexto';
+
+export type Som =
+  | 'laser'
+  | 'torpedo'
+  | 'bomba'
+  | 'explosao_pequena'
+  | 'explosao_grande'
+  | 'impressao'
+  | 'concluido'
+  | 'morte'
+  | 'clique'
+  | 'erro'
+  | 'confirmacao'
+  | 'alerta_baixa'
+  | 'alerta_alta'
+  | 'alerta_critica';
+
+let ruido: AudioBuffer | null = null;
+
+function bufferDeRuido(ctx: AudioContext): AudioBuffer {
+  if (ruido) return ruido;
+  ruido = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+  const dados = ruido.getChannelData(0);
+  // Ruído branco para explosões e atrito; o sorteio é de apresentação (fora da simulação).
+  for (let k = 0; k < dados.length; k++) dados[k] = Math.random() * 2 - 1;
+  return ruido;
+}
+
+interface Saida {
+  ctx: AudioContext;
+  destino: AudioNode;
+  t: number;
+}
+
+/** O canal de efeitos, com o abafamento do vácuo (AUD-02). */
+function saida(volume: number, abafado: boolean, interface_ = false): Saida | null {
+  const a = audio();
+  if (!a || a.ctx.state !== 'running') return null;
+  const ganho = a.ctx.createGain();
+  ganho.gain.value = volume;
+  let destino: AudioNode = ganho;
+  if (abafado && !interface_) {
+    const filtro = a.ctx.createBiquadFilter();
+    filtro.type = 'lowpass';
+    filtro.frequency.value = abafadoInterno ? 500 : 1400;
+    filtro.connect(ganho);
+    destino = filtro;
+  }
+  ganho.connect(a.canais.efeitos);
+  return { ctx: a.ctx, destino, t: a.ctx.currentTime };
+}
+
+function tom(
+  s: Saida,
+  tipo: OscillatorType,
+  de: number,
+  para: number,
+  duracao: number,
+  pico = 0.5,
+  atraso = 0,
+): void {
+  const o = s.ctx.createOscillator();
+  const g = s.ctx.createGain();
+  o.type = tipo;
+  const t0 = s.t + atraso;
+  o.frequency.setValueAtTime(de, t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(para, 1), t0 + duracao);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(pico, t0 + Math.min(0.01, duracao / 4));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + duracao);
+  o.connect(g).connect(s.destino);
+  o.start(t0);
+  o.stop(t0 + duracao + 0.05);
+}
+
+function chiado(s: Saida, duracao: number, freq: number, pico = 0.6, q = 0.7): void {
+  const fonte = s.ctx.createBufferSource();
+  fonte.buffer = bufferDeRuido(s.ctx);
+  const filtro = s.ctx.createBiquadFilter();
+  filtro.type = 'lowpass';
+  filtro.frequency.setValueAtTime(freq, s.t);
+  filtro.frequency.exponentialRampToValueAtTime(Math.max(freq / 8, 40), s.t + duracao);
+  filtro.Q.value = q;
+  const g = s.ctx.createGain();
+  g.gain.setValueAtTime(pico, s.t);
+  g.gain.exponentialRampToValueAtTime(0.0001, s.t + duracao);
+  fonte.connect(filtro).connect(g).connect(s.destino);
+  fonte.start(s.t);
+  fonte.stop(s.t + duracao + 0.05);
+}
+
+/** AUD-02: em 1ª pessoa os sons ficam ainda mais internos. */
+let abafadoInterno = false;
+export function somInterno(ligado: boolean): void {
+  abafadoInterno = ligado;
+}
+
+/** Toca um efeito; `volume` 0..1 já com a distância aplicada. */
+export function tocarSom(som: Som, volume = 1): void {
+  const interface_ = ['clique', 'erro', 'confirmacao'].includes(som) || som.startsWith('alerta');
+  const s = saida(volume, true, interface_);
+  if (!s) return;
+  switch (som) {
+    case 'laser':
+      tom(s, 'sawtooth', 1100, 260, 0.14, 0.25);
+      break;
+    case 'torpedo':
+      chiado(s, 0.45, 2500, 0.35, 4);
+      tom(s, 'triangle', 180, 120, 0.4, 0.2);
+      break;
+    case 'bomba':
+      tom(s, 'sine', 700, 180, 0.7, 0.2);
+      break;
+    case 'explosao_pequena':
+      chiado(s, 0.5, 1800, 0.7);
+      tom(s, 'sine', 90, 40, 0.4, 0.6);
+      break;
+    case 'explosao_grande':
+      chiado(s, 1.6, 1200, 0.9);
+      tom(s, 'sine', 70, 28, 1.2, 0.8);
+      break;
+    case 'impressao':
+      for (let k = 0; k < 3; k++)
+        tom(s, 'square', 520 + k * 90, 480 + k * 90, 0.05, 0.12, k * 0.07);
+      break;
+    case 'concluido':
+      tom(s, 'triangle', 660, 660, 0.12, 0.25);
+      tom(s, 'triangle', 990, 990, 0.18, 0.25, 0.1);
+      break;
+    case 'morte':
+      chiado(s, 0.9, 900, 0.6);
+      tom(s, 'sine', 120, 35, 0.8, 0.5);
+      break;
+    case 'clique':
+      tom(s, 'square', 1600, 1500, 0.03, 0.08);
+      break;
+    case 'erro':
+      tom(s, 'square', 220, 200, 0.1, 0.15);
+      tom(s, 'square', 180, 170, 0.12, 0.15, 0.12);
+      break;
+    case 'confirmacao':
+      tom(s, 'sine', 700, 700, 0.07, 0.2);
+      tom(s, 'sine', 1050, 1050, 0.1, 0.2, 0.07);
+      break;
+    case 'alerta_baixa':
+      tom(s, 'sine', 880, 880, 0.18, 0.2);
+      break;
+    case 'alerta_alta':
+      tom(s, 'sine', 880, 880, 0.14, 0.28);
+      tom(s, 'sine', 660, 660, 0.2, 0.28, 0.16);
+      break;
+    case 'alerta_critica':
+      for (let k = 0; k < 3; k++) tom(s, 'square', 980, 940, 0.1, 0.22, k * 0.14);
+      break;
+  }
+}
+
+/**
+ * AUD-04: zumbido dos hovers e atrito da mineração, contínuos no canal de ambiente. A
+ * intensidade (0..1) vem de quantos hovers se movem ou mineram perto do ponto da câmera.
+ */
+export class Ambiente {
+  private zumbido: { osc: OscillatorNode; ganho: GainNode } | null = null;
+  private atrito: { fonte: AudioBufferSourceNode; ganho: GainNode } | null = null;
+
+  private montar(): boolean {
+    if (this.zumbido) return true;
+    const a = audio();
+    if (!a || a.ctx.state !== 'running') return false;
+    const filtro = a.ctx.createBiquadFilter();
+    filtro.type = 'lowpass';
+    filtro.frequency.value = 320;
+    const osc = a.ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = 58;
+    const ganho = a.ctx.createGain();
+    ganho.gain.value = 0;
+    osc.connect(filtro).connect(ganho).connect(a.canais.ambiente);
+    osc.start();
+    this.zumbido = { osc, ganho };
+    const fonte = a.ctx.createBufferSource();
+    fonte.buffer = bufferDeRuido(a.ctx);
+    fonte.loop = true;
+    const banda = a.ctx.createBiquadFilter();
+    banda.type = 'bandpass';
+    banda.frequency.value = 700;
+    banda.Q.value = 2;
+    const ganhoAtrito = a.ctx.createGain();
+    ganhoAtrito.gain.value = 0;
+    fonte.connect(banda).connect(ganhoAtrito).connect(a.canais.ambiente);
+    fonte.start();
+    this.atrito = { fonte, ganho: ganhoAtrito };
+    return true;
+  }
+
+  atualizar(movimento: number, mineracao: number): void {
+    if (!this.montar()) return;
+    const a = audio()!;
+    const t = a.ctx.currentTime;
+    this.zumbido!.ganho.gain.setTargetAtTime(Math.min(1, movimento) * 0.25, t, 0.3);
+    this.zumbido!.osc.frequency.setTargetAtTime(52 + Math.min(1, movimento) * 14, t, 0.5);
+    this.atrito!.ganho.gain.setTargetAtTime(Math.min(1, mineracao) * 0.12, t, 0.3);
+  }
+
+  parar(): void {
+    this.atualizar(0, 0);
+  }
+}

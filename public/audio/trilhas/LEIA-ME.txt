@@ -1,0 +1,12 @@
+Trilhas musicais do Forgeborn (SPEC AUD-01, D-47)
+
+Coloque aqui os arquivos .mp3 com estes nomes:
+
+  trilha_abertura.mp3   Tela de Abertura e Seleção de Modo (toca em loop)
+  trilha_menu.mp3       Demais menus: Universo, Free Battle, Configurações, Créditos (em loop)
+  trilha1.mp3           Partida: as trilhas numeradas tocam em ordem embaralhada,
+  trilha2.mp3           sem repetir a última, com transição cruzada de 4 s.
+  trilha3.mp3 ...       A numeração deve ser contínua (o jogo para de procurar no primeiro buraco).
+
+Arquivo que falta é pulado; sem nenhum, o jogo segue sem música.
+O volume da música fica em Configurações > Áudio.

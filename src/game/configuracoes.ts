@@ -13,7 +13,12 @@ export interface Configuracoes {
   barrasSempre: boolean;
   /** UI-12: escala da interface, em % (de ESCALA_MIN a ESCALA_MAX). */
   escalaInterface: number;
+  /** AUD-05: volume de cada canal de mixagem, de 0 a 100. */
+  volumes: Record<CanalDeAudio, number>;
 }
+
+export type CanalDeAudio = 'geral' | 'musica' | 'efeitos' | 'voz' | 'ambiente';
+export const CANAIS: readonly CanalDeAudio[] = ['geral', 'musica', 'efeitos', 'voz', 'ambiente'];
 
 /** TEC-19: escala de resolução (limitada à densidade da tela) e lado do mapa de sombras. */
 export const PRESETS_GRAFICOS: Record<PresetGrafico, { escala: number; sombra: number }> = {
@@ -33,6 +38,8 @@ export const PADRAO: Configuracoes = {
   rolagemPelasBordas: true,
   barrasSempre: false,
   escalaInterface: 100,
+  // Apresentação: volumes iniciais da mixagem.
+  volumes: { geral: 80, musica: 60, efeitos: 80, voz: 90, ambiente: 60 },
 };
 
 const CHAVE = 'configuracoes';
@@ -48,6 +55,15 @@ export function normalizar(bruto: unknown): Configuracoes {
       typeof c.escalaInterface === 'number'
         ? Math.min(ESCALA_MAX, Math.max(ESCALA_MIN, Math.round(c.escalaInterface)))
         : PADRAO.escalaInterface,
+    volumes: Object.fromEntries(
+      CANAIS.map((canal) => {
+        const v = (c.volumes as Partial<Record<CanalDeAudio, unknown>> | undefined)?.[canal];
+        return [
+          canal,
+          typeof v === 'number' ? Math.min(100, Math.max(0, Math.round(v))) : PADRAO.volumes[canal],
+        ];
+      }),
+    ) as Record<CanalDeAudio, number>,
   };
 }
 

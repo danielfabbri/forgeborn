@@ -17,22 +17,17 @@ import {
   rumoEmGraus,
 } from '../input/controleDireto';
 
-/** D-42: a habilidade do clique direito de cada unidade (chave de i18n). */
-const HABILIDADES: Record<string, string> = {
-  hover_explorer: 'direto.habilidade.descarregar',
-  hover_minelayer: 'direto.habilidade.plantar',
-  hover_scout: 'direto.habilidade.sentinela',
-  drone_bomber: 'direto.habilidade.pousar',
-  drone_laser: 'direto.habilidade.pousar',
-  mobile_silo: 'direto.habilidade.ancorar',
-  mobile_battery: 'direto.habilidade.suporte',
-};
 import {
   alterarConfiguracoes,
   aplicarEscalaDaInterface,
   configuracoes,
   PRESETS_GRAFICOS,
 } from './configuracoes';
+import { somInterno, tocarSom } from '../audio/sfx';
+import { SomDaPartida } from '../audio/somDaPartida';
+import { trilhas } from '../audio/trilhas';
+import { falar } from '../audio/voz';
+import { textoDoAlerta } from '../ui/Alertas';
 import { type Alerta, CentralDeAlertas } from './alertas';
 import { fimDaPartida } from './fimDePartida';
 import { irParaMenu, irParaPartida, lerPartidaDaUrl, novaSeed } from './navegacao';
@@ -112,6 +107,17 @@ import {
   tooltip,
 } from '../ui/hud';
 import { acoesDoPainel, avisoProducao, painelProducao } from '../ui/producao';
+
+/** D-42: a habilidade do clique direito de cada unidade (chave de i18n). */
+const HABILIDADES: Record<string, string> = {
+  hover_explorer: 'direto.habilidade.descarregar',
+  hover_minelayer: 'direto.habilidade.plantar',
+  hover_scout: 'direto.habilidade.sentinela',
+  drone_bomber: 'direto.habilidade.pousar',
+  drone_laser: 'direto.habilidade.pousar',
+  mobile_silo: 'direto.habilidade.ancorar',
+  mobile_battery: 'direto.habilidade.suporte',
+};
 
 declare global {
   interface Window {
@@ -451,6 +457,8 @@ export function iniciarPartida(): void {
     impacto.mostrar([ponto[0] * r, ponto[1] * r, ponto[2] * r], ponto);
   };
 
+  /** Apresentação: raio (m) do ambiente sonoro em volta de quem ouve. */
+  const ALCANCE_DO_AMBIENTE_M = 40;
   /** CTL-13 (apresentação): 1,5 s de estática no SINAL PERDIDO. */
   const SINAL_PERDIDO_MS = 1500;
   /** CTL-14: o HUD do controle direto, lido do estado da simulação. */
@@ -502,6 +510,7 @@ export function iniciarPartida(): void {
 
   const atualizarHud = (agora: number): void => {
     atualizarHudDireto();
+    atualizarAmbiente();
     alertasVisiveis.value = centralDeAlertas.visiveis(
       sim.state.tick / sim.tickHz,
       DURACAO_ALERTA_S,
@@ -725,9 +734,47 @@ export function iniciarPartida(): void {
       return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
     },
   });
-  /** AUD-03/AUD-05: som e voz de cada alerta novo (T-126). */
+  // AUD-01: as trilhas da partida; AUD-02/AUD-04: efeitos e ambiente sintetizados.
+  trilhas.tocar('partida');
+  const som = new SomDaPartida({
+    raio: R,
+    ouvinte: () => {
+      const id = direto?.ativo ?? null;
+      const c = id !== null ? unidades.get(id) : undefined;
+      return c ? [c.x, c.y, c.z] : [pontoFocal.x, pontoFocal.y, pontoFocal.z];
+    },
+    posicao: (id) => {
+      if (!visivelAoJogador(id)) return null;
+      const c = unidades.get(id);
+      return c ? [c.x, c.y, c.z] : null;
+    },
+    explorado: (d) => !nevoa || explorado(leitura(), jogador, d),
+    projetil: (arma) => dados.armas.find((a) => a.id === arma)?.projetil ?? null,
+  });
+  /** AUD-03/AUD-05: sinal sonoro pela prioridade e a voz da IA (a pilha é a legenda). */
   const aoAlertar = (alerta: Alerta): void => {
-    void alerta;
+    tocarSom(
+      alerta.prioridade === 'critica'
+        ? 'alerta_critica'
+        : alerta.prioridade === 'alta'
+          ? 'alerta_alta'
+          : 'alerta_baixa',
+    );
+    falar(textoDoAlerta(alerta), alerta.prioridade);
+  };
+  /** AUD-04: o ambiente segue os hovers que se movem ou mineram perto de quem ouve. */
+  const atualizarAmbiente = (): void => {
+    const o = som.ouvinte();
+    let movendo = 0;
+    let minerando = 0;
+    for (const c of unidades.corpos) {
+      if (!c.movel || c.nacao !== jogador) continue;
+      if (Math.hypot(c.x - o[0], c.y - o[1], c.z - o[2]) > ALCANCE_DO_AMBIENTE_M) continue;
+      if ((getComponent(sim.state, c.id, 'locomotion')?.speed ?? 0) > 0.2) movendo++;
+      if (getComponent(sim.state, c.id, 'coleta')?.estado === 'minerando') minerando++;
+    }
+    som.ambiente.atualizar(movendo / 4, minerando / 2);
+    somInterno(direto?.ativo != null && direto.modo === '1p');
   };
   /** UI-06 (apresentação): cada alerta fica 10 s na pilha. */
   const DURACAO_ALERTA_S = 10;
@@ -754,6 +801,7 @@ export function iniciarPartida(): void {
       const eventos = sim.step();
       tickTotalMs += performance.now() - inicio;
       avisar(eventos);
+      som.eventos(eventos);
       for (const alerta of centralDeAlertas.processar(
         eventos,
         sim.state,

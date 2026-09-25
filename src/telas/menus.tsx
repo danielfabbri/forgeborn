@@ -7,6 +7,7 @@ import { effect, signal } from '@preact/signals';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { desbloquearAudio, estadoDoAudio } from '../audio/contexto';
+import { trilhas } from '../audio/trilhas';
 import { aplicarEscalaDaInterface, configuracoes } from '../game/configuracoes';
 import { t, type TextKey } from '../i18n';
 import { CenaAbertura } from '../render/cenaAbertura';
@@ -159,6 +160,8 @@ function Menus({ viewport }: { viewport: HTMLElement }) {
       viewport,
       atual === 'universo' || atual === 'free_battle' ? 'universo' : 'abertura',
     );
+    // AUD-01: a abertura (e a Seleção de Modo, no mesmo fundo) tem a sua trilha; o resto, a do menu.
+    trilhas.tocar(atual === 'abertura' || atual === 'modo' ? 'abertura' : 'menu');
   }, [atual]);
   return (
     <div class="menus">

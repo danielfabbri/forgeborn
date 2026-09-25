@@ -5,6 +5,7 @@
 import { useState } from 'preact/hooks';
 import {
   alterarConfiguracoes,
+  CANAIS,
   configuracoes,
   ESCALA_MAX,
   ESCALA_MIN,
@@ -14,8 +15,8 @@ import {
 import { t, type TextKey } from '../i18n';
 import { dados } from '../sim';
 
-type Aba = 'graficos' | 'jogo' | 'controles' | 'acessibilidade';
-const ABAS: readonly Aba[] = ['graficos', 'jogo', 'controles', 'acessibilidade'];
+type Aba = 'graficos' | 'audio' | 'jogo' | 'controles' | 'acessibilidade';
+const ABAS: readonly Aba[] = ['graficos', 'audio', 'jogo', 'controles', 'acessibilidade'];
 
 /** §12.4: todos os atalhos, com os do controle direto (M11). */
 const ATALHOS = dados.atalhos;
@@ -57,6 +58,26 @@ export function Configuracoes({ aoVoltar }: { aoVoltar: () => void }) {
             </div>
           </label>
         )}
+        {aba === 'audio' &&
+          CANAIS.map((canal) => (
+            <label class="campo" key={canal}>
+              <span>{t(`config.volume.${canal}` as TextKey)}</span>
+              <input
+                type="range"
+                data-testid={`volume-${canal}`}
+                min={0}
+                max={100}
+                step={5}
+                value={c.volumes[canal]}
+                onInput={(e) =>
+                  alterarConfiguracoes({
+                    volumes: { ...c.volumes, [canal]: Number(e.currentTarget.value) },
+                  })
+                }
+              />
+              <span class="valor">{c.volumes[canal]}</span>
+            </label>
+          ))}
         {aba === 'jogo' && (
           <>
             <label class="campo">

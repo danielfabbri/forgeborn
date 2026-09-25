@@ -270,7 +270,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [ ] **T-123 — VFX de combate** · M · Spec: ART-07 · Dep: T-062, T-066
 - [ ] **T-124 — Iluminação, pós-processamento e presets** · M · Spec: ART-08, TEC-19 · Dep: T-014
 - [ ] **T-125 — Cinemática de pouso** · M · Spec: FLX-09 · Dep: T-121
-- [ ] **T-126 — Áudio** · G · Spec: AUD-01 – AUD-05, D-46, D-47 · Dep: T-084
+- [x] **T-126 — Áudio** · G · Spec: AUD-01 – AUD-05, D-46, D-47 · Dep: T-084 · Feito: 2026-09-25 (as trilhas são arquivos do produto em public/audio/trilhas/; a pasta tem um LEIA-ME)
   - Aceite: trilhas por contexto com transição cruzada e arquivos faltando pulados; SFX sintetizados por unidade e interface; voz TTS pt-BR com legenda; volumes por canal nas Configurações.
 - [ ] **T-127 — Acessibilidade** · M · Spec: UI-11, UI-12 · Dep: T-080
 

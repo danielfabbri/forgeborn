@@ -4,7 +4,14 @@
  * de desenvolvimento (`?ia=`, `?camera=`). Sem eles, splash, abertura e menus.
  */
 import './styles.css';
-import { aplicarEscalaDaInterface, carregarConfiguracoes } from './game/configuracoes';
+import { effect } from '@preact/signals';
+import { aplicarVolumes, desbloquearNoPrimeiroGesto, quandoDesbloquear } from './audio/contexto';
+import { tocarSom } from './audio/sfx';
+import {
+  aplicarEscalaDaInterface,
+  carregarConfiguracoes,
+  configuracoes,
+} from './game/configuracoes';
 import { esconderCarregamento, mostrarCarregamento, pintar, progresso } from './telas/carregamento';
 
 const parametros = new URLSearchParams(location.search);
@@ -17,6 +24,19 @@ async function iniciar(): Promise<void> {
   progresso(0.1, 'carregando.configuracoes');
   const config = await carregarConfiguracoes();
   aplicarEscalaDaInterface(document.documentElement, config.escalaInterface);
+  // TEC-22/AUD-05: o áudio abre no primeiro gesto; os volumes das Configurações valem na hora.
+  desbloquearNoPrimeiroGesto();
+  quandoDesbloquear(() => aplicarVolumes(configuracoes.value.volumes));
+  effect(() => aplicarVolumes(configuracoes.value.volumes));
+  // AUD-04: clique de interface em todo botão.
+  document.addEventListener(
+    'click',
+    (e) => {
+      const botao = (e.target as Element | null)?.closest?.('button');
+      if (botao && !botao.disabled) tocarSom('clique');
+    },
+    true,
+  );
   progresso(0.3, 'carregando.modulos');
   await pintar();
   if (direto) {

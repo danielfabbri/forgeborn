@@ -305,5 +305,11 @@
   "rumo.sudoeste": "sudoeste",
   "rumo.oeste": "oeste",
   "rumo.noroeste": "noroeste",
-  "barra.menu": "Menu"
+  "barra.menu": "Menu",
+  "config.aba.audio": "Áudio",
+  "config.volume.geral": "Geral",
+  "config.volume.musica": "Música",
+  "config.volume.efeitos": "Efeitos",
+  "config.volume.voz": "Voz",
+  "config.volume.ambiente": "Ambiente"
 }

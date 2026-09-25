@@ -10,6 +10,21 @@ import { estadoDaBateria } from '../sim/energia';
 export function estadoDaUnidade(state: SimState, id: EntityId): string {
   const obra = getComponent(state, id, 'obra');
   if (obra) return obra.instalada ? 'estado.em_obra' : 'estado.reservada';
+  // D-51: satélite subindo, reposicionando ou parado em órbita.
+  const satelite = getComponent(state, id, 'satelite');
+  if (satelite) {
+    if (satelite.estado === 'lancando') return 'estado.lancando';
+    if (satelite.alvo !== null) return 'estado.atacando';
+    return satelite.destino ? 'estado.reposicionando' : 'estado.em_orbita';
+  }
+  // CMB-28: hover recolhido; UNI-09: portão.
+  const abrigo = getComponent(state, id, 'abrigo');
+  if (abrigo) return abrigo.estado === 'dentro' ? 'estado.abrigado' : 'estado.indo_abrigo';
+  const portao = getComponent(state, id, 'portao');
+  if (portao) {
+    if (portao.trancado) return 'estado.portao_trancado';
+    return portao.abertura > 0 ? 'estado.portao_aberto' : 'estado.portao_fechado';
+  }
   const bateria = getComponent(state, id, 'bateria');
   const recarga = getComponent(state, id, 'recarga');
   if (recarga?.estado === 'indo') return 'estado.indo_recarregar';
@@ -59,7 +74,8 @@ export function barrasDe(
   selecionado: boolean,
   sempre: boolean,
 ): Barras | null {
-  const vida = getComponent(state, id, 'vida');
+  // D-51: o satélite guarda o HP no próprio componente.
+  const vida = getComponent(state, id, 'vida') ?? getComponent(state, id, 'satelite');
   if (!vida) return null;
   const bateria = getComponent(state, id, 'bateria');
   const danificado = vida.hp < vida.max - 1e-9;

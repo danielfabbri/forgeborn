@@ -69,6 +69,8 @@ test('T-031/CTL-07: com um hover de exploração selecionado, o clique direito n
 test('T-032: o estoque do jogador cresce com a coleta automática (ECO-14, ECO-19)', async ({
   page,
 }) => {
+  // Espera fixa de 25 s de coleta: o limite padrão de 30 s não cobre o carregamento sob carga.
+  test.setTimeout(60_000);
   await page.keyboard.press('Control+Shift+D');
   const total = async () => {
     const texto = (await page.getByTestId('debug-estoque').textContent()) ?? '';

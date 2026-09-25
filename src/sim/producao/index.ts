@@ -3,6 +3,7 @@ import type { CommandHandler, SystemContext } from '../core/pipeline';
 import { comandosDeFila, passoFilas } from './fila';
 import { comandosDeInicio } from './inicio';
 import { comandosDeObra, passoConstrucao } from './obra';
+import { comandosDePortao, passoPortoes } from './portao';
 import { comandosDeTrabalho, passoReparo, passoTrabalhos } from './trabalho';
 
 export { custoDe, produz } from './custos';
@@ -16,11 +17,13 @@ export function sistemaProducao(ctx: SystemContext): void {
   passoTrabalhos(ctx);
   passoConstrucao(ctx);
   passoReparo(ctx);
+  passoPortoes(ctx);
 }
 
 export const comandosDaProducao: Record<string, CommandHandler> = {
   ...comandosDeFila,
   ...comandosDeObra,
   ...comandosDeTrabalho,
+  ...comandosDePortao,
   ...comandosDeInicio,
 };

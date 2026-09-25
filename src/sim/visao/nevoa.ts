@@ -144,6 +144,12 @@ export function explorado(ctx: SystemContext, nacao: NacaoId, d: Vec3): boolean 
  */
 export function visivelPara(ctx: SystemContext, nacao: NacaoId, id: EntityId): boolean {
   if (getComponent(ctx.state, id, 'owner')?.nacao === nacao) return true;
+  // CMB-28: hover recolhido não aparece para o inimigo.
+  if (getComponent(ctx.state, id, 'abrigo')?.estado === 'dentro') return false;
+  // D-51: o satélite inimigo aparece quando o ponto sob ele está visível.
+  const satelite = getComponent(ctx.state, id, 'satelite');
+  if (satelite)
+    return satelite.estado === 'orbita' && estadoEm(ctx, nacao, satelite.ponto) === VISIVEL;
   const pos = getComponent(ctx.state, id, 'position');
   if (pos === undefined || estadoEm(ctx, nacao, direcaoDe(pos)) !== VISIVEL) return false;
   if (!furtivo(ctx.state, id)) return true;

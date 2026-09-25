@@ -121,6 +121,21 @@ export function PainelProducao() {
                   </button>
                 </div>
               )}
+              {estado.recolhidos !== null && (
+                <div class="abas">
+                  <button
+                    type="button"
+                    class={estado.recolhidos ? 'ativa' : ''}
+                    onClick={() => acoes?.recolherMineradores()}
+                    data-testid="recolher-mineradores"
+                  >
+                    Q{' '}
+                    {estado.recolhidos
+                      ? t('producao.liberar_mineradores')
+                      : t('producao.recolher_mineradores')}
+                  </button>
+                </div>
+              )}
               <div class="opcoes cartao" data-testid="opcoes">
                 {estado.opcoes.map((opcao) => (
                   <button

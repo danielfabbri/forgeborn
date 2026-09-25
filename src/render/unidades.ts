@@ -24,6 +24,7 @@ import {
   type EntityId,
   entitiesWith,
   getComponent,
+  param,
   type SimEvent,
   type SimState,
 } from '../sim';
@@ -34,6 +35,7 @@ import {
   ANGULO_RAMPA_ABERTA,
   ANGULO_RAMPA_FECHADA,
   DOBRADICA_DA_RAMPA,
+  geometriaDaFolha,
   geometriaDaRampa,
   geometriaDoModelo,
   type TipoDeModelo,
@@ -61,6 +63,13 @@ const INTENSIDADE_EMISSIVA = 1.8;
 /** ART-06 (apresentação): duração da impressão de uma unidade na tela e a faixa da linha. */
 const IMPRESSAO_MS = 1200;
 const FAIXA_DA_LINHA_M = 0.07;
+/** D-51 (apresentação): altura do satélite sobre o chão e a suavização por quadro. */
+const ALTURA_DA_ORBITA_M = 38;
+const SUAVIZACAO_DO_SATELITE = 0.2;
+/** UNI-09 (apresentação): altura da soleira e da folha do Portão. */
+const ALTURA_DA_SOLEIRA_M = 0.3;
+const ALTURA_DA_FOLHA_M = 3.3;
+const TEMPO_DE_LANCAMENTO_S = () => param('tempo_lancamento_satelite_s');
 
 export function criarMaterial(): MeshStandardMaterial {
   const material = new MeshStandardMaterial({
@@ -243,6 +252,9 @@ export class UnidadesRender {
   /** FLX-09: deslocamento só visual (mundo) de um corpo, para a cinemática de pouso. */
   readonly deslocamentoVisual = new Map<EntityId, [number, number, number]>();
   private loteDaRampa: Lote | null = null;
+  private loteDaFolha: Lote | null = null;
+  /** D-51: posição suavizada de cada satélite desenhado. */
+  private readonly posicaoDosSatelites = new Map<EntityId, [number, number, number]>();
   /** Corpo que não é desenhado (o pilotado em 1ª pessoa). */
   oculto: EntityId | null = null;
   /** VIS-04: fantasmas em cinza translúcido. */
@@ -331,11 +343,16 @@ export class UnidadesRender {
             ? 'mine'
             : null;
       if (!tipo) continue;
+      // CMB-28: hover recolhido está dentro do abrigo.
+      if (getComponent(state, id, 'abrigo')?.estado === 'dentro') continue;
       const p = history.interpolate(id, getComponent(state, id, 'position')!, alpha, this.scratch);
       const loc = getComponent(state, id, 'locomotion');
+      // UNI-08: segmento de muro em linha guarda a própria frente.
       const frente = loc
         ? { ...history.interpolateRumo(id, loc.rumo, alpha, this.scratchRumo) }
-        : null;
+        : estrutura?.rumo
+          ? { x: estrutura.rumo[0], y: estrutura.rumo[1], z: estrutura.rumo[2] }
+          : null;
       const deslocamento = this.deslocamentoVisual.get(id);
       if (deslocamento) {
         p.x += deslocamento[0];
@@ -390,8 +407,11 @@ export class UnidadesRender {
       lista.push({ corpo, frente, corte });
     }
 
+    this.satelites(state, visivel, porTipo);
+
     this.preencher(this.lotes, porTipo, (tipo) => this.lote(tipo));
     this.desenharRampas(porTipo.get('ship') ?? []);
+    this.desenharFolhas(state, porTipo.get('gate') ?? []);
     this.preencher(this.hologramas, emObra, (tipo) => this.holograma(tipo));
     this.preencher(this.fantasmas, lembrados, (tipo) => this.fantasma(tipo));
   }
@@ -434,6 +454,63 @@ export class UnidadesRender {
     }
   }
 
+  /**
+   * D-51: satélites no céu, a `ALTURA_DA_ORBITA_M` sobre o ponto de visão (subindo da base
+   * durante o lançamento). A posição segue o ponto da simulação suavizada por quadro.
+   */
+  private satelites(
+    state: SimState,
+    visivel: ((id: EntityId) => boolean) | null,
+    porTipo: Map<
+      TipoDeModelo,
+      Array<{ corpo: CorpoDesenhado; frente: Vec3 | null; corte: number }>
+    >,
+  ): void {
+    const vivos = new Set<EntityId>();
+    for (const id of entitiesWith(state, 'satelite', 'owner')) {
+      if (visivel && !visivel(id)) continue;
+      const s = getComponent(state, id, 'satelite')!;
+      const base = getComponent(state, s.base, 'position');
+      if (!base) continue;
+      const chao = Math.hypot(base.x, base.y, base.z);
+      const subida =
+        s.estado === 'lancando' ? 1 - s.timer_s / Math.max(1e-6, TEMPO_DE_LANCAMENTO_S()) : 1;
+      const r = chao + ALTURA_DA_ORBITA_M * subida;
+      const alvo: [number, number, number] = [s.ponto[0] * r, s.ponto[1] * r, s.ponto[2] * r];
+      const antes = this.posicaoDosSatelites.get(id);
+      const p: [number, number, number] = antes
+        ? [
+            antes[0] + (alvo[0] - antes[0]) * SUAVIZACAO_DO_SATELITE,
+            antes[1] + (alvo[1] - antes[1]) * SUAVIZACAO_DO_SATELITE,
+            antes[2] + (alvo[2] - antes[2]) * SUAVIZACAO_DO_SATELITE,
+          ]
+        : alvo;
+      this.posicaoDosSatelites.set(id, p);
+      vivos.add(id);
+      const m = Math.hypot(...p) || 1;
+      const corpo: CorpoDesenhado = {
+        id,
+        tipo: 'satellite',
+        nacao: getComponent(state, id, 'owner')!.nacao,
+        movel: false,
+        x: p[0],
+        y: p[1],
+        z: p[2],
+        cima: [p[0] / m, p[1] / m, p[2] / m],
+        raio: raioDe('satellite'),
+        altura: alturaDe('satellite'),
+      };
+      this.corpos.push(corpo);
+      this.porId.set(id, corpo);
+      let lista = porTipo.get('satellite');
+      if (!lista) porTipo.set('satellite', (lista = []));
+      lista.push({ corpo, frente: null, corte: 0 });
+    }
+    for (const id of this.posicaoDosSatelites.keys()) {
+      if (!vivos.has(id)) this.posicaoDosSatelites.delete(id);
+    }
+  }
+
   /** FLX-09: a rampa de cada Nave, girada na dobradiça pela abertura. */
   private desenharRampas(
     naves: ReadonlyArray<{ corpo: CorpoDesenhado; frente: Vec3 | null }>,
@@ -458,6 +535,42 @@ export class UnidadesRender {
       lote.cortes.array[k] = 0;
     });
     lote.malha.count = naves.length;
+    lote.malha.instanceMatrix.needsUpdate = true;
+    lote.cores.needsUpdate = true;
+    lote.cortes.needsUpdate = true;
+  }
+
+  /** UNI-09: as duas folhas de cada Portão descem para dentro do chão com a abertura. */
+  private desenharFolhas(
+    state: SimState,
+    portoes: ReadonlyArray<{ corpo: CorpoDesenhado; corte: number }>,
+  ): void {
+    this.loteDaFolha ??= new Lote(this.scene, geometriaDaFolha(), this.material, 8);
+    const lote = this.loteDaFolha;
+    const prontos = portoes.filter(({ corpo }) => !getComponent(state, corpo.id, 'obra'));
+    lote.garantir(Math.max(1, prontos.length * 2));
+    const peca = new Matrix4();
+    let k = 0;
+    for (const { corpo } of prontos) {
+      const abertura = getComponent(state, corpo.id, 'portao')?.abertura ?? 0;
+      this.cima.set(...corpo.cima);
+      this.frente.set(...norteEm(corpo.cima));
+      this.frente.addScaledVector(this.cima, -this.frente.dot(this.cima)).normalize();
+      this.lado.crossVectors(this.frente, this.cima);
+      const y = ALTURA_DA_SOLEIRA_M - ALTURA_DA_FOLHA_M * abertura;
+      for (const lado of [-1, 1]) {
+        this.matriz.makeBasis(this.frente, this.cima, this.lado);
+        this.matriz.setPosition(corpo.x, corpo.y, corpo.z);
+        // A folha vai da dobradiça (x = 0) até 2,45 m; a direita é a esquerda girada.
+        peca.makeRotationY(lado > 0 ? Math.PI : 0).setPosition(lado * 2.45, y, 0);
+        this.matriz.multiply(peca);
+        lote.malha.setMatrixAt(k, this.matriz);
+        this.cor(corpo.nacao).toArray(lote.cores.array, k * 3);
+        lote.cortes.array[k] = 0;
+        k++;
+      }
+    }
+    lote.malha.count = k;
     lote.malha.instanceMatrix.needsUpdate = true;
     lote.cores.needsUpdate = true;
     lote.cortes.needsUpdate = true;
@@ -523,6 +636,7 @@ export class UnidadesRender {
 /** Raio de seleção: o de colisão para móveis; metade da pegada para estruturas. */
 export function raioDe(tipo: TipoDeModelo): number {
   if (tipo === 'mine') return 0.6;
+  if (tipo === 'satellite') return 3;
   const movel = dados.moveis.find((m) => m.id === tipo);
   if (movel) return movel.raio_m;
   const estrutura = dados.estruturas.find((e) => e.id === tipo)!;

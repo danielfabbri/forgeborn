@@ -1,6 +1,8 @@
 /** Combate (§9): dano, armas, projéteis, minas, explosões, morte e fim de partida. */
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import { sistemaCombate as armas } from './armas';
+import { comandosDeAbrigo, passoAbrigo } from './abrigo';
+import { passoBrechas } from './brecha';
 import { comandosDeCombate } from './comandos';
 import { passoFuga } from './fuga';
 import { passoMinas } from './minas';
@@ -20,6 +22,8 @@ export function sistemaCombate(ctx: SystemContext): void {
   passoFuga(ctx);
   passoSentinelas(ctx);
   passoSatelites(ctx);
+  passoAbrigo(ctx);
+  passoBrechas(ctx);
   armas(ctx);
   passoMinas(ctx);
 }
@@ -30,4 +34,5 @@ export const comandosDoCombate: Record<string, CommandHandler> = {
   ...comandosDeSentinela,
   ...comandosDeSatelite,
   ...comandosDePilotagem,
+  ...comandosDeAbrigo,
 };

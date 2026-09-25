@@ -19,6 +19,8 @@ export interface EstadoDoPainel {
   motivo: string | null;
   reparando: boolean;
   estoque: Record<string, number>;
+  /** CMB-28 (Nave): há mineradores recolhidos (o botão libera), ou null fora da Nave. */
+  recolhidos: boolean | null;
 }
 
 export const painelProducao = signal<EstadoDoPainel>({
@@ -30,6 +32,7 @@ export const painelProducao = signal<EstadoDoPainel>({
   motivo: null,
   reparando: false,
   estoque: {},
+  recolhidos: null,
 });
 
 /** Aviso passageiro (AL-06, AL-11). */
@@ -41,6 +44,8 @@ export interface AcoesDoPainel {
   abrirMenu(menu: 'unidades' | 'estruturas'): void;
   cancelarItem(produtor: EntityId, indice: number): void;
   cancelarObra(obra: EntityId): void;
+  /** CMB-28: Q da Nave. */
+  recolherMineradores(): void;
 }
 
 export const acoesDoPainel: { atual: AcoesDoPainel | null } = { atual: null };

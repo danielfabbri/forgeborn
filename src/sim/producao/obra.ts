@@ -15,6 +15,7 @@ import {
   removeComponent,
   setComponent,
 } from '../core/entities';
+import type { Ponto } from '../core/components';
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId } from '../core/types';
 import { type CustosId, dados, type EstruturasId, param } from '../data';
@@ -298,6 +299,17 @@ function impressoraDa(ctx: SystemContext, nacao: NacaoId, id: unknown): EntityId
   return getComponent(ctx.state, id, 'unit')?.tipo === 'printer' ? id : null;
 }
 
+/** Frente tangente em `d` a partir de `[x, y, z]` do comando, ou null. */
+function rumoDoComando(bruto: unknown, d: Vec3): Ponto | null {
+  if (!Array.isArray(bruto) || bruto.length !== 3) return null;
+  if (!bruto.every((v) => typeof v === 'number' && Number.isFinite(v))) return null;
+  const v = bruto as [number, number, number];
+  const radial = v[0] * d[0] + v[1] * d[1] + v[2] * d[2];
+  const t: Ponto = [v[0] - radial * d[0], v[1] - radial * d[1], v[2] - radial * d[2]];
+  const n = Math.hypot(...t);
+  return n > 1e-9 ? [t[0] / n, t[1] / n, t[2] / n] : null;
+}
+
 /** Estrutura que a Impressora imprime (a Nave não é impressa). */
 type EstruturaImpressa = Extract<CustosId, EstruturasId>;
 
@@ -317,6 +329,7 @@ export const comandosDeObra: Record<string, CommandHandler> = {
       x?: unknown;
       y?: unknown;
       z?: unknown;
+      rumo?: unknown;
     };
     const impressora = impressoraDa(ctx, comando.nacao, d.id);
     const alvo = direcaoDoComando(d);
@@ -329,6 +342,9 @@ export const comandosDeObra: Record<string, CommandHandler> = {
     }
     const obra = reservarEstrutura(ctx, comando.nacao, d.tipo, alvo);
     if (obra === null) return;
+    // UNI-08: o segmento em linha guarda a frente (só visual; a pegada segue a grade).
+    const rumo = rumoDoComando(d.rumo, alvo);
+    if (rumo) getComponent(ctx.state, obra, 'structure')!.rumo = rumo;
     const pago = pagar(ctx, comando.nacao, d.tipo);
     if (!pago) {
       destroyEntity(ctx.state, obra);

@@ -3,6 +3,7 @@
  * arquivos. Sem atmosfera na Lua, os sons do mundo são "percebidos": graves e abafados (filtro
  * passa-baixa), e mais internos ainda em 1ª pessoa. Todos os números aqui são de apresentação.
  */
+import type { SinalDeOrdem } from '../render/sinalizadores';
 import { audio } from './contexto';
 
 export type Som =
@@ -19,7 +20,8 @@ export type Som =
   | 'confirmacao'
   | 'alerta_baixa'
   | 'alerta_alta'
-  | 'alerta_critica';
+  | 'alerta_critica'
+  | `ordem_${SinalDeOrdem}`;
 
 let ruido: AudioBuffer | null = null;
 
@@ -79,6 +81,24 @@ function tom(
   o.stop(t0 + duracao + 0.05);
 }
 
+let curvaDeSaturacao: Float32Array<ArrayBuffer> | null = null;
+
+/** Saturação suave (tanh) para dar peso e aspereza às armas. */
+function saturado(s: Saida, quanto = 3): Saida {
+  if (!curvaDeSaturacao) {
+    curvaDeSaturacao = new Float32Array(1024);
+    for (let k = 0; k < 1024; k++) {
+      const x = (k / 1023) * 2 - 1;
+      curvaDeSaturacao[k] = Math.tanh(x * quanto) / Math.tanh(quanto);
+    }
+  }
+  const ws = s.ctx.createWaveShaper();
+  ws.curve = curvaDeSaturacao;
+  ws.oversample = '2x';
+  ws.connect(s.destino);
+  return { ...s, destino: ws };
+}
+
 function chiado(s: Saida, duracao: number, freq: number, pico = 0.6, q = 0.7): void {
   const fonte = s.ctx.createBufferSource();
   fonte.buffer = bufferDeRuido(s.ctx);
@@ -103,20 +123,38 @@ export function somInterno(ligado: boolean): void {
 
 /** Toca um efeito; `volume` 0..1 já com a distância aplicada. */
 export function tocarSom(som: Som, volume = 1): void {
-  const interface_ = ['clique', 'erro', 'confirmacao'].includes(som) || som.startsWith('alerta');
+  const interface_ =
+    ['clique', 'erro', 'confirmacao'].includes(som) ||
+    som.startsWith('alerta') ||
+    som.startsWith('ordem_');
   const s = saida(volume, true, interface_);
   if (!s) return;
   switch (som) {
-    case 'laser':
-      tom(s, 'sawtooth', 1100, 260, 0.14, 0.25);
+    case 'laser': {
+      // Estalo seco, dois dentes-de-serra desafinados caindo e um soco grave: tenso, sem "pew".
+      const sujo = saturado(s, 4);
+      chiado(s, 0.05, 7000, 0.3, 0.5);
+      tom(sujo, 'sawtooth', 380, 70, 0.2, 0.18);
+      tom(sujo, 'sawtooth', 391, 73, 0.22, 0.14);
+      tom(s, 'sine', 95, 38, 0.18, 0.4);
       break;
-    case 'torpedo':
-      chiado(s, 0.45, 2500, 0.35, 4);
-      tom(s, 'triangle', 180, 120, 0.4, 0.2);
+    }
+    case 'torpedo': {
+      // Ignição rasgada e um ronco grave que cresce.
+      const sujo = saturado(s, 3);
+      chiado(s, 0.7, 1800, 0.4, 3);
+      tom(sujo, 'sawtooth', 55, 90, 0.6, 0.22);
+      tom(s, 'sine', 48, 70, 0.6, 0.3);
       break;
-    case 'bomba':
-      tom(s, 'sine', 700, 180, 0.7, 0.2);
+    }
+    case 'bomba': {
+      // Assobio grave descendo e o baque do lançamento.
+      const sujo = saturado(s, 2.5);
+      tom(sujo, 'triangle', 420, 110, 0.8, 0.16);
+      tom(s, 'sine', 70, 32, 0.25, 0.45);
+      chiado(s, 0.12, 900, 0.3);
       break;
+    }
     case 'explosao_pequena':
       chiado(s, 0.5, 1800, 0.7);
       tom(s, 'sine', 90, 40, 0.4, 0.6);
@@ -157,6 +195,44 @@ export function tocarSom(som: Som, volume = 1): void {
       break;
     case 'alerta_critica':
       for (let k = 0; k < 3; k++) tom(s, 'square', 980, 940, 0.1, 0.22, k * 0.14);
+      break;
+    // UI-14: cada ordem do clique direito tem um som curto próprio.
+    case 'ordem_mover':
+      tom(s, 'sine', 620, 820, 0.07, 0.16);
+      tom(s, 'sine', 930, 930, 0.06, 0.12, 0.06);
+      break;
+    case 'ordem_atacar':
+      tom(s, 'square', 330, 250, 0.06, 0.14);
+      tom(s, 'square', 250, 180, 0.09, 0.14, 0.06);
+      break;
+    case 'ordem_coletar':
+      tom(s, 'triangle', 520, 520, 0.05, 0.18);
+      tom(s, 'triangle', 780, 780, 0.05, 0.18, 0.05);
+      tom(s, 'triangle', 1040, 1040, 0.07, 0.14, 0.1);
+      break;
+    case 'ordem_descarregar':
+      tom(s, 'triangle', 900, 500, 0.12, 0.18);
+      break;
+    case 'ordem_recarregar':
+      tom(s, 'sawtooth', 300, 1200, 0.18, 0.1);
+      tom(s, 'sine', 1200, 1200, 0.06, 0.12, 0.17);
+      break;
+    case 'ordem_construir':
+      tom(s, 'square', 440, 440, 0.04, 0.12);
+      tom(s, 'square', 440, 440, 0.04, 0.12, 0.08);
+      break;
+    case 'ordem_reciclar':
+      tom(s, 'triangle', 700, 350, 0.1, 0.16);
+      tom(s, 'triangle', 350, 700, 0.1, 0.12, 0.09);
+      break;
+    case 'ordem_patrulhar':
+      tom(s, 'sine', 560, 560, 0.06, 0.14);
+      tom(s, 'sine', 840, 840, 0.06, 0.14, 0.07);
+      tom(s, 'sine', 560, 560, 0.06, 0.14, 0.14);
+      break;
+    case 'ordem_satelite':
+      tom(s, 'sine', 1400, 1800, 0.2, 0.1);
+      tom(s, 'sine', 2100, 2100, 0.15, 0.06, 0.08);
       break;
   }
 }

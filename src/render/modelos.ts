@@ -28,7 +28,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { EstruturasId, MoveisId } from '../sim/data';
 
-export type TipoDeModelo = MoveisId | EstruturasId | 'mine';
+export type TipoDeModelo = MoveisId | EstruturasId | 'mine' | 'satellite';
 
 export const EMIS_NENHUM = 0;
 export const EMIS_NACAO = 1;
@@ -504,6 +504,44 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     m.caixa(8.5, 0.06, 0.2, 'nacao', { y: 0.82, z: -4.5 });
     return olho(m, 4.9, 1.0, 3.8, 0.3).pronta();
   },
+  // D-53: segmento de muro espacial de 4 m (comprimento em x), com pilares nas pontas.
+  wall: () => {
+    const m = new Montagem();
+    m.caixa(3.9, 0.35, 1.5, GRAFITE);
+    m.caixa(3.6, 2.4, 0.9, PAINEL, { y: 0.35 });
+    m.caixa(3.4, 0.5, 1.1, GRAFITE, { y: 2.75 });
+    for (const x of [-1.85, 1.85]) {
+      m.cilindro(0.35, 3.4, METAL, { x }, 8);
+      m.cilindro(0.22, 0.12, 'nacao', { x, y: 3.4 }, 8);
+    }
+    m.caixa(3.2, 0.08, 0.95, 'nacao', { y: 1.4 });
+    for (const x of [-0.9, 0, 0.9]) m.caixa(0.08, 1.6, 0.95, GRAFITE, { x, y: 0.6 });
+    return olho(m, 0, 3.1, 0.45, 0.12).pronta();
+  },
+  // D-54: portão de 6 m: pilares e verga; as folhas são peças à parte (geometriaDaFolha).
+  gate: () => {
+    const m = new Montagem();
+    m.caixa(5.9, 0.3, 1.6, GRAFITE);
+    for (const x of [-2.75, 2.75]) {
+      m.caixa(0.6, 3.8, 1.4, PAINEL, { x });
+      m.caixa(0.7, 0.2, 1.5, METAL, { x, y: 3.8 });
+      m.caixa(0.08, 3.0, 1.2, 'nacao', { x: x > 0 ? x - 0.34 : x + 0.34, y: 0.4 });
+    }
+    m.caixa(5.3, 0.45, 1.0, GRAFITE, { y: 3.5 });
+    return olho(m, 0, 3.75, 0.5, 0.14).pronta();
+  },
+  // D-51: satélite em órbita, com painéis solares e antena.
+  satellite: () => {
+    const m = new Montagem();
+    m.caixa(1.4, 1.0, 1.0, PAINEL);
+    m.caixa(1.0, 0.12, 0.7, 'nacao', { y: 1.0 });
+    for (const z of [-1, 1]) {
+      m.caixa(0.1, 0.1, 0.9, METAL, { y: 0.45, z: z * 0.95 });
+      m.caixa(1.3, 0.05, 2.2, VIDRO, { y: 0.45, z: z * 2.5 });
+    }
+    m.add(new ConeGeometry(0.45, 0.35, 12, 1, true), METAL, { x: 0.9, y: 0.5, rz: -Math.PI / 2 });
+    return olho(m, 1.1, 0.5, 0, 0.12).pronta();
+  },
   // Disco baixo com sensor na cor da nação.
   mine: () => {
     const m = new Montagem();
@@ -538,6 +576,18 @@ export function geometriaDaRampa(): BufferGeometry {
     rampa = m.pronta();
   }
   return rampa;
+}
+
+/** D-54: folha do portão (metade do vão, 2,7 m); aberta, desce para dentro do chão. */
+let folha: BufferGeometry | null = null;
+export function geometriaDaFolha(): BufferGeometry {
+  if (!folha) {
+    const m = new Montagem();
+    m.caixa(2.45, 3.1, 0.35, METAL, { x: 1.225 });
+    for (const y of [0.8, 1.6, 2.4]) m.caixa(2.3, 0.06, 0.4, 'nacao', { x: 1.225, y });
+    folha = m.pronta();
+  }
+  return folha;
 }
 
 export const TIPOS_DE_MODELO = Object.keys(CONSTRUTORES) as TipoDeModelo[];

@@ -5,7 +5,8 @@ import { navegavelDa } from '../../src/sim/units/navegacao';
 import { celulaDe } from '../../src/sim/map/grids';
 import { estadoEm, VISIVEL, visivelPara } from '../../src/sim/visao/nevoa';
 import { rumoDe } from '../../src/sim/visao/sentinela';
-import { statsEstrutura } from '../../src/sim/units/stats';
+import { armaDe } from '../../src/sim/combate/armas';
+import { entitiesWith } from '../../src/sim/core/entities';
 import { alvo, criar, mundoLiso, ordenar, partida, ponto, pos } from './mundo-teste';
 
 function contexto(sim: Sim): SystemContext {
@@ -24,6 +25,10 @@ const rodar = (sim: Sim, s: number, eventos?: SimEvent[]) => {
     eventos?.push(...novos);
   }
 };
+const satelitesDe = (sim: Sim, nacao: 'bra' | 'usa') =>
+  entitiesWith(sim.state, 'satelite', 'owner').filter(
+    (id) => getComponent(sim.state, id, 'owner')!.nacao === nacao,
+  );
 function minaDe(sim: Sim, x: number, z: number, nacao: 'bra' | 'usa' = 'usa'): number {
   criar(sim, [{ mina: true, x, z }], nacao);
   return sim.state.entities.filter((id) => getComponent(sim.state, id, 'mine')).at(-1)!;
@@ -174,25 +179,33 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
     const { uplink } = base(sim);
     const eventos: SimEvent[] = [];
     rodar(sim, param('tempo_lancamento_satelite_s') + 0.5, eventos);
-    expect(getComponent(sim.state, uplink, 'satelite')!.estado).toBe('orbita');
+    const sat = satelitesDe(sim, 'bra')[0]!;
+    expect(getComponent(sim.state, sat, 'satelite')!.estado).toBe('orbita');
     expect(eventos).toContainEqual(
       expect.objectContaining({ dados: expect.objectContaining({ id: 'AL-12', nacao: 'bra' }) }),
     );
+    // A ordem vale pela base (atalho T) ou pelo próprio satélite (clique direito).
     ordenar(sim, 'reposicionar_satelite', { ids: [uplink], ...alvo(0, 100) });
     rodar(sim, 100 / param('satelite_vel_m_s') + 1);
     expect(estadoEm(contexto(sim), 'bra', ponto(0, 100 + param('satelite_visao_m') - 5))).toBe(
       VISIVEL,
     );
+    ordenar(sim, 'reposicionar_satelite', { ids: [sat], ...alvo(0, 0) });
+    rodar(sim, 100 / param('satelite_vel_m_s') + 1);
+    const p = getComponent(sim.state, sat, 'satelite')!.ponto;
+    expect(p[2]).toBeCloseTo(ponto(0, 0)[2], 3);
   });
 
   it('VIS-08: Varredura revela varredura_raio_m por varredura_duracao_s, paga do banco e recarrega', () => {
     const sim = partida(mundoLiso());
     const { uplink } = base(sim);
     rodar(sim, param('tempo_lancamento_satelite_s') + 0.5);
+    const sat = satelitesDe(sim, 'bra')[0]!;
     const banco = sim.state.energia.bra.banco;
     ordenar(sim, 'varredura', { ids: [uplink], ...alvo(0, -90) });
     rodar(sim, 0.3);
-    expect(banco - sim.state.energia.bra.banco).toBeGreaterThan(param('varredura_custo_en') - 1);
+    // A geração da Nave repõe um pouco do banco nesses ticks.
+    expect(banco - sim.state.energia.bra.banco).toBeGreaterThan(param('varredura_custo_en') - 5);
     expect(estadoEm(contexto(sim), 'bra', ponto(0, -90 - param('varredura_raio_m') + 10))).toBe(
       VISIVEL,
     );
@@ -202,7 +215,7 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
     rodar(sim, 0.1);
     expect(sim.state.energia.bra.banco).toBeGreaterThan(antes - param('varredura_custo_en') + 1);
     rodar(sim, param('varredura_duracao_s'));
-    expect(getComponent(sim.state, uplink, 'satelite')!.varredura).toBeNull();
+    expect(getComponent(sim.state, sat, 'satelite')!.varredura).toBeNull();
   });
 
   it('UNI-04: destruir a base durante o lançamento perde o satélite', () => {
@@ -212,30 +225,80 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
     getComponent(sim.state, uplink, 'vida')!.hp = 0;
     rodar(sim, param('tempo_lancamento_satelite_s'));
     expect(sim.state.entities.includes(uplink)).toBe(false);
+    expect(satelitesDe(sim, 'bra')).toHaveLength(0);
   });
 
-  it('ENE-04/AL-17: em racionamento o satélite fica offline e sem visão', () => {
+  it('UNI-05 (D-51): o satélite cai com a base (AL-18)', () => {
     const sim = partida(mundoLiso());
     const { uplink } = base(sim);
     rodar(sim, param('tempo_lancamento_satelite_s') + 0.5);
-    // Uma defesa (prioridade 1) toma toda a geração; o banco some.
+    expect(satelitesDe(sim, 'bra')).toHaveLength(1);
     const eventos: SimEvent[] = [];
-    getComponent(sim.state, uplink, 'consumidor')!.demanda_en_s = 1;
-    const [torre] = criar(sim, [{ estrutura: 'laser_tower', x: 30, z: 30 }]);
-    getComponent(sim.state, torre!, 'arma')!.demanda_en_s =
-      statsEstrutura('ship').geracao_en_s * 10;
-    sim.state.energia.bra.banco = 0;
-    const fixar = () => {
-      getComponent(sim.state, torre!, 'arma')!.demanda_en_s =
-        statsEstrutura('ship').geracao_en_s * 10;
-    };
-    for (let t = 0; t < 10; t++) {
-      fixar();
-      eventos.push(...sim.step());
-    }
-    expect(getComponent(sim.state, uplink, 'consumidor')!.offline).toBe(true);
+    getComponent(sim.state, uplink, 'vida')!.hp = 0;
+    rodar(sim, 1, eventos);
+    expect(satelitesDe(sim, 'bra')).toHaveLength(0);
     expect(eventos).toContainEqual(
-      expect.objectContaining({ dados: expect.objectContaining({ id: 'AL-17', nacao: 'bra' }) }),
+      expect.objectContaining({ dados: expect.objectContaining({ id: 'AL-18', nacao: 'bra' }) }),
+    );
+  });
+
+  it('ENE-04 (D-51): o satélite não consome da rede e segue em órbita sem banco', () => {
+    const sim = partida(mundoLiso());
+    const { uplink } = base(sim);
+    rodar(sim, param('tempo_lancamento_satelite_s') + 0.5);
+    expect(getComponent(sim.state, uplink, 'consumidor')).toBeUndefined();
+    sim.state.energia.bra.banco = 0;
+    rodar(sim, 5);
+    const sat = satelitesDe(sim, 'bra')[0]!;
+    expect(getComponent(sim.state, sat, 'satelite')!.estado).toBe('orbita');
+    expect(getComponent(sim.state, sat, 'position')).toBeUndefined();
+  });
+
+  it('UNI-05 (D-51): sat_laser só atinge satélites; só satélites atingem satélites', () => {
+    const sim = partida(mundoLiso());
+    criar(sim, [
+      { estrutura: 'ship', x: -40, z: 0 },
+      { estrutura: 'satellite_uplink', x: 0, z: 0 },
+      // Alvo de solo sob o satélite: nunca é atingido pelo laser orbital.
+      { unidade: 'hover_ex1', x: 30, z: 30, postura: 'passiva' },
+    ]);
+    const [, uplinkUsa] = criar(
+      sim,
+      [
+        { estrutura: 'ship', x: 40, z: 200 },
+        { estrutura: 'satellite_uplink', x: 0, z: 200 },
+      ],
+      'usa',
+    );
+    ordenar(sim, 'debug_encher_banco', {});
+    rodar(sim, param('tempo_lancamento_satelite_s') + 0.5);
+    const [nosso] = satelitesDe(sim, 'bra');
+    const [deles] = satelitesDe(sim, 'usa');
+    // O deles revida (só em satélite); o nosso aguenta para o teste ver o deles cair.
+    getComponent(sim.state, nosso!, 'satelite')!.hp = 1e6;
+    const doSolo = sim.state.entities.filter((id) => getComponent(sim.state, id, 'unit'));
+    // Fora do alcance, nada acontece.
+    rodar(sim, 2);
+    expect(getComponent(sim.state, deles!, 'satelite')!.hp).toBe(param('satelite_hp'));
+    const eventos: SimEvent[] = [];
+    ordenar(sim, 'atacar_satelite', { ids: [nosso], alvo: deles });
+    const arma = armaDe('sat_laser');
+    const distancia = 200 - arma.alcance_m;
+    rodar(sim, distancia / param('satelite_vel_m_s') + 2, eventos);
+    const disparos = eventos.filter((e) => e.tipo === 'disparo' && e.dados.arma === 'sat_laser');
+    expect(disparos.length).toBeGreaterThan(0);
+    for (const d of disparos) expect([nosso, deles]).toContain(d.dados.alvo);
+    // Ninguém no solo foi tocado; ao fim cai o deles (AL-18 do usa), mas a base segue de pé.
+    for (const id of doSolo) {
+      expect(getComponent(sim.state, id, 'vida')!.hp).toBe(
+        getComponent(sim.state, id, 'vida')!.max,
+      );
+    }
+    rodar(sim, (param('satelite_hp') / arma.dano) * (arma.recarga_s ?? 0) + 2, eventos);
+    expect(satelitesDe(sim, 'usa')).toHaveLength(0);
+    expect(sim.state.entities.includes(uplinkUsa!)).toBe(true);
+    expect(eventos).toContainEqual(
+      expect.objectContaining({ dados: expect.objectContaining({ id: 'AL-18', nacao: 'usa' }) }),
     );
   });
 });

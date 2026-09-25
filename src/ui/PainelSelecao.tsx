@@ -59,6 +59,18 @@ export function PainelSelecao() {
                 {t('selecao.arma_valor', { dano: sel.arma.dano, alcance: sel.arma.alcance })}
               </div>
             )}
+            {sel.modelo === 'gate' && sel.estado !== 'estado.em_obra' && (
+              <button
+                type="button"
+                data-testid="trancar-portao"
+                onClick={() => acoesDaSelecao.trancar?.(sel.id)}
+              >
+                T{' '}
+                {sel.estado === 'estado.portao_trancado'
+                  ? t('producao.destrancar_portao')
+                  : t('producao.trancar_portao')}
+              </button>
+            )}
           </div>
         </div>
       )}

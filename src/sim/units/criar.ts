@@ -2,6 +2,7 @@
  * Criação de corpos com os limites da nação (REG-16 a REG-19). Toda criação passa por aqui:
  * uma ordem que excede um limite é recusada e emite o alerta AL-11.
  */
+import { lancarSatelite } from '../visao/satelite';
 import { createEntity, entitiesWith, getComponent, setComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId } from '../core/types';
@@ -245,23 +246,17 @@ export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
   }
   // UNI-04: a Base de Lançamento pronta começa a lançar o satélite (sobre a própria base).
   if (tipo === 'satellite_uplink') {
-    const d = direcaoDe(getComponent(state, id, 'position')!);
-    setComponent(state, id, 'satelite', {
-      estado: 'lancando',
-      timer_s: param('tempo_lancamento_satelite_s'),
-      ponto: d,
-      destino: null,
-      recarga_s: 0,
-      varredura: null,
-      offlineAvisado: false,
-    });
-    // ENE-04: a manutenção entra na rede como satélite (prioridade 2), só com ele em órbita.
-    setComponent(state, id, 'consumidor', {
-      prioridade: 2,
-      demanda_en_s: 0,
-      atendido: 1,
-      offline: false,
-    });
+    // D-51: o satélite é um corpo próprio e não consome da rede.
+    lancarSatelite(
+      ctx,
+      id,
+      getComponent(state, id, 'owner')!.nacao,
+      direcaoDe(getComponent(state, id, 'position')!),
+    );
+  }
+  // UNI-09: o Portão nasce fechado e destrancado.
+  if (tipo === 'gate') {
+    setComponent(state, id, 'portao', { abertura: 0, trancado: false, semUnidade_s: 0 });
   }
   // ENE-06: a Usina Nuclear nasce ligada e se abastece no primeiro tick.
   if (tipo === 'nuclear_plant') {

@@ -101,4 +101,8 @@ export const acoesDosAlertas: { irPara: (a: Alerta) => void } = { irPara: () => 
 export const canvasDoRetrato = signal<HTMLCanvasElement | null>(null);
 
 /** Clicar num grupo filtra a seleção (UI-03). */
-export const acoesDaSelecao: { filtrar: ((ids: EntityId[]) => void) | null } = { filtrar: null };
+export const acoesDaSelecao: {
+  filtrar: ((ids: EntityId[]) => void) | null;
+  /** UNI-09: T do Portão (tranca ou destranca). */
+  trancar: ((id: EntityId) => void) | null;
+} = { filtrar: null, trancar: null };

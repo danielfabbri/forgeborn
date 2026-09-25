@@ -62,6 +62,7 @@ import { HologramaRender } from '../render/holograma';
 import { campoDaCamera, Minimapa } from '../render/minimapa';
 import { NevoaRender } from '../render/nevoa';
 import { SinaisRender } from '../render/sinais';
+import { SinalizadoresRender } from '../render/sinalizadores';
 import { pontoNoTerreno } from '../render/picking';
 import { criarCeu } from '../render/sky';
 import { criarTerreno } from '../render/terrain';
@@ -71,6 +72,7 @@ import {
   createSim,
   dados,
   type EntityId,
+  entitiesWith,
   getComponent,
   isAlive,
   type NacaoId,
@@ -161,6 +163,10 @@ declare global {
       barras?: () => number;
       /** A estrutura cabe no ponto de tela (px) (PRD-10)? */
       localValido?: (tipo: string, x: number, y: number) => boolean;
+      /** Satélites (D-51): dono, estado e se está indo a um destino. */
+      satelites?: () => Array<{ id: EntityId; nacao: string; estado: string; indo: boolean }>;
+      /** Sinalizadores do clique direito ativos (UI-14), pelo tipo. */
+      sinalizadores?: () => string[];
     };
   }
 }
@@ -346,6 +352,8 @@ export function iniciarPartida(): void {
   );
   const efeitos = new Efeitos(view.scene, R, (d) => alturaEm(pronto.mapa, d), particulas);
   const marcas = new SinaisRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+  // UI-14: sinalizadores e sons das ordens do clique direito.
+  const sinalizadores = new SinalizadoresRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
   const jazidas = new JazidasRender(view.scene);
   const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
   const holograma = new HologramaRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
@@ -393,6 +401,10 @@ export function iniciarPartida(): void {
           destrocos: () => combate.destrocosDesenhados,
           validarLocal: (tipo, d) => validarPosicionamento(leitura(), tipo, d, jogador),
           holograma,
+          sinalizar: (tipo, d) => {
+            sinalizadores.mostrar(tipo, d, performance.now());
+            tocarSom(`ordem_${tipo}`, 0.8);
+          },
           aoEsc: () => abrirMenuDePausa(),
           bloqueado: () =>
             menuDePausa.value !== 'fechado' || fimDePartida.value !== null || direto?.ativo != null,
@@ -444,8 +456,16 @@ export function iniciarPartida(): void {
       abrirMenu: (menu) => comandos.abrirMenu(menu),
       cancelarItem: (produtor, indice) => comandos.cancelarItem(produtor, indice),
       cancelarObra: (obra) => comandos.cancelarObra(obra),
+      recolherMineradores: () => comandos.recolherMineradores(),
     };
     acoesDaSelecao.filtrar = (ids) => comandos.selecionar(ids);
+    acoesDaSelecao.trancar = (id) =>
+      sim.enqueue({
+        tick: sim.state.tick,
+        nacao: jogador,
+        tipo: 'trancar_portao',
+        dados: { ids: [id] } as never,
+      });
   }
 
   /** UI-07: barras dos corpos visíveis (do lado da câmera). */
@@ -670,6 +690,12 @@ export function iniciarPartida(): void {
       motivo: entrada.motivo,
       reparando: entrada.reparando,
       estoque: estoque(sim.state, jogador),
+      recolhidos:
+        tipoProdutor === 'ship'
+          ? entitiesWith(sim.state, 'abrigo', 'owner').some(
+              (id) => getComponent(sim.state, id, 'owner')!.nacao === jogador,
+            )
+          : null,
     };
   };
   let ultimoPainel = 0;
@@ -884,6 +910,7 @@ export function iniciarPartida(): void {
         performance.now(),
         nevoa ? exploradoPeloJogador : null,
       );
+      sinalizadores.sync(performance.now());
       const agoraEfeitos = performance.now();
       efeitos.sync(
         sim.state,
@@ -936,7 +963,19 @@ export function iniciarPartida(): void {
       const p = getComponent(sim.state, id, 'position');
       return p ? [p.x, p.y, p.z] : null;
     };
+    sonda.satelites = () =>
+      entitiesWith(sim.state, 'satelite', 'owner').map((id) => {
+        const s = getComponent(sim.state, id, 'satelite')!;
+        return {
+          id,
+          nacao: getComponent(sim.state, id, 'owner')!.nacao,
+          estado: s.estado,
+          indo: s.destino !== null,
+        };
+      });
+    sonda.sinalizadores = () => sinalizadores.tipos;
     sonda.tipo = (id) =>
+      (getComponent(sim.state, id, 'satelite') ? 'satellite' : null) ??
       getComponent(sim.state, id, 'unit')?.tipo ??
       getComponent(sim.state, id, 'structure')?.tipo ??
       null;

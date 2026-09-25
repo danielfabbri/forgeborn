@@ -172,7 +172,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: taxas por reparador e tipo de alvo; no máximo `max_reparadores`; drones só pousados; Impressora ociosa repara dentro de `raio_reparo_auto_m`.
 - [x] **T-056 — Início de partida** · M · Spec: REG-04 – REG-08, FLX-09 (versão simples) · Dep: T-050, T-033 · Feito: 2026-09-23 (o pouso é o hover saindo pela rampa, sem cinemática; área explorada inicial desde a T-070)
   - Aceite: cada nação começa com Nave e 1 hover; estoque inicial por modo; área explorada inicial; o hover inicial coleta sozinho; INV-02 verde.
-- [ ] **T-057 — Muro e Portão** · M · Spec: UNI-08, UNI-09, D-53, D-54 · Dep: T-052
+- [x] **T-057 — Muro e Portão** · M · Spec: UNI-08, UNI-09, D-53, D-54 · Dep: T-052 · Feito: 2026-09-25
   - Aceite: Muro bloqueia hovers e deixa drones passarem; posicionamento em linha arrastando; Portão abre sozinho para unidades próprias no raio e fecha depois do tempo, deixa qualquer um passar aberto, e trancado não abre; inimigos atacam o muro que fecha o caminho.
 
 ## M6 — Combate
@@ -197,7 +197,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-068 — Invariantes de combate e relatório de balanceamento** · M · Spec: INV-03 – INV-08, INV-11, INV-13, §21.2 · Dep: T-063, T-064 · Feito: 2026-09-24
   - `npm run balance:report` recalcula as tabelas informativas de §21.2 a partir dos dados gerados.
   - Aceite: todos os INV citados verdes; o relatório bate com §21.2 da v0.1.0.
-- [ ] **T-069 — Recolher mineradores** · M · Spec: CMB-28, D-52 · Dep: T-062
+- [x] **T-069 — Recolher mineradores** · M · Spec: CMB-28, D-52 · Dep: T-062 · Feito: 2026-09-25
   - Aceite: Q (ou o botão da Nave) leva os hovers de exploração ao abrigo mais próximo com vaga; abrigados somem e não são atingidos; cada um soma um disparo de `abrigo_laser`; de novo, libera para a coleta; com a estrutura destruída, saem ao lado.
 
 ## M7 — Visão
@@ -212,7 +212,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: lançamento cancelável pela destruição da base; visão persistente reposicionável; Varredura com custo, duração e recarga; offline em racionamento (AL-17).
 - [x] **T-074 — Minimapa** · M · Spec: VIS-09, UI-05, CTL-03 · Dep: T-071 · Feito: 2026-09-24 (o painel de produção foi para o canto inferior direito, lugar do cartão de comandos)
   - Aceite: mostra os três estados, unidades, fantasmas, sinais, círculos de satélite e o campo da câmera; clique move a câmera e clique direito dá ordem.
-- [ ] **T-075 — Satélite em órbita e combate orbital** · M · Spec: UNI-05, ENE-04, D-51 · Dep: T-073
+- [x] **T-075 — Satélite em órbita e combate orbital** · M · Spec: UNI-05, ENE-04, D-51 · Dep: T-073 · Feito: 2026-09-25
   - Aceite: satélite visível no céu e selecionável; clique direito reposiciona a `satelite_vel_m_s` ou ataca satélite inimigo; `sat_laser` só atinge satélites e nada atinge satélite além dele; sem gasto de energia; cai com a base.
 
 ## M8 — HUD e UX
@@ -231,7 +231,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: nenhuma string de interface fixa no código (verificação automatizada).
 - [x] **T-088 — Informação de jazidas** · P · Spec: UI-13, UI-09 · Dep: T-081, T-030 · Feito: 2026-09-23
   - Aceite: tooltip com recurso e quantidade restante após o atraso; clique seleciona a jazida sozinha e o painel mostra recurso, restante/inicial e hovers designados.
-- [ ] **T-089 — Sinalizadores do clique direito** · P · Spec: UI-14 · Dep: T-025
+- [x] **T-089 — Sinalizadores do clique direito** · P · Spec: UI-14 · Dep: T-025 · Feito: 2026-09-25
   - Aceite: cada tipo de ordem mostra um sinalizador próprio no ponto e toca um som próprio.
 
 ## M9 — IA

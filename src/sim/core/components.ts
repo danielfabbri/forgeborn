@@ -16,7 +16,11 @@ export interface ComponentMap {
   /** Unidade móvel e seu tipo (linha de `dados:moveis`). */
   unit: { tipo: MoveisId };
   /** Estrutura e seu tipo (linha de `dados:estruturas`). */
-  structure: { tipo: EstruturasId };
+  structure: {
+    tipo: EstruturasId;
+    /** UNI-08: frente do segmento (tangente) quando posicionado em linha; sem ela, o norte. */
+    rumo?: Ponto;
+  };
   /** Obstáculo rígido circular (MOV-04): estruturas e jazidas. */
   obstacle: { raio: number };
   /** Estado de deslocamento de uma unidade móvel. */
@@ -173,16 +177,21 @@ export interface ComponentMap {
   };
   /** Satélite da Base de Lançamento (UNI-04 a UNI-06, VIS-08). */
   satelite: {
+    /** A Base de Lançamento que o mantém (UNI-05: cai com ela). */
+    base: EntityId;
     estado: 'lancando' | 'orbita';
     timer_s: number;
-    /** Ponto de visão persistente e para onde está indo. */
+    /** Ponto de visão persistente (no solo, sob o satélite) e para onde está indo. */
     ponto: Ponto;
     destino: Ponto | null;
     /** Recarga da Varredura Orbital e a varredura ativa. */
     recarga_s: number;
     varredura: { ponto: Ponto; restante_s: number } | null;
-    /** AL-17 já avisado nesta queda. */
-    offlineAvisado: boolean;
+    /** D-51: HP e o laser orbital (recarga e alvo escolhido). */
+    hp: number;
+    max: number;
+    recargaArma_s: number;
+    alvo: EntityId | null;
   };
   /**
    * Modo Sentinela do Hover de Observação (UNI-03): implantando → ativo → recolhendo.
@@ -191,6 +200,13 @@ export interface ComponentMap {
   sentinela: { estado: 'implantando' | 'ativo' | 'recolhendo'; timer_s: number };
   /** REG-10: nação eliminada; o corpo se desliga e explode sem dano em `em_s`. */
   autodestruicao: { em_s: number };
+  /**
+   * CMB-28 (D-52): hover recolhido. `indo` ao abrigo; `dentro`, fora do mapa, somando um
+   * disparo de `abrigo_laser` à estrutura (recarga desse disparo em `recargas[0]`).
+   */
+  abrigo: { estrutura: EntityId; estado: 'indo' | 'dentro'; recargas: number[] };
+  /** Portão (UNI-09, D-54): abertura 0..1, trancado pelo dono e segundos sem unidade própria. */
+  portao: { abertura: number; trancado: boolean; semUnidade_s: number };
   /** Mina plantada (UNI-07): arma após `tempo_armar_mina_s`. */
   mine: { armada: boolean; timer_s: number };
   /**

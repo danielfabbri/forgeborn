@@ -319,5 +319,20 @@
   "config.daltonismo.tritanopia": "Tritanopia",
   "pouso.pular": "Esc, Espaço ou clique: pular o pouso",
   "producao.energia": "{n} EN",
-  "producao.tempo": "{n} s"
+  "producao.tempo": "{n} s",
+  "item.satellite": "Satélite",
+  "item.wall": "Muro",
+  "item.gate": "Portão",
+  "estado.lancando": "Lançando",
+  "estado.em_orbita": "Em órbita",
+  "estado.reposicionando": "Reposicionando",
+  "estado.abrigado": "Abrigado",
+  "estado.indo_abrigo": "Indo ao abrigo",
+  "estado.portao_aberto": "Aberto",
+  "estado.portao_fechado": "Fechado",
+  "estado.portao_trancado": "Trancado",
+  "producao.recolher_mineradores": "Recolher mineradores",
+  "producao.liberar_mineradores": "Liberar mineradores",
+  "producao.trancar_portao": "Trancar portão",
+  "producao.destrancar_portao": "Destrancar portão"
 }

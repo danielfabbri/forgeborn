@@ -3,6 +3,7 @@
  * unidade pelo grande círculo, separação entre corpos, obstáculos rígidos, pouso e decolagem de
  * drones e altura final (solo ou voo).
  */
+import { abrigado } from '../combate/abrigo';
 import type { ComponentMap, Ponto } from '../core/components';
 import { entitiesWith, getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
@@ -489,7 +490,10 @@ function ajustarAltura(ctx: SystemContext, ids: EntityId[]): void {
 
 export function sistemaMovimento(ctx: SystemContext): void {
   const g = navegavel(ctx);
-  const ids = entitiesWith(ctx.state, 'unit', 'locomotion', 'position');
+  // CMB-28: hovers recolhidos estão fora do mapa.
+  const ids = entitiesWith(ctx.state, 'unit', 'locomotion', 'position').filter(
+    (id) => !abrigado(ctx.state, id),
+  );
   for (const id of ids) passo(ctx, g, id, ctx.dt);
   separar(ctx, g, ids);
   ajustarAltura(ctx, ids);

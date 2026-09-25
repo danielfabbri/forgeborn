@@ -37,4 +37,6 @@ export const MENU_ESTRUTURAS: OpcaoDeMenu[] = [
   opcao('S', 'solar_plant'),
   opcao('N', 'nuclear_plant'),
   opcao('L', 'satellite_uplink'),
+  opcao('M', 'wall'),
+  opcao('P', 'gate'),
 ];

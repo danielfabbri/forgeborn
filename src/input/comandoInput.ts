@@ -24,10 +24,12 @@ import { centrarEm, type EstadoCameraRts } from '../render/cameraRts';
 import { pontoNoTerreno } from '../render/picking';
 import type { DestrocoDesenhado } from '../render/combate';
 import type { JazidaDesenhada } from '../render/jazidas';
+import type { SinalDeOrdem } from '../render/sinalizadores';
 import type { CorpoDesenhado } from '../render/unidades';
-import { type EntityId, getComponent, isAlive, type NacaoId, type Sim } from '../sim';
+import { dados, type EntityId, getComponent, isAlive, type NacaoId, type Sim } from '../sim';
 import type { CustosId, EstruturasId } from '../sim/data';
 import { normalizar, type Vec3 } from '../sim/map/esfera';
+import { segmentosDaLinha } from '../game/linhaDeMuro';
 import type { Heightmap } from '../sim/map/heightmap';
 
 /** Corpo ou jazida que pode ser apontado na tela. */
@@ -97,6 +99,8 @@ export interface EntradaComandos {
   selecionadosDesenhados(): CorpoDesenhado[];
   /** CTL-03: clique direito no minimapa dá ordem de movimento para a direção. */
   ordenarEm(d: Vec3): void;
+  /** CMB-28: recolhe ou libera os mineradores (Q da Nave). */
+  recolherMineradores(): void;
   dispose(): void;
 }
 
@@ -117,6 +121,8 @@ export interface OpcoesEntradaComandos {
   /** PRD-10: por que o local não serve, ou null (a validação da simulação). */
   validarLocal?: (tipo: EstruturasId, d: Vec3) => string | null;
   holograma?: HologramaDePosicionamento;
+  /** UI-14: sinalizador e som da ordem no ponto (direção). */
+  sinalizar?: (tipo: SinalDeOrdem, d: Vec3) => void;
   /** §12.4: Esc sem modo a cancelar abre o menu de pausa (FLX-11). */
   aoEsc?: () => void;
   /** Menu aberto por cima do jogo: as teclas de comando não valem. */
@@ -214,6 +220,28 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   const enviar = (tipo: string, dados: Record<string, unknown>) => {
     sim.enqueue({ tick: sim.state.tick, nacao: jogador, tipo, dados: dados as never });
   };
+  /** UI-14: sinaliza a ordem sobre o corpo `id` ou no terreno sob o cursor. */
+  const sinal = (tipo: SinalDeOrdem, px: number, py: number, id: EntityId | null = null) => {
+    if (!o.sinalizar) return;
+    const corpo =
+      id === null
+        ? undefined
+        : (o.corpos().find((c) => c.id === id) ??
+          o.jazidas?.().find((j) => j.id === id) ??
+          o.destrocos?.().find((d) => d.id === id));
+    const ponto = corpo
+      ? ([corpo.x, corpo.y, corpo.z] as Vec3)
+      : pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
+    if (ponto) o.sinalizar(tipo, normalizar(ponto));
+  };
+  /** D-51: satélites próprios selecionados. */
+  const satelites = () =>
+    selecao.filter(
+      (id) =>
+        isAlive(sim.state, id) &&
+        getComponent(sim.state, id, 'owner')?.nacao === jogador &&
+        getComponent(sim.state, id, 'satelite') !== undefined,
+    );
   const minhas = (componente: 'unit' | 'producer' | 'structure') =>
     selecao.filter(
       (id) =>
@@ -276,6 +304,41 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     o.holograma?.mostrar(posicionando, d, motivo === null);
   };
 
+  /**
+   * UNI-08: Muro arrastado vira uma linha de segmentos do ponto inicial ao final, um a cada
+   * pegada (medida na grade local, para as pegadas quadradas se tocarem sem se sobrepor).
+   */
+  const posicionarLinha = (origem: { x: number; y: number }, px: number, py: number): boolean => {
+    if (posicionando !== 'wall') return false;
+    if (Math.hypot(px - origem.x, py - origem.y) <= LIMIAR_ARRASTO_PX) return false;
+    const a = pontoNoTerreno(o.camera, viewport, origem.x, origem.y, o.mapa);
+    const b = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
+    const impressora = impressoraLivre();
+    if (!a || !b || impressora === null) return false;
+    const pegada = dados.estruturas.find((e) => e.id === 'wall')!.pegada_m;
+    const linha = segmentosDaLinha(normalizar(a), normalizar(b), pegada, o.mapa.raio_m);
+    if (!linha) return false;
+    // Os segmentos se repartem entre as Impressoras selecionadas (a de menor fila primeiro).
+    const impressoras = doTipo('printer');
+    const carga = new Map(
+      impressoras.map((id) => [id, getComponent(sim.state, id, 'producer')!.fila.length]),
+    );
+    for (const d of linha.pontos) {
+      if (o.validarLocal?.('wall', d)) continue;
+      const quem = impressoras.reduce((a, b) => (carga.get(b)! < carga.get(a)! ? b : a));
+      carga.set(quem, carga.get(quem)! + 1);
+      enviar('posicionar_estrutura', {
+        id: quem,
+        tipo: 'wall',
+        x: d[0],
+        y: d[1],
+        z: d[2],
+        rumo: linha.frente,
+      });
+    }
+    return true;
+  };
+
   const confirmarPosicionamento = (px: number, py: number, manter: boolean) => {
     if (!posicionando) return;
     const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
@@ -301,11 +364,13 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     if (!alvo || alvo.nacao !== jogador) return false;
     if (getComponent(sim.state, alvo.id, 'obra')) {
       enviar('construir', { ids: quem, alvo: alvo.id });
+      sinal('construir', px, py, alvo.id);
       return true;
     }
     const vida = getComponent(sim.state, alvo.id, 'vida');
     if (vida && vida.hp < vida.max && !quem.includes(alvo.id)) {
       enviar('reparar', { ids: quem, alvo: alvo.id });
+      sinal('construir', px, py, alvo.id);
       return true;
     }
     return false;
@@ -320,14 +385,17 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     const unidades = minhas('unit');
     if (unidades.length === 0) return false;
     const alvo = corpoNoPonto(naTela(), px, py);
-    if (alvo && alvo.nacao !== null && alvo.nacao !== jogador) {
+    // D-51: satélite só é alvo de satélite.
+    if (alvo && alvo.nacao !== null && alvo.nacao !== jogador && alvo.tipo !== 'satellite') {
       enviar('atacar', { ids: unidades, alvo: alvo.id });
+      sinal('atacar', px, py, alvo.id);
       return true;
     }
     const hovers = doTipo('hover_explorer');
     const destroco = hovers.length > 0 ? corpoNoPonto(destrocosNaTela(), px, py) : null;
     if (destroco) {
       enviar('reciclar', { ids: hovers, alvo: destroco.id });
+      sinal('reciclar', px, py, destroco.id);
       return true;
     }
     return false;
@@ -342,10 +410,29 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       return false;
     if (getComponent(sim.state, alvo.id, 'obra')) return false;
     enviar('recarregar', { ids: unidades, estrutura: alvo.id });
+    sinal('recarregar', px, py, alvo.id);
     return true;
   };
 
+  /** D-51: satélite inimigo → atacar em órbita; terreno → reposicionar. */
+  const ordemDosSatelites = (px: number, py: number): void => {
+    const sats = satelites();
+    if (sats.length === 0) return;
+    const alvo = corpoNoPonto(naTela(), px, py);
+    if (alvo && alvo.tipo === 'satellite' && alvo.nacao !== jogador) {
+      enviar('atacar_satelite', { ids: sats, alvo: alvo.id });
+      sinal('atacar', px, py, alvo.id);
+      return;
+    }
+    const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
+    if (!ponto) return;
+    enviar('reposicionar_satelite', { ids: sats, x: ponto[0], y: ponto[1], z: ponto[2] });
+    o.sinalizar?.('satelite', normalizar(ponto));
+  };
+
   const ordemNoPonto = (px: number, py: number, tipo: OrdemNoTerreno) => {
+    if (tipo === 'mover') ordemDosSatelites(px, py);
+    if (minhas('unit').length + minhas('producer').length === 0) return;
     if (tipo === 'mover' && alvoDeCombateNoPonto(px, py)) return;
     if (tipo === 'mover' && trabalhoNoPonto(px, py)) return;
     if (tipo === 'mover' && recargaNoPonto(px, py)) return;
@@ -354,6 +441,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       const hovers = coletores();
       if (jazida && hovers.length > 0) {
         enviar('coletar', { ids: hovers, jazida: jazida.id });
+        sinal('coletar', px, py, jazida.id);
         const outros = minhas('unit').filter((id) => !hovers.includes(id));
         const alvo = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
         if (outros.length > 0 && alvo) {
@@ -371,13 +459,17 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     // O comando leva a direção do ponto (a simulação normaliza).
     const [x, y, z] = ponto;
     const unidades = minhas('unit');
+    const marca: SinalDeOrdem =
+      tipo === 'patrulhar' ? 'patrulhar' : tipo === 'atacar_mover' ? 'atacar' : 'mover';
     if (unidades.length > 0) {
       enviar(tipo, { ids: unidades, x, y, z });
+      o.sinalizar?.(marca, normalizar(ponto));
       return;
     }
     const produtores = minhas('producer');
     if (produtores.length > 0 && tipo === 'mover') {
       enviar('ponto_de_encontro', { ids: produtores, x, y, z });
+      o.sinalizar?.(marca, normalizar(ponto));
     }
   };
 
@@ -400,7 +492,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     atualizarHolograma(e.clientX, e.clientY);
     if (!inicio) return;
     if (!arrastando && Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y) > LIMIAR_ARRASTO_PX) {
-      arrastando = modo === 'normal';
+      arrastando = modo === 'normal' && !posicionando;
     }
     if (arrastando) mostrarCaixa({ x0: inicio.x, y0: inicio.y, x1: e.clientX, y1: e.clientY });
   };
@@ -417,6 +509,10 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     caixaDiv.hidden = true;
     if (posicionando) {
       arrastando = false;
+      if (posicionarLinha(origem, e.clientX, e.clientY)) {
+        if (!e.shiftKey) sairDaProducao();
+        return;
+      }
       confirmarPosicionamento(e.clientX, e.clientY, e.shiftKey);
       return;
     }
@@ -437,6 +533,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
           y: ponto[1],
           z: ponto[2],
         });
+        o.sinalizar?.('satelite', normalizar(ponto));
       }
       definirModo('normal');
       return;
@@ -550,6 +647,11 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       case 'KeyS':
         enviar('parar', { ids: minhas('unit') });
         break;
+      // §12.4 (Nave) Q: recolher ou liberar os mineradores (CMB-28).
+      case 'KeyQ':
+        if (doTipo('ship').length === 0) return;
+        enviar('recolher_mineradores', {});
+        break;
       case 'KeyH':
         enviar('manter_posicao', { ids: minhas('unit') });
         break;
@@ -591,8 +693,12 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         const plantadores = doTipo('hover_minelayer');
         const observadores = doTipo('hover_scout');
         const bases = doTipo('satellite_uplink');
+        // §12.4 (Portão) T: trancar ou destrancar (UNI-09).
+        const portoes = doTipo('gate');
+        if (portoes.length > 0) enviar('trancar_portao', { ids: portoes });
         if (
-          silos.length +
+          portoes.length +
+            silos.length +
             baterias.length +
             usinas.length +
             plantadores.length +
@@ -674,6 +780,9 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     },
     ordenarEm(d) {
       ordemNaDirecao(d, 'mover');
+    },
+    recolherMineradores() {
+      if (doTipo('ship').length > 0) enviar('recolher_mineradores', {});
     },
     dispose() {
       viewport.removeEventListener('pointerdown', apertou);

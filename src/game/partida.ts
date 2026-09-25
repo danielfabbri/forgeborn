@@ -30,6 +30,7 @@ import { trilhas } from '../audio/trilhas';
 import { falar } from '../audio/voz';
 import { textoDoAlerta } from '../ui/Alertas';
 import { type Alerta, CentralDeAlertas } from './alertas';
+import { estadoEm as estadoDoPouso, poseDaCinematica } from './cinematica';
 import { fimDaPartida } from './fimDePartida';
 import { irParaMenu, irParaPartida, lerPartidaDaUrl, novaSeed } from './navegacao';
 import { ligarEntradaCamera } from '../input/cameraInput';
@@ -176,6 +177,18 @@ export function iniciarPartida(): void {
   // TEC-19/FLX-13: preset gráfico e escala da interface valem na hora.
   const view = createView(viewport, PRESETS_GRAFICOS[configuracoes.value.grafico]);
   mountUi(uiRoot);
+  // FLX-09: a cinemática de pouso se pula com Esc, Espaço ou clique. Em captura e antes de tudo,
+  // para a tecla não abrir o menu de pausa nem virar ordem.
+  const pouso = { ativo: false, terminar: () => {} };
+  const pularPouso = (e: Event) => {
+    if (!pouso.ativo) return;
+    if (e instanceof KeyboardEvent && e.code !== 'Escape' && e.code !== 'Space') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    pouso.terminar();
+  };
+  window.addEventListener('keydown', pularPouso, { capture: true });
+  window.addEventListener('pointerdown', pularPouso, { capture: true });
   effect(() => {
     const c = configuracoes.value;
     const preset = PRESETS_GRAFICOS[c.grafico];
@@ -706,7 +719,7 @@ export function iniciarPartida(): void {
   window.addEventListener(
     'keydown',
     (e) => {
-      if (e.repeat || fimDePartida.value) return;
+      if (e.repeat || fimDePartida.value || pouso.ativo) return;
       if (e.code === 'Escape' && menuDePausa.value !== 'fechado') {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -1019,6 +1032,7 @@ export function iniciarPartida(): void {
   };
 
   const posicionarCamera = (dt: number): void => {
+    if (pouso.ativo && cameraDoPouso()) return;
     entradaCamera?.atualizar(dt);
     const pose = direto?.atualizar(performance.now()) ?? null;
     if (pose) {
@@ -1113,6 +1127,103 @@ export function iniciarPartida(): void {
       }
     }
   };
+
+  // FLX-09: cinemática de pouso na partida real (a cena de demonstração começa pousada).
+  let cameraDoPouso = (): boolean => false;
+  if (resolvida) {
+    // O tick 0 monta a partida (a Nave e o hover existem); depois a simulação para até o fim.
+    history.capture(sim.state);
+    sim.step();
+    const doJogador = (tipo: string) =>
+      sim.state.entities.find(
+        (id) =>
+          (getComponent(sim.state, id, 'structure')?.tipo === tipo ||
+            getComponent(sim.state, id, 'unit')?.tipo === tipo) &&
+          getComponent(sim.state, id, 'owner')?.nacao === jogador,
+      );
+    const nave = doJogador('ship');
+    const hover = doJogador('hover_explorer');
+    if (nave !== undefined) {
+      const zona = direcaoDe(getComponent(sim.state, nave, 'position')!);
+      const posNave = getComponent(sim.state, nave, 'position')!;
+      const posHover = hover !== undefined ? getComponent(sim.state, hover, 'position')! : null;
+      const inicio = performance.now();
+      const duracao_ms = param('duracao_pouso_s') * 1000;
+      let tocou = false;
+      pausado.value = true;
+      pouso.ativo = true;
+      document.body.classList.add('em-cinematica');
+      const dica = document.createElement('div');
+      dica.className = 'dica-pouso';
+      dica.dataset.testid = 'pouso';
+      dica.textContent = t('pouso.pular');
+      document.body.appendChild(dica);
+      pouso.terminar = () => {
+        if (!pouso.ativo) return;
+        pouso.ativo = false;
+        unidades.deslocamentoVisual.clear();
+        unidades.aberturaDaRampa.clear();
+        dica.remove();
+        document.body.classList.remove('em-cinematica');
+        centrarEm(camera, zona);
+        pausado.value = false;
+      };
+      cameraDoPouso = (): boolean => {
+        const f = (performance.now() - inicio) / duracao_ms;
+        if (f >= 1) {
+          pouso.terminar();
+          return false;
+        }
+        const e = estadoDoPouso(f);
+        unidades.deslocamentoVisual.set(nave, [
+          zona[0] * e.alturaDaNave,
+          zona[1] * e.alturaDaNave,
+          zona[2] * e.alturaDaNave,
+        ]);
+        unidades.aberturaDaRampa.set(nave, e.aberturaDaRampa);
+        if (hover !== undefined && posHover) {
+          const k = 1 - e.saidaDoHover;
+          unidades.deslocamentoVisual.set(hover, [
+            (posNave.x - posHover.x) * k,
+            (posNave.y - posHover.y) * k,
+            (posNave.z - posHover.z) * k,
+          ]);
+        }
+        const chao = alturaEm(pronto.mapa, zona);
+        if (e.poeira) {
+          // A poeira de regolito sobe em anel sob a Nave.
+          const r = R + chao + 0.5;
+          particulas.emitir(
+            {
+              origem: [zona[0] * r, zona[1] * r, zona[2] * r],
+              cima: zona,
+              n: 14,
+              velocidade: [4, 12],
+              espalhamento: 1.4,
+              vida_s: [1.2, 2.6],
+              cor: [0.52, 0.5, 0.47],
+              tamanho: 1.6,
+              gravidade: 1.62,
+            },
+            'poeira',
+          );
+        }
+        if (!tocou && e.alturaDaNave < 0.5) {
+          tocou = true;
+          tocarSom('explosao_grande', 0.7);
+        }
+        const pose = poseDaCinematica(zona, R, chao, f, e.alturaDaNave);
+        ceu.atualizar(zona, norteEm(zona), new Vector3(...pose.alvo));
+        view.camera.up.set(...pose.cima);
+        view.camera.position.set(...pose.olho);
+        pontoFocal.set(...pose.alvo);
+        view.camera.lookAt(pontoFocal);
+        view.camera.updateMatrixWorld();
+        view.focarSombras(pontoFocal, ceu.sol, ceu.terra);
+        return true;
+      };
+    }
+  }
 
   requestAnimationFrame((agora) => {
     ultimoQuadro = agora;

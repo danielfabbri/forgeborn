@@ -993,3 +993,24 @@ body.em-controle-direto .minimapa {
   cursor: pointer;
   margin-left: 12px;
 }
+
+/* FLX-09: durante a cinemática de pouso, só a dica de pular. */
+body.em-cinematica #ui {
+  display: none;
+}
+.dica-pouso {
+  position: fixed;
+  right: 20px;
+  bottom: 18px;
+  z-index: 30;
+  font:
+    13px/1.4 ui-monospace,
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: rgba(5, 10, 18, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 3px;
+  padding: 4px 10px;
+  pointer-events: none;
+}

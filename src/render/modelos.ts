@@ -396,9 +396,8 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
       m.add(new ConeGeometry(0.9, 1.2, 12, 1, true), METAL, { x, z, y: 1.6 });
       m.cilindro(0.55, 0.05, { brilho: BRASA }, { x, z, y: 1.0 }, 12);
     }
-    // Rampa frontal.
-    m.caixa(4.2, 0.25, 3.2, METAL, { x: 7.2, y: 1.0, rz: 0.42 });
-    m.caixa(0.15, 0.4, 3.2, GRAFITE, { x: 8.9, y: 0.25, rz: 0.42 });
+    // A rampa frontal é uma peça à parte (geometriaDaRampa), para abrir no pouso (FLX-09).
+    m.caixa(0.6, 2.2, 3.4, GRAFITE, { x: 5.3, y: 1.2 });
     // Antena de dobra.
     m.cilindro(0.18, 5.5, METAL, { x: -1.5, y: 8.3 });
     m.add(new ConeGeometry(1.6, 0.8, 16, 1, true), METAL, { x: -1.5, y: 13.6, rx: Math.PI });
@@ -520,6 +519,26 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     return olho(m, 0, 0.22, 0, 0.12).pronta();
   },
 };
+
+/**
+ * FLX-09: rampa frontal da Nave, com a dobradiça na origem e o comprimento em +x. Aberta, ela
+ * desce até o chão (ANGULO_RAMPA_ABERTA); fechada, fica de pé contra o casco.
+ */
+export const DOBRADICA_DA_RAMPA: [number, number, number] = [5.28, 1.9, 0];
+export const ANGULO_RAMPA_ABERTA = -0.42;
+export const ANGULO_RAMPA_FECHADA = Math.PI / 2 - 0.08;
+
+let rampa: BufferGeometry | null = null;
+export function geometriaDaRampa(): BufferGeometry {
+  if (!rampa) {
+    const m = new Montagem();
+    m.caixa(4.2, 0.25, 3.2, METAL, { x: 2.1, y: -0.25 });
+    m.caixa(0.15, 0.4, 3.2, GRAFITE, { x: 4.15, y: -0.4 });
+    for (const z of [-1.2, 0, 1.2]) m.caixa(3.6, 0.04, 0.12, 'nacao', { x: 2.0, y: 0.0, z });
+    rampa = m.pronta();
+  }
+  return rampa;
+}
 
 export const TIPOS_DE_MODELO = Object.keys(CONSTRUTORES) as TipoDeModelo[];
 

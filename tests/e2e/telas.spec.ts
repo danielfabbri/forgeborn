@@ -176,6 +176,36 @@ test.describe('M10: partida', () => {
     await page.getByTestId('selecao-de-modo').waitFor({ timeout: 20_000 });
   });
 
+  test('FLX-09: pouso com a simulação parada; Espaço pula e o relógio começa em 0:00', async ({
+    page,
+  }) => {
+    const config = {
+      nacaoJogador: 'bra',
+      oponentes: [{ nacao: 'usa', dificuldade: 'facil' }],
+      cenario: 'lua',
+      tamanho: 'm',
+      mapa: 'mare_tranquillitatis',
+      zonaPouso: 0,
+      recursos: 'padrao',
+      nevoa: 'normal',
+      vitoria: 'eliminacao',
+      tempoLimiteMin: 30,
+      velocidade: 1,
+    };
+    await page.goto(`/?partida=${encodeURIComponent(JSON.stringify({ config, seed: 5 }))}`);
+    await page.getByTestId('pouso').waitFor({ timeout: 30_000 });
+    // O HUD fica escondido e o relógio parado durante a cinemática.
+    await expect(page.getByTestId('barra-superior')).toBeHidden();
+    await page.waitForTimeout(2000);
+    await page.keyboard.press('Space');
+    await expect(page.getByTestId('pouso')).toHaveCount(0);
+    await expect(page.getByTestId('barra-superior')).toBeVisible();
+    await expect(page.getByTestId('relogio')).toHaveText('0:00');
+    // Espaço não abriu o menu de pausa.
+    await expect(page.getByTestId('menu-de-pausa')).toHaveCount(0);
+    await expect(page.getByTestId('relogio')).toHaveText('0:02', { timeout: 5_000 });
+  });
+
   test('REG-21/REG-20: pausa tática aceita ordens; velocidade 1,5× acelera o relógio', async ({
     page,
   }) => {

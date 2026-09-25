@@ -30,7 +30,14 @@ import {
 import type { PositionHistory, Vec3 } from './interpolation';
 import { norteEm } from '../sim/map/esfera';
 import type { Fantasma } from './fantasmas';
-import { geometriaDoModelo, type TipoDeModelo } from './modelos';
+import {
+  ANGULO_RAMPA_ABERTA,
+  ANGULO_RAMPA_FECHADA,
+  DOBRADICA_DA_RAMPA,
+  geometriaDaRampa,
+  geometriaDoModelo,
+  type TipoDeModelo,
+} from './modelos';
 
 /** Corpo desenhado neste quadro, na posição interpolada; usado também pela seleção. */
 export interface CorpoDesenhado {
@@ -231,6 +238,11 @@ export class UnidadesRender {
     cima: [number, number, number];
     raio: number;
   }> = [];
+  /** FLX-09: abertura da rampa de cada Nave (0 fechada, 1 aberta; sem entrada, aberta). */
+  readonly aberturaDaRampa = new Map<EntityId, number>();
+  /** FLX-09: deslocamento só visual (mundo) de um corpo, para a cinemática de pouso. */
+  readonly deslocamentoVisual = new Map<EntityId, [number, number, number]>();
+  private loteDaRampa: Lote | null = null;
   /** Corpo que não é desenhado (o pilotado em 1ª pessoa). */
   oculto: EntityId | null = null;
   /** VIS-04: fantasmas em cinza translúcido. */
@@ -324,6 +336,12 @@ export class UnidadesRender {
       const frente = loc
         ? { ...history.interpolateRumo(id, loc.rumo, alpha, this.scratchRumo) }
         : null;
+      const deslocamento = this.deslocamentoVisual.get(id);
+      if (deslocamento) {
+        p.x += deslocamento[0];
+        p.y += deslocamento[1];
+        p.z += deslocamento[2];
+      }
       const r = Math.hypot(p.x, p.y, p.z) || 1;
       const corpo: CorpoDesenhado = {
         id,
@@ -373,6 +391,7 @@ export class UnidadesRender {
     }
 
     this.preencher(this.lotes, porTipo, (tipo) => this.lote(tipo));
+    this.desenharRampas(porTipo.get('ship') ?? []);
     this.preencher(this.hologramas, emObra, (tipo) => this.holograma(tipo));
     this.preencher(this.fantasmas, lembrados, (tipo) => this.fantasma(tipo));
   }
@@ -413,6 +432,35 @@ export class UnidadesRender {
       lote.cores.needsUpdate = true;
       lote.cortes.needsUpdate = true;
     }
+  }
+
+  /** FLX-09: a rampa de cada Nave, girada na dobradiça pela abertura. */
+  private desenharRampas(
+    naves: ReadonlyArray<{ corpo: CorpoDesenhado; frente: Vec3 | null }>,
+  ): void {
+    this.loteDaRampa ??= new Lote(this.scene, geometriaDaRampa(), this.material, 8);
+    const lote = this.loteDaRampa;
+    lote.garantir(Math.max(1, naves.length));
+    const giro = new Matrix4();
+    const dobradica = new Matrix4().makeTranslation(...DOBRADICA_DA_RAMPA);
+    naves.forEach(({ corpo }, k) => {
+      this.cima.set(...corpo.cima);
+      this.frente.set(...norteEm(corpo.cima));
+      this.frente.addScaledVector(this.cima, -this.frente.dot(this.cima)).normalize();
+      this.lado.crossVectors(this.frente, this.cima);
+      this.matriz.makeBasis(this.frente, this.cima, this.lado);
+      this.matriz.setPosition(corpo.x, corpo.y, corpo.z);
+      const a = this.aberturaDaRampa.get(corpo.id) ?? 1;
+      giro.makeRotationZ(ANGULO_RAMPA_FECHADA + (ANGULO_RAMPA_ABERTA - ANGULO_RAMPA_FECHADA) * a);
+      this.matriz.multiply(dobradica).multiply(giro);
+      lote.malha.setMatrixAt(k, this.matriz);
+      this.cor(corpo.nacao).toArray(lote.cores.array, k * 3);
+      lote.cortes.array[k] = 0;
+    });
+    lote.malha.count = naves.length;
+    lote.malha.instanceMatrix.needsUpdate = true;
+    lote.cores.needsUpdate = true;
+    lote.cortes.needsUpdate = true;
   }
 
   /** ART-06: as unidades impressas neste tick começam a animação de impressão. */

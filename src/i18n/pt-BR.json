@@ -316,5 +316,6 @@
   "config.daltonismo.nenhum": "Desligado",
   "config.daltonismo.protanopia": "Protanopia",
   "config.daltonismo.deuteranopia": "Deuteranopia",
-  "config.daltonismo.tritanopia": "Tritanopia"
+  "config.daltonismo.tritanopia": "Tritanopia",
+  "pouso.pular": "Esc, Espaço ou clique: pular o pouso"
 }

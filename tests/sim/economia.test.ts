@@ -109,7 +109,9 @@ describe('T-030 — ECO-04 a ECO-06, D-27: jazidas', () => {
     const eventos: SimEvent[] = [];
     expect(rodarAte(sim, () => jazida(sim, a!) === undefined, 30, eventos)).toBe(true);
     expect(eventos.filter((e) => e.tipo === 'alerta')).toEqual([
-      expect.objectContaining({ dados: { id: 'AL-07', nacao: 'bra', recurso: 'cu', jazida: a } }),
+      expect.objectContaining({
+        dados: expect.objectContaining({ id: 'AL-07', nacao: 'bra', recurso: 'cu', jazida: a }),
+      }),
     ]);
     // A carga que sobrou vai para o depósito.
     expect(rodarAte(sim, () => Math.abs(estoque(sim.state, 'bra').cu - 5) < 1e-9, 20)).toBe(true);

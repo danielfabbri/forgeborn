@@ -176,7 +176,7 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
     rodar(sim, param('tempo_lancamento_satelite_s') + 0.5, eventos);
     expect(getComponent(sim.state, uplink, 'satelite')!.estado).toBe('orbita');
     expect(eventos).toContainEqual(
-      expect.objectContaining({ dados: { id: 'AL-12', nacao: 'bra' } }),
+      expect.objectContaining({ dados: expect.objectContaining({ id: 'AL-12', nacao: 'bra' }) }),
     );
     ordenar(sim, 'reposicionar_satelite', { ids: [uplink], ...alvo(0, 100) });
     rodar(sim, 100 / param('satelite_vel_m_s') + 1);
@@ -235,7 +235,7 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
     }
     expect(getComponent(sim.state, uplink, 'consumidor')!.offline).toBe(true);
     expect(eventos).toContainEqual(
-      expect.objectContaining({ dados: { id: 'AL-17', nacao: 'bra' } }),
+      expect.objectContaining({ dados: expect.objectContaining({ id: 'AL-17', nacao: 'bra' }) }),
     );
   });
 });

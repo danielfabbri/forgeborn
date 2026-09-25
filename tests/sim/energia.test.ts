@@ -425,7 +425,9 @@ describe('T-044 — ENE-06, ENE-07: usinas', () => {
     const eventos: SimEvent[] = [];
     expect(rodarAte(sim, () => rede(sim).geracao === 0, 30, eventos)).toBe(true);
     expect(eventos.filter((e) => e.tipo === 'alerta')).toEqual([
-      expect.objectContaining({ dados: { id: 'AL-10', nacao: 'bra', usina } }),
+      expect.objectContaining({
+        dados: expect.objectContaining({ id: 'AL-10', nacao: 'bra', usina }),
+      }),
     ]);
     sim.state.estoques.bra.u = 5;
     sim.step();

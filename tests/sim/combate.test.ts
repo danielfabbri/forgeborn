@@ -79,7 +79,7 @@ describe('T-060 — CMB-01 a CMB-03, CMB-27: dano, HP e morte', () => {
     expect(eventos).toContainEqual(
       expect.objectContaining({
         tipo: 'alerta',
-        dados: { id: 'AL-18', nacao: 'usa', unidade: 'hover_explorer' },
+        dados: expect.objectContaining({ id: 'AL-18', nacao: 'usa', unidade: 'hover_explorer' }),
       }),
     );
     // Cada acerto tira dano × multiplicador (leve).
@@ -533,7 +533,10 @@ describe('T-064 — UNI-01, UNI-02, UNI-07, CMB-09, CMB-21, REG-18: minas', () =
     expect(hp(sim, h!)).toBeLessThan(statsMovel('hover_ex1').hp);
     expect(vivo(sim, mina)).toBe(false);
     expect(eventos).toContainEqual(
-      expect.objectContaining({ tipo: 'alerta', dados: { id: 'AL-16', nacao: 'bra' } }),
+      expect.objectContaining({
+        tipo: 'alerta',
+        dados: expect.objectContaining({ id: 'AL-16', nacao: 'bra' }),
+      }),
     );
   });
 

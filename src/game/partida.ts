@@ -33,6 +33,7 @@ import {
   configuracoes,
   PRESETS_GRAFICOS,
 } from './configuracoes';
+import { type Alerta, CentralDeAlertas } from './alertas';
 import { fimDaPartida } from './fimDePartida';
 import { irParaMenu, irParaPartida, lerPartidaDaUrl, novaSeed } from './navegacao';
 import { ligarEntradaCamera } from '../input/cameraInput';
@@ -98,6 +99,8 @@ import { mountUi } from '../ui/mount';
 import {
   acoesDaPartida,
   acoesDaSelecao,
+  acoesDosAlertas,
+  alertasVisiveis,
   controleDireto,
   sinalPerdido,
   barraSuperior,
@@ -499,6 +502,10 @@ export function iniciarPartida(): void {
 
   const atualizarHud = (agora: number): void => {
     atualizarHudDireto();
+    alertasVisiveis.value = centralDeAlertas.visiveis(
+      sim.state.tick / sim.tickHz,
+      DURACAO_ALERTA_S,
+    );
     const transito = emTransito(sim.state, jogador);
     const noEstoque = estoque(sim.state, jogador);
     barraSuperior.value = {
@@ -693,6 +700,7 @@ export function iniciarPartida(): void {
     }
   };
   acoesDaPartida.continuar = continuar;
+  acoesDaPartida.abrirMenu = () => abrirMenuDePausa();
   acoesDaPartida.reiniciar = () => recarregarPartida(false);
   acoesDaPartida.jogarDeNovo = () => recarregarPartida(true);
   acoesDaPartida.sair = () => irParaMenu();
@@ -703,6 +711,41 @@ export function iniciarPartida(): void {
     continuar();
   };
 
+  // UI-06: alertas da simulação e os do que o jogador vê (fora da tela, rede, reserva, ociosos).
+  const centralDeAlertas = new CentralDeAlertas({
+    jogador,
+    naTela: (id) => {
+      const c = unidades.get(id);
+      if (!c) return false;
+      const olho = view.camera.position;
+      const doLado =
+        (olho.x - c.x) * c.cima[0] + (olho.y - c.y) * c.cima[1] + (olho.z - c.z) * c.cima[2] > 0;
+      if (!doLado) return false;
+      const v = new Vector3(c.x, c.y, c.z).project(view.camera);
+      return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
+    },
+  });
+  /** AUD-03/AUD-05: som e voz de cada alerta novo (T-126). */
+  const aoAlertar = (alerta: Alerta): void => {
+    void alerta;
+  };
+  /** UI-06 (apresentação): cada alerta fica 10 s na pilha. */
+  const DURACAO_ALERTA_S = 10;
+  const irAoAlerta = (a: Alerta): void => {
+    if (!a.local || direto?.ativo != null) return;
+    centrarEm(camera, a.local);
+  };
+  acoesDosAlertas.irPara = irAoAlerta;
+  // UI-06: Espaço vai ao último alerta.
+  window.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space' || e.repeat || direto?.ativo != null) return;
+    if (menuDePausa.value !== 'fechado' || fimDePartida.value) return;
+    const ultimo = centralDeAlertas.ultimoComLocal;
+    if (!ultimo) return;
+    e.preventDefault();
+    irAoAlerta(ultimo);
+  });
+
   const loop = createFixedLoop({
     tickHz: sim.tickHz,
     step: () => {
@@ -711,6 +754,13 @@ export function iniciarPartida(): void {
       const eventos = sim.step();
       tickTotalMs += performance.now() - inicio;
       avisar(eventos);
+      for (const alerta of centralDeAlertas.processar(
+        eventos,
+        sim.state,
+        sim.state.tick / sim.tickHz,
+      )) {
+        aoAlertar(alerta);
+      }
       combate.registrar(sim.state, eventos, performance.now());
       tickCount++;
     },

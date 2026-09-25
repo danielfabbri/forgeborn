@@ -4,6 +4,7 @@
  * AL-10. Desligar é imediato; religar leva `nuclear_religar_s`. (A solar, ENE-07, é só geração.)
  */
 import { entitiesWith, getComponent, isAlive } from '../core/entities';
+import { direcaoDe } from '../units/superficie';
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import { param } from '../data';
 
@@ -28,7 +29,12 @@ export function passoUsinas(ctx: SystemContext): void {
       reator.semUranio = false;
     } else if (!reator.semUranio) {
       reator.semUranio = true;
-      ctx.emit('alerta', { id: 'AL-10', nacao, usina: id });
+      ctx.emit('alerta', {
+        id: 'AL-10',
+        nacao,
+        usina: id,
+        d: direcaoDe(getComponent(state, id, 'position')!),
+      });
     }
   }
 }

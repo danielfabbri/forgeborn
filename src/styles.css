@@ -936,3 +936,60 @@ body.em-controle-direto .minimapa {
   color: #ff5a4f;
   text-shadow: 0 0 12px rgba(255, 90, 79, 0.7);
 }
+
+/* UI-06: pilha de alertas à esquerda, acima do minimapa. */
+.alertas {
+  position: absolute;
+  left: 8px;
+  bottom: 196px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 340px;
+  pointer-events: auto;
+}
+.alerta {
+  font:
+    12px/1.4 ui-monospace,
+    Consolas,
+    monospace;
+  text-align: left;
+  color: #dce9ff;
+  background: rgba(5, 10, 18, 0.85);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-left: 3px solid #7fa8d8;
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+  animation: alerta-entra 0.25s ease-out;
+}
+.alerta:disabled {
+  cursor: default;
+}
+.alerta.media {
+  border-left-color: #ffd27a;
+}
+.alerta.alta {
+  border-left-color: #ff8a3d;
+}
+.alerta.critica {
+  border-left-color: #ff3b30;
+  color: #ffd8d4;
+}
+@keyframes alerta-entra {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+.barra-superior .botao-menu {
+  pointer-events: auto;
+  font: inherit;
+  color: #cfe3ff;
+  background: rgba(40, 70, 120, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.45);
+  border-radius: 3px;
+  padding: 1px 10px;
+  cursor: pointer;
+  margin-left: 12px;
+}

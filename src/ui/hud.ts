@@ -1,5 +1,6 @@
 import { signal } from '@preact/signals';
 import type { EntityId } from '../sim';
+import type { Alerta } from '../game/alertas';
 import type { FimDaPartida } from '../game/fimDePartida';
 import type { LeituraDaRede } from '../sim/energia';
 
@@ -52,12 +53,15 @@ export const menuDePausa = signal<'fechado' | 'aberto' | 'configuracoes'>('fecha
 
 /** Ações do menu de pausa e do fim de partida, ligadas pela partida. */
 export const acoesDaPartida: {
+  /** UI-01: o botão Menu da barra superior abre o menu de pausa. */
+  abrirMenu: () => void;
   continuar: () => void;
   reiniciar: () => void;
   renderSe: () => void;
   jogarDeNovo: () => void;
   sair: () => void;
 } = {
+  abrirMenu: () => {},
   continuar: () => {},
   reiniciar: () => {},
   renderSe: () => {},
@@ -88,6 +92,10 @@ export interface EstadoDoControleDireto {
 export const controleDireto = signal<EstadoDoControleDireto | null>(null);
 /** CTL-13: "SINAL PERDIDO" na tela. */
 export const sinalPerdido = signal(false);
+
+/** UI-06: os alertas visíveis (mais recente primeiro) e o clique que leva ao local. */
+export const alertasVisiveis = signal<Alerta[]>([]);
+export const acoesDosAlertas: { irPara: (a: Alerta) => void } = { irPara: () => {} };
 
 /** Canvas do retrato 3D (UI-03), montado pelo painel e desenhado pelo render. */
 export const canvasDoRetrato = signal<HTMLCanvasElement | null>(null);

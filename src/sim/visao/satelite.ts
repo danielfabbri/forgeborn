@@ -49,7 +49,7 @@ export function passoSatelites(ctx: SystemContext): void {
       s.timer_s -= dt;
       if (s.timer_s <= 1e-9) {
         s.estado = 'orbita';
-        ctx.emit('alerta', { id: 'AL-12', nacao });
+        ctx.emit('alerta', { id: 'AL-12', nacao, d: s.ponto });
       }
       continue;
     }
@@ -57,7 +57,7 @@ export function passoSatelites(ctx: SystemContext): void {
     consumidor.demanda_en_s = statsEstrutura('satellite_uplink').manutencao_en_s;
     if (consumidor.offline && !s.offlineAvisado) {
       s.offlineAvisado = true;
-      ctx.emit('alerta', { id: 'AL-17', nacao });
+      ctx.emit('alerta', { id: 'AL-17', nacao, d: s.ponto });
     } else if (!consumidor.offline) {
       s.offlineAvisado = false;
     }

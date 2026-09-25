@@ -86,8 +86,9 @@ function nacoesInteressadas(ctx: SystemContext, id: EntityId): NacaoId[] {
 /** ECO-05: jazida chegou a 0 — some e dispara AL-07 para quem minerava nela. */
 export function esgotar(ctx: SystemContext, id: EntityId): void {
   const jazida = getComponent(ctx.state, id, 'jazida')!;
+  const d = direcaoDe(getComponent(ctx.state, id, 'position')!);
   for (const nacao of nacoesInteressadas(ctx, id)) {
-    ctx.emit('alerta', { id: 'AL-07', nacao, recurso: jazida.recurso, jazida: id });
+    ctx.emit('alerta', { id: 'AL-07', nacao, recurso: jazida.recurso, jazida: id, d });
   }
   destroyEntity(ctx.state, id);
   ctx.state.versaoObstaculos++;

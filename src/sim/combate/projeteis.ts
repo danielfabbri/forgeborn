@@ -157,7 +157,7 @@ function passoMinas(ctx: SystemContext): void {
     if (!acionou) continue;
     destroyEntity(state, id);
     detonar(ctx, 'mine_blast', dm, null, dono, null);
-    ctx.emit('alerta', { id: 'AL-16', nacao: dono });
+    ctx.emit('alerta', { id: 'AL-16', nacao: dono, d: dm });
   }
 }
 

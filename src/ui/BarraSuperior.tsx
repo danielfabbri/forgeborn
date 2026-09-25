@@ -1,9 +1,9 @@
 import { t, type TextKey } from '../i18n';
-import { barraSuperior } from './hud';
+import { acoesDaPartida, barraSuperior } from './hud';
 
 const COR_DO_INDICADOR = { verde: '#46e08a', amarelo: '#f7c948', vermelho: '#ff4d4d' } as const;
 
-/** UI-01: recursos (com o que está em trânsito), energia (ENE-22), corpos e relógio. */
+/** UI-01: recursos (com o que está em trânsito), energia (ENE-22), corpos, relógio e menu. */
 export function BarraSuperior() {
   const barra = barraSuperior.value;
   const energia = barra.energia;
@@ -34,6 +34,13 @@ export function BarraSuperior() {
       <span class="relogio" data-testid="relogio">
         {barra.relogio}
       </span>
+      <button
+        class="botao-menu"
+        data-testid="botao-menu"
+        onClick={() => acoesDaPartida.abrirMenu()}
+      >
+        {t('barra.menu')}
+      </button>
     </div>
   );
 }

@@ -176,7 +176,7 @@ function morrer(ctx: SystemContext, id: EntityId): void {
   }
   ctx.emit('morte', { id, tipo, nacao, por });
   if (nacao && getComponent(state, id, 'unit') && !autodestruicao) {
-    ctx.emit('alerta', { id: 'AL-18', nacao, unidade: tipo });
+    ctx.emit('alerta', { id: 'AL-18', nacao, unidade: tipo, d });
   }
   if (tipo && !getComponent(state, id, 'mine')) criarDestroco(ctx, id, tipo, d);
   removerCorpo(ctx, id);

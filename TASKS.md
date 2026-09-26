@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.18.0 |
+| Derivado de | `SPEC.md` v0.19.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -29,16 +29,16 @@
 | M0 Fundação | T-000 – T-008 | Projeto roda; dados gerados do SPEC; simulação headless determinística |
 | M1 Mundo | T-010 – T-016 | Planeta lunar gerado por seed, grades, câmera RTS |
 | M2 Entidades e movimento | T-020 – T-026 | Selecionar e mover unidades placeholder com pathfinding |
-| M3 Economia | T-030 – T-036 | Coleta → entrega → estoque, com diretiva, silo e reciclagem |
-| M4 Energia | T-040 – T-047 | Rede, baterias, recarga, usinas e Bateria Móvel |
+| M3 Economia | T-030 – T-037 | Coleta → entrega → estoque, com diretiva, silo e reciclagem |
+| M4 Energia | T-040 – T-048 | Rede, baterias, recarga, usinas e Bateria Móvel |
 | M5 Produção | T-050 – T-058 | Filas, construção, assistência, reparo e início de partida |
 | M6 Combate | T-060 – T-068 | Armas, dano, minas, explosões, eliminação e invariantes |
 | M7 Visão | T-070 – T-076 | Névoa de 3 estados, Sentinela, satélite, minimapa |
 | M8 HUD | T-080 – T-087 | Interface completa em pt-BR |
 | M9 IA | T-090 – T-095 | 4 dificuldades × 4 personalidades; IA × IA estável |
-| M10 Telas e Free Battle | T-100 – T-107 | **MVP: Free Battle Lua jogável do início ao fim** |
+| M10 Telas e Free Battle | T-100 – T-108 | **MVP: Free Battle Lua jogável do início ao fim** |
 | M11 Controle direto | T-110 – T-113 | 1ª e 3ª pessoa com Sincronia |
-| M12 Arte e áudio | T-120 – T-127 | Visual e som finais da Lua |
+| M12 Arte e áudio | T-120 – T-128 | Visual e som finais da Lua |
 | M13 Campanha | T-130 – T-135 | Universo + missões 1–2 → **v1.0** |
 | M14 Release web | T-140 – T-143 | Performance, compatibilidade e deploy |
 | M15 Pós-v1 | T-150 – T-159 | Cenários e missões 3–8, salvar partida, inglês |
@@ -138,6 +138,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: só recebe descargas ancorado; ciclo automático no `limiar_ciclo_silo_pct`; a carga só conta depois de descarregar num depósito; hovers se redirecionam enquanto o silo está fora.
 - [x] **T-036 — Destroços e reciclagem** · M · Spec: ECO-27 – ECO-29 · Dep: T-032, T-060 · Feito: 2026-09-24
   - Aceite: destroço = piso(receita × `rendimento_destroco_pct`%) por recurso; some no prazo; a sucata vira os recursos certos ao ser descarregada; o destroço do silo inclui `rendimento_carga_silo_pct`% da carga.
+- [ ] **T-037 — Silo Móvel sem ancorar** · M · Spec: ECO-10, ECO-22 – ECO-24, CTL-07, UI-14, D-60 · Dep: T-035
+  - Aceite: o silo recebe parado ou andando (menos descarregando); descarrega sozinho ao encostar na Nave ou num Armazém; clique direito dos hovers no silo descarrega qualquer carga e eles voltam a minerar, com sinalizador de descarregar.
 
 ## M4 — Energia
 
@@ -157,6 +159,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: INV-09 e INV-10 verdes em `tests/balance/`.
 - [x] **T-047 — Recarga na Bateria Móvel pelo clique direito** · P · Spec: CTL-07, ENE-18, D-57 · Dep: T-045 · Feito: 2026-09-25
   - Aceite: clique direito na Bateria Móvel própria leva as unidades selecionadas até ela e as recarrega com qualquer nível, até 100%, antes das demais.
+- [ ] **T-048 — Bateria Móvel encostada, carregar unidade e brilho** · M · Spec: ENE-18, ENE-23, ENE-24, D-59 · Dep: T-047
+  - Aceite: suporte só para unidades encostadas; clique direito numa unidade própria com a Bateria Móvel selecionada leva a bateria até ela e a enche até 100%; brilho ligado/desligado e botão no cartão; 2000 EN.
 
 ## M5 — Produção e construção
 
@@ -269,6 +273,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite (**marco MVP**): teste E2E (Playwright) abre o jogo, inicia um Free Battle na Lua contra IA Fácil, confere o HUD, se rende e vê a tela de derrota com estatísticas; sessão manual de 20 min contra IA Normal sem erros no console.
 - [x] **T-107 — Botões de parados e barras só do jogador** · P · Spec: UI-07, UI-15, D-58 · Dep: T-084 · Feito: 2026-09-25
   - Aceite: botões fixos contam mineradores e impressoras parados e o clique seleciona e centraliza o próximo; unidades de outras nações não mostram barras; AL-10 respeita a recarga de 120 s.
+- [ ] **T-108 — Barras só nas selecionadas e cartões de ação** · P · Spec: UI-07, UI-16, D-61, D-62 · Dep: T-107
+  - Aceite: sem Tab, barras só nas unidades selecionadas; cartão do Hover de Plantio de Minas com a foto da mina que entra no modo de plantar; cartão da Bateria Móvel com o botão do suporte.
 
 ## M11 — Controle direto
 
@@ -290,6 +296,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: trilhas por contexto com transição cruzada e arquivos faltando pulados; SFX sintetizados por unidade e interface; voz TTS pt-BR com legenda; volumes por canal nas Configurações.
 - [x] **T-127 — Acessibilidade** · M · Spec: UI-11, UI-12 · Dep: T-080 · Feito: 2026-09-25 (paletas daltônicas a partir da Okabe-Ito; legendas pela pilha de alertas; escala, 0,75× e pausa tática já existiam)
 
+- [ ] **T-128 — Base de Lançamento com torre vertical** · P · Spec: §12 (visual da Base de Lançamento) · Dep: T-121
+  - Aceite: o modelo tem uma torre vertical coerente com a subida do satélite.
 ## M13 — Campanha (v1.0)
 
 - [ ] **T-130 — Persistência** · P · Spec: TEC-21, CAM-04 · Dep: T-102

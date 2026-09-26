@@ -144,7 +144,7 @@
     "raio_m": 1.8,
     "visao_m": 14,
     "deteccao_m": 0,
-    "bateria_en": 1200,
+    "bateria_en": 2000,
     "mov_en_s": 0.6,
     "pairar_en_s": 0,
     "arma": null

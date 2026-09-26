@@ -146,11 +146,6 @@
   },
   {
     "contexto": "mobile_silo",
-    "tecla": "T",
-    "acao": "Ancorar ou desancorar"
-  },
-  {
-    "contexto": "mobile_silo",
     "tecla": "G",
     "acao": "Descarregar agora"
   },

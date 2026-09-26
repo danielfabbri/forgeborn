@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.18.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.19.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -319,8 +319,6 @@ export type ParametrosChave =
   | 'diretiva_u_pct'
   | 'capacidade_silo_u'
   | 'taxa_descarga_silo_u_s'
-  | 'tempo_ancorar_silo_s'
-  | 'tempo_desancorar_silo_s'
   | 'limiar_ciclo_silo_pct'
   | 'rendimento_destroco_pct'
   | 'rendimento_carga_silo_pct'

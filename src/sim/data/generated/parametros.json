@@ -186,18 +186,6 @@
     "descricao": "Descarga do silo no depósito"
   },
   {
-    "chave": "tempo_ancorar_silo_s",
-    "valor": 2,
-    "unidade": "s",
-    "descricao": "Ancorar"
-  },
-  {
-    "chave": "tempo_desancorar_silo_s",
-    "valor": 1,
-    "unidade": "s",
-    "descricao": "Desancorar"
-  },
-  {
     "chave": "limiar_ciclo_silo_pct",
     "valor": 100,
     "unidade": "%",
@@ -349,9 +337,9 @@
   },
   {
     "chave": "bateria_movel_raio_m",
-    "valor": 10,
+    "valor": 1,
     "unidade": "m",
-    "descricao": "Raio do modo suporte"
+    "descricao": "Folga casco a casco para o suporte (encostada)"
   },
   {
     "chave": "bateria_movel_max_alvos",

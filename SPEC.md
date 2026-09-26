@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.18.0 — rascunho para aprovação |
+| Versão do SPEC | 0.19.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -318,7 +318,7 @@ flowchart LR
 ### 5.3 Ciclo de coleta
 
 - **ECO-09** — O Hover de Exploração minera um tipo de recurso por vez, à `taxa_mineracao_u_s` do recurso, até `carga_hover_u`. Para minerar, ocupa uma vaga (ECO-04) e fica com o casco a até `distancia_mineracao_m` da borda da jazida (D-27).
-- **ECO-10** — Cheio (ou com a jazida esgotada e carga > 0), o hover leva a carga ao **ponto de entrega** mais próximo pelo caminho: Nave Inicial, Armazém ou Silo Móvel ancorado com espaço.
+- **ECO-10** — Cheio (ou com a jazida esgotada e carga > 0), o hover leva a carga ao **ponto de entrega** mais próximo pelo caminho: Nave Inicial, Armazém ou Silo Móvel parado com espaço (D-60).
 - **ECO-11** — Descarregar leva `tempo_descarga_hover_s`, com o casco do hover a até `raio_deposito_m` da borda do ponto de entrega.
 - **ECO-12** — Depois de descarregar, o hover volta à mesma jazida (ou à mais próxima do mesmo tipo, conforme ECO-06).
 - **ECO-13** — Hover sob ataque foge para a estrutura própria armada mais próxima (ou para a Nave) e retoma a tarefa após `fuga_hover_retorno_s` sem sofrer dano. Desligável nas Diretivas (UI-02).
@@ -339,9 +339,9 @@ flowchart LR
 
 ### 5.6 Silo Móvel (logística avançada)
 
-- **ECO-22** — O Silo Móvel só recebe descargas de hovers quando está **ancorado** (ancorar leva `tempo_ancorar_silo_s`; desancorar, `tempo_desancorar_silo_s`). Guarda até `capacidade_silo_u` de qualquer mistura de recursos.
-- **ECO-23** — Carga no silo está em trânsito (ECO-15). Só vira recurso quando o silo descarrega na Nave ou num Armazém, a `taxa_descarga_silo_u_s`.
-- **ECO-24** — **Ciclo automático** (ligado por padrão): ao atingir `limiar_ciclo_silo_pct` da capacidade, o silo desancora, vai ao depósito mais próximo, descarrega e volta a ancorar no mesmo ponto. O jogador PODE mudar o limiar ou desligar o ciclo.
+- **ECO-22** — O Silo Móvel não ancora: sempre recebe descargas de hovers, exceto enquanto ele mesmo descarrega num depósito. Guarda até `capacidade_silo_u` de qualquer mistura de recursos. Hovers com carga selecionados e o clique direito no silo próprio: cada um vai até ele, descarrega o que tem (qualquer quantidade) e volta a minerar (D-60).
+- **ECO-23** — Carga no silo está em trânsito (ECO-15). Só vira recurso quando o silo descarrega na Nave ou num Armazém, a `taxa_descarga_silo_u_s`. O silo com carga que encosta num depósito próprio (casco a até `raio_deposito_m` da borda) descarrega sozinho, parado ali (D-60).
+- **ECO-24** — **Ciclo automático** (ligado por padrão): ao atingir `limiar_ciclo_silo_pct` da capacidade, o silo parado vai ao depósito mais próximo, descarrega e volta ao mesmo ponto. O jogador PODE mudar o limiar ou desligar o ciclo.
 - **ECO-25** — Enquanto o silo está fora, os hovers usam o próximo ponto de entrega disponível.
 - **ECO-26** — Um silo destruído deixa no destroço `rendimento_carga_silo_pct`% da carga, além do rendimento normal de destroço (§5.7).
 
@@ -374,8 +374,6 @@ flowchart LR
 | diretiva_u_pct | 3 | % | Diretiva padrão: Urânio |
 | capacidade_silo_u | 200 | u | Capacidade do Silo Móvel |
 | taxa_descarga_silo_u_s | 20 | u/s | Descarga do silo no depósito |
-| tempo_ancorar_silo_s | 2 | s | Ancorar |
-| tempo_desancorar_silo_s | 1 | s | Desancorar |
 | limiar_ciclo_silo_pct | 100 | % | Ocupação que dispara o ciclo automático |
 | rendimento_destroco_pct | 25 | % | Fração da receita no destroço |
 | rendimento_carga_silo_pct | 50 | % | Fração da carga do silo no destroço |
@@ -450,7 +448,9 @@ flowchart LR
 ### 6.5 Bateria Móvel
 
 - **ENE-17** — A Bateria Móvel enche o próprio estoque (`bateria_en`) em portas de recarga, como qualquer unidade.
-- **ENE-18** — **Modo suporte** (ligado por padrão): transfere energia para até `bateria_movel_max_alvos` unidades próprias no raio `bateria_movel_raio_m`, a `bateria_movel_taxa_por_alvo_en_s` cada. Atende unidades abaixo de `bateria_movel_limiar_alvo_pct`, começando pela de menor %; a unidade mandada a ela pelo clique direito vem antes e é atendida com qualquer nível, até 100% (D-57). Não há perdas. Funciona com a Bateria Móvel parada ou em movimento.
+- **ENE-18** — **Modo suporte** (ligado por padrão): transfere energia para até `bateria_movel_max_alvos` unidades próprias **encostadas** (casco a até `bateria_movel_raio_m` do casco da Bateria Móvel, D-59), a `bateria_movel_taxa_por_alvo_en_s` cada. Atende unidades abaixo de `bateria_movel_limiar_alvo_pct`, começando pela de menor %; a unidade mandada a ela pelo clique direito vem antes e é atendida com qualquer nível, até 100% (D-57). Não há perdas. Funciona com a Bateria Móvel parada ou em movimento.
+- **ENE-23** — Com a Bateria Móvel selecionada, o clique direito numa unidade própria a manda até ela; encostada, carrega essa unidade com qualquer nível, até 100%, antes das demais, e depois para. Outra ordem cancela (D-59).
+- **ENE-24** — A Bateria Móvel mostra se o suporte está ligado: com brilho ligado, sem brilho desligado; o cartão dela tem o botão de ligar e desligar (D-59).
 - **ENE-19** — O movimento da Bateria Móvel consome do mesmo estoque. Em `auto_recarga_bateria_movel_pct` ela interrompe o suporte e volta para recarregar.
 - **ENE-20** — Unidade recebendo energia de uma Bateria Móvel não procura porta de recarga enquanto a carga sobe.
 - **ENE-21** — Bateria Móvel destruída explode (CMB-23).
@@ -476,7 +476,7 @@ flowchart LR
 | en_reparo_impressora_s | 2,0 | EN/s | Reparo pela Impressora |
 | en_sentinela_s | 0,15 | EN/s | Modo Sentinela |
 | impulso_mult_en | 3 | × | Multiplicador de gasto de movimento no Impulso |
-| bateria_movel_raio_m | 10 | m | Raio do modo suporte |
+| bateria_movel_raio_m | 1 | m | Folga casco a casco para o suporte (encostada) |
 | bateria_movel_max_alvos | 4 | unidades | Alvos simultâneos do suporte |
 | bateria_movel_taxa_por_alvo_en_s | 5 | EN/s | Transferência por alvo |
 | bateria_movel_limiar_alvo_pct | 90 | % | Só atende unidades abaixo disso |
@@ -598,7 +598,7 @@ Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação
 | drone_bomber | 90 | leve | ar | 11,0 | 240 | 1,2 | 18 | 0 | 400 | 1,6 | 0,4 | bomb |
 | drone_laser | 130 | blindada | ar | 12,0 | 300 | 1,0 | 22 | 0 | 360 | 1,4 | 0,4 | drone_laser_gun |
 | mobile_silo | 320 | blindada | solo | 4,0 | 150 | 2,2 | 14 | 0 | 500 | 1,0 | 0 | — |
-| mobile_battery | 200 | blindada | solo | 4,5 | 180 | 1,8 | 14 | 0 | 1200 | 0,6 | 0 | — |
+| mobile_battery | 200 | blindada | solo | 4,5 | 180 | 1,8 | 14 | 0 | 2000 | 0,6 | 0 | — |
 
 ### 8.3 Estruturas
 
@@ -689,13 +689,13 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 #### Silo Móvel — `mobile_silo` ("Unidade móvel de armazenamento de materiais")
 - **Papel:** depósito avançado e móvel (§5.6). Lento e blindado.
-- **Comandos:** Ancorar/Desancorar, Descarregar agora, Ciclo automático (liga/desliga e limiar).
+- **Comandos:** Descarregar agora, Ciclo automático (liga/desliga e limiar). Não ancora (D-60).
 - **Contra-jogo:** alvo valioso, porque a carga não contabilizada vira destroço que o inimigo pode reciclar (ECO-26).
-- **Visual:** caçamba grande com rampa lateral que se abre ao ancorar.
+- **Visual:** caçamba grande com rampa lateral.
 
 #### Bateria Móvel — `mobile_battery` ("Unidade de baterias móveis")
 - **Papel:** linha de energia móvel (§6.5). Sustenta exércitos, drones e impressoras longe da base.
-- **Comandos:** Modo suporte (liga/desliga), Seguir unidade ou grupo.
+- **Comandos:** Modo suporte (liga/desliga, botão no cartão), Carregar unidade (clique direito, ENE-23).
 - **Contra-jogo:** explode ao ser destruída (CMB-23), o que é perigoso para quem estiver perto.
 - **Visual:** módulos cilíndricos com brilho ciano pulsante e arcos de transferência até os alvos.
 
@@ -726,7 +726,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **UNI-04** — A Base de Lançamento pronta imprime o Satélite (item `satellite`, tecla S no cartão), um por base de cada vez: só aceita a ordem sem satélite vivo nem outro na fila. Impresso, o satélite sobe em `tempo_lancamento_satelite_s` (animação). Se a base for destruída durante a impressão ou o lançamento, o satélite se perde (D-55).
 - **UNI-05** — O satélite em órbita é um corpo que o jogador vê no céu e seleciona: tem `satelite_hp` de HP e o laser orbital `sat_laser`, que só atinge outro satélite (camada `orbita`); não atira em nada no solo nem no ar, e só outro satélite o atinge. Dá visão persistente e Varredura Orbital (VIS-08). Não gasta energia (painéis próprios) e fica fora do racionamento. Selecionado, o clique direito no terreno o reposiciona e num satélite inimigo o ataca. Destruir a base derruba o satélite (D-51).
 - **UNI-06** — O satélite não detecta furtivos.
-- **Visual:** plataforma com trilho de lançamento. Em órbita: ícone no minimapa e círculo de visão no chão.
+- **Visual:** plataforma com torre de lançamento vertical, de onde o satélite sobe na vertical. Em órbita: ícone no minimapa e círculo de visão no chão.
 
 #### Mina — `mine`
 - **UNI-07** — Invisível para inimigos sem detecção (CMB-19). Arma após `tempo_armar_mina_s` e detona quando um **hover** inimigo entra no raio de gatilho (`alcance_m` de `mine_blast`). Não afeta unidades do dono e não expira. Quando revelada, tem `mina_hp` e pode ser alvo.
@@ -929,7 +929,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ### 12.3 Clique direito contextual
 
-- **CTL-07** — Com unidades selecionadas, o clique direito em: terreno → mover (as armadas disparam no que estiver no alcance, sem desviar; M move sem disparar, D-32); inimigo → atacar; jazida → coletar (hovers); ponto de entrega → descarregar; canteiro próprio → auxiliar; unidade ou estrutura própria danificada → reparar (hovers e impressoras); porta de recarga → recarregar naquela estrutura, com qualquer nível de bateria, até 100% (D-50); destroço → reciclar; Bateria Móvel própria → seguir e recarregar nela até 100%, com qualquer nível de bateria (D-57). Com um produtor selecionado, o clique direito define o ponto de encontro.
+- **CTL-07** — Com unidades selecionadas, o clique direito em: terreno → mover (as armadas disparam no que estiver no alcance, sem desviar; M move sem disparar, D-32); inimigo → atacar; jazida → coletar (hovers); ponto de entrega → descarregar; canteiro próprio → auxiliar; unidade ou estrutura própria danificada → reparar (hovers e impressoras); porta de recarga → recarregar naquela estrutura, com qualquer nível de bateria, até 100% (D-50); Silo Móvel próprio → descarregar nele e voltar a minerar (hovers com carga, D-60); destroço → reciclar; Bateria Móvel própria → seguir e recarregar nela até 100%, com qualquer nível de bateria (D-57). Com um produtor selecionado, o clique direito define o ponto de encontro.
 
 ### 12.4 Atalhos
 
@@ -967,7 +967,6 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | hover_minelayer | T | Plantar mina |
 | hover_minelayer | G | Campo minado |
 | drones | L | Pousar ou decolar |
-| mobile_silo | T | Ancorar ou desancorar |
 | mobile_silo | G | Descarregar agora |
 | mobile_battery | T | Modo suporte liga/desliga |
 | satellite_uplink | S | Imprimir Satélite |
@@ -1217,13 +1216,14 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **UI-04** — Cartão de comandos: grade 4×3 com ícone, tecla e custo. O tooltip mostra receita completa, energia e tempo. Item sem recursos mostra em vermelho o que falta.
 - **UI-05** — Minimapa no canto inferior esquerdo (VIS-09). Clique move a câmera; alertas piscam no ponto.
 - **UI-06** — Alertas: pilha à esquerda com até 5 visíveis, clicáveis (levam ao local), com som e voz conforme `dados:alertas`.
-- **UI-07** — Barras sobre as unidades do jogador (as de outras nações não mostram barras, D-58): HP (verde → amarelo → vermelho) e EN (ciano). No modo automático aparecem em unidades selecionadas, danificadas ou com bateria Baixa; Tab alterna para "sempre".
+- **UI-07** — Barras sobre as unidades do jogador (as de outras nações não mostram barras, D-58): HP (verde → amarelo → vermelho) e EN (ciano). No modo automático aparecem só nas unidades selecionadas (D-61); Tab alterna para "sempre".
 - **UI-08** — Posicionamento de estrutura: holograma da pegada em verde (válido) ou vermelho (inválido, com o motivo); raio de alcance e de visão desenhado no chão.
 - **UI-09** — Tooltips com atraso de 0,4 s. Toda unidade tem descrição do papel e "forte contra / fraco contra" (§8.5).
 - **UI-10** — A fila de impressão aparece sobre a Impressora ou a Nave selecionada e no painel.
 - **UI-13** — Jazidas: passar o mouse mostra, após o atraso de UI-09, o recurso e a quantidade restante. Clicar numa jazida a seleciona sozinha e o painel de seleção mostra o recurso, a quantidade restante sobre a inicial e os hovers designados. A jazida selecionada não recebe ordens.
-- **UI-14** — Cada ordem do clique direito mostra no ponto um sinalizador com forma e cor próprias e toca um som próprio: mover, atacar, coletar, descarregar, recarregar, construir ou reparar, reciclar, patrulhar e reposicionar satélite.
+- **UI-14** — Cada ordem do clique direito mostra no ponto um sinalizador com forma e cor próprias e toca um som próprio: mover, atacar, coletar, descarregar (inclusive no Silo Móvel), recarregar, construir ou reparar, reciclar, patrulhar e reposicionar satélite.
 - **UI-15** — Dois botões fixos ao lado do minimapa: **mineradores parados** (Hovers de Exploração ociosos, ECO-19) e **impressoras paradas** (Impressoras sem item na fila, sem obra, reparo ou recarga e sem ordem de movimento). Cada botão mostra quantos há e fica em destaque quando há algum; o clique seleciona o próximo parado (em ciclo) e centraliza a câmera nele (D-58).
+- **UI-16** — Cartões de ação de unidades sem fila: o Hover de Plantio de Minas mostra a foto da mina; clicar nela (ou T) entra no modo de plantar e o clique no terreno escolhe o ponto (UNI-02). A Bateria Móvel mostra o botão do modo suporte (ENE-24) (D-62).
 
 ### 17.2 Alertas
 
@@ -1514,6 +1514,10 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-56 | Muro de 6 m e Portão giram livremente ao posicionar (apertar e arrastar) e encaixam pela ponta em outro segmento próprio, formando muralhas; espessura `muro_espessura_m`. O dono planeja caminho através do próprio portão destrancado. Substitui o posicionamento em linha de D-53. | Pedido do produto: cercar um perímetro com portão. | Aprovada |
 | D-57 | Clique direito na Bateria Móvel própria: as unidades selecionadas vão até ela e recarregam com qualquer nível, até 100%, com prioridade no suporte. | Pedido do produto: completar a bateria antes de uma caravana. | Aprovada |
 | D-58 | Barras de HP e EN só nas unidades do jogador; botões fixos de mineradores e impressoras parados (UI-15); AL-10 com recarga de 120 s (o aviso se repetia a cada ciclo curto de Urânio). | Pedido do produto. | Aprovada |
+| D-59 | Bateria Móvel com 2000 EN (`bateria_en`), suporte só para unidades encostadas (`bateria_movel_raio_m` 1, casco a casco), clique direito numa unidade própria para ir carregá-la (ENE-23) e brilho ligado/desligado com botão no cartão (ENE-24). | Pedido do produto. | Aprovada |
+| D-60 | Silo Móvel sem ancorar: sempre recebe (menos enquanto descarrega), descarrega sozinho ao encostar num depósito e recebe dos hovers pelo clique direito, com qualquer carga. | Pedido do produto. | Aprovada |
+| D-61 | Barras de HP e EN automáticas só nas unidades selecionadas (Tab segue alternando para "sempre"). | Pedido do produto. | Aprovada |
+| D-62 | Cartão de ação do Hover de Plantio de Minas (foto da mina → plantar no ponto) e da Bateria Móvel (botão do suporte). | Pedido do produto. | Aprovada |
 
 ---
 
@@ -1543,7 +1547,7 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | Arca-Forja | Nome de lore da Nave Inicial. |
 | VR (Valor de Referência) | Medida de valor dos recursos; 1x do briefing = 10 VR. |
 | Jazida | Afloramento de um recurso, com quantidade e vagas de mineração. |
-| Ponto de entrega | Nave, Armazém ou Silo Móvel ancorado. |
+| Ponto de entrega | Nave, Armazém ou Silo Móvel parado. |
 | Em trânsito | Material coletado que ainda não foi contabilizado. |
 | Rede / Banco | Sistema de energia da nação / energia armazenada nele. |
 | Porta de recarga | Vaga de recarga física na Nave ou numa usina. |
@@ -1595,3 +1599,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.16.0 | 2026-09-25 | D-49: `bateria_en` ×2 em `dados:moveis`, `banco_en` da Nave 1000 (INV-09) e coluna Fácil de `dados:dificuldade` (reacao_s, meta_hovers, primeiro_ataque_min, vr_exercito_ataque, bonus_coleta_pct, bonus_impressao_pct). D-50: recarga pelo clique direito na estrutura (CTL-07). |
 | 0.17.0 | 2026-09-25 | D-51 a D-54: satélite com HP e laser orbital, sem energia (UNI-05, ENE-04; `sat_laser`, `satelite_hp`, `satelite_vel_m_s` 15; manutenção da Base 0; AL-17 sem uso); Recolher mineradores (CMB-28, `abrigo_laser`, `abrigo_vagas`); Muro e Portão (UNI-08, UNI-09, `wall`, `gate`, `portao_*`); sinalizadores do clique direito (UI-14); atalhos Q, M, P e T. |
 | 0.18.0 | 2026-09-25 | D-55 a D-58: Satélite como item da Base de Lançamento (`dados:custos` `satellite`, categoria `orbital`; Base mais cara; `satelite_vel_m_s` 8; UNI-04, PRD-01, PRD-06, ENE-04, atalho S); Muro de 6 m e Portão com giro livre e encaixe pela ponta (UNI-08, UNI-09, `muro_espessura_m`); recarga na Bateria Móvel pelo clique direito (CTL-07, ENE-18); barras só do jogador (UI-07); botões de parados (UI-15); AL-10 com recarga 120 s. |
+| 0.19.0 | 2026-09-25 | D-59 a D-62: Bateria Móvel (`bateria_en` 2000, `bateria_movel_raio_m` 1 casco a casco, ENE-18, ENE-23, ENE-24); Silo Móvel sem ancorar (ECO-22 a ECO-24, CTL-07; remove os tempos de ancorar e desancorar e o atalho T do silo); barras só nas selecionadas (UI-07); cartões de ação (UI-16); visual da Base de Lançamento. |

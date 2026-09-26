@@ -227,7 +227,8 @@ export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
   const { state } = ctx;
   const tipo = getComponent(state, id, 'structure')!.tipo;
   // PRD-12: a arma só funciona com a estrutura pronta.
-  armar(ctx, id, statsEstrutura(tipo).arma, false);
+  // A Antiaérea dispara pelo sistema dela (UNI-12), não pelo das armas.
+  if (tipo !== 'aa_battery') armar(ctx, id, statsEstrutura(tipo).arma, false);
   if (tipo === 'ship') {
     marcarPresente(ctx, getComponent(state, id, 'owner')!.nacao);
     setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });
@@ -257,6 +258,20 @@ export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
       offline: false,
     });
   }
+  // UNI-10 (D-63): a Base de Lança-Mísseis fabrica mísseis com a energia da rede.
+  if (tipo === 'missile_silo') {
+    setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });
+    setComponent(state, id, 'consumidor', {
+      prioridade: 3,
+      demanda_en_s: 0,
+      atendido: 1,
+      offline: false,
+    });
+    setComponent(state, id, 'lancador', { prontos: [], recarga_s: 0 });
+  }
+  // UNI-12/UNI-13 (D-64, D-65): antiaérea e campo magnético têm sistemas próprios.
+  if (tipo === 'aa_battery') setComponent(state, id, 'antiaerea', { recarga_s: 0 });
+  if (tipo === 'mag_tower') setComponent(state, id, 'magnetico', { banco: 0, ativo: false });
   // UNI-09: o Portão nasce fechado e destrancado.
   if (tipo === 'gate') {
     setComponent(state, id, 'portao', { abertura: 0, trancado: false, semUnidade_s: 0 });

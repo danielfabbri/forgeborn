@@ -196,7 +196,9 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
   const alvo = ordem.tipo === 'manter' ? null : proximoAlvo(ctx, g, id, loc, d);
   // ENE-11: no Modo Reserva anda a `modo_reserva_vel_pct`% da velocidade.
   const reserva = emReserva(ctx, id) ? param('modo_reserva_vel_pct') / 100 : 1;
-  const velMax = Math.min(s.vel_m_s * reserva, loc.limiteVel ?? Infinity);
+  // UNI-13: o campo da Torre Magnética deixa a unidade mais lenta.
+  const campo = 1 - (getComponent(ctx.state, id, 'lentidao')?.fator ?? 0);
+  const velMax = Math.min(s.vel_m_s * reserva * campo, loc.limiteVel ?? Infinity);
   // MOV-03: da parada à velocidade máxima em aceleracao_*_s.
   const aceleracao = s.vel_m_s / param(aerea ? 'aceleracao_ar_s' : 'aceleracao_solo_s');
   let velAlvo = 0;
@@ -336,7 +338,8 @@ function passoPilotado(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt
     1 +
     param('controle_direto_bonus_vel_pct') / 100 +
     (impulso ? param('impulso_bonus_vel_pct') / 100 : 0);
-  const velAlvo = s.vel_m_s * reserva * bonus * entrada;
+  const campo = 1 - (getComponent(ctx.state, id, 'lentidao')?.fator ?? 0);
+  const velAlvo = s.vel_m_s * reserva * bonus * entrada * campo;
   const aceleracao = s.vel_m_s / param(aerea ? 'aceleracao_ar_s' : 'aceleracao_solo_s');
   const dv = aceleracao * bonus * dt;
   loc.speed =

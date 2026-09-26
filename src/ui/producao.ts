@@ -23,6 +23,8 @@ export interface EstadoDoPainel {
   estoque: Record<string, number>;
   /** CMB-28 (Nave): há mineradores recolhidos (o botão libera), ou null fora da Nave. */
   recolhidos: boolean | null;
+  /** UNI-10: mísseis prontos (a frente sai primeiro) e a recarga do lançador, ou null. */
+  misseis: { prontos: string[]; max: number; recarga_s: number } | null;
   /** UI-16: minas no carregador do Hover de Plantio selecionado, ou null. */
   minas: { n: number; max: number } | null;
   /** ENE-24 (D-59): modo suporte da Bateria Móvel selecionada, ou null. */
@@ -39,6 +41,7 @@ export const painelProducao = signal<EstadoDoPainel>({
   reparando: false,
   estoque: {},
   recolhidos: null,
+  misseis: null,
   minas: null,
   suporte: null,
 });

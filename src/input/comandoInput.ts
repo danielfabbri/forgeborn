@@ -17,6 +17,7 @@ import {
 import {
   MENU_BASE,
   MENU_ESTRUTURAS,
+  MENU_MISSEIS,
   MENU_NAVE,
   MENU_UNIDADES,
   type OpcaoDeMenu,
@@ -53,6 +54,12 @@ interface Projetavel {
   raio: number;
   altura: number;
 }
+
+/** Estruturas com cartão de fabricação próprio (§12.4). */
+const MENUS_DE_ESTRUTURA: ReadonlyArray<[string, OpcaoDeMenu[]]> = [
+  ['satellite_uplink', MENU_BASE],
+  ['missile_silo', MENU_MISSEIS],
+];
 
 /** Distância (px) a partir da qual o arrasto vira caixa de seleção. */
 const LIMIAR_ARRASTO_PX = 6;
@@ -301,11 +308,13 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       definirModo('normal');
       return;
     }
-    // UNI-04 (D-55): a Base de Lançamento imprime o Satélite.
-    const bases = doTipo('satellite_uplink');
-    if (bases.length > 0 && MENU_BASE.some((opcao) => opcao.item === item)) {
-      enviar('imprimir', { ids: bases, item });
-      return;
+    // UNI-04 (D-55): a Base de Lançamento imprime o Satélite; UNI-10: a Lança-Mísseis, mísseis.
+    for (const [tipo, menu] of MENUS_DE_ESTRUTURA) {
+      const produtores = doTipo(tipo);
+      if (produtores.length > 0 && menu.some((opcao) => opcao.item === item)) {
+        enviar('imprimir', { ids: produtores, item });
+        return;
+      }
     }
     const naves = doTipo('ship');
     if (naves.length > 0 && MENU_NAVE.some((opcao) => opcao.item === item)) {
@@ -504,6 +513,17 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     o.sinalizar?.('satelite', normalizar(ponto));
   };
 
+  /** UNI-10 (D-63): Base de Lança-Mísseis selecionada → lança o míssil da frente no ponto. */
+  const misseisNoPonto = (px: number, py: number): boolean => {
+    const silos = doTipo('missile_silo');
+    if (silos.length === 0) return false;
+    const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
+    if (!ponto) return true;
+    enviar('lancar_missil', { ids: silos, x: ponto[0], y: ponto[1], z: ponto[2] });
+    o.sinalizar?.('atacar', normalizar(ponto));
+    return true;
+  };
+
   /** ENE-23 (D-59): Bateria Móvel selecionada + unidade própria → ir carregá-la. */
   const bateriaParaUnidade = (px: number, py: number): boolean => {
     const baterias = minhas('unit').filter((id) => getComponent(sim.state, id, 'suporte'));
@@ -532,6 +552,7 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
 
   const ordemNoPonto = (px: number, py: number, tipo: OrdemNoTerreno) => {
     if (tipo === 'mover') ordemDosSatelites(px, py);
+    if (tipo === 'mover' && misseisNoPonto(px, py)) return;
     if (minhas('unit').length + minhas('producer').length === 0) return;
     if (tipo === 'mover' && alvoDeCombateNoPonto(px, py)) return;
     if (tipo === 'mover' && bateriaParaUnidade(px, py)) return;
@@ -736,12 +757,13 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       e.preventDefault();
       return;
     }
-    const daBase =
-      doTipo('satellite_uplink').length > 0 ? MENU_BASE.find((x) => x.codigo === e.code) : null;
-    if (daBase) {
-      escolher(daBase.item);
-      e.preventDefault();
-      return;
+    for (const [tipo, menu] of MENUS_DE_ESTRUTURA) {
+      const opcao = doTipo(tipo).length > 0 ? menu.find((x) => x.codigo === e.code) : null;
+      if (opcao) {
+        escolher(opcao.item);
+        e.preventDefault();
+        return;
+      }
     }
     switch (e.code) {
       // §12.4 (Impressora): U menu de unidades; B menu de estruturas.

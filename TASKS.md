@@ -161,7 +161,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: clique direito na Bateria Móvel própria leva as unidades selecionadas até ela e as recarrega com qualquer nível, até 100%, antes das demais.
 - [x] **T-048 — Bateria Móvel encostada, carregar unidade e brilho** · M · Spec: ENE-18, ENE-23, ENE-24, D-59 · Dep: T-047 · Feito: 2026-09-25
   - Aceite: suporte só para unidades encostadas; clique direito numa unidade própria com a Bateria Móvel selecionada leva a bateria até ela e a enche até 100%; brilho ligado/desligado e botão no cartão; 2000 EN.
-- [ ] **T-049 — Torre Magnética** · M · Spec: UNI-13, D-65 · Dep: T-045
+- [x] **T-049 — Torre Magnética** · M · Spec: UNI-13, D-65 · Dep: T-045 · Feito: 2026-09-25
   - Aceite: inimigos no campo ficam mais lentos e perdem EN, com efeito que cai até a borda e vale menos em blindados; a torre guarda até o limite e para de drenar cheia; repassa aos aliados no campo, os de menor % primeiro.
 
 ## M5 — Produção e construção
@@ -184,7 +184,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: Muro bloqueia hovers e deixa drones passarem; posicionamento em linha arrastando; Portão abre sozinho para unidades próprias no raio e fecha depois do tempo, deixa qualquer um passar aberto, e trancado não abre; inimigos atacam o muro que fecha o caminho.
 - [x] **T-058 — Giro e encaixe de Muro e Portão** · M · Spec: UNI-08, UNI-09, D-56 · Dep: T-057 · Feito: 2026-09-25
   - Aceite: apertar e arrastar gira o segmento livremente; apertar perto da ponta livre de outro segmento encaixa nela; o obstáculo segue o segmento girado; as unidades do dono planejam caminho pelo próprio portão destrancado e as inimigas não.
-- [ ] **T-059 — Base de Lança-Mísseis e Bateria Antiaérea** · G · Spec: UNI-10 – UNI-12, D-63, D-64 · Dep: T-062
+- [x] **T-059 — Base de Lança-Mísseis e Bateria Antiaérea** · G · Spec: UNI-10 – UNI-12, D-63, D-64 · Dep: T-062 · Feito: 2026-09-25
   - Aceite: a base fabrica mísseis curtos e longos até 5; clique direito lança o da frente no ponto dentro do alcance (mesmo no escuro), recusa fora dele e espera a recarga entre lançamentos; o míssil detona no ponto; a Antiaérea dispara um por vez contra mísseis e drones, com a chance de acerto pela distância, e erra explodindo sozinha.
 
 ## M6 — Combate

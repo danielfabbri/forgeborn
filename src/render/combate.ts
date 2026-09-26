@@ -25,6 +25,7 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three';
+import { geometriaDoModelo } from './modelos';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {
   dados,
@@ -98,6 +99,9 @@ export class CombateRender {
   private readonly posicoesFeixe = new Float32Array(MAX_FEIXES * 6);
   private readonly coresFeixe = new Float32Array(MAX_FEIXES * 6);
   private readonly projeteis: InstancedMesh;
+  /** UNI-11: mísseis em voo com o modelo, apontados no sentido do voo. */
+  private readonly misseis: Record<'missil_curto' | 'missil_longo', InstancedMesh>;
+  private readonly ultimaPosicao = new Map<EntityId, Vector3>();
   private readonly destrocos: InstancedMesh;
   private readonly explosoes: Explosao[] = [];
   private readonly geoExplosao = new SphereGeometry(1, 16, 12);
@@ -131,6 +135,21 @@ export class CombateRender {
     );
     this.projeteis.frustumCulled = false;
     this.projeteis.count = 0;
+    const materialMissil = new MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.5,
+      metalness: 0.4,
+      emissive: '#ff9a3c',
+      emissiveIntensity: 0.25,
+    });
+    const malha = (tipo: 'missile_short' | 'missile_long') => {
+      const m = new InstancedMesh(geometriaDoModelo(tipo), materialMissil, 32);
+      m.frustumCulled = false;
+      m.count = 0;
+      scene.add(m);
+      return m;
+    };
+    this.misseis = { missil_curto: malha('missile_short'), missil_longo: malha('missile_long') };
     this.destrocos = new InstancedMesh(
       geometriaDeEntulho(),
       new MeshStandardMaterial({ color: '#3b3d42', roughness: 0.9, metalness: 0.2 }),
@@ -246,17 +265,47 @@ export class CombateRender {
     geo.getAttribute('position').needsUpdate = true;
     geo.getAttribute('color').needsUpdate = true;
 
-    // Projéteis em voo.
+    // Projéteis em voo; os mísseis (UNI-11) com o modelo apontado no sentido do voo.
     let p = 0;
+    const nMisseis = { missil_curto: 0, missil_longo: 0 };
+    const vivos = new Set<EntityId>();
     for (const id of entitiesWith(state, 'projetil', 'position')) {
       if (p >= MAX_INSTANCIAS) break;
       if (explorado && !explorado(id)) continue;
       const pos = getComponent(state, id, 'position')!;
+      const proj = getComponent(state, id, 'projetil')!;
+      if (
+        proj.tipo === 'missil' &&
+        (proj.arma === 'missil_curto' || proj.arma === 'missil_longo')
+      ) {
+        vivos.add(id);
+        const agora = new Vector3(pos.x, pos.y, pos.z);
+        const antes = this.ultimaPosicao.get(id);
+        const cimaM = agora.clone().normalize();
+        const frenteM =
+          antes && antes.distanceToSquared(agora) > 1e-6
+            ? agora.clone().sub(antes).normalize()
+            : new Vector3(...norteEm([cimaM.x, cimaM.y, cimaM.z]));
+        if (Math.abs(frenteM.dot(cimaM)) > 0.999)
+          cimaM.set(...norteEm([cimaM.x, cimaM.y, cimaM.z]));
+        const ladoM = new Vector3().crossVectors(frenteM, cimaM).normalize();
+        cimaM.crossVectors(ladoM, frenteM).normalize();
+        this.matriz.makeBasis(frenteM, cimaM, ladoM).setPosition(agora);
+        this.ultimaPosicao.set(id, agora);
+        const lote = this.misseis[proj.arma];
+        if (nMisseis[proj.arma] < 32) lote.setMatrixAt(nMisseis[proj.arma]++, this.matriz);
+        continue;
+      }
       this.matriz.makeTranslation(pos.x, pos.y, pos.z);
       this.projeteis.setMatrixAt(p++, this.matriz);
     }
     this.projeteis.count = p;
     this.projeteis.instanceMatrix.needsUpdate = true;
+    for (const arma of ['missil_curto', 'missil_longo'] as const) {
+      this.misseis[arma].count = nMisseis[arma];
+      this.misseis[arma].instanceMatrix.needsUpdate = true;
+    }
+    for (const id of this.ultimaPosicao.keys()) if (!vivos.has(id)) this.ultimaPosicao.delete(id);
 
     // Destroços (ECO-27), alinhados à vertical local.
     this.destrocosDesenhados.length = 0;

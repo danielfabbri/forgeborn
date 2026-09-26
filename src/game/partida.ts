@@ -40,6 +40,7 @@ import {
   MENU_BASE,
   MENU_ESTRUTURAS,
   MENU_MINAS,
+  MENU_MISSEIS,
   MENU_NAVE,
   MENU_UNIDADES,
 } from './atalhosProducao';
@@ -104,6 +105,7 @@ import { validarPosicionamento } from '../sim/producao';
 import { direcaoDe } from '../sim/units/superficie';
 import { explorado, visivelPara } from '../sim/visao/nevoa';
 import { satelitesAtivos } from '../sim/visao/satelite';
+import { alcanceDoProximo } from '../sim/combate/misseis';
 import { comandosDoJogo, sistemasDoJogo } from '../sim/units';
 import { debugStats } from '../ui/debugStats';
 import { mountUi } from '../ui/mount';
@@ -179,6 +181,9 @@ declare global {
       sinalizadores?: () => string[];
       /** Minas a plantar do Hover de Plantio (UNI-02), ou null. */
       plantios?: (id: EntityId) => { plantios: number; carregador: number } | null;
+      /** UNI-10: mísseis prontos de uma Base de Lança-Mísseis e mísseis em voo. */
+      misseis?: (id: EntityId) => string[] | null;
+      misseisEmVoo?: () => number;
       /** Rumo guardado de uma estrutura (D-56), ou null. */
       rumo?: (id: EntityId) => Vec3 | null;
     };
@@ -516,6 +521,34 @@ export function iniciarPartida(): void {
     centrarEm(camera, direcaoDe(getComponent(sim.state, id, 'position')!));
   };
 
+  /**
+   * UNI-10/UNI-13: anéis no chão do alcance do míssil da frente das Lança-Mísseis selecionadas e
+   * do campo das Torres Magnéticas do jogador.
+   */
+  const aneisDeAlcance = (): Array<{ ponto: Vec3; raio: number }> => {
+    const aneis: Array<{ ponto: Vec3; raio: number }> = [];
+    const selecionados = new Set(comandos?.selecao ?? []);
+    for (const id of entitiesWith(sim.state, 'lancador', 'owner', 'position')) {
+      if (getComponent(sim.state, id, 'owner')!.nacao !== jogador || !selecionados.has(id))
+        continue;
+      const alcance = alcanceDoProximo(leitura(), id);
+      if (alcance)
+        aneis.push({
+          ponto: direcaoDe(getComponent(sim.state, id, 'position')!),
+          raio: alcance.alcance,
+        });
+    }
+    for (const id of entitiesWith(sim.state, 'magnetico', 'owner', 'position')) {
+      if (getComponent(sim.state, id, 'owner')!.nacao !== jogador) continue;
+      if (getComponent(sim.state, id, 'obra')) continue;
+      aneis.push({
+        ponto: direcaoDe(getComponent(sim.state, id, 'position')!),
+        raio: param('mag_raio_m'),
+      });
+    }
+    return aneis;
+  };
+
   /** UI-07: barras dos corpos visíveis (do lado da câmera). */
   const corposComBarras: CorpoComBarras[] = [];
   const sincronizarBarras = (): void => {
@@ -684,6 +717,17 @@ export function iniciarPartida(): void {
       }
       if (texto) avisoProducao.value = { texto, ate: performance.now() + DURACAO_AVISO_MS };
     }
+    // UNI-10: lançamento recusado (fora do alcance, sem míssil ou recarregando).
+    for (const e of eventos) {
+      if (e.tipo !== 'missil_recusado') continue;
+      const d = e.dados as { nacao: string; motivo: string };
+      if (d.nacao !== jogador) continue;
+      avisoProducao.value = {
+        texto: t(`missil.recusado.${d.motivo}` as TextKey),
+        ate: performance.now() + DURACAO_AVISO_MS,
+      };
+      tocarSom('erro');
+    }
   };
 
   /** Painel de produção: produtor ou obra própria selecionados e o estado da entrada. */
@@ -715,11 +759,13 @@ export function iniciarPartida(): void {
             ? MENU_MINAS
             : tipoProdutor === 'mobile_battery'
               ? []
-              : entrada.menu === 'unidades'
-                ? MENU_UNIDADES
-                : entrada.menu === 'estruturas'
-                  ? MENU_ESTRUTURAS
-                  : [];
+              : tipoProdutor === 'missile_silo'
+                ? MENU_MISSEIS
+                : entrada.menu === 'unidades'
+                  ? MENU_UNIDADES
+                  : entrada.menu === 'estruturas'
+                    ? MENU_ESTRUTURAS
+                    : [];
     const obra = obraId !== undefined ? getComponent(sim.state, obraId, 'obra')! : null;
     painelProducao.value = {
       produtor:
@@ -757,6 +803,14 @@ export function iniciarPartida(): void {
           ? entitiesWith(sim.state, 'abrigo', 'owner').some(
               (id) => getComponent(sim.state, id, 'owner')!.nacao === jogador,
             )
+          : null,
+      misseis:
+        tipoProdutor === 'missile_silo'
+          ? {
+              prontos: [...(getComponent(sim.state, produtorId!, 'lancador')?.prontos ?? [])],
+              max: param('misseis_max_base'),
+              recarga_s: getComponent(sim.state, produtorId!, 'lancador')?.recarga_s ?? 0,
+            }
           : null,
       minas:
         tipoProdutor === 'hover_minelayer'
@@ -973,9 +1027,12 @@ export function iniciarPartida(): void {
       // VIS-06/VIS-08: sinais de radar e o círculo dos satélites do jogador.
       marcas.sync(
         sim.state.sinais[jogador] ?? [],
-        satelitesAtivos(leitura())
-          .filter((s) => s.nacao === jogador)
-          .map((s) => ({ ponto: s.ponto, raio: param('satelite_visao_m') })),
+        [
+          ...satelitesAtivos(leitura())
+            .filter((s) => s.nacao === jogador)
+            .map((s) => ({ ponto: s.ponto, raio: param('satelite_visao_m') })),
+          ...aneisDeAlcance(),
+        ],
         performance.now(),
       );
       combate.sync(
@@ -1052,6 +1109,11 @@ export function iniciarPartida(): void {
       const l = getComponent(sim.state, id, 'lancaMinas');
       return l ? { plantios: l.plantios.length, carregador: l.carregador } : null;
     };
+    sonda.misseis = (id) => getComponent(sim.state, id, 'lancador')?.prontos.slice() ?? null;
+    sonda.misseisEmVoo = () =>
+      entitiesWith(sim.state, 'projetil').filter(
+        (id) => getComponent(sim.state, id, 'projetil')!.tipo === 'missil',
+      ).length;
     sonda.rumo = (id) => getComponent(sim.state, id, 'structure')?.rumo ?? null;
     sonda.tipo = (id) =>
       (getComponent(sim.state, id, 'satelite') ? 'satellite' : null) ??

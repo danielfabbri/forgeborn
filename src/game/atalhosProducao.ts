@@ -51,4 +51,13 @@ export const MENU_ESTRUTURAS: OpcaoDeMenu[] = [
   opcao('L', 'satellite_uplink'),
   opcao('M', 'wall'),
   opcao('P', 'gate'),
+  opcao('F', 'missile_silo'),
+  opcao('R', 'aa_battery'),
+  opcao('G', 'mag_tower'),
+];
+
+/** §12.4 (Base de Lança-Mísseis) C curto, L longo (UNI-10, D-63). */
+export const MENU_MISSEIS: OpcaoDeMenu[] = [
+  opcao('C', 'missile_short'),
+  opcao('L', 'missile_long'),
 ];

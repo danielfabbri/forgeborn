@@ -335,5 +335,17 @@
   "parados.impressoras": "Impressoras paradas: clique para ir à próxima",
   "producao.suporte_ligado": "Suporte ligado",
   "producao.suporte_desligado": "Suporte desligado",
-  "producao.minas": "Minas prontas: {n}/{max} (clique na mina e depois no terreno)"
+  "producao.minas": "Minas prontas: {n}/{max} (clique na mina e depois no terreno)",
+  "item.missile_silo": "Base de Lança-Mísseis",
+  "item.aa_battery": "Bateria Antiaérea",
+  "item.mag_tower": "Torre Magnética",
+  "item.missile_short": "Míssil de Curto Alcance",
+  "item.missile_long": "Míssil de Longo Alcance",
+  "producao.misseis_prontos": "Prontos ({n}/{max}):",
+  "producao.misseis_nenhum": "nenhum",
+  "producao.misseis_recarga": "próximo lançamento em {s} s",
+  "producao.misseis_disparar": "Clique direito no mapa para lançar o da frente.",
+  "missil.recusado.alcance": "Fora do alcance do míssil da frente.",
+  "missil.recusado.vazio": "Nenhum míssil pronto.",
+  "missil.recusado.recarga": "A base ainda está recarregando o lançador."
 }

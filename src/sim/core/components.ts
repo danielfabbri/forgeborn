@@ -128,7 +128,8 @@ export interface ComponentMap {
   };
   /** Projétil em voo (CMB-07, CMB-08). */
   projetil: {
-    tipo: 'torpedo' | 'bomba';
+    /** `missil`: da Base de Lança-Mísseis (UNI-11); `aa`: da Bateria Antiaérea (UNI-12). */
+    tipo: 'torpedo' | 'bomba' | 'missil' | 'aa';
     arma: ArmasId;
     atirador: EntityId;
     nacao: NacaoId;
@@ -140,7 +141,20 @@ export interface ComponentMap {
     dano: number;
     /** D-40: torpedo sem trava do controle direto voa reto neste rumo. */
     rumo?: Ponto;
+    /** UNI-11: de onde o míssil saiu e o tempo total do voo (arco até `ponto`). */
+    origem?: Ponto;
+    total_s?: number;
+    /** UNI-12: o antiaéreo vai acertar (sorteado no disparo). */
+    acerta?: boolean;
   };
+  /** UNI-10 (D-63): mísseis prontos da Base de Lança-Mísseis (a frente sai primeiro). */
+  lancador: { prontos: Array<'missile_short' | 'missile_long'>; recarga_s: number };
+  /** UNI-12 (D-64): recarga entre disparos da Bateria Antiaérea. */
+  antiaerea: { recarga_s: number };
+  /** UNI-13 (D-65): energia guardada pela Torre Magnética. */
+  magnetico: { banco: number; ativo: boolean };
+  /** UNI-13: lentidão do campo magnético sobre a unidade (0..1), refeita a cada tick. */
+  lentidao: { fator: number };
   /**
    * Controle direto (CTL-08 a CTL-12): a entrada do jogador, atualizada pelo comando `pilotar`.
    * Enquanto existir, a unidade não age sozinha (D-44).

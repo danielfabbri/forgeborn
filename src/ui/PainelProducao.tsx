@@ -152,6 +152,26 @@ export function PainelProducao() {
                   </button>
                 </div>
               )}
+              {estado.misseis && (
+                <div class="misseis-prontos" data-testid="misseis-prontos">
+                  {t('producao.misseis_prontos', {
+                    n: estado.misseis.prontos.length,
+                    max: estado.misseis.max,
+                  })}{' '}
+                  {estado.misseis.prontos.length === 0
+                    ? t('producao.misseis_nenhum')
+                    : estado.misseis.prontos.map((m, k) => (
+                        <span class="missil-pronto" key={k} title={nome(m)}>
+                          <Foto item={m} />
+                        </span>
+                      ))}
+                  <div>
+                    {estado.misseis.recarga_s > 0
+                      ? t('producao.misseis_recarga', { s: Math.ceil(estado.misseis.recarga_s) })
+                      : estado.misseis.prontos.length > 0 && t('producao.misseis_disparar')}
+                  </div>
+                </div>
+              )}
               {estado.minas && (
                 <div data-testid="carregador-minas">
                   {t('producao.minas', { n: estado.minas.n, max: estado.minas.max })}

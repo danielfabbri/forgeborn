@@ -1145,3 +1145,14 @@ body.em-cinematica #ui {
 .dica-item .receita .falta {
   color: #ff6b5f;
 }
+
+/* UNI-10: mísseis prontos no cartão da Base de Lança-Mísseis. */
+.misseis-prontos {
+  margin: 4px 0;
+}
+.missil-pronto .foto-item {
+  width: 28px;
+  height: 28px;
+  vertical-align: middle;
+  margin-right: 2px;
+}

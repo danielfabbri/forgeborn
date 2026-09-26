@@ -3,6 +3,8 @@ import type { CommandHandler, SystemContext } from '../core/pipeline';
 import { sistemaCombate as armas } from './armas';
 import { comandosDeAbrigo, passoAbrigo } from './abrigo';
 import { passoBrechas } from './brecha';
+import { passoMagnetico } from './magnetico';
+import { comandosDeMisseis, passoAntiaereas, passoLancadores } from './misseis';
 import { comandosDeCombate } from './comandos';
 import { passoFuga } from './fuga';
 import { passoMinas } from './minas';
@@ -24,6 +26,9 @@ export function sistemaCombate(ctx: SystemContext): void {
   passoSatelites(ctx);
   passoAbrigo(ctx);
   passoBrechas(ctx);
+  passoLancadores(ctx);
+  passoAntiaereas(ctx);
+  passoMagnetico(ctx);
   armas(ctx);
   passoMinas(ctx);
 }
@@ -35,4 +40,5 @@ export const comandosDoCombate: Record<string, CommandHandler> = {
   ...comandosDeSatelite,
   ...comandosDePilotagem,
   ...comandosDeAbrigo,
+  ...comandosDeMisseis,
 };

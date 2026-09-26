@@ -54,7 +54,14 @@ export class SomDaPartida {
       switch (e.tipo) {
         case 'disparo': {
           const tipo = this.f.projetil(d.arma as string);
-          const som: Som = tipo === 'guiado' ? 'torpedo' : tipo === 'balistico' ? 'bomba' : 'laser';
+          const som: Som =
+            tipo === 'missil'
+              ? 'missil'
+              : tipo === 'guiado'
+                ? 'torpedo'
+                : tipo === 'balistico'
+                  ? 'bomba'
+                  : 'laser';
           this.noMundo(som, this.f.posicao(d.atirador as EntityId));
           break;
         }

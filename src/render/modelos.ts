@@ -28,7 +28,8 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { EstruturasId, MoveisId } from '../sim/data';
 
-export type TipoDeModelo = MoveisId | EstruturasId | 'mine' | 'satellite';
+export type TipoDeModelo =
+  MoveisId | EstruturasId | 'mine' | 'satellite' | 'missile_short' | 'missile_long';
 
 export const EMIS_NENHUM = 0;
 export const EMIS_NACAO = 1;
@@ -554,6 +555,77 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     }
     m.caixa(5.3, 0.45, 1.0, GRAFITE, { y: 3.5 });
     return olho(m, 0, 3.75, 0.5, 0.14).pronta();
+  },
+  // UNI-10: plataforma com tubo lançador inclinado sobre um berço giratório e paiol ao lado.
+  missile_silo: () => {
+    const m = new Montagem();
+    m.caixa(8, 0.5, 8, GRAFITE);
+    m.caixa(7.6, 0.2, 7.6, PAINEL, { y: 0.5 });
+    m.cilindro(2.2, 0.6, METAL, { y: 0.7 }, 16);
+    m.cilindro(1.6, 0.9, GRAFITE, { y: 1.3 }, 16);
+    for (const z of [-1.1, 1.1]) m.caixa(1.6, 2.2, 0.35, PAINEL, { y: 2.2, z });
+    // Tubo lançador inclinado para a frente (+x), com anel da nação na boca.
+    m.add(new CylinderGeometry(0.75, 0.85, 6.5, 14), PAINEL, { x: 1.2, y: 4.3, rz: -0.9 });
+    m.add(new CylinderGeometry(0.9, 0.9, 0.3, 14), 'nacao', { x: 3.7, y: 6.1, rz: -0.9 });
+    m.add(new CylinderGeometry(0.6, 0.6, 0.05, 14), VIDRO, { x: 3.85, y: 6.2, rz: -0.9 });
+    // Paiol de mísseis.
+    m.caixa(2.4, 1.2, 2.2, PAINEL, { x: -2.6, y: 0.7, z: 2.4 });
+    for (let k = 0; k < 3; k++)
+      m.caixa(0.5, 0.12, 1.9, 'nacao', { x: -3.3 + k * 0.7, y: 1.9, z: 2.4 });
+    m.caixa(7, 0.06, 0.2, 'nacao', { y: 0.72, z: -3.6 });
+    return olho(m, -2.6, 2.0, 1.2, 0.2).pronta();
+  },
+  // UNI-12: torre curta com dois casulos de mísseis apontados para cima e radar.
+  aa_battery: () => {
+    const m = new Montagem();
+    m.cilindro(1.9, 0.5, GRAFITE, {}, 10);
+    m.cilindro(1.2, 1.4, PAINEL, { y: 0.5 }, 10);
+    m.cilindro(1.0, 0.3, METAL, { y: 1.9 }, 12);
+    for (const z of [-0.8, 0.8]) {
+      m.caixa(1.1, 1.5, 0.7, PAINEL, { y: 2.3, z, rz: 0.5 });
+      for (const [a, b] of [
+        [-0.2, -0.15],
+        [0.2, 0.15],
+      ])
+        m.add(new CylinderGeometry(0.14, 0.14, 0.1, 8), 'nacao', {
+          x: 0.55 + a!,
+          y: 3.3,
+          z: z + b!,
+          rz: 0.5,
+        });
+    }
+    m.cilindro(0.08, 1.2, METAL, { x: -0.7, y: 2.2 }, 6);
+    m.add(new ConeGeometry(0.5, 0.25, 12, 1, true), METAL, { x: -0.7, y: 3.5, rx: Math.PI });
+    return olho(m, -0.7, 3.4, 0, 0.12).pronta();
+  },
+  // UNI-13: coluna de bobinas com anéis na cor da nação.
+  mag_tower: () => {
+    const m = new Montagem();
+    m.cilindro(2.2, 0.5, GRAFITE, {}, 12);
+    m.cilindro(0.7, 6.5, PAINEL, { y: 0.5 }, 12, 0.5);
+    for (let k = 0; k < 4; k++) {
+      m.cilindro(1.3 - k * 0.15, 0.35, METAL, { y: 1.3 + k * 1.3 }, 16);
+      m.cilindro(1.35 - k * 0.15, 0.08, 'nacao', { y: 1.72 + k * 1.3 }, 16);
+    }
+    m.esfera(0.7, VIDRO, { y: 7.3 });
+    m.cilindro(0.9, 0.1, 'nacao', { y: 7.2 }, 16);
+    return olho(m, 0, 7.3, 0, 0.3).pronta();
+  },
+  // UNI-11: mísseis (fotos do cartão e o voo), deitados em +x.
+  missile_short: () => {
+    const m = new Montagem();
+    m.add(new CylinderGeometry(0.18, 0.18, 1.6, 10), PAINEL, { rz: -Math.PI / 2 });
+    m.add(new ConeGeometry(0.18, 0.5, 10), 'nacao', { x: 1.05, rz: -Math.PI / 2 });
+    for (const a of [0, Math.PI / 2]) m.caixa(0.35, 0.03, 0.7, GRAFITE, { x: -0.65, rx: a });
+    return m.pronta();
+  },
+  missile_long: () => {
+    const m = new Montagem();
+    m.add(new CylinderGeometry(0.28, 0.28, 3.0, 12), PAINEL, { rz: -Math.PI / 2 });
+    m.add(new CylinderGeometry(0.3, 0.3, 0.2, 12), 'nacao', { x: 0.6, rz: -Math.PI / 2 });
+    m.add(new ConeGeometry(0.28, 0.9, 12), METAL, { x: 1.95, rz: -Math.PI / 2 });
+    for (const a of [0, Math.PI / 2]) m.caixa(0.6, 0.04, 1.1, GRAFITE, { x: -1.2, rx: a });
+    return m.pronta();
   },
   // D-51: satélite em órbita, com painéis solares e antena.
   satellite: () => {

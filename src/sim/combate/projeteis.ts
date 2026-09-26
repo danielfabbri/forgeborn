@@ -17,6 +17,7 @@ import { ALTURA_HOVER_M, statsMovel } from '../units/stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from '../units/superficie';
 import { armaDe } from './armas';
 import { aplicarDano, camadaDe, danoEmArea, type TipoDeDano } from './dano';
+import { passoAntiaereo, passoMissil } from './misseis';
 
 /** Detonação de uma arma com splash no ponto (CMB-10, CMB-11). */
 export function detonar(
@@ -184,7 +185,12 @@ function passoRadiacao(ctx: SystemContext): void {
 
 export function sistemaProjeteis(ctx: SystemContext): void {
   for (const id of entitiesWith(ctx.state, 'projetil', 'position')) {
-    if (getComponent(ctx.state, id, 'projetil')!.tipo === 'torpedo') passoTorpedo(ctx, id);
+    // Um antiaéreo pode ter destruído este míssil no mesmo tick.
+    if (!isAlive(ctx.state, id)) continue;
+    const tipo = getComponent(ctx.state, id, 'projetil')!.tipo;
+    if (tipo === 'torpedo') passoTorpedo(ctx, id);
+    else if (tipo === 'missil') passoMissil(ctx, id);
+    else if (tipo === 'aa') passoAntiaereo(ctx, id);
     else passoBomba(ctx, id);
   }
   passoMinas(ctx);

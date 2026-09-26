@@ -32,7 +32,8 @@ export function filaMaxima(tipoProdutor: string): number {
 
 export const ehMovel = (item: CustosId): item is MoveisId => custoDe(item).categoria === 'movel';
 /** Itens que a fila imprime (unidades móveis e o Satélite, D-55). */
-const ehImprimivel = (item: CustosId) => ehMovel(item) || custoDe(item).categoria === 'orbital';
+const ehImprimivel = (item: CustosId) =>
+  ehMovel(item) || ['orbital', 'municao'].includes(custoDe(item).categoria);
 
 /** REG-19: corpos vivos mais unidades já pagas nas filas da nação. */
 function corposComFila(ctx: SystemContext, nacao: NacaoId): number {
@@ -60,6 +61,11 @@ export function cabeNaFila(ctx: SystemContext, produtor: EntityId, item: CustosI
       (id) => getComponent(ctx.state, id, 'satelite')!.base === produtor,
     );
     if (temSatelite) return false;
+  }
+  // UNI-10 (D-63): a Base de Lança-Mísseis guarda até `misseis_max_base`, prontos e na fila.
+  if (tipo === 'missile_silo') {
+    const prontos = getComponent(ctx.state, produtor, 'lancador')?.prontos.length ?? 0;
+    return fila.length + prontos < param('misseis_max_base');
   }
   return fila.length < filaMaxima(tipo);
 }
@@ -174,6 +180,18 @@ function concluirUnidade(ctx: SystemContext, produtor: EntityId): void {
     const id = lancarSatelite(ctx, produtor, nacao, d);
     producer.fila.shift();
     ctx.emit('impresso', { id, tipo: 'satellite', nacao, produtor });
+    return;
+  }
+  // UNI-10: o míssil fabricado entra na fila de prontos da base.
+  const lancador = getComponent(ctx.state, produtor, 'lancador');
+  if (lancador && (item.item === 'missile_short' || item.item === 'missile_long')) {
+    lancador.prontos.push(item.item);
+    producer.fila.shift();
+    ctx.emit('missil_pronto', {
+      id: produtor,
+      tipo: item.item,
+      nacao: getComponent(ctx.state, produtor, 'owner')!.nacao,
+    });
     return;
   }
   if (nascer(ctx, produtor, item.item as MoveisId) !== null) producer.fila.shift();

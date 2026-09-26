@@ -8,6 +8,7 @@ import { audio } from './contexto';
 
 export type Som =
   | 'laser'
+  | 'missil'
   | 'torpedo'
   | 'bomba'
   | 'explosao_pequena'
@@ -137,6 +138,14 @@ export function tocarSom(som: Som, volume = 1): void {
       tom(sujo, 'sawtooth', 380, 70, 0.2, 0.18);
       tom(sujo, 'sawtooth', 391, 73, 0.22, 0.14);
       tom(s, 'sine', 95, 38, 0.18, 0.4);
+      break;
+    }
+    case 'missil': {
+      // UNI-10: ignição pesada e ronco longo do motor subindo.
+      const sujo = saturado(s, 3.5);
+      chiado(s, 1.4, 2200, 0.55, 1.5);
+      tom(sujo, 'sawtooth', 40, 120, 1.2, 0.3);
+      tom(s, 'sine', 55, 30, 0.5, 0.5);
       break;
     }
     case 'torpedo': {

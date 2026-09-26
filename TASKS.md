@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.19.0 |
+| Derivado de | `SPEC.md` v0.19.1 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -138,7 +138,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: só recebe descargas ancorado; ciclo automático no `limiar_ciclo_silo_pct`; a carga só conta depois de descarregar num depósito; hovers se redirecionam enquanto o silo está fora.
 - [x] **T-036 — Destroços e reciclagem** · M · Spec: ECO-27 – ECO-29 · Dep: T-032, T-060 · Feito: 2026-09-24
   - Aceite: destroço = piso(receita × `rendimento_destroco_pct`%) por recurso; some no prazo; a sucata vira os recursos certos ao ser descarregada; o destroço do silo inclui `rendimento_carga_silo_pct`% da carga.
-- [ ] **T-037 — Silo Móvel sem ancorar** · M · Spec: ECO-10, ECO-22 – ECO-24, CTL-07, UI-14, D-60 · Dep: T-035
+- [ ] **T-037 — Silo Móvel sem ancorar** · M · Spec: ECO-10, ECO-22 – ECO-24, CTL-07, CTL-10, UI-14, D-60 · Dep: T-035
   - Aceite: o silo recebe parado ou andando (menos descarregando); descarrega sozinho ao encostar na Nave ou num Armazém; clique direito dos hovers no silo descarrega qualquer carga e eles voltam a minerar, com sinalizador de descarregar.
 
 ## M4 — Energia

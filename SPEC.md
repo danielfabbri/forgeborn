@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.19.0 — rascunho para aprovação |
+| Versão do SPEC | 0.19.1 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -985,7 +985,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 
 - **CTL-08** — Com exatamente 1 unidade móvel própria selecionada, V entra em controle direto em 1ª pessoa. V de novo alterna entre 1ª e 3ª pessoa; Esc volta à visão RTS centrada na unidade. Estruturas não podem ser controladas no v1.
 - **CTL-09** — A simulação continua em tempo real; os outros corpos seguem autônomos; alertas e minimapa continuam visíveis. Com o jogo pausado, o controle direto também pausa.
-- **CTL-10** — Controles: W/S frente e ré, A/D deslocamento lateral, mouse orienta; clique esquerdo usa a arma principal (ou minera, no Hover de Exploração); clique direito usa a habilidade da unidade (D-42): Hover de Exploração descarrega no ponto de entrega ao alcance, Hover de Plantio planta mina, Hover de Observação liga ou desliga a Sentinela, drones pousam ou decolam, Silo Móvel ancora ou desancora e Bateria Móvel liga ou desliga o suporte; EX1, OPQ e Impressora não têm habilidade. Shift ativa o Impulso. A unidade em controle direto não age sozinha: não dispara, não foge, não sai para recarregar e não segue ordens (D-44).
+- **CTL-10** — Controles: W/S frente e ré, A/D deslocamento lateral, mouse orienta; clique esquerdo usa a arma principal (ou minera, no Hover de Exploração); clique direito usa a habilidade da unidade (D-42): Hover de Exploração descarrega no ponto de entrega ao alcance, Hover de Plantio planta mina, Hover de Observação liga ou desliga a Sentinela, drones pousam ou decolam e Bateria Móvel liga ou desliga o suporte; EX1, OPQ, Impressora e Silo Móvel (que descarrega sozinho ao encostar num depósito, D-60) não têm habilidade. Shift ativa o Impulso. A unidade em controle direto não age sozinha: não dispara, não foge, não sai para recarregar e não segue ordens (D-44).
 - **CTL-11** — Mira: lasers acertam o que estiver sob a mira, dentro do alcance. O torpedo trava no alvo sob a mira se o clique for mantido por `trava_torpedo_s`; sem trava, sai reto e detona no primeiro corpo inimigo em que encostar ou, sem acertar nada, no tempo máximo de voo (D-40). Disparo sem alvo sob a mira sai e se perde: gasta `en_disparo` e a recarga (D-44). Bombas caem no ponto indicado por um marcador de impacto previsto.
 - **CTL-12** — **Sincronia:** a unidade em controle direto recebe +`controle_direto_bonus_dano_pct`% de dano e +`controle_direto_bonus_vel_pct`% de velocidade. **Impulso** (Shift): +`impulso_bonus_vel_pct`% de velocidade, com gasto de movimento × `impulso_mult_en`. Os bônus de velocidade somam (D-41).
 - **CTL-13** — Se a unidade for destruída, a tela mostra "SINAL PERDIDO" com estática por 1,5 s e volta à visão RTS.
@@ -1600,3 +1600,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.17.0 | 2026-09-25 | D-51 a D-54: satélite com HP e laser orbital, sem energia (UNI-05, ENE-04; `sat_laser`, `satelite_hp`, `satelite_vel_m_s` 15; manutenção da Base 0; AL-17 sem uso); Recolher mineradores (CMB-28, `abrigo_laser`, `abrigo_vagas`); Muro e Portão (UNI-08, UNI-09, `wall`, `gate`, `portao_*`); sinalizadores do clique direito (UI-14); atalhos Q, M, P e T. |
 | 0.18.0 | 2026-09-25 | D-55 a D-58: Satélite como item da Base de Lançamento (`dados:custos` `satellite`, categoria `orbital`; Base mais cara; `satelite_vel_m_s` 8; UNI-04, PRD-01, PRD-06, ENE-04, atalho S); Muro de 6 m e Portão com giro livre e encaixe pela ponta (UNI-08, UNI-09, `muro_espessura_m`); recarga na Bateria Móvel pelo clique direito (CTL-07, ENE-18); barras só do jogador (UI-07); botões de parados (UI-15); AL-10 com recarga 120 s. |
 | 0.19.0 | 2026-09-25 | D-59 a D-62: Bateria Móvel (`bateria_en` 2000, `bateria_movel_raio_m` 1 casco a casco, ENE-18, ENE-23, ENE-24); Silo Móvel sem ancorar (ECO-22 a ECO-24, CTL-07; remove os tempos de ancorar e desancorar e o atalho T do silo); barras só nas selecionadas (UI-07); cartões de ação (UI-16); visual da Base de Lançamento. |
+| 0.19.1 | 2026-09-25 | CTL-10: o Silo Móvel deixa de ter habilidade no controle direto (não ancora mais, D-60). |

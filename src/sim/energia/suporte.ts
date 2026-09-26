@@ -113,8 +113,8 @@ export function passoSuporte(ctx: SystemContext): void {
     suporte.alvos = [];
     const propria = getComponent(state, fonte, 'bateria')!;
     const recarga = getComponent(state, fonte, 'recarga');
-    if (!suporte.ligado || propria.en <= 1e-9 || (recarga && recarga.estado !== 'nenhuma'))
-      continue;
+    // D-71: o suporte é sempre ativo (para só ao ir recarregar ou sem energia, ENE-19).
+    if (propria.en <= 1e-9 || (recarga && recarga.estado !== 'nenhuma')) continue;
     const nacao = getComponent(state, fonte, 'owner')!.nacao;
     const raio = param('bateria_movel_raio_m');
     const limiar = param('bateria_movel_limiar_alvo_pct');
@@ -193,17 +193,6 @@ export const comandosDeSuporte: Record<string, CommandHandler> = {
       removeComponent(ctx.state, id, 'trabalho');
       setComponent(ctx.state, id, 'seguirBateria', { bateria: fonte });
       irPara(ctx, id, direcaoDe(getComponent(ctx.state, fonte, 'position')!));
-    }
-  },
-  /** §12.4 (Bateria Móvel) T: modo suporte liga/desliga. */
-  suporte_bateria: (ctx, comando) => {
-    const d = (comando.dados ?? {}) as { ids?: unknown };
-    if (!Array.isArray(d.ids)) return;
-    for (const id of [...new Set(d.ids)].sort((a, b) => Number(a) - Number(b))) {
-      if (typeof id !== 'number' || !isAlive(ctx.state, id)) continue;
-      if (getComponent(ctx.state, id, 'owner')?.nacao !== comando.nacao) continue;
-      const suporte = getComponent(ctx.state, id, 'suporte');
-      if (suporte) suporte.ligado = !suporte.ligado;
     }
   },
 };

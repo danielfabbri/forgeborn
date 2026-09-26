@@ -461,7 +461,7 @@ describe('T-063 — CMB-12 a CMB-18: alvos, posturas e mente única', () => {
   it('CMB-18: Agressiva responde a ataque contra aliado dentro da própria visão', () => {
     const sim = partida(mundoLiso());
     const [ex1, aliado] = criar(sim, [
-      { unidade: 'hover_ex1', x: 0, z: 0 },
+      { unidade: 'hover_ex1', x: 0, z: 0, postura: 'agressiva' },
       { unidade: 'hover_explorer', x: 12, z: 0 },
     ]);
     const [inimigo] = criar(sim, [{ unidade: 'hover_ex1', x: 20, z: 0 }], 'usa');

@@ -36,7 +36,8 @@ import {
   type SimEvent,
   type SimState,
 } from '../sim';
-import { norteEm, produtoVetorial, type Vec3 } from '../sim/map/esfera';
+import { arco, interpolarArco, norteEm, produtoVetorial, type Vec3 } from '../sim/map/esfera';
+import { alturaDoArco } from '../sim/combate/misseis';
 import type { CorpoDesenhado } from './unidades';
 
 /** CMB-06: duração do feixe (s). */
@@ -101,7 +102,6 @@ export class CombateRender {
   private readonly projeteis: InstancedMesh;
   /** UNI-11: mísseis em voo com o modelo, apontados no sentido do voo. */
   private readonly misseis: Record<'missil_curto' | 'missil_longo', InstancedMesh>;
-  private readonly ultimaPosicao = new Map<EntityId, Vector3>();
   private readonly destrocos: InstancedMesh;
   private readonly explosoes: Explosao[] = [];
   private readonly geoExplosao = new SphereGeometry(1, 16, 12);
@@ -228,6 +228,8 @@ export class CombateRender {
     corpos: (id: EntityId) => CorpoDesenhado | undefined,
     agora: number,
     explorado: ((id: EntityId) => boolean) | null = null,
+    /** Tempo (s) já passado desde o último tick (interpolação do voo dos mísseis). */
+    adiantamento_s = 0,
   ): void {
     // Feixes: da posição desenhada do atirador à do alvo.
     let n = 0;
@@ -279,19 +281,30 @@ export class CombateRender {
         (proj.arma === 'missil_curto' || proj.arma === 'missil_longo')
       ) {
         vivos.add(id);
-        const agora = new Vector3(pos.x, pos.y, pos.z);
-        const antes = this.ultimaPosicao.get(id);
-        const cimaM = agora.clone().normalize();
-        const frenteM =
-          antes && antes.distanceToSquared(agora) > 1e-6
-            ? agora.clone().sub(antes).normalize()
-            : new Vector3(...norteEm([cimaM.x, cimaM.y, cimaM.z]));
-        if (Math.abs(frenteM.dot(cimaM)) > 0.999)
-          cimaM.set(...norteEm([cimaM.x, cimaM.y, cimaM.z]));
-        const ladoM = new Vector3().crossVectors(frenteM, cimaM).normalize();
-        cimaM.crossVectors(ladoM, frenteM).normalize();
+        // UNI-11: posição e rumo calculados no arco (o mesmo da simulação), adiantados pela
+        // fração do tick, para o voo não tremer nem trocar de rumo entre os ticks.
+        const origem = proj.origem!;
+        const total = proj.total_s ?? 1;
+        const distancia = arco(origem, proj.ponto) * this.raio;
+        const noArco = (f: number): Vector3 => {
+          const d = interpolarArco(origem, proj.ponto, Math.max(0, Math.min(1, f)));
+          const r = this.raio + this.chao(d) + alturaDoArco(distancia, f);
+          return new Vector3(d[0] * r, d[1] * r, d[2] * r);
+        };
+        const f = Math.min(1, (proj.voo_s + adiantamento_s) / total);
+        const agora = noArco(f);
+        const frenteM = noArco(f + 0.01)
+          .sub(noArco(f - 0.01))
+          .normalize();
+        // O plano do voo é fixo: o lado é a normal do grande círculo origem → ponto.
+        const ladoM = new Vector3(...produtoVetorial(origem, proj.ponto)).normalize();
+        if (ladoM.lengthSq() < 0.5) ladoM.set(...norteEm(origem));
+        const cimaM = new Vector3().crossVectors(ladoM, frenteM).normalize();
+        if (cimaM.dot(agora) < 0) {
+          ladoM.negate();
+          cimaM.negate();
+        }
         this.matriz.makeBasis(frenteM, cimaM, ladoM).setPosition(agora);
-        this.ultimaPosicao.set(id, agora);
         const lote = this.misseis[proj.arma];
         if (nMisseis[proj.arma] < 32) lote.setMatrixAt(nMisseis[proj.arma]++, this.matriz);
         continue;
@@ -305,7 +318,6 @@ export class CombateRender {
       this.misseis[arma].count = nMisseis[arma];
       this.misseis[arma].instanceMatrix.needsUpdate = true;
     }
-    for (const id of this.ultimaPosicao.keys()) if (!vivos.has(id)) this.ultimaPosicao.delete(id);
 
     // Destroços (ECO-27), alinhados à vertical local.
     this.destrocosDesenhados.length = 0;

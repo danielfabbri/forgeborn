@@ -421,14 +421,14 @@ export class UnidadesRender {
           raio: corpo.raio,
         });
       }
-      // ENE-24: a Bateria Móvel com suporte ligado brilha (pulsando); desligada, fica apagada.
+      // ENE-24 (D-71): a Bateria Móvel brilha (pulsando) enquanto transfere energia.
       const suporte = getComponent(state, id, 'suporte');
       if (suporte) {
         this.brilho.set(
           id,
-          suporte.ligado
+          suporte.alvos.length > 0
             ? BRILHO_LIGADA + 0.4 * Math.sin(performance.now() / 300)
-            : BRILHO_DESLIGADA,
+            : BRILHO_DESLIGADA * 6,
         );
       }
       lista.push({ corpo, frente, corte });

@@ -27,8 +27,6 @@ export interface EstadoDoPainel {
   misseis: { prontos: string[]; max: number; recarga_s: number } | null;
   /** UI-16: minas no carregador do Hover de Plantio selecionado, ou null. */
   minas: { n: number; max: number } | null;
-  /** ENE-24 (D-59): modo suporte da Bateria Móvel selecionada, ou null. */
-  suporte: boolean | null;
 }
 
 export const painelProducao = signal<EstadoDoPainel>({
@@ -43,7 +41,6 @@ export const painelProducao = signal<EstadoDoPainel>({
   recolhidos: null,
   misseis: null,
   minas: null,
-  suporte: null,
 });
 
 /** Aviso passageiro (AL-06, AL-11). */
@@ -57,8 +54,6 @@ export interface AcoesDoPainel {
   cancelarObra(obra: EntityId): void;
   /** CMB-28: Q da Nave. */
   recolherMineradores(): void;
-  /** ENE-24: T da Bateria Móvel. */
-  alternarSuporte(): void;
 }
 
 export const acoesDoPainel: { atual: AcoesDoPainel | null } = { atual: null };

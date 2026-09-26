@@ -118,8 +118,6 @@ export interface EntradaComandos {
   ordenarEm(d: Vec3): void;
   /** CMB-28: recolhe ou libera os mineradores (Q da Nave). */
   recolherMineradores(): void;
-  /** ENE-24: liga ou desliga o suporte das Baterias Móveis selecionadas. */
-  alternarSuporte(): void;
   dispose(): void;
 }
 
@@ -836,7 +834,6 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         if (bases.length > 0) definirModo('satelite');
         // §12.4 (Plantio de Minas) T: plantar mina no ponto.
         if (plantadores.length > 0) definirModo('plantar');
-        if (baterias.length > 0) enviar('suporte_bateria', { ids: baterias });
         if (usinas.length > 0) enviar('ligar_usina', { ids: usinas });
         break;
       }
@@ -903,10 +900,6 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     },
     ordenarEm(d) {
       ordemNaDirecao(d, 'mover');
-    },
-    alternarSuporte() {
-      const baterias = minhas('unit').filter((id) => getComponent(sim.state, id, 'suporte'));
-      if (baterias.length > 0) enviar('suporte_bateria', { ids: baterias });
     },
     recolherMineradores() {
       if (doTipo('ship').length > 0) enviar('recolher_mineradores', {});

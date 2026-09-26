@@ -16,7 +16,6 @@ import { param } from '../data';
 import { descarregar, extrair, folgaAteJazida, liberar } from '../economia/coleta';
 import { pontosDeEntrega } from '../economia/estoque';
 import { gastar } from '../energia/bateria';
-import { comandosDeSuporte } from '../energia/suporte';
 import { avancar, normalizar, tangente, type Vec3 } from '../map/esfera';
 import { criarMina } from '../units/criar';
 import { statsMovel } from '../units/stats';
@@ -142,9 +141,6 @@ function habilidade(ctx: SystemContext, comando: QueuedCommand, id: EntityId): v
     case 'drone_bomber':
     case 'drone_laser':
       p.pousar = !p.pousar;
-      return;
-    case 'mobile_battery':
-      repassar(comandosDeSuporte, 'suporte_bateria');
       return;
     default:
       // EX1, OPQ e Impressora não têm habilidade (D-42).

@@ -136,22 +136,6 @@ export function PainelProducao() {
                   </button>
                 </div>
               )}
-              {estado.suporte !== null && (
-                <div class="abas">
-                  <button
-                    type="button"
-                    class={estado.suporte ? 'ativa' : ''}
-                    onClick={() => acoes?.alternarSuporte()}
-                    data-testid="alternar-suporte"
-                    aria-pressed={estado.suporte}
-                  >
-                    T{' '}
-                    {estado.suporte
-                      ? t('producao.suporte_ligado')
-                      : t('producao.suporte_desligado')}
-                  </button>
-                </div>
-              )}
               {estado.misseis && (
                 <div class="misseis-prontos" data-testid="misseis-prontos">
                   {t('producao.misseis_prontos', {

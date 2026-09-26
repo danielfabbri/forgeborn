@@ -70,7 +70,12 @@ export function recursosSemJazida(ctx: SystemContext, nacao: NacaoId): RecursosI
 /** Distribui os hovers ociosos de cada nação pela diretiva. */
 export function distribuirOciosos(ctx: SystemContext): void {
   for (const nacao of ctx.state.nacoes) {
-    const livres = ociosos(ctx, nacao);
+    // D-69: o hover que o jogador parou fica parado (só conta para o aviso e o botão de
+    // parados); a IA segue entregando os seus à Diretiva.
+    const ia = ctx.state.ias[nacao] !== undefined;
+    const livres = ociosos(ctx, nacao).filter(
+      (id) => ia || getComponent(ctx.state, id, 'order')!.tipo === 'tarefa',
+    );
     if (livres.length === 0) continue;
     const elegiveis = jazidasElegiveis(ctx, nacao);
     if (elegiveis.length === 0) continue;

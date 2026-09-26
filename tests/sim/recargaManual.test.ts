@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getComponent, type Sim } from '../../src/sim';
+import { getComponent, param, type Sim } from '../../src/sim';
 import { criar, mundoLiso, ordenar, partida } from './mundo-teste';
 
 const rodar = (sim: Sim, s: number) => {
@@ -85,11 +85,11 @@ describe('T-047 — CTL-07, ENE-18, D-57: recarregar na Bateria Móvel pelo cliq
 });
 
 describe('T-048 — ENE-18, ENE-23, D-59: Bateria Móvel encostada e carregar unidade', () => {
-  it('ENE-18 (D-59): unidade a poucos metros, sem encostar, não recebe', () => {
+  it('ENE-18 (D-71): unidade fora do raio (casco a casco) não recebe', () => {
     const sim = partida(mundoLiso());
     const [movel, ex1] = criar(sim, [
       { unidade: 'mobile_battery', x: 0, z: 0 },
-      { unidade: 'hover_ex1', x: 8, z: 0, postura: 'passiva' },
+      { unidade: 'hover_ex1', x: param('bateria_movel_raio_m') + 6, z: 0, postura: 'passiva' },
     ]);
     getComponent(sim.state, movel!, 'bateria')!.en = getComponent(
       sim.state,

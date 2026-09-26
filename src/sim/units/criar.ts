@@ -49,14 +49,19 @@ function comecarCombate(ctx: SystemContext, id: EntityId): void {
   });
 }
 
-/** §8.6: armadas começam Agressivas; estruturas não têm postura. */
+/**
+ * §8.6/D-70: armadas do jogador começam Defensivas; as da IA, Agressivas. Estruturas não têm
+ * postura.
+ */
 function armar(ctx: SystemContext, id: EntityId, arma: string | null, movel: boolean): void {
   if (!arma) return;
+  const nacao = getComponent(ctx.state, id, 'owner')?.nacao;
+  const ia = nacao !== undefined && ctx.state.ias[nacao] !== undefined;
   setComponent(ctx.state, id, 'arma', {
     id: arma as ArmasId,
     recarga_s: 0,
     alvo: null,
-    postura: movel ? 'agressiva' : null,
+    postura: movel ? (ia ? 'agressiva' : 'defensiva') : null,
     origem: null,
     perseguindo: null,
     alvoDireto: null,

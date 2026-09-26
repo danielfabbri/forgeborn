@@ -64,13 +64,11 @@ test('T-108/UI-16: cartão do Plantio de Minas: foto da mina e clique no terreno
     .toBeGreaterThan(0);
 });
 
-test('T-108/ENE-24: cartão da Bateria Móvel liga e desliga o suporte', async ({ page }) => {
+test('T-077/ENE-24: a Bateria Móvel não tem botão de liga/desliga (sempre ativa)', async ({
+  page,
+}) => {
   const bateria = await primeiro(page, 'mobile_battery');
   await clicar(page, bateria);
-  const botao = page.getByTestId('alternar-suporte');
-  await expect(botao).toHaveAttribute('aria-pressed', 'true');
-  await botao.click();
-  await expect(botao).toHaveAttribute('aria-pressed', 'false');
-  await botao.click();
-  await expect(botao).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('painel-selecao')).toBeVisible();
+  await expect(page.getByTestId('alternar-suporte')).toHaveCount(0);
 });

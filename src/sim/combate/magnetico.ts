@@ -1,8 +1,9 @@
 /**
- * Torre Magnética (UNI-13, D-65). Unidades móveis inimigas no campo de `mag_raio_m` ficam mais
+ * Torre Magnética (UNI-13, D-65, D-72). Unidades móveis inimigas no campo de `mag_raio_m` ficam mais
  * lentas e perdem energia; o efeito cai em linha até a borda, vale menos em blindadas e não se
  * soma entre torres (vale o mais forte). A torre guarda o drenado até `mag_banco_max_en` e
- * repassa aos aliados no campo, os de menor % primeiro.
+ * repassa aos aliados no campo, os de menor % primeiro. Também repara as unidades próprias
+ * feridas no campo (`mag_reparo_hp_s`).
  */
 import { entitiesWith, getComponent, removeComponent, setComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
@@ -75,6 +76,23 @@ export function passoMagnetico(ctx: SystemContext): void {
       const en = Math.min(param('mag_repasse_en_s') * dt, b.max - b.en, mag.banco);
       b.en += en;
       mag.banco -= en;
+      mag.ativo = true;
+    }
+    // D-72: repara as unidades próprias feridas no campo, as mais feridas primeiro.
+    const feridos = aliados
+      .filter((u) => {
+        const v = getComponent(state, u, 'vida');
+        return v !== undefined && v.hp > 0 && v.hp < v.max - 1e-9;
+      })
+      .sort((a, b) => {
+        const va = getComponent(state, a, 'vida')!;
+        const vb = getComponent(state, b, 'vida')!;
+        return va.hp / va.max - vb.hp / vb.max || a - b;
+      })
+      .slice(0, param('mag_max_aliados'));
+    for (const u of feridos) {
+      const v = getComponent(state, u, 'vida')!;
+      v.hp = Math.min(v.max, v.hp + param('mag_reparo_hp_s') * dt);
       mag.ativo = true;
     }
   }

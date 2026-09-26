@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { dados, getComponent, param, type Sim } from '../../src/sim';
 import type { RecursosId } from '../../src/sim/data';
 import { SEMEAR_JAZIDAS_COMMAND } from '../../src/sim/economia';
-import { recursosSemJazida } from '../../src/sim/economia/diretiva';
+import { ociosos, recursosSemJazida } from '../../src/sim/economia/diretiva';
 import { avancar, normalizar, norteEm, girar } from '../../src/sim/map/esfera';
 import { criar, mundoLiso, mundoLua, ordenar, partida, revelar, semear } from './mundo-teste';
 
@@ -123,7 +123,7 @@ describe('T-033 — ECO-18 a ECO-21: Diretiva de Coleta', () => {
     expect(sim.state.diretivas.usa!.si).toBe(param('diretiva_si_pct'));
   });
 
-  it('ECO-19: hover parado pelo jogador volta ao trabalho após hover_ocioso_alerta_s', () => {
+  it('ECO-19 (D-69): hover parado pelo jogador fica parado; conta como ocioso para o aviso', () => {
     const { sim, hovers } = partidaComHovers(1);
     sim.step();
     const [h] = hovers;
@@ -131,9 +131,16 @@ describe('T-033 — ECO-18 a ECO-21: Diretiva de Coleta', () => {
     ordenar(sim, 'parar', { ids: [h] });
     sim.step();
     expect(recursoDe(sim, h!)).toBeNull();
-    sim.run(Math.round(param('hover_ocioso_alerta_s') * sim.tickHz) - 5);
+    sim.run(Math.round(param('hover_ocioso_alerta_s') * sim.tickHz) * 3);
     expect(recursoDe(sim, h!)).toBeNull();
-    sim.run(10);
-    expect(recursoDe(sim, h!)).not.toBeNull();
+    const ctx = {
+      state: sim.state,
+      tick: sim.state.tick,
+      dt: 1 / sim.tickHz,
+      commands: [],
+      mundo: mundoLiso(),
+      emit: () => {},
+    };
+    expect(ociosos(ctx, 'bra')).toContain(h);
   });
 });

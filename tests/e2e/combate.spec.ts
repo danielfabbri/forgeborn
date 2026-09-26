@@ -47,12 +47,14 @@ test.beforeEach(async ({ page }) => {
   await page.waitForTimeout(800);
 });
 
-test('CMB-13/§12.4: X alterna a postura e o painel mostra', async ({ page }) => {
+test('CMB-13/§12.4/D-70: começa Defensiva; X alterna a postura e o painel mostra', async ({
+  page,
+}) => {
   const ex1 = await idDe(page, 'hover_ex1');
   await clicar(page, ex1);
-  await expect(page.getByTestId('selecao-postura')).toHaveText('Postura: Agressiva');
-  await page.keyboard.press('KeyX');
   await expect(page.getByTestId('selecao-postura')).toHaveText('Postura: Defensiva');
+  await page.keyboard.press('KeyX');
+  await expect(page.getByTestId('selecao-postura')).not.toHaveText('Postura: Defensiva');
 });
 
 test('CMB-14/§12.4: A + clique no terreno dá ataque-movimento', async ({ page }) => {
@@ -93,8 +95,8 @@ test('CMB-15/CMB-27: com o EX1 Passivo, o clique direito num inimigo manda ataca
   });
   expect(inimigo).not.toBeNull();
   await clicar(page, ex1);
-  // Agressiva → Defensiva → Manter posição → Passiva: sem a ordem, ele não atira.
-  for (let k = 0; k < 3; k++) await page.keyboard.press('KeyX');
+  // D-70: Defensiva → Manter posição → Passiva: sem a ordem, ele não atira.
+  for (let k = 0; k < 2; k++) await page.keyboard.press('KeyX');
   await expect(page.getByTestId('selecao-postura')).toHaveText('Postura: Passiva');
   await page.waitForTimeout(500);
   expect(await sonda(page, (s, a) => s.tipo(a as number), inimigo)).toBe('hover_explorer');

@@ -220,4 +220,20 @@ describe('T-049 — UNI-13, D-65: Torre Magnética', () => {
     expect(ba.en).toBeGreaterThan(10 + param('mag_repasse_en_s') * 0.9);
     expect(mag.banco).toBeLessThan(param('mag_banco_max_en'));
   });
+
+  it('UNI-13 (D-72): repara as unidades próprias feridas no campo, as mais feridas primeiro', () => {
+    const sim = partida(mundoLiso());
+    criar(sim, [{ estrutura: 'mag_tower', x: 0, z: 0 }]);
+    const [a, b, fora] = criar(sim, [
+      { unidade: 'hover_ex1', x: 4, z: 0, postura: 'passiva' },
+      { unidade: 'hover_ex1', x: -4, z: 0, postura: 'passiva' },
+      { unidade: 'hover_ex1', x: 0, z: param('mag_raio_m') + 4, postura: 'passiva' },
+    ]);
+    const vida = (id: number) => getComponent(sim.state, id, 'vida')!;
+    for (const id of [a!, b!, fora!]) vida(id).hp = vida(id).max / 2;
+    rodar(sim, 2);
+    expect(vida(a!).hp).toBeCloseTo(vida(a!).max / 2 + 2 * param('mag_reparo_hp_s'), 0);
+    expect(vida(b!).hp).toBeGreaterThan(vida(b!).max / 2);
+    expect(vida(fora!).hp).toBeCloseTo(vida(fora!).max / 2, 6);
+  });
 });

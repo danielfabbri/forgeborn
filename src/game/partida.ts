@@ -136,7 +136,6 @@ const HABILIDADES: Record<string, string> = {
   hover_scout: 'direto.habilidade.sentinela',
   drone_bomber: 'direto.habilidade.pousar',
   drone_laser: 'direto.habilidade.pousar',
-  mobile_battery: 'direto.habilidade.suporte',
 };
 
 declare global {
@@ -476,7 +475,6 @@ export function iniciarPartida(): void {
       cancelarItem: (produtor, indice) => comandos.cancelarItem(produtor, indice),
       cancelarObra: (obra) => comandos.cancelarObra(obra),
       recolherMineradores: () => comandos.recolherMineradores(),
-      alternarSuporte: () => comandos.alternarSuporte(),
     };
     acoesDaSelecao.filtrar = (ids) => comandos.selecionar(ids);
     acoesDaSelecao.trancar = (id) =>
@@ -757,15 +755,13 @@ export function iniciarPartida(): void {
           ? MENU_BASE
           : tipoProdutor === 'hover_minelayer'
             ? MENU_MINAS
-            : tipoProdutor === 'mobile_battery'
-              ? []
-              : tipoProdutor === 'missile_silo'
-                ? MENU_MISSEIS
-                : entrada.menu === 'unidades'
-                  ? MENU_UNIDADES
-                  : entrada.menu === 'estruturas'
-                    ? MENU_ESTRUTURAS
-                    : [];
+            : tipoProdutor === 'missile_silo'
+              ? MENU_MISSEIS
+              : entrada.menu === 'unidades'
+                ? MENU_UNIDADES
+                : entrada.menu === 'estruturas'
+                  ? MENU_ESTRUTURAS
+                  : [];
     const obra = obraId !== undefined ? getComponent(sim.state, obraId, 'obra')! : null;
     painelProducao.value = {
       produtor:
@@ -818,10 +814,6 @@ export function iniciarPartida(): void {
               n: getComponent(sim.state, produtorId!, 'lancaMinas')?.carregador ?? 0,
               max: param('magazine_minas'),
             }
-          : null,
-      suporte:
-        tipoProdutor === 'mobile_battery'
-          ? (getComponent(sim.state, produtorId!, 'suporte')?.ligado ?? false)
           : null,
     };
   };
@@ -1014,6 +1006,7 @@ export function iniciarPartida(): void {
         nevoa ? visivelAoJogador : null,
         nevoa ? fantasmas.visiveis(leitura(), jogador) : [],
       );
+      posicionarCamera(dtDoQuadro);
       jazidas.sync(sim.state, nevoa ? exploradoPeloJogador : null);
       // UI-11: emblemas das nações sobre os corpos no modo daltônico.
       emblemas.sync(unidades.corpos, modoDaltonico());
@@ -1040,6 +1033,7 @@ export function iniciarPartida(): void {
         (id) => unidades.get(id),
         performance.now(),
         nevoa ? exploradoPeloJogador : null,
+        alpha / sim.tickHz,
       );
       sinalizadores.sync(performance.now());
       const agoraEfeitos = performance.now();
@@ -1224,6 +1218,7 @@ export function iniciarPartida(): void {
     );
   };
 
+  let dtDoQuadro = 0;
   const posicionarCamera = (dt: number): void => {
     if (pouso.ativo && cameraDoPouso()) return;
     entradaCamera?.atualizar(dt);
@@ -1274,7 +1269,9 @@ export function iniciarPartida(): void {
     }
   };
   const quadro = (agora: number): void => {
-    posicionarCamera(Math.min((agora - ultimoQuadro) / 1000, 0.1));
+    // A câmera é posta no render, depois da interpolação dos corpos (no controle direto ela
+    // segue a posição desenhada da unidade deste mesmo quadro, sem tremer).
+    dtDoQuadro = Math.min((agora - ultimoQuadro) / 1000, 0.1);
     // REG-20: a velocidade de jogo muda quantos ticks rodam por segundo real.
     loop.speed = resolvida?.velocidade ?? 1;
     loop.paused = pausado.value;

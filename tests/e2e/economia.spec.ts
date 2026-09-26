@@ -83,10 +83,10 @@ test('T-032: o estoque do jogador cresce com a coleta automática (ECO-14, ECO-1
   expect(await total()).toBeGreaterThan(inicial);
 });
 
-test('T-035: T ancora o Silo Móvel selecionado', async ({ page }) => {
+test('T-037: o Silo Móvel não ancora (T não muda o estado)', async ({ page }) => {
   const [silo] = await idsDe(page, 'mobile_silo');
   await clicar(page, silo!);
   await page.keyboard.press('KeyT');
   await page.waitForTimeout(200);
-  expect(await sonda(page, (s, a) => s.silo(a), silo!)).toMatch(/ancorando|ancorado/);
+  expect(await sonda(page, (s, a) => s.silo(a), silo!)).not.toMatch(/ancor/);
 });

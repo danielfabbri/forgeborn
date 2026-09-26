@@ -35,7 +35,14 @@ import { fimDaPartida } from './fimDePartida';
 import { irParaMenu, irParaPartida, lerPartidaDaUrl, novaSeed } from './navegacao';
 import { ligarEntradaCamera } from '../input/cameraInput';
 import { ligarEntradaComandos } from '../input/comandoInput';
-import { MENU_ESTRUTURAS, MENU_BASE, MENU_NAVE, MENU_UNIDADES } from './atalhosProducao';
+import {
+  COM_CARTAO_DE_ACAO,
+  MENU_BASE,
+  MENU_ESTRUTURAS,
+  MENU_MINAS,
+  MENU_NAVE,
+  MENU_UNIDADES,
+} from './atalhosProducao';
 import { barrasDe, corpos as corposDa, relogio, resumoDaJazida } from './hud';
 import { resumoDaSelecao } from './painelSelecao';
 import { ociosos } from '../sim/economia/diretiva';
@@ -127,7 +134,6 @@ const HABILIDADES: Record<string, string> = {
   hover_scout: 'direto.habilidade.sentinela',
   drone_bomber: 'direto.habilidade.pousar',
   drone_laser: 'direto.habilidade.pousar',
-  mobile_silo: 'direto.habilidade.ancorar',
   mobile_battery: 'direto.habilidade.suporte',
 };
 
@@ -171,6 +177,8 @@ declare global {
       satelites?: () => Array<{ id: EntityId; nacao: string; estado: string; indo: boolean }>;
       /** Sinalizadores do clique direito ativos (UI-14), pelo tipo. */
       sinalizadores?: () => string[];
+      /** Minas a plantar do Hover de Plantio (UNI-02), ou null. */
+      plantios?: (id: EntityId) => { plantios: number; carregador: number } | null;
       /** Rumo guardado de uma estrutura (D-56), ou null. */
       rumo?: (id: EntityId) => Vec3 | null;
     };
@@ -463,6 +471,7 @@ export function iniciarPartida(): void {
       cancelarItem: (produtor, indice) => comandos.cancelarItem(produtor, indice),
       cancelarObra: (obra) => comandos.cancelarObra(obra),
       recolherMineradores: () => comandos.recolherMineradores(),
+      alternarSuporte: () => comandos.alternarSuporte(),
     };
     acoesDaSelecao.filtrar = (ids) => comandos.selecionar(ids);
     acoesDaSelecao.trancar = (id) =>
@@ -685,11 +694,16 @@ export function iniciarPartida(): void {
       (id) => getComponent(sim.state, id, 'owner')?.nacao === jogador,
     );
     const obraId = proprios.find((id) => getComponent(sim.state, id, 'obra'));
-    const produtorId = proprios.find(
-      (id) => getComponent(sim.state, id, 'producer') && !getComponent(sim.state, id, 'obra'),
-    );
     const tipoDe = (id: EntityId) =>
       getComponent(sim.state, id, 'unit')?.tipo ?? getComponent(sim.state, id, 'structure')!.tipo;
+    // UI-16 (D-62): sem produtor, o cartão de ação da unidade (Plantio de Minas, Bateria Móvel).
+    const produtorId =
+      proprios.find(
+        (id) => getComponent(sim.state, id, 'producer') && !getComponent(sim.state, id, 'obra'),
+      ) ??
+      proprios.find(
+        (id) => getComponent(sim.state, id, 'unit') && COM_CARTAO_DE_ACAO.has(tipoDe(id)),
+      );
     const entrada = comandos.estado;
     const tipoProdutor = produtorId !== undefined ? tipoDe(produtorId) : null;
     const opcoes =
@@ -697,11 +711,15 @@ export function iniciarPartida(): void {
         ? MENU_NAVE
         : tipoProdutor === 'satellite_uplink'
           ? MENU_BASE
-          : entrada.menu === 'unidades'
-            ? MENU_UNIDADES
-            : entrada.menu === 'estruturas'
-              ? MENU_ESTRUTURAS
-              : [];
+          : tipoProdutor === 'hover_minelayer'
+            ? MENU_MINAS
+            : tipoProdutor === 'mobile_battery'
+              ? []
+              : entrada.menu === 'unidades'
+                ? MENU_UNIDADES
+                : entrada.menu === 'estruturas'
+                  ? MENU_ESTRUTURAS
+                  : [];
     const obra = obraId !== undefined ? getComponent(sim.state, obraId, 'obra')! : null;
     painelProducao.value = {
       produtor:
@@ -709,7 +727,8 @@ export function iniciarPartida(): void {
           ? {
               id: produtorId,
               tipo: tipoProdutor!,
-              fila: getComponent(sim.state, produtorId, 'producer')!.fila.map((item) => ({
+              cartaoDeAcao: !getComponent(sim.state, produtorId, 'producer'),
+              fila: (getComponent(sim.state, produtorId, 'producer')?.fila ?? []).map((item) => ({
                 item: item.item,
                 progresso:
                   item.obra !== null
@@ -738,6 +757,17 @@ export function iniciarPartida(): void {
           ? entitiesWith(sim.state, 'abrigo', 'owner').some(
               (id) => getComponent(sim.state, id, 'owner')!.nacao === jogador,
             )
+          : null,
+      minas:
+        tipoProdutor === 'hover_minelayer'
+          ? {
+              n: getComponent(sim.state, produtorId!, 'lancaMinas')?.carregador ?? 0,
+              max: param('magazine_minas'),
+            }
+          : null,
+      suporte:
+        tipoProdutor === 'mobile_battery'
+          ? (getComponent(sim.state, produtorId!, 'suporte')?.ligado ?? false)
           : null,
     };
   };
@@ -1018,6 +1048,10 @@ export function iniciarPartida(): void {
         };
       });
     sonda.sinalizadores = () => sinalizadores.tipos;
+    sonda.plantios = (id) => {
+      const l = getComponent(sim.state, id, 'lancaMinas');
+      return l ? { plantios: l.plantios.length, carregador: l.carregador } : null;
+    };
     sonda.rumo = (id) => getComponent(sim.state, id, 'structure')?.rumo ?? null;
     sonda.tipo = (id) =>
       (getComponent(sim.state, id, 'satelite') ? 'satellite' : null) ??

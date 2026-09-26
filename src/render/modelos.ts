@@ -322,7 +322,7 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     m.add(new TorusGeometry(0.46, 0.04, 6, 16), 'nacao', { y: 0.8, rx: Math.PI / 2 });
     return olho(m, 0.45, 0.45, 0, 0.12).pronta();
   },
-  // Caçamba grande com rampa lateral que se abre ao ancorar.
+  // Caçamba grande com rampa lateral.
   mobile_silo: () => {
     const m = casco(new Montagem(), 3.6, 2.8, 0.5, 0.12);
     m.add(new CylinderGeometry(1.9, 1.3, 1.5, 4), GRAFITE, { y: 1.25, ry: Math.PI / 4 });
@@ -489,18 +489,42 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     return olho(m, 2.3, 2.2, 0, 0.3).pronta();
   },
   // Plataforma com trilho de lançamento.
+  // T-128: plataforma com torre de lançamento vertical ao lado do berço central, de onde o
+  // satélite sobe na vertical (o render o faz subir do centro da base).
   satellite_uplink: () => {
     const m = new Montagem();
     m.caixa(10, 0.6, 10, GRAFITE);
     m.caixa(9.5, 0.2, 9.5, PAINEL, { y: 0.6 });
-    m.caixa(9.0, 0.35, 0.9, METAL, { x: 0.5, y: 3.2, rz: 0.6 });
-    for (const x of [-2.0, 1.2]) m.caixa(0.5, x < 0 ? 1.4 : 3.4, 0.5, GRAFITE, { x, y: 0.8 });
-    // O satélite no trilho, com as asas solares recolhidas.
-    m.caixa(1.2, 0.8, 0.8, METAL, { x: 3.0, y: 5.6, rz: 0.6 });
-    for (const z of [-0.8, 0.8]) m.caixa(1.0, 0.05, 0.6, VIDRO, { x: 3.0, y: 5.9, z, rz: 0.6 });
-    // Casa de controle e antena.
-    m.caixa(2.0, 1.4, 2.0, PAINEL, { x: -3.5, y: 0.8, z: 3.2 });
-    antena(m, -3.5, 2.2, 3.2, 1.5);
+    // Berço de lançamento no centro: anel, fosso de chamas e quatro garras.
+    m.cilindro(2.0, 0.3, METAL, { y: 0.8 }, 24);
+    m.cilindro(1.3, 0.32, GRAFITE, { y: 0.8 }, 24);
+    m.cilindro(1.6, 0.05, 'nacao', { y: 1.12 }, 24);
+    for (let k = 0; k < 4; k++) {
+      const a = (k * Math.PI) / 2 + Math.PI / 4;
+      m.caixa(0.25, 1.6, 0.25, METAL, { x: Math.cos(a) * 1.5, y: 1.1, z: Math.sin(a) * 1.5 });
+    }
+    // Torre de serviço vertical (treliça de 4 pernas) com braço até o berço.
+    const tx = -3.2;
+    const tz = -3.2;
+    const h = 10;
+    for (const dx of [-0.7, 0.7])
+      for (const dz of [-0.7, 0.7])
+        m.cilindro(0.12, h, METAL, { x: tx + dx, y: 0.8, z: tz + dz }, 6);
+    for (let y = 1.8; y < h; y += 1.6) {
+      m.caixa(1.5, 0.1, 0.1, PAINEL, { x: tx, y, z: tz - 0.7 });
+      m.caixa(1.5, 0.1, 0.1, PAINEL, { x: tx, y, z: tz + 0.7 });
+      m.caixa(0.1, 0.1, 1.5, PAINEL, { x: tx - 0.7, y, z: tz });
+      m.caixa(0.1, 0.1, 1.5, PAINEL, { x: tx + 0.7, y, z: tz });
+    }
+    m.caixa(1.9, 0.25, 1.9, GRAFITE, { x: tx, y: h + 0.8, z: tz });
+    m.cilindro(0.2, 0.3, 'nacao', { x: tx, y: h + 1.05, z: tz }, 10);
+    antena(m, tx + 0.6, h + 1.05, tz + 0.6, 1.4);
+    // Braço de serviço que abraça a carga no berço.
+    m.caixa(0.35, 0.35, 2.8, METAL, { x: tx + 1.45, y: 6.2, z: tz + 1.45, ry: Math.PI / 4 });
+    m.caixa(0.1, 0.1, 2.6, 'nacao', { x: tx + 1.45, y: 6.6, z: tz + 1.45, ry: Math.PI / 4 });
+    // Casa de controle.
+    m.caixa(2.0, 1.4, 2.0, PAINEL, { x: 3.4, y: 0.8, z: 3.2 });
+    m.caixa(1.6, 0.4, 0.05, VIDRO, { x: 3.4, y: 1.7, z: 2.2 });
     m.caixa(8.5, 0.06, 0.2, 'nacao', { y: 0.82, z: -4.5 });
     return olho(m, 4.9, 1.0, 3.8, 0.3).pronta();
   },

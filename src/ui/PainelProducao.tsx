@@ -136,6 +136,27 @@ export function PainelProducao() {
                   </button>
                 </div>
               )}
+              {estado.suporte !== null && (
+                <div class="abas">
+                  <button
+                    type="button"
+                    class={estado.suporte ? 'ativa' : ''}
+                    onClick={() => acoes?.alternarSuporte()}
+                    data-testid="alternar-suporte"
+                    aria-pressed={estado.suporte}
+                  >
+                    T{' '}
+                    {estado.suporte
+                      ? t('producao.suporte_ligado')
+                      : t('producao.suporte_desligado')}
+                  </button>
+                </div>
+              )}
+              {estado.minas && (
+                <div data-testid="carregador-minas">
+                  {t('producao.minas', { n: estado.minas.n, max: estado.minas.max })}
+                </div>
+              )}
               <div class="opcoes cartao" data-testid="opcoes">
                 {estado.opcoes.map((opcao) => (
                   <button
@@ -152,25 +173,27 @@ export function PainelProducao() {
                   </button>
                 ))}
               </div>
-              <div class="fila" data-testid="fila">
-                {t('producao.fila')}:
-                {estado.produtor.fila.length === 0 && <span> {t('producao.vazia')}</span>}
-                {estado.produtor.fila.map((item, k) => (
-                  <div class="item-fila" key={`${k}-${item.item}`}>
-                    <span>{nome(item.item)}</span>
-                    <span class="barra">
-                      <span style={{ width: `${Math.floor(item.progresso * 100)}%` }} />
-                    </span>
-                    <button
-                      type="button"
-                      title={t('producao.cancelar')}
-                      onClick={() => acoes?.cancelarItem(estado.produtor!.id, k)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
+              {!estado.produtor.cartaoDeAcao && (
+                <div class="fila" data-testid="fila">
+                  {t('producao.fila')}:
+                  {estado.produtor.fila.length === 0 && <span> {t('producao.vazia')}</span>}
+                  {estado.produtor.fila.map((item, k) => (
+                    <div class="item-fila" key={`${k}-${item.item}`}>
+                      <span>{nome(item.item)}</span>
+                      <span class="barra">
+                        <span style={{ width: `${Math.floor(item.progresso * 100)}%` }} />
+                      </span>
+                      <button
+                        type="button"
+                        title={t('producao.cancelar')}
+                        onClick={() => acoes?.cancelarItem(estado.produtor!.id, k)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

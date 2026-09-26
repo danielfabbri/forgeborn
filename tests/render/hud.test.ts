@@ -87,7 +87,7 @@ describe('T-081 — UI-03: painel de seleção', () => {
 });
 
 describe('T-085 — UI-07: barras sobre as unidades', () => {
-  it('UI-07: no automático, só selecionadas, danificadas ou com bateria Baixa; "sempre" mostra todas', () => {
+  it('UI-07 (D-61): no automático, só as selecionadas (mesmo danificadas ou com bateria Baixa); "sempre" mostra todas', () => {
     const sim = partida(mundoLiso());
     const [a, b, c] = criar(sim, [
       { unidade: 'hover_ex1', x: 0, z: 0 },
@@ -99,8 +99,10 @@ describe('T-085 — UI-07: barras sobre as unidades', () => {
     bat.en = (bat.max * param('limiar_bateria_baixa_pct')) / 100;
     expect(barrasDe(sim.state, a!, false, false)).toBeNull();
     expect(barrasDe(sim.state, a!, true, false)).toEqual({ hp: 1, en: 1 });
-    expect(barrasDe(sim.state, b!, false, false)?.hp).toBeLessThan(1);
-    expect(barrasDe(sim.state, c!, false, false)?.en).toBeCloseTo(
+    expect(barrasDe(sim.state, b!, false, false)).toBeNull();
+    expect(barrasDe(sim.state, c!, false, false)).toBeNull();
+    expect(barrasDe(sim.state, b!, true, false)?.hp).toBeLessThan(1);
+    expect(barrasDe(sim.state, c!, true, false)?.en).toBeCloseTo(
       param('limiar_bateria_baixa_pct') / 100,
       9,
     );

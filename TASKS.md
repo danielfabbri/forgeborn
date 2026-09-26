@@ -138,7 +138,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: só recebe descargas ancorado; ciclo automático no `limiar_ciclo_silo_pct`; a carga só conta depois de descarregar num depósito; hovers se redirecionam enquanto o silo está fora.
 - [x] **T-036 — Destroços e reciclagem** · M · Spec: ECO-27 – ECO-29 · Dep: T-032, T-060 · Feito: 2026-09-24
   - Aceite: destroço = piso(receita × `rendimento_destroco_pct`%) por recurso; some no prazo; a sucata vira os recursos certos ao ser descarregada; o destroço do silo inclui `rendimento_carga_silo_pct`% da carga.
-- [ ] **T-037 — Silo Móvel sem ancorar** · M · Spec: ECO-10, ECO-22 – ECO-24, CTL-07, CTL-10, UI-14, D-60 · Dep: T-035
+- [x] **T-037 — Silo Móvel sem ancorar** · M · Spec: ECO-10, ECO-22 – ECO-24, CTL-07, CTL-10, UI-14, D-60 · Dep: T-035 · Feito: 2026-09-25
   - Aceite: o silo recebe parado ou andando (menos descarregando); descarrega sozinho ao encostar na Nave ou num Armazém; clique direito dos hovers no silo descarrega qualquer carga e eles voltam a minerar, com sinalizador de descarregar.
 
 ## M4 — Energia
@@ -159,7 +159,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: INV-09 e INV-10 verdes em `tests/balance/`.
 - [x] **T-047 — Recarga na Bateria Móvel pelo clique direito** · P · Spec: CTL-07, ENE-18, D-57 · Dep: T-045 · Feito: 2026-09-25
   - Aceite: clique direito na Bateria Móvel própria leva as unidades selecionadas até ela e as recarrega com qualquer nível, até 100%, antes das demais.
-- [ ] **T-048 — Bateria Móvel encostada, carregar unidade e brilho** · M · Spec: ENE-18, ENE-23, ENE-24, D-59 · Dep: T-047
+- [x] **T-048 — Bateria Móvel encostada, carregar unidade e brilho** · M · Spec: ENE-18, ENE-23, ENE-24, D-59 · Dep: T-047 · Feito: 2026-09-25
   - Aceite: suporte só para unidades encostadas; clique direito numa unidade própria com a Bateria Móvel selecionada leva a bateria até ela e a enche até 100%; brilho ligado/desligado e botão no cartão; 2000 EN.
 
 ## M5 — Produção e construção
@@ -273,7 +273,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite (**marco MVP**): teste E2E (Playwright) abre o jogo, inicia um Free Battle na Lua contra IA Fácil, confere o HUD, se rende e vê a tela de derrota com estatísticas; sessão manual de 20 min contra IA Normal sem erros no console.
 - [x] **T-107 — Botões de parados e barras só do jogador** · P · Spec: UI-07, UI-15, D-58 · Dep: T-084 · Feito: 2026-09-25
   - Aceite: botões fixos contam mineradores e impressoras parados e o clique seleciona e centraliza o próximo; unidades de outras nações não mostram barras; AL-10 respeita a recarga de 120 s.
-- [ ] **T-108 — Barras só nas selecionadas e cartões de ação** · P · Spec: UI-07, UI-16, D-61, D-62 · Dep: T-107
+- [x] **T-108 — Barras só nas selecionadas e cartões de ação** · P · Spec: UI-07, UI-16, D-61, D-62 · Dep: T-107 · Feito: 2026-09-25
   - Aceite: sem Tab, barras só nas unidades selecionadas; cartão do Hover de Plantio de Minas com a foto da mina que entra no modo de plantar; cartão da Bateria Móvel com o botão do suporte.
 
 ## M11 — Controle direto
@@ -296,7 +296,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: trilhas por contexto com transição cruzada e arquivos faltando pulados; SFX sintetizados por unidade e interface; voz TTS pt-BR com legenda; volumes por canal nas Configurações.
 - [x] **T-127 — Acessibilidade** · M · Spec: UI-11, UI-12 · Dep: T-080 · Feito: 2026-09-25 (paletas daltônicas a partir da Okabe-Ito; legendas pela pilha de alertas; escala, 0,75× e pausa tática já existiam)
 
-- [ ] **T-128 — Base de Lançamento com torre vertical** · P · Spec: §12 (visual da Base de Lançamento) · Dep: T-121
+- [x] **T-128 — Base de Lançamento com torre vertical** · P · Spec: §12 (visual da Base de Lançamento) · Dep: T-121 · Feito: 2026-09-25
   - Aceite: o modelo tem uma torre vertical coerente com a subida do satélite.
 ## M13 — Campanha (v1.0)
 

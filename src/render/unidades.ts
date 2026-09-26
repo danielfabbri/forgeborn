@@ -66,6 +66,9 @@ const FAIXA_DA_LINHA_M = 0.07;
 /** D-51 (apresentação): altura do satélite sobre o chão e a suavização por quadro. */
 const ALTURA_DA_ORBITA_M = 38;
 const SUAVIZACAO_DO_SATELITE = 0.2;
+/** ENE-24 (apresentação): brilho da Bateria Móvel ligada e desligada. */
+const BRILHO_LIGADA = 2.2;
+const BRILHO_DESLIGADA = 0.12;
 /** UNI-09 (apresentação): altura da soleira e da folha do Portão. */
 const ALTURA_DA_SOLEIRA_M = 0.3;
 const ALTURA_DA_FOLHA_M = 3.3;
@@ -253,6 +256,9 @@ export class UnidadesRender {
   readonly deslocamentoVisual = new Map<EntityId, [number, number, number]>();
   private loteDaRampa: Lote | null = null;
   private loteDaFolha: Lote | null = null;
+  /** ENE-24 (D-59): fator do brilho na cor da nação (Bateria Móvel ligada ou desligada). */
+  private readonly brilho = new Map<EntityId, number>();
+  private readonly corBrilho = new Color();
   /** D-51: posição suavizada de cada satélite desenhado. */
   private readonly posicaoDosSatelites = new Map<EntityId, [number, number, number]>();
   /** Corpo que não é desenhado (o pilotado em 1ª pessoa). */
@@ -299,6 +305,7 @@ export class UnidadesRender {
   ): void {
     this.corpos.length = 0;
     this.linhasDeImpressao.length = 0;
+    this.brilho.clear();
     this.porId.clear();
     type Desenho = { corpo: CorpoDesenhado; frente: Vec3 | null; corte: number };
     const porTipo = new Map<TipoDeModelo, Desenho[]>();
@@ -404,6 +411,16 @@ export class UnidadesRender {
           raio: corpo.raio,
         });
       }
+      // ENE-24: a Bateria Móvel com suporte ligado brilha (pulsando); desligada, fica apagada.
+      const suporte = getComponent(state, id, 'suporte');
+      if (suporte) {
+        this.brilho.set(
+          id,
+          suporte.ligado
+            ? BRILHO_LIGADA + 0.4 * Math.sin(performance.now() / 300)
+            : BRILHO_DESLIGADA,
+        );
+      }
       lista.push({ corpo, frente, corte });
     }
 
@@ -441,7 +458,14 @@ export class UnidadesRender {
         this.matriz.makeBasis(this.frente, this.cima, this.lado);
         this.matriz.setPosition(corpo.x, corpo.y, corpo.z);
         lote.malha.setMatrixAt(k, this.matriz);
-        this.cor(corpo.nacao).toArray(lote.cores.array, k * 3);
+        const brilho = this.brilho.get(corpo.id);
+        const cor = this.cor(corpo.nacao);
+        if (brilho === undefined) cor.toArray(lote.cores.array, k * 3);
+        else
+          this.corBrilho
+            .copy(cor)
+            .multiplyScalar(brilho)
+            .toArray(lote.cores.array, k * 3);
         lote.cortes.array[k] = corte;
       });
       lote.usados = lista.length;

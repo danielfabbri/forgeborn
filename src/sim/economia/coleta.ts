@@ -208,7 +208,8 @@ function descarregarSucata(ctx: SystemContext, hover: EntityId): boolean {
   if (!vivo(ctx.state, coleta.entrega)) return false;
   const nacao = getComponent(ctx.state, hover, 'owner')!.nacao;
   const silo = getComponent(ctx.state, coleta.entrega, 'silo');
-  if (silo && silo.estado !== 'ancorado') return false;
+  // ECO-22 (D-60): o silo só não recebe enquanto descarrega.
+  if (silo && silo.estado === 'descarregando') return false;
   const espaco = silo ? param('capacidade_silo_u') - cargaDoSilo(silo) : Infinity;
   const fracao = Math.min(1, espaco / Math.max(coleta.carga, 1e-9));
   for (const [r, u] of Object.entries(coleta.sucata!) as Array<[RecursosId, number]>) {
@@ -234,7 +235,7 @@ export function descarregar(ctx: SystemContext, hover: EntityId): boolean {
   const nacao = getComponent(ctx.state, hover, 'owner')!.nacao;
   const silo = getComponent(ctx.state, coleta.entrega, 'silo');
   if (silo) {
-    if (silo.estado !== 'ancorado') return false;
+    if (silo.estado === 'descarregando') return false;
     const espaco = param('capacidade_silo_u') - cargaDoSilo(silo);
     const u = Math.min(espaco, coleta.carga);
     silo.carga[coleta.cargaRecurso] = (silo.carga[coleta.cargaRecurso] ?? 0) + u;
@@ -366,7 +367,7 @@ function passo(ctx: SystemContext, hover: EntityId, dt: number): void {
       const valida =
         vivo(state, coleta.entrega) &&
         (!getComponent(state, coleta.entrega, 'silo') ||
-          getComponent(state, coleta.entrega, 'silo')!.estado === 'ancorado');
+          getComponent(state, coleta.entrega, 'silo')!.estado !== 'descarregando');
       if (!valida) {
         iniciarEntrega(ctx, hover);
         return;
@@ -439,5 +440,33 @@ export const comandosDeColeta: Record<string, CommandHandler> = {
       )
       .sort((a, b) => a - b);
     for (const id of ids) designar(ctx, id, d.jazida, true);
+  },
+  /**
+   * CTL-07/ECO-22 (D-60): clique direito dos hovers no Silo Móvel próprio: cada um com carga vai
+   * até ele, descarrega o que tem e volta à jazida.
+   */
+  descarregar_no_silo: (ctx, comando) => {
+    const d = (comando.dados ?? {}) as { ids?: unknown; silo?: unknown };
+    const alvo = d.silo;
+    if (typeof alvo !== 'number' || !vivo(ctx.state, alvo)) return;
+    if (!getComponent(ctx.state, alvo, 'silo')) return;
+    if (getComponent(ctx.state, alvo, 'owner')?.nacao !== comando.nacao) return;
+    if (!Array.isArray(d.ids)) return;
+    const ds = direcaoDe(getComponent(ctx.state, alvo, 'position')!);
+    const borda = statsMovel(getComponent(ctx.state, alvo, 'unit')!.tipo).raio_m;
+    for (const id of [...new Set(d.ids)].sort((a, b) => Number(a) - Number(b))) {
+      if (typeof id !== 'number' || !vivo(ctx.state, id)) continue;
+      if (getComponent(ctx.state, id, 'owner')?.nacao !== comando.nacao) continue;
+      const coleta = getComponent(ctx.state, id, 'coleta');
+      if (!coleta || coleta.carga <= 0) continue;
+      removeComponent(ctx.state, id, 'trabalho');
+      liberar(ctx, id);
+      coleta.estado = 'indo_entregar';
+      coleta.entrega = alvo;
+      const dh = direcaoDe(getComponent(ctx.state, id, 'position')!);
+      const rumo = tangente(ds, dh) ?? norteEm(ds);
+      const distancia = borda + raioDoHover(ctx, id) + param('raio_deposito_m') / 2;
+      irPara(ctx, id, avancar(ds, rumo, distancia / raioDoMundo(ctx)).p);
+    }
   },
 };

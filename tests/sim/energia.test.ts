@@ -448,13 +448,17 @@ describe('T-045 — ENE-17 a ENE-20: Bateria Móvel', () => {
     const sim = partida(mundoLiso());
     const [bm] = criar(sim, [{ unidade: 'mobile_battery', x: 0, z: 0 }]);
     bateria(sim, bm!).en = bateria(sim, bm!).max;
+    // D-59: todos encostados na Bateria Móvel, em volta dela.
+    const raio =
+      dados.moveis.find((m) => m.id === 'mobile_battery')!.raio_m +
+      dados.moveis.find((m) => m.id === 'hover_ex1')!.raio_m +
+      param('bateria_movel_raio_m') / 2;
     const alvos = criar(
       sim,
-      [30, 10, 50, 20, 40, 95].map((pct, k) => ({
+      [30, 10, 50, 20, 40, 95].map((_, k) => ({
         unidade: 'hover_ex1' as const,
-        x: 4,
-        z: -6 + k * 2.6,
-        pct,
+        x: raio * Math.cos((k * Math.PI) / 3),
+        z: raio * Math.sin((k * Math.PI) / 3),
       })),
     );
     const pcts = [30, 10, 50, 20, 40, 95];

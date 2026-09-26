@@ -8,6 +8,8 @@ export interface EstadoDoPainel {
   produtor: {
     id: EntityId;
     tipo: string;
+    /** UI-16: cartão de ação de unidade sem fila (sem a seção de fila). */
+    cartaoDeAcao?: boolean;
     fila: Array<{ item: string; progresso: number }>;
   } | null;
   /** Estrutura própria em obra selecionada. */
@@ -21,6 +23,10 @@ export interface EstadoDoPainel {
   estoque: Record<string, number>;
   /** CMB-28 (Nave): há mineradores recolhidos (o botão libera), ou null fora da Nave. */
   recolhidos: boolean | null;
+  /** UI-16: minas no carregador do Hover de Plantio selecionado, ou null. */
+  minas: { n: number; max: number } | null;
+  /** ENE-24 (D-59): modo suporte da Bateria Móvel selecionada, ou null. */
+  suporte: boolean | null;
 }
 
 export const painelProducao = signal<EstadoDoPainel>({
@@ -33,6 +39,8 @@ export const painelProducao = signal<EstadoDoPainel>({
   reparando: false,
   estoque: {},
   recolhidos: null,
+  minas: null,
+  suporte: null,
 });
 
 /** Aviso passageiro (AL-06, AL-11). */
@@ -46,6 +54,8 @@ export interface AcoesDoPainel {
   cancelarObra(obra: EntityId): void;
   /** CMB-28: Q da Nave. */
   recolherMineradores(): void;
+  /** ENE-24: T da Bateria Móvel. */
+  alternarSuporte(): void;
 }
 
 export const acoesDoPainel: { atual: AcoesDoPainel | null } = { atual: null };

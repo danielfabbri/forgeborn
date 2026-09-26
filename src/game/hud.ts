@@ -78,9 +78,8 @@ export function barrasDe(
   const vida = getComponent(state, id, 'vida') ?? getComponent(state, id, 'satelite');
   if (!vida) return null;
   const bateria = getComponent(state, id, 'bateria');
-  const danificado = vida.hp < vida.max - 1e-9;
-  const baixa = bateria !== undefined && estadoDaBateria(bateria) !== 'normal';
-  if (!sempre && !selecionado && !danificado && !baixa) return null;
+  // UI-07 (D-61): no modo automático, só as selecionadas.
+  if (!sempre && !selecionado) return null;
   return {
     hp: Math.max(0, Math.min(1, vida.hp / vida.max)),
     en: bateria ? Math.max(0, Math.min(1, bateria.en / bateria.max)) : null,

@@ -240,7 +240,7 @@ export interface ComponentMap {
     /** Carga a bordo e o recurso dela (ECO-15: em trânsito). */
     carga: number;
     cargaRecurso: RecursosId | null;
-    /** Ponto de entrega escolhido (Nave, Armazém ou Silo ancorado). */
+    /** Ponto de entrega escolhido (Nave, Armazém ou Silo Móvel). */
     entrega: EntityId | null;
     timer_s: number;
     /** ECO-20: designado pelo jogador (fica na jazida até esgotar). */
@@ -290,20 +290,19 @@ export interface ComponentMap {
     semUranio: boolean;
   };
   /** ENE-18: modo suporte da Bateria Móvel. */
-  suporte: { ligado: boolean; alvos: EntityId[] };
+  suporte: {
+    ligado: boolean;
+    alvos: EntityId[];
+    /** ENE-23 (D-59): unidade que o jogador mandou a bateria carregar, ou null. */
+    atender?: EntityId | null;
+  };
   /** Silo Móvel (ECO-22 a ECO-25). */
   silo: {
-    estado:
-      | 'solto'
-      | 'ancorando'
-      | 'ancorado'
-      | 'desancorando'
-      | 'indo_descarregar'
-      | 'descarregando'
-      | 'voltando';
+    /** D-60: sem âncora; `solto` recebe e anda; `descarregando` fica no depósito. */
+    estado: 'solto' | 'indo_descarregar' | 'descarregando' | 'voltando';
     timer_s: number;
     carga: Partial<Record<RecursosId, number>>;
-    /** Onde voltar a ancorar depois do ciclo (ECO-24). */
+    /** Onde voltar depois do ciclo (ECO-24). */
     ancora: Ponto | null;
     cicloAutomatico: boolean;
     limiar_pct: number;

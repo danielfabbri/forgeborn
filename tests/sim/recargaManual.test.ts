@@ -83,3 +83,43 @@ describe('T-047 — CTL-07, ENE-18, D-57: recarregar na Bateria Móvel pelo cliq
     expect(getComponent(sim.state, ex1!, 'seguirBateria')).toBeUndefined();
   });
 });
+
+describe('T-048 — ENE-18, ENE-23, D-59: Bateria Móvel encostada e carregar unidade', () => {
+  it('ENE-18 (D-59): unidade a poucos metros, sem encostar, não recebe', () => {
+    const sim = partida(mundoLiso());
+    const [movel, ex1] = criar(sim, [
+      { unidade: 'mobile_battery', x: 0, z: 0 },
+      { unidade: 'hover_ex1', x: 8, z: 0, postura: 'passiva' },
+    ]);
+    getComponent(sim.state, movel!, 'bateria')!.en = getComponent(
+      sim.state,
+      movel!,
+      'bateria',
+    )!.max;
+    const b = getComponent(sim.state, ex1!, 'bateria')!;
+    b.en = b.max * 0.2;
+    b.autoRecarga = false;
+    const antes = b.en;
+    rodar(sim, 2);
+    expect(b.en).toBeLessThanOrEqual(antes + 1e-9);
+  });
+
+  it('ENE-23 (D-59): a Bateria Móvel mandada a uma unidade vai até ela, enche até 100% e para', () => {
+    const sim = partida(mundoLiso());
+    const [movel, ex1] = criar(sim, [
+      { unidade: 'mobile_battery', x: 0, z: 0 },
+      { unidade: 'hover_ex1', x: 30, z: 0, postura: 'passiva' },
+    ]);
+    expect(getComponent(sim.state, movel!, 'bateria')!.max).toBe(2000);
+    getComponent(sim.state, movel!, 'bateria')!.en = 2000;
+    const b = getComponent(sim.state, ex1!, 'bateria')!;
+    b.en = b.max * 0.95;
+    b.autoRecarga = false;
+    ordenar(sim, 'carregar_unidade', { ids: [movel], alvo: ex1 });
+    for (let s = 0; s < 60 && b.en < b.max - 1e-6; s++) rodar(sim, 1);
+    expect(b.en).toBeCloseTo(b.max, 3);
+    rodar(sim, 0.2);
+    expect(getComponent(sim.state, movel!, 'suporte')!.atender ?? null).toBeNull();
+    expect(getComponent(sim.state, movel!, 'order')!.tipo).toBe('nenhuma');
+  });
+});

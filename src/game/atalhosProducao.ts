@@ -19,6 +19,15 @@ const opcao = (tecla: string, item: CustosId): OpcaoDeMenu => ({
 
 export const MENU_NAVE: OpcaoDeMenu[] = [opcao('E', 'hover_explorer'), opcao('I', 'printer')];
 
+/** UI-16 (D-62): cartão do Hover de Plantio de Minas (T: plantar mina no ponto). */
+export const MENU_MINAS: OpcaoDeMenu[] = [opcao('T', 'mine')];
+
+/** Unidades sem fila com cartão de ação (UI-16). */
+export const COM_CARTAO_DE_ACAO: ReadonlySet<string> = new Set([
+  'hover_minelayer',
+  'mobile_battery',
+]);
+
 /** §12.4 (Base de Lançamento) S: Satélite (UNI-04, D-55). */
 export const MENU_BASE: OpcaoDeMenu[] = [opcao('S', 'satellite')];
 

@@ -111,6 +111,8 @@ export interface EntradaComandos {
   ordenarEm(d: Vec3): void;
   /** CMB-28: recolhe ou libera os mineradores (Q da Nave). */
   recolherMineradores(): void;
+  /** ENE-24: liga ou desliga o suporte das Baterias Móveis selecionadas. */
+  alternarSuporte(): void;
   dispose(): void;
 }
 
@@ -286,6 +288,11 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   };
 
   const escolher = (item: CustosId) => {
+    // UI-16 (D-62): a foto da mina entra no modo de plantar; o clique no terreno escolhe o ponto.
+    if (item === 'mine') {
+      if (doTipo('hover_minelayer').length > 0) definirModo('plantar');
+      return;
+    }
     if (MENU_ESTRUTURAS.some((opcao) => opcao.item === item)) {
       if (doTipo('printer').length === 0) return;
       menuAberto = null;
@@ -497,10 +504,38 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     o.sinalizar?.('satelite', normalizar(ponto));
   };
 
+  /** ENE-23 (D-59): Bateria Móvel selecionada + unidade própria → ir carregá-la. */
+  const bateriaParaUnidade = (px: number, py: number): boolean => {
+    const baterias = minhas('unit').filter((id) => getComponent(sim.state, id, 'suporte'));
+    if (baterias.length === 0) return false;
+    const alvo = corpoNoPonto(naTela(), px, py);
+    if (!alvo || alvo.nacao !== jogador || baterias.includes(alvo.id)) return false;
+    if (!getComponent(sim.state, alvo.id, 'bateria') || !getComponent(sim.state, alvo.id, 'unit'))
+      return false;
+    enviar('carregar_unidade', { ids: baterias, alvo: alvo.id });
+    sinal('recarregar', px, py, alvo.id);
+    return true;
+  };
+
+  /** CTL-07/ECO-22 (D-60): Silo Móvel próprio → os hovers com carga descarregam nele. */
+  const siloNoPonto = (px: number, py: number): boolean => {
+    const alvo = corpoNoPonto(naTela(), px, py);
+    if (!alvo || alvo.nacao !== jogador || !getComponent(sim.state, alvo.id, 'silo')) return false;
+    const hovers = coletores().filter(
+      (id) => (getComponent(sim.state, id, 'coleta')?.carga ?? 0) > 0,
+    );
+    if (hovers.length === 0) return false;
+    enviar('descarregar_no_silo', { ids: hovers, silo: alvo.id });
+    sinal('descarregar', px, py, alvo.id);
+    return true;
+  };
+
   const ordemNoPonto = (px: number, py: number, tipo: OrdemNoTerreno) => {
     if (tipo === 'mover') ordemDosSatelites(px, py);
     if (minhas('unit').length + minhas('producer').length === 0) return;
     if (tipo === 'mover' && alvoDeCombateNoPonto(px, py)) return;
+    if (tipo === 'mover' && bateriaParaUnidade(px, py)) return;
+    if (tipo === 'mover' && siloNoPonto(px, py)) return;
     if (tipo === 'mover' && recargaNoPonto(px, py)) return;
     if (tipo === 'mover' && trabalhoNoPonto(px, py)) return;
     if (tipo === 'mover') {
@@ -754,12 +789,9 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         if (minhas('unit').length === 0) return;
         enviar('recarregar', { ids: minhas('unit') });
         break;
-      // §12.4 T: Silo Móvel ancora ou desancora; Bateria Móvel liga o suporte; Usina Nuclear liga.
+      // §12.4 T: Bateria Móvel liga o suporte; Usina Nuclear liga (o silo não ancora, D-60).
       case 'KeyT': {
-        const com = (c: 'silo' | 'suporte') =>
-          minhas('unit').filter((id) => getComponent(sim.state, id, c));
-        const silos = com('silo');
-        const baterias = com('suporte');
+        const baterias = minhas('unit').filter((id) => getComponent(sim.state, id, 'suporte'));
         const usinas = minhas('structure').filter((id) => getComponent(sim.state, id, 'reator'));
         const plantadores = doTipo('hover_minelayer');
         const observadores = doTipo('hover_scout');
@@ -769,7 +801,6 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         if (portoes.length > 0) enviar('trancar_portao', { ids: portoes });
         if (
           portoes.length +
-            silos.length +
             baterias.length +
             usinas.length +
             plantadores.length +
@@ -783,7 +814,6 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         if (bases.length > 0) definirModo('satelite');
         // §12.4 (Plantio de Minas) T: plantar mina no ponto.
         if (plantadores.length > 0) definirModo('plantar');
-        if (silos.length > 0) enviar('ancorar_silo', { ids: silos });
         if (baterias.length > 0) enviar('suporte_bateria', { ids: baterias });
         if (usinas.length > 0) enviar('ligar_usina', { ids: usinas });
         break;
@@ -851,6 +881,10 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     },
     ordenarEm(d) {
       ordemNaDirecao(d, 'mover');
+    },
+    alternarSuporte() {
+      const baterias = minhas('unit').filter((id) => getComponent(sim.state, id, 'suporte'));
+      if (baterias.length > 0) enviar('suporte_bateria', { ids: baterias });
     },
     recolherMineradores() {
       if (doTipo('ship').length > 0) enviar('recolher_mineradores', {});

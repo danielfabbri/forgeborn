@@ -97,9 +97,6 @@
   "estado.imprimindo": "Imprimindo",
   "estado.em_obra": "Em obra",
   "estado.reservada": "Aguardando a Impressora",
-  "estado.silo_ancorando": "Ancorando",
-  "estado.silo_ancorado": "Ancorado",
-  "estado.silo_desancorando": "Desancorando",
   "estado.silo_indo_descarregar": "Indo descarregar",
   "estado.silo_descarregando": "Descarregando",
   "estado.silo_voltando": "Voltando",
@@ -278,7 +275,6 @@
   "direto.habilidade.plantar": "plantar mina",
   "direto.habilidade.sentinela": "Sentinela",
   "direto.habilidade.pousar": "pousar ou decolar",
-  "direto.habilidade.ancorar": "ancorar ou desancorar",
   "direto.habilidade.suporte": "suporte",
   "atalho.contexto.controle_direto": "Controle direto",
   "alerta.AL-01": "Um de meus corpos está sob ataque.",
@@ -336,5 +332,8 @@
   "producao.trancar_portao": "Trancar portão",
   "producao.destrancar_portao": "Destrancar portão",
   "parados.mineradores": "Mineradores parados: clique para ir ao próximo",
-  "parados.impressoras": "Impressoras paradas: clique para ir à próxima"
+  "parados.impressoras": "Impressoras paradas: clique para ir à próxima",
+  "producao.suporte_ligado": "Suporte ligado",
+  "producao.suporte_desligado": "Suporte desligado",
+  "producao.minas": "Minas prontas: {n}/{max} (clique na mina e depois no terreno)"
 }

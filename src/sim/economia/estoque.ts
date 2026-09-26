@@ -36,7 +36,7 @@ export function cargaDoSilo(silo: { carga: Partial<Record<RecursosId, number>> }
   return Object.values(silo.carga).reduce<number>((s, u) => s + (u ?? 0), 0);
 }
 
-/** ECO-10: Nave, Armazéns e Silos Móveis ancorados com espaço da nação. */
+/** ECO-10: Nave, Armazéns e Silos Móveis parados com espaço da nação. */
 export function pontosDeEntrega(ctx: SystemContext, nacao: NacaoId): PontoDeEntrega[] {
   const { state } = ctx;
   const pontos: PontoDeEntrega[] = [];
@@ -49,7 +49,8 @@ export function pontosDeEntrega(ctx: SystemContext, nacao: NacaoId): PontoDeEntr
       continue;
     }
     const silo = getComponent(state, id, 'silo');
-    if (silo && silo.estado === 'ancorado') {
+    // ECO-10 (D-60): a entrega automática vai ao silo parado (não persegue silo andando).
+    if (silo && silo.estado === 'solto' && !getComponent(state, id, 'locomotion')?.destino) {
       const espaco = param('capacidade_silo_u') - cargaDoSilo(silo);
       if (espaco <= 0) continue;
       const tipo = getComponent(state, id, 'unit')!.tipo;

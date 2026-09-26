@@ -14,7 +14,6 @@ import {
 import type { EntityId, QueuedCommand } from '../core/types';
 import { param } from '../data';
 import { descarregar, extrair, folgaAteJazida, liberar } from '../economia/coleta';
-import { comandosDoSilo } from '../economia/silo';
 import { pontosDeEntrega } from '../economia/estoque';
 import { gastar } from '../energia/bateria';
 import { comandosDeSuporte } from '../energia/suporte';
@@ -143,9 +142,6 @@ function habilidade(ctx: SystemContext, comando: QueuedCommand, id: EntityId): v
     case 'drone_bomber':
     case 'drone_laser':
       p.pousar = !p.pousar;
-      return;
-    case 'mobile_silo':
-      repassar(comandosDoSilo, 'ancorar_silo');
       return;
     case 'mobile_battery':
       repassar(comandosDeSuporte, 'suporte_bateria');

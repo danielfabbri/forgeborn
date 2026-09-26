@@ -696,6 +696,72 @@
     "descricao": "O portão fecha depois disso sem unidade própria no raio"
   },
   {
+    "chave": "misseis_max_base",
+    "valor": 5,
+    "unidade": "mísseis",
+    "descricao": "Mísseis prontos mais na fila por Base de Lança-Mísseis"
+  },
+  {
+    "chave": "aa_acerto_centro_pct",
+    "valor": 90,
+    "unidade": "%",
+    "descricao": "Chance de acerto da Antiaérea até `aa_zona_certeira_pct` do alcance"
+  },
+  {
+    "chave": "aa_acerto_borda_pct",
+    "valor": 40,
+    "unidade": "%",
+    "descricao": "Chance de acerto no limite do alcance"
+  },
+  {
+    "chave": "aa_zona_certeira_pct",
+    "valor": 50,
+    "unidade": "%",
+    "descricao": "Fração do alcance com a chance cheia"
+  },
+  {
+    "chave": "mag_raio_m",
+    "valor": 16,
+    "unidade": "m",
+    "descricao": "Raio do campo da Torre Magnética"
+  },
+  {
+    "chave": "mag_lentidao_max_pct",
+    "valor": 40,
+    "unidade": "%",
+    "descricao": "Redução máxima de velocidade no centro do campo"
+  },
+  {
+    "chave": "mag_dreno_max_en_s",
+    "valor": 6,
+    "unidade": "EN/s",
+    "descricao": "Energia drenada por inimigo no centro do campo"
+  },
+  {
+    "chave": "mag_fator_blindada_pct",
+    "valor": 50,
+    "unidade": "%",
+    "descricao": "Efeito do campo em unidades blindadas"
+  },
+  {
+    "chave": "mag_banco_max_en",
+    "valor": 400,
+    "unidade": "EN",
+    "descricao": "Energia que a torre guarda"
+  },
+  {
+    "chave": "mag_repasse_en_s",
+    "valor": 8,
+    "unidade": "EN/s",
+    "descricao": "Repasse por aliado no campo"
+  },
+  {
+    "chave": "mag_max_aliados",
+    "valor": 4,
+    "unidade": "unidades",
+    "descricao": "Aliados atendidos ao mesmo tempo"
+  },
+  {
     "chave": "tempo_lancamento_satelite_s",
     "valor": 20,
     "unidade": "s",

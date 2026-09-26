@@ -118,5 +118,50 @@
     "manutencao_en_s": 0,
     "deposito": false,
     "arma": null
+  },
+  {
+    "id": "missile_silo",
+    "nome": "Base de Lança-Mísseis",
+    "hp": 700,
+    "pegada_m": 8,
+    "visao_m": 14,
+    "deteccao_m": 0,
+    "geracao_en_s": 0,
+    "banco_en": 0,
+    "portas": 0,
+    "taxa_porta_en_s": 0,
+    "manutencao_en_s": 0,
+    "deposito": false,
+    "arma": null
+  },
+  {
+    "id": "aa_battery",
+    "nome": "Bateria Antiaérea",
+    "hp": 500,
+    "pegada_m": 4,
+    "visao_m": 24,
+    "deteccao_m": 0,
+    "geracao_en_s": 0,
+    "banco_en": 0,
+    "portas": 0,
+    "taxa_porta_en_s": 0,
+    "manutencao_en_s": 0,
+    "deposito": false,
+    "arma": "aa_missil"
+  },
+  {
+    "id": "mag_tower",
+    "nome": "Torre Magnética",
+    "hp": 600,
+    "pegada_m": 5,
+    "visao_m": 16,
+    "deteccao_m": 0,
+    "geracao_en_s": 0,
+    "banco_en": 0,
+    "portas": 0,
+    "taxa_porta_en_s": 0,
+    "manutencao_en_s": 0,
+    "deposito": false,
+    "arma": null
   }
 ]

@@ -325,6 +325,96 @@
     "tempo_s": 12
   },
   {
+    "id": "missile_silo",
+    "nome": "Base de Lança-Mísseis",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 90,
+    "si": 40,
+    "cu": 40,
+    "li": 20,
+    "ti": 30,
+    "u": 0,
+    "vr": 320,
+    "ref_x": null,
+    "en_impressao": 200,
+    "tempo_s": 60
+  },
+  {
+    "id": "aa_battery",
+    "nome": "Bateria Antiaérea",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 50,
+    "si": 20,
+    "cu": 25,
+    "li": 10,
+    "ti": 10,
+    "u": 0,
+    "vr": 157.5,
+    "ref_x": null,
+    "en_impressao": 80,
+    "tempo_s": 30
+  },
+  {
+    "id": "mag_tower",
+    "nome": "Torre Magnética",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 70,
+    "si": 30,
+    "cu": 50,
+    "li": 20,
+    "ti": 15,
+    "u": 0,
+    "vr": 260,
+    "ref_x": null,
+    "en_impressao": 120,
+    "tempo_s": 40
+  },
+  {
+    "id": "missile_short",
+    "nome": "Míssil de Curto Alcance",
+    "categoria": "municao",
+    "produzido_por": [
+      "missile_silo"
+    ],
+    "fe": 20,
+    "si": 0,
+    "cu": 10,
+    "li": 5,
+    "ti": 0,
+    "u": 0,
+    "vr": 45,
+    "ref_x": null,
+    "en_impressao": 40,
+    "tempo_s": 20
+  },
+  {
+    "id": "missile_long",
+    "nome": "Míssil de Longo Alcance",
+    "categoria": "municao",
+    "produzido_por": [
+      "missile_silo"
+    ],
+    "fe": 60,
+    "si": 0,
+    "cu": 30,
+    "li": 20,
+    "ti": 20,
+    "u": 5,
+    "vr": 230,
+    "ref_x": null,
+    "en_impressao": 150,
+    "tempo_s": 45
+  },
+  {
     "id": "mine",
     "nome": "Mina",
     "categoria": "municao",

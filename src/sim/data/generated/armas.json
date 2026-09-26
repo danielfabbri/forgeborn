@@ -156,5 +156,57 @@
     "fonte_en": "rede",
     "projetil": "hitscan",
     "vel_projetil_m_s": null
+  },
+  {
+    "id": "missil_curto",
+    "tipo_dano": "explosivo",
+    "dano": 350,
+    "recarga_s": 8,
+    "alcance_m": 60,
+    "alcance_min_m": 0,
+    "splash_m": 2,
+    "splash_borda_pct": 50,
+    "alvos": [
+      "solo"
+    ],
+    "en_disparo": 0,
+    "fonte_en": null,
+    "projetil": "missil",
+    "vel_projetil_m_s": 30
+  },
+  {
+    "id": "missil_longo",
+    "tipo_dano": "explosivo",
+    "dano": 1200,
+    "recarga_s": 8,
+    "alcance_m": 250,
+    "alcance_min_m": 0,
+    "splash_m": 4,
+    "splash_borda_pct": 50,
+    "alvos": [
+      "solo"
+    ],
+    "en_disparo": 0,
+    "fonte_en": null,
+    "projetil": "missil",
+    "vel_projetil_m_s": 30
+  },
+  {
+    "id": "aa_missil",
+    "tipo_dano": "explosivo",
+    "dano": 150,
+    "recarga_s": 4,
+    "alcance_m": 30,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "ar",
+      "missil"
+    ],
+    "en_disparo": 5,
+    "fonte_en": "rede",
+    "projetil": "guiado",
+    "vel_projetil_m_s": 40
   }
 ]

@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.19.1.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.20.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -38,7 +38,10 @@ export type ArmasId =
   | 'ship_pd'
   | 'mine_blast'
   | 'sat_laser'
-  | 'abrigo_laser';
+  | 'abrigo_laser'
+  | 'missil_curto'
+  | 'missil_longo'
+  | 'aa_missil';
 
 export interface ArmasRow {
   id: ArmasId;
@@ -109,6 +112,11 @@ export type CustosId =
   | 'satellite'
   | 'wall'
   | 'gate'
+  | 'missile_silo'
+  | 'aa_battery'
+  | 'mag_tower'
+  | 'missile_short'
+  | 'missile_long'
   | 'mine';
 
 export interface CustosRow {
@@ -170,7 +178,10 @@ export type EstruturasId =
   | 'nuclear_plant'
   | 'satellite_uplink'
   | 'wall'
-  | 'gate';
+  | 'gate'
+  | 'missile_silo'
+  | 'aa_battery'
+  | 'mag_tower';
 
 export interface EstruturasRow {
   id: EstruturasId;
@@ -404,6 +415,17 @@ export type ParametrosChave =
   | 'portao_raio_abertura_m'
   | 'portao_tempo_abrir_s'
   | 'portao_tempo_fechar_apos_s'
+  | 'misseis_max_base'
+  | 'aa_acerto_centro_pct'
+  | 'aa_acerto_borda_pct'
+  | 'aa_zona_certeira_pct'
+  | 'mag_raio_m'
+  | 'mag_lentidao_max_pct'
+  | 'mag_dreno_max_en_s'
+  | 'mag_fator_blindada_pct'
+  | 'mag_banco_max_en'
+  | 'mag_repasse_en_s'
+  | 'mag_max_aliados'
   | 'tempo_lancamento_satelite_s'
   | 'varredura_raio_m'
   | 'varredura_duracao_s'

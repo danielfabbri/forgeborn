@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.19.1 — rascunho para aprovação |
+| Versão do SPEC | 0.20.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -578,6 +578,11 @@ flowchart LR
 | satellite | Satélite | orbital | satellite_uplink | 120 | 90 | 75 | 60 | 90 | 15 | 787,5 | — | 525 | 90 |
 | wall | Muro | estrutura | printer | 20 | 5 | 0 | 0 | 0 | 0 | 25 | 2 | 10 | 8 |
 | gate | Portão | estrutura | printer | 40 | 15 | 10 | 0 | 0 | 0 | 70 | 7 | 25 | 12 |
+| missile_silo | Base de Lança-Mísseis | estrutura | printer | 90 | 40 | 40 | 20 | 30 | 0 | 320 | — | 200 | 60 |
+| aa_battery | Bateria Antiaérea | estrutura | printer | 50 | 20 | 25 | 10 | 10 | 0 | 157,5 | — | 80 | 30 |
+| mag_tower | Torre Magnética | estrutura | printer | 70 | 30 | 50 | 20 | 15 | 0 | 260 | — | 120 | 40 |
+| missile_short | Míssil de Curto Alcance | municao | missile_silo | 20 | 0 | 10 | 5 | 0 | 0 | 45 | — | 40 | 20 |
+| missile_long | Míssil de Longo Alcance | municao | missile_silo | 60 | 0 | 30 | 20 | 20 | 5 | 230 | — | 150 | 45 |
 | mine | Mina | municao | hover_minelayer | 6 | 0 | 2 | 1 | 0 | 0 | 11 | — | 20 | 6 |
 
 Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação, Silo, Bateria Móvel, Torre, Armazém, Solar, Muro, Portão. **T2** (exige Ti) = OPQ, Plantio de Minas, Drones. **T3** (exige U) = Usina Nuclear, Base de Lançamento.
@@ -615,6 +620,9 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | satellite_uplink | Base de Lançamento | 800 | 10 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | wall | Muro | 800 | 6 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | gate | Portão | 1000 | 6 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
+| missile_silo | Base de Lança-Mísseis | 700 | 8 | 14 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
+| aa_battery | Bateria Antiaérea | 500 | 4 | 24 | 0 | 0 | 0 | 0 | 0 | 0 | nao | aa_missil |
+| mag_tower | Torre Magnética | 600 | 5 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 
 ### 8.4 Armas
 
@@ -632,6 +640,9 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | mine_blast | explosivo | 150 | — | 2 | 0 | 4 | 40 | solo | 0 | — | gatilho | — |
 | sat_laser | laser | 20 | 2,0 | 60 | 0 | 0 | — | orbita | 0 | — | hitscan | — |
 | abrigo_laser | laser | 10 | 1,0 | 14 | 0 | 0 | — | solo+ar | 1 | rede | hitscan | — |
+| missil_curto | explosivo | 350 | 8,0 | 60 | 0 | 2 | 50 | solo | 0 | — | missil | 30 |
+| missil_longo | explosivo | 1200 | 8,0 | 250 | 0 | 4 | 50 | solo | 0 | — | missil | 30 |
+| aa_missil | explosivo | 150 | 4,0 | 30 | 0 | 0 | — | ar+missil | 5 | rede | guiado | 40 |
 
 ### 8.5 Fichas das unidades
 
@@ -735,6 +746,19 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 - **UNI-08** — **Muro:** segmento fixo de bloqueio, sem arma nem energia. Bloqueia a passagem de unidades de solo; drones passam por cima. O segmento tem `pegada_m` de comprimento e `muro_espessura_m` de espessura e gira livremente: ao posicionar, o jogador aperta no ponto e arrasta para apontar o segmento; clicar sem arrastar mantém a última direção. Apertar perto da ponta livre de um Muro ou Portão próprio encaixa o novo segmento nela, e o arrasto gira o segmento em volta dessa ponta, formando uma muralha contínua; segmentos só se tocam pelas pontas (D-56). Pode ser atacado; unidades inimigas atacam o muro que fecha o caminho até o alvo (D-53).
 - **UNI-09** — **Portão:** segmento que bloqueia, gira e encaixa como o muro, mas abre sozinho em `portao_tempo_abrir_s` quando uma unidade móvel própria chega a `portao_raio_abertura_m` e fecha `portao_tempo_fechar_apos_s` depois que a última unidade própria sai do raio. Aberto, qualquer unidade passa, inclusive as inimigas. O dono pode trancá-lo pelo cartão (trancado, não abre). As unidades do dono planejam o caminho através do portão destrancado (D-54, D-56).
+
+#### Base de Lança-Mísseis — `missile_silo`
+- **UNI-10** — Fabrica mísseis (`missile_short`, `missile_long`, com a energia da rede como a Nave, PRD-06): o jogador clica no cartão e espera a fabricação. Guarda até `misseis_max_base` mísseis, somando os prontos e os da fila. Com a base selecionada, o clique direito no terreno lança o míssil da frente da fila de prontos no ponto, se o ponto estiver no `alcance_m` dele (medido pela superfície; fora do alcance, a ordem é recusada com aviso). O ponto pode estar no escuro ou com visão desatualizada. Depois de um lançamento, o próximo só sai após o `recarga_s` do míssil lançado (D-63).
+- **UNI-11** — O míssil voa em arco a `vel_projetil_m_s` até o ponto escolhido e detona lá (CMB-10), atingindo o que estiver no raio ao chegar. O curto (`missil_curto`) derruba qualquer unidade num acerto; o longo (`missil_longo`) derruba qualquer estrutura menos a Nave. Míssil em voo é alvo da Bateria Antiaérea (UNI-12) (D-63).
+- **Visual:** plataforma com um tubo lançador inclinado.
+
+#### Bateria Antiaérea — `aa_battery`
+- **UNI-12** — Estrutura fixa que dispara `aa_missil` só contra mísseis inimigos em voo e drones inimigos no ar, um por vez, a cada `recarga_s`, pagando `en_disparo` da rede (prioridade de defesa, ENE-04). Não fabrica mísseis antes. Prioriza mísseis. O míssil antiaéreo acerta com chance `aa_acerto_centro_pct` se o alvo estava a até `aa_zona_certeira_pct` do alcance no disparo, caindo em linha até `aa_acerto_borda_pct` no limite (sorteio do RNG da simulação). Acerto: o míssil inimigo é destruído no ar; o drone recebe o dano. Erro: o antiaéreo explode sozinho, sem dano (D-64).
+- **Visual:** torre curta com casulos de mísseis apontados para cima.
+
+#### Torre Magnética — `mag_tower`
+- **UNI-13** — Campo eletromagnético de raio `mag_raio_m`. Unidades móveis inimigas no campo ficam mais lentas (até `mag_lentidao_max_pct` no centro) e perdem energia da bateria (até `mag_dreno_max_en_s` no centro); o efeito cai em linha até zero na borda e, em unidades blindadas, vale `mag_fator_blindada_pct`. Vários campos não se somam: vale o mais forte. A torre guarda o que drena até `mag_banco_max_en`; cheia, para de drenar até gastar parte. Ela repassa a até `mag_max_aliados` unidades próprias no campo, as de menor % primeiro, até `mag_repasse_en_s` cada (D-65).
+- **Visual:** coluna de bobinas com anéis que brilham enquanto o campo age.
 
 ### 8.6 Autonomia padrão (resumo)
 
@@ -877,6 +901,17 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 | portao_raio_abertura_m | 8 | m | Distância em que uma unidade própria abre o portão |
 | portao_tempo_abrir_s | 1 | s | Tempo para o portão abrir |
 | portao_tempo_fechar_apos_s | 2 | s | O portão fecha depois disso sem unidade própria no raio |
+| misseis_max_base | 5 | mísseis | Mísseis prontos mais na fila por Base de Lança-Mísseis |
+| aa_acerto_centro_pct | 90 | % | Chance de acerto da Antiaérea até `aa_zona_certeira_pct` do alcance |
+| aa_acerto_borda_pct | 40 | % | Chance de acerto no limite do alcance |
+| aa_zona_certeira_pct | 50 | % | Fração do alcance com a chance cheia |
+| mag_raio_m | 16 | m | Raio do campo da Torre Magnética |
+| mag_lentidao_max_pct | 40 | % | Redução máxima de velocidade no centro do campo |
+| mag_dreno_max_en_s | 6 | EN/s | Energia drenada por inimigo no centro do campo |
+| mag_fator_blindada_pct | 50 | % | Efeito do campo em unidades blindadas |
+| mag_banco_max_en | 400 | EN | Energia que a torre guarda |
+| mag_repasse_en_s | 8 | EN/s | Repasse por aliado no campo |
+| mag_max_aliados | 4 | unidades | Aliados atendidos ao mesmo tempo |
 | tempo_lancamento_satelite_s | 20 | s | Lançamento após a obra |
 | varredura_raio_m | 120 | m | Raio da Varredura Orbital |
 | varredura_duracao_s | 6 | s | Duração da Varredura |
@@ -958,7 +993,8 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ship | E | Imprimir Hover de Exploração |
 | ship | I | Imprimir Impressora 3D |
 | ship | Q | Recolher ou liberar os mineradores (CMB-28) |
-| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão |
+| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética |
+| missile_silo | C / L | Fabricar míssil curto / longo |
 | printer | U | Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, B Bombardeiro, L Drone Laser, V Silo, C Bateria |
 | hover_explorer | C | Coletar |
 | hover_explorer | G | Reparar |
@@ -1518,6 +1554,9 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-60 | Silo Móvel sem ancorar: sempre recebe (menos enquanto descarrega), descarrega sozinho ao encostar num depósito e recebe dos hovers pelo clique direito, com qualquer carga. | Pedido do produto. | Aprovada |
 | D-61 | Barras de HP e EN automáticas só nas unidades selecionadas (Tab segue alternando para "sempre"). | Pedido do produto. | Aprovada |
 | D-62 | Cartão de ação do Hover de Plantio de Minas (foto da mina → plantar no ponto) e da Bateria Móvel (botão do suporte). | Pedido do produto. | Aprovada |
+| D-63 | Base de Lança-Mísseis (HP 700; Fe 90, Si 40, Cu 40, Li 20, Ti 30; 60 s) com mísseis fabricados: curto (Fe 20, Cu 10, Li 5; 20 s; 60 m; 350 de dano; área de 2 m) e longo (Fe 60, Cu 30, Li 20, Ti 20, U 5; 45 s; 250 m; 1200 de dano; área de 4 m); até 5 por base; 8 s entre lançamentos. | Pedido do produto. | Aprovada |
+| D-64 | Bateria Antiaérea (HP 500; Fe 50, Si 20, Cu 25, Li 10, Ti 10; 30 s): um míssil a cada 4 s, 30 m, só mísseis e drones, 150 de dano, 5 EN; acerto de 90% até metade do alcance, 40% na borda. | Pedido do produto. | Aprovada |
+| D-65 | Torre Magnética (HP 600; Fe 70, Si 30, Cu 50, Li 20, Ti 15; 40 s): campo de 16 m, até 40% de lentidão e 6 EN/s de dreno no centro, metade em blindados; guarda até 400 EN e repassa até 8 EN/s a até 4 aliados. | Pedido do produto. | Aprovada |
 
 ---
 
@@ -1601,3 +1640,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.18.0 | 2026-09-25 | D-55 a D-58: Satélite como item da Base de Lançamento (`dados:custos` `satellite`, categoria `orbital`; Base mais cara; `satelite_vel_m_s` 8; UNI-04, PRD-01, PRD-06, ENE-04, atalho S); Muro de 6 m e Portão com giro livre e encaixe pela ponta (UNI-08, UNI-09, `muro_espessura_m`); recarga na Bateria Móvel pelo clique direito (CTL-07, ENE-18); barras só do jogador (UI-07); botões de parados (UI-15); AL-10 com recarga 120 s. |
 | 0.19.0 | 2026-09-25 | D-59 a D-62: Bateria Móvel (`bateria_en` 2000, `bateria_movel_raio_m` 1 casco a casco, ENE-18, ENE-23, ENE-24); Silo Móvel sem ancorar (ECO-22 a ECO-24, CTL-07; remove os tempos de ancorar e desancorar e o atalho T do silo); barras só nas selecionadas (UI-07); cartões de ação (UI-16); visual da Base de Lançamento. |
 | 0.19.1 | 2026-09-25 | CTL-10: o Silo Móvel deixa de ter habilidade no controle direto (não ancora mais, D-60). |
+| 0.20.0 | 2026-09-25 | D-63 a D-65: Base de Lança-Mísseis e mísseis (UNI-10, UNI-11; `missile_silo`, `missile_short`, `missile_long`, `missil_curto`, `missil_longo`, `misseis_max_base`), Bateria Antiaérea (UNI-12; `aa_battery`, `aa_missil`, `aa_acerto_*`) e Torre Magnética (UNI-13; `mag_tower`, `mag_*`); atalhos F, R, G, C e L. |

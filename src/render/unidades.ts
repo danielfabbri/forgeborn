@@ -36,6 +36,10 @@ import {
   ANGULO_RAMPA_FECHADA,
   DOBRADICA_DA_RAMPA,
   geometriaDaFolha,
+  geometriaDaTorre,
+  geometriaDoCorpo,
+  pivoDaTorre,
+  temTorre,
   geometriaDaRampa,
   geometriaDoModelo,
   type TipoDeModelo,
@@ -66,6 +70,8 @@ const FAIXA_DA_LINHA_M = 0.07;
 /** D-51 (apresentação): altura do satélite sobre o chão e a suavização por quadro. */
 const ALTURA_DA_ORBITA_M = 38;
 const SUAVIZACAO_DO_SATELITE = 0.2;
+/** ART-12 (apresentação): velocidade de giro das torres. */
+const VELOCIDADE_DA_TORRE_RAD_S = 4;
 /** ENE-24 (apresentação): brilho da Bateria Móvel ligada e desligada. */
 const BRILHO_LIGADA = 2.2;
 const BRILHO_DESLIGADA = 0.12;
@@ -256,6 +262,10 @@ export class UnidadesRender {
   readonly deslocamentoVisual = new Map<EntityId, [number, number, number]>();
   private loteDaRampa: Lote | null = null;
   private loteDaFolha: Lote | null = null;
+  /** ART-12: torres por tipo e o giro atual (rad) de cada corpo. */
+  private readonly lotesDeTorre = new Map<TipoDeModelo, Lote>();
+  private readonly giroDaTorre = new Map<EntityId, number>();
+  private ultimoGiro = performance.now();
   /** ENE-24 (D-59): fator do brilho na cor da nação (Bateria Móvel ligada ou desligada). */
   private readonly brilho = new Map<EntityId, number>();
   private readonly corBrilho = new Color();
@@ -428,6 +438,7 @@ export class UnidadesRender {
 
     this.preencher(this.lotes, porTipo, (tipo) => this.lote(tipo));
     this.desenharRampas(porTipo.get('ship') ?? []);
+    this.desenharTorres(state, porTipo);
     this.desenharFolhas(state, porTipo.get('gate') ?? []);
     this.preencher(this.hologramas, emObra, (tipo) => this.holograma(tipo));
     this.preencher(this.fantasmas, lembrados, (tipo) => this.fantasma(tipo));
@@ -564,6 +575,81 @@ export class UnidadesRender {
     lote.cortes.needsUpdate = true;
   }
 
+  /**
+   * ART-12 (D-68): a torre de cada corpo armado gira (só no eixo vertical local) para o alvo da
+   * arma; sem alvo, volta para a frente do corpo. O giro é suavizado por quadro.
+   */
+  private desenharTorres(
+    state: SimState,
+    porTipo: Map<
+      TipoDeModelo,
+      Array<{ corpo: CorpoDesenhado; frente: Vec3 | null; corte: number }>
+    >,
+  ): void {
+    const agora = performance.now();
+    const dt = Math.min(0.1, (agora - this.ultimoGiro) / 1000);
+    this.ultimoGiro = agora;
+    const vivos = new Set<EntityId>();
+    for (const lote of this.lotesDeTorre.values()) lote.usados = 0;
+    const peca = new Matrix4();
+    for (const [tipo, lista] of porTipo) {
+      if (!temTorre(tipo)) continue;
+      let lote = this.lotesDeTorre.get(tipo);
+      if (!lote) {
+        lote = new Lote(this.scene, geometriaDaTorre(tipo), this.material, CAPACIDADE_INICIAL);
+        this.lotesDeTorre.set(tipo, lote);
+      }
+      lote.garantir(lista.length);
+      const pivo = pivoDaTorre(tipo);
+      lista.forEach(({ corpo, frente, corte }) => {
+        vivos.add(corpo.id);
+        this.cima.set(...corpo.cima);
+        if (frente) this.frente.set(frente.x, frente.y, frente.z);
+        else this.frente.set(...norteEm(corpo.cima));
+        this.frente.addScaledVector(this.cima, -this.frente.dot(this.cima)).normalize();
+        this.lado.crossVectors(this.frente, this.cima);
+        // Ângulo desejado: o alvo no plano local (+x = frente, +z = lado).
+        const alvo =
+          getComponent(state, corpo.id, 'arma')?.alvo ??
+          getComponent(state, corpo.id, 'antiaerea')?.alvo ??
+          null;
+        const pos =
+          alvo !== null && alvo !== undefined ? getComponent(state, alvo, 'position') : undefined;
+        let desejado = 0;
+        if (pos) {
+          const vx = pos.x - corpo.x;
+          const vy = pos.y - corpo.y;
+          const vz = pos.z - corpo.z;
+          const x = vx * this.frente.x + vy * this.frente.y + vz * this.frente.z;
+          const z = vx * this.lado.x + vy * this.lado.y + vz * this.lado.z;
+          if (x * x + z * z > 1e-6) desejado = Math.atan2(-z, x);
+        }
+        const atual = this.giroDaTorre.get(corpo.id) ?? desejado;
+        let delta = desejado - atual;
+        delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+        const passo = VELOCIDADE_DA_TORRE_RAD_S * dt;
+        const giro = atual + Math.max(-passo, Math.min(passo, delta));
+        this.giroDaTorre.set(corpo.id, giro);
+        this.matriz.makeBasis(this.frente, this.cima, this.lado);
+        this.matriz.setPosition(corpo.x, corpo.y, corpo.z);
+        peca.makeRotationY(giro).setPosition(pivo[0], pivo[1], pivo[2]);
+        this.matriz.multiply(peca);
+        const k = lote!.usados++;
+        lote!.malha.setMatrixAt(k, this.matriz);
+        this.cor(corpo.nacao).toArray(lote!.cores.array, k * 3);
+        // ART-06: o corte da impressão vale a partir do pivô da torre.
+        lote!.cortes.array[k] = corte > 0 ? Math.max(0.001, corte - pivo[1]) : 0;
+      });
+    }
+    for (const lote of this.lotesDeTorre.values()) {
+      lote.malha.count = lote.usados;
+      lote.malha.instanceMatrix.needsUpdate = true;
+      lote.cores.needsUpdate = true;
+      lote.cortes.needsUpdate = true;
+    }
+    for (const id of this.giroDaTorre.keys()) if (!vivos.has(id)) this.giroDaTorre.delete(id);
+  }
+
   /** UNI-09: as duas folhas de cada Portão descem para dentro do chão com a abertura. */
   private desenharFolhas(
     state: SimState,
@@ -641,7 +727,8 @@ export class UnidadesRender {
   private lote(tipo: TipoDeModelo): Lote {
     let lote = this.lotes.get(tipo);
     if (!lote) {
-      lote = new Lote(this.scene, geometriaDoModelo(tipo), this.material, CAPACIDADE_INICIAL);
+      // ART-12: nos tipos com torre, o lote é só o corpo; a torre gira à parte.
+      lote = new Lote(this.scene, geometriaDoCorpo(tipo), this.material, CAPACIDADE_INICIAL);
       this.lotes.set(tipo, lote);
     }
     return lote;

@@ -8,6 +8,7 @@ import dificuldade from './generated/dificuldade.json';
 import estoqueInicial from './generated/estoque_inicial.json';
 import estruturas from './generated/estruturas.json';
 import freeBattle from './generated/free_battle.json';
+import iaPlano from './generated/ia_plano.json';
 import jazidas from './generated/jazidas.json';
 import missoes from './generated/missoes.json';
 import moveis from './generated/moveis.json';
@@ -31,6 +32,7 @@ export const dados: Readonly<Tabelas> = {
   estoque_inicial: estoqueInicial as unknown as Tabelas['estoque_inicial'],
   estruturas: estruturas as unknown as Tabelas['estruturas'],
   free_battle: freeBattle as unknown as Tabelas['free_battle'],
+  ia_plano: iaPlano as unknown as Tabelas['ia_plano'],
   jazidas: jazidas as unknown as Tabelas['jazidas'],
   missoes: missoes as unknown as Tabelas['missoes'],
   moveis: moveis as unknown as Tabelas['moveis'],

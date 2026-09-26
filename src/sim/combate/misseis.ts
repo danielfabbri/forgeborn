@@ -187,6 +187,7 @@ export function passoAntiaereas(ctx: SystemContext): void {
     if (!rede || rede.banco < arma.en_disparo - 1e-9) continue;
     rede.banco -= arma.en_disparo;
     aa.recarga_s = arma.recarga_s ?? 0;
+    aa.alvo = alvo.id;
     const sorteio = nextU32(state.rng) / 2 ** 32;
     const d = direcaoDe(getComponent(state, id, 'position')!);
     const tiro = createEntity(state);

@@ -94,6 +94,10 @@ export interface EstadoDaIa {
   } | null;
   /** Batedor: índices dos pontos de exploração já visitados. */
   visitados: number[];
+  /** IA-08: já viu míssil inimigo em voo (a meta de Antiaéreas sobe). */
+  viuMisseis?: boolean;
+  /** IA-10: último míssil longo lançado (s de jogo). */
+  ultimoLongo_s?: number;
 }
 
 export interface ChavesDaNacao {

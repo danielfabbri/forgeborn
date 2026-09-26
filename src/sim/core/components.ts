@@ -150,7 +150,7 @@ export interface ComponentMap {
   /** UNI-10 (D-63): mísseis prontos da Base de Lança-Mísseis (a frente sai primeiro). */
   lancador: { prontos: Array<'missile_short' | 'missile_long'>; recarga_s: number };
   /** UNI-12 (D-64): recarga entre disparos da Bateria Antiaérea. */
-  antiaerea: { recarga_s: number };
+  antiaerea: { recarga_s: number; alvo?: EntityId | null };
   /** UNI-13 (D-65): energia guardada pela Torre Magnética. */
   magnetico: { banco: number; ativo: boolean };
   /** UNI-13: lentidão do campo magnético sobre a unidade (0..1), refeita a cada tick. */

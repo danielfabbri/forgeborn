@@ -237,14 +237,7 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     // Blindagem lateral inclinada.
     for (const z of [-1, 1])
       m.caixa(1.9, 0.3, 0.12, GRAFITE, { y: 0.2, z: z * 0.88, rx: z * 0.35 });
-    // Torre com canos duplos e protetores.
-    m.caixa(0.9, 0.3, 0.9, GRAFITE, { x: 0.1, y: 0.45 });
-    m.cilindro(0.3, 0.12, METAL, { x: 0.1, y: 0.75 }, 10);
-    for (const z of [-0.2, 0.2]) {
-      m.tubo(0.08, 1.2, METAL, { x: 0.95, y: 0.62, z });
-      m.tubo(0.12, 0.35, GRAFITE, { x: 0.6, y: 0.62, z });
-      m.esfera(0.05, { brilho: BRASA }, { x: 1.56, y: 0.62, z });
-    }
+    // A torre com canos duplos é peça à parte (TORRES, ART-12).
     antena(m, -0.8, 0.45, 0.5, 0.35);
     return olho(m, 1.22, 0.3).pronta();
   },
@@ -252,15 +245,8 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
   hover_opq: () => {
     const m = casco(new Montagem(), 2.7, 2.7, 0.75, 0.2);
     for (const z of [-1, 1]) m.caixa(2.4, 0.45, 0.14, GRAFITE, { y: 0.1, z: z * 1.38 });
-    // Berço do lançador e a bateria de 8 tubos.
-    m.caixa(1.9, 0.18, 1.6, METAL, { x: -0.1, y: 0.75 });
-    for (const y of [0.95, 1.35]) {
-      for (const z of [-0.55, -0.18, 0.18, 0.55]) {
-        m.tubo(0.17, 1.6, GRAFITE, { x: -0.1, y, z });
-        m.tubo(0.12, 0.05, { brilho: BRASA }, { x: 0.71, y, z });
-      }
-    }
-    m.caixa(0.3, 0.5, 1.4, PAINEL, { x: -0.95, y: 0.9 });
+    // O lançador de 8 tubos gira sobre o dorso (TORRES, ART-12).
+    m.cilindro(0.7, 0.12, METAL, { x: -0.1, y: 0.63 }, 12);
     return olho(m, 1.37, 0.5).pronta();
   },
   // Casco achatado com tambor giratório de minas na traseira.
@@ -420,11 +406,9 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
         ry: -a,
       });
     }
-    m.caixa(1.3, 0.6, 0.8, GRAFITE, { y: 6.4 });
-    m.esfera(0.32, VIDRO, { x: 0.62, y: 6.7 });
-    for (const z of [-0.45, 0.45]) m.caixa(0.6, 0.05, 0.15, METAL, { x: -0.3, y: 6.75, z });
+    // A cabeça com a lente gira no topo (TORRES, ART-12).
     m.add(new TorusGeometry(0.5, 0.08, 6, 14), 'nacao', { y: 3.2, rx: Math.PI / 2 });
-    return olho(m, 0.7, 6.7, 0, 0.3).pronta();
+    return m.pronta();
   },
   // Conjunto de silos hexagonais com doca.
   storage: () => {
@@ -581,19 +565,7 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     m.cilindro(1.9, 0.5, GRAFITE, {}, 10);
     m.cilindro(1.2, 1.4, PAINEL, { y: 0.5 }, 10);
     m.cilindro(1.0, 0.3, METAL, { y: 1.9 }, 12);
-    for (const z of [-0.8, 0.8]) {
-      m.caixa(1.1, 1.5, 0.7, PAINEL, { y: 2.3, z, rz: 0.5 });
-      for (const [a, b] of [
-        [-0.2, -0.15],
-        [0.2, 0.15],
-      ])
-        m.add(new CylinderGeometry(0.14, 0.14, 0.1, 8), 'nacao', {
-          x: 0.55 + a!,
-          y: 3.3,
-          z: z + b!,
-          rz: 0.5,
-        });
-    }
+    // Os casulos de mísseis giram sobre o anel (TORRES, ART-12).
     m.cilindro(0.08, 1.2, METAL, { x: -0.7, y: 2.2 }, 6);
     m.add(new ConeGeometry(0.5, 0.25, 12, 1, true), METAL, { x: -0.7, y: 3.5, rx: Math.PI });
     return olho(m, -0.7, 3.4, 0, 0.12).pronta();
@@ -689,12 +661,120 @@ export function geometriaDaFolha(): BufferGeometry {
 
 export const TIPOS_DE_MODELO = Object.keys(CONSTRUTORES) as TipoDeModelo[];
 
+/**
+ * ART-12 (D-68): torres que giram para o alvo, montadas em volta do pivô (+x = frente, +y =
+ * vertical). O corpo (CONSTRUTORES) não as inclui; o modelo inteiro soma as duas.
+ */
+const TORRES: Partial<
+  Record<TipoDeModelo, { pivo: [number, number, number]; montar: () => Montagem }>
+> = {
+  hover_ex1: {
+    pivo: [0.1, 0.45, 0],
+    montar: () => {
+      const m = new Montagem();
+      m.caixa(0.9, 0.3, 0.9, GRAFITE);
+      m.cilindro(0.3, 0.12, METAL, { y: 0.3 }, 10);
+      for (const z of [-0.2, 0.2]) {
+        m.tubo(0.08, 1.2, METAL, { x: 0.85, y: 0.17, z });
+        m.tubo(0.12, 0.35, GRAFITE, { x: 0.5, y: 0.17, z });
+        m.esfera(0.05, { brilho: BRASA }, { x: 1.46, y: 0.17, z });
+      }
+      return m;
+    },
+  },
+  hover_opq: {
+    pivo: [-0.1, 0.75, 0],
+    montar: () => {
+      const m = new Montagem();
+      m.caixa(1.9, 0.18, 1.6, METAL);
+      for (const y of [0.2, 0.6]) {
+        for (const z of [-0.55, -0.18, 0.18, 0.55]) {
+          m.tubo(0.17, 1.6, GRAFITE, { y, z });
+          m.tubo(0.12, 0.05, { brilho: BRASA }, { x: 0.81, y, z });
+        }
+      }
+      m.caixa(0.3, 0.5, 1.4, PAINEL, { x: -0.85, y: 0.15 });
+      return m;
+    },
+  },
+  laser_tower: {
+    pivo: [0, 6.4, 0],
+    montar: () => {
+      const m = new Montagem();
+      m.caixa(1.3, 0.6, 0.8, GRAFITE);
+      m.esfera(0.32, VIDRO, { x: 0.62, y: 0.3 });
+      for (const z of [-0.45, 0.45]) m.caixa(0.6, 0.05, 0.15, METAL, { x: -0.3, y: 0.35, z });
+      return olho(m, 0.7, 0.3, 0, 0.3);
+    },
+  },
+  aa_battery: {
+    pivo: [0, 2.2, 0],
+    montar: () => {
+      const m = new Montagem();
+      m.cilindro(0.6, 0.2, METAL, {}, 10);
+      for (const z of [-0.8, 0.8]) {
+        m.caixa(1.1, 1.5, 0.7, PAINEL, { y: 0.1, z, rz: 0.5 });
+        for (const [a, b] of [
+          [-0.2, -0.15],
+          [0.2, 0.15],
+        ])
+          m.add(new CylinderGeometry(0.14, 0.14, 0.1, 8), 'nacao', {
+            x: 0.55 + a!,
+            y: 1.1,
+            z: z + b!,
+            rz: 0.5,
+          });
+      }
+      return m;
+    },
+  },
+};
+
+export const temTorre = (tipo: TipoDeModelo): boolean => TORRES[tipo] !== undefined;
+
+/** Pivô da torre no corpo (m, espaço do modelo). */
+export function pivoDaTorre(tipo: TipoDeModelo): [number, number, number] {
+  return TORRES[tipo]?.pivo ?? [0, 0, 0];
+}
+
+const cacheTorre = new Map<TipoDeModelo, BufferGeometry>();
+/** ART-12: a torre com o pivô na origem. */
+export function geometriaDaTorre(tipo: TipoDeModelo): BufferGeometry {
+  let geo = cacheTorre.get(tipo);
+  if (!geo) {
+    geo = TORRES[tipo]!.montar().pronta();
+    cacheTorre.set(tipo, geo);
+  }
+  return geo;
+}
+
+const cacheCorpo = new Map<TipoDeModelo, BufferGeometry>();
+/** O corpo sem a torre (igual ao modelo inteiro nos tipos sem torre). */
+export function geometriaDoCorpo(tipo: TipoDeModelo): BufferGeometry {
+  let geo = cacheCorpo.get(tipo);
+  if (!geo) {
+    geo = CONSTRUTORES[tipo]();
+    cacheCorpo.set(tipo, geo);
+  }
+  return geo;
+}
+
 const cache = new Map<TipoDeModelo, BufferGeometry>();
 
+/** Modelo inteiro (retrato, holograma, fantasmas): corpo mais torre no pivô. */
 export function geometriaDoModelo(tipo: TipoDeModelo): BufferGeometry {
   let geo = cache.get(tipo);
   if (!geo) {
-    geo = CONSTRUTORES[tipo]();
+    const corpo = geometriaDoCorpo(tipo);
+    if (temTorre(tipo)) {
+      const torre = geometriaDaTorre(tipo)
+        .clone()
+        .translate(...pivoDaTorre(tipo));
+      geo = mergeGeometries([corpo, torre], false)!;
+      geo.computeBoundingSphere();
+    } else {
+      geo = corpo;
+    }
     cache.set(tipo, geo);
   }
   return geo;

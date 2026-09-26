@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getComponent, param, type Sim } from '../../src/sim';
+import { dados, getComponent, param, type Sim } from '../../src/sim';
 import type { SystemContext } from '../../src/sim/core/pipeline';
 import { ATIVAR_IA_COMMAND, dificuldade, pesos } from '../../src/sim/ia';
 import { montarQuadro } from '../../src/sim/ia/quadro';
 import { CATEGORIAS } from '../../src/sim/ia/producao';
+import { proximoDoPlano } from '../../src/sim/ia/plano';
 import { INICIAR_PARTIDA_COMMAND } from '../../src/sim/producao';
 import { criar, mundoLiso, ordenar, partida, ponto, pos, revelar, semear } from './mundo-teste';
 import { criarPartida } from '../../tools/sim/match';
@@ -70,7 +71,8 @@ describe('T-090 — IA-01, IA-02, IA-06, IA-07: arquitetura da IA', () => {
     const sim = comIa('facil');
     const q = montarQuadro(contexto(sim), 'bra')!;
     const w = pesos(q);
-    expect(dificuldade('facil', 'tiers_permitidos')).toBe(1);
+    // D-66: no Fácil o exército fica em T1 (estruturas e apoio usam `tiers_permitidos`).
+    expect(dificuldade('facil', 'tiers_militares')).toBe(1);
     expect(w.opq).toBe(0);
     expect(w.dlaser).toBe(0);
     const total = Object.values(w).reduce((s, v) => s + v, 0);
@@ -247,5 +249,93 @@ describe('T-093 — IA-04, IA-05, §13.2: militar e dificuldades', () => {
     const antes = pos(sim, meus[0]!);
     sim.run(2 * sim.tickHz);
     expect(pos(sim, meus[0]!).z).toBeLessThan(antes.z);
+  });
+});
+
+describe('T-096 — IA-06, IA-08 a IA-10, D-66: a IA evolui estruturas', () => {
+  const muito = { fe: 5000, si: 5000, cu: 5000, li: 5000, ti: 5000, u: 500 };
+
+  it('IA-08: antes do minuto do item, nada; depois, o primeiro item abaixo da meta vai para a fila', () => {
+    const sim = comIa('facil');
+    Object.assign(sim.state.estoques.bra!, muito);
+    const ctx = contexto(sim);
+    const q = montarQuadro(ctx, 'bra')!;
+    const torres = dados.ia_plano.find((l) => l.item === 'laser_tower')!;
+    const aa = dados.ia_plano.find((l) => l.item === 'aa_battery')!;
+    // Torres já contam desde o minuto 0; com elas feitas, a Antiaérea só entra no minuto dela.
+    q.naFila['laser_tower'] = torres.facil;
+    q.minutos = aa.min_facil - 1;
+    expect(proximoDoPlano(ctx, q)).not.toBe('aa_battery');
+    q.minutos = aa.min_facil + 1;
+    q.naFila['nuclear_plant'] = 1;
+    expect(proximoDoPlano(ctx, q)).toBe('aa_battery');
+  });
+
+  it('IA-06 (D-66): no Fácil, o exército não passa de vr_exercito_max nem sai de tiers_militares', () => {
+    const { sim } = criarPartida({ seed: 3, ias: ['facil', 'facil'], maxMin: 25 });
+    let maior = 0;
+    for (let t = 0; t < 25 * 60 * sim.tickHz; t++) {
+      sim.step();
+      if (t % (30 * sim.tickHz) !== 0) continue;
+      for (const nacao of sim.state.nacoes) {
+        const ex = sim.state.entities.filter(
+          (id) =>
+            getComponent(sim.state, id, 'owner')?.nacao === nacao &&
+            getComponent(sim.state, id, 'unit') &&
+            getComponent(sim.state, id, 'arma'),
+        );
+        const vr = ex.reduce(
+          (s, id) =>
+            s + dados.custos.find((c) => c.id === getComponent(sim.state, id, 'unit')!.tipo)!.vr,
+          0,
+        );
+        maior = Math.max(maior, vr);
+        for (const id of ex) {
+          const tipo = getComponent(sim.state, id, 'unit')!.tipo;
+          expect(['hover_ex1', 'hover_scout']).toContain(tipo);
+        }
+      }
+    }
+    // Uma unidade pode já estar na fila quando o teto é alcançado.
+    const maiorUnidade = Math.max(
+      ...['hover_ex1', 'hover_scout'].map((t) => dados.custos.find((c) => c.id === t)!.vr),
+    );
+    expect(maior).toBeLessThanOrEqual(dificuldade('facil', 'vr_exercito_max') + maiorUnidade);
+  }, 180_000);
+
+  it('IA-08/IA-10: no Normal, a partida headless constrói as estruturas do plano e fabrica mísseis', () => {
+    const { sim } = criarPartida({ seed: 3, ias: ['normal', 'normal'], maxMin: 26 });
+    for (let t = 0; t < 26 * 60 * sim.tickHz && !sim.state.resultado; t++) sim.step();
+    const tipos = new Set(
+      sim.state.entities.map((id) => getComponent(sim.state, id, 'structure')?.tipo),
+    );
+    for (const t of ['aa_battery', 'satellite_uplink', 'mag_tower', 'missile_silo'] as const) {
+      expect(tipos).toContain(t);
+    }
+    const misseis = sim.state.entities
+      .filter((id) => getComponent(sim.state, id, 'lancador'))
+      .reduce(
+        (n, id) =>
+          n +
+          getComponent(sim.state, id, 'lancador')!.prontos.length +
+          getComponent(sim.state, id, 'producer')!.fila.length,
+        0,
+      );
+    expect(misseis).toBeGreaterThan(0);
+  }, 180_000);
+
+  it('IA-10: curto defende contra inimigo perto de uma estrutura própria', () => {
+    const sim = comIa('facil');
+    const [silo] = criar(sim, [{ estrutura: 'missile_silo', x: 20, z: 20 }]);
+    getComponent(sim.state, silo!, 'lancador')!.prontos.push('missile_short');
+    criar(sim, [{ unidade: 'hover_ex1', x: 30, z: 20, postura: 'passiva' }], 'usa');
+    const eventos: string[] = [];
+    for (let t = 0; t < 10 * sim.tickHz; t++) {
+      for (const e of sim.step()) {
+        if (e.tipo === 'disparo' && (e.dados as { arma: string }).arma === 'missil_curto')
+          eventos.push(e.tipo);
+      }
+    }
+    expect(eventos.length).toBeGreaterThan(0);
   });
 });

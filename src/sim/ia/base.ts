@@ -86,6 +86,11 @@ export function tierPermitido(nivel: Nivel, item: CustosId): boolean {
   return tierDe(item) <= dificuldade(nivel, 'tiers_permitidos');
 }
 
+/** IA-06 (D-66): tier das unidades de combate (composição militar). */
+export function tierMilitar(nivel: Nivel, item: CustosId): boolean {
+  return tierDe(item) <= dificuldade(nivel, 'tiers_militares');
+}
+
 export function tipoDe(state: SimState, id: EntityId): string | null {
   return (
     getComponent(state, id, 'unit')?.tipo ?? getComponent(state, id, 'structure')?.tipo ?? null

@@ -34,10 +34,15 @@ export function BarraSuperior() {
         </span>
       ))}
       {energia && (
-        <span class="energia" data-testid="energia" data-indicador={energia.indicador}>
+        <span
+          class="energia"
+          data-testid="energia"
+          data-indicador={energia.indicador}
+          title={t('hud.energia_ajuda')}
+        >
           <span class="icone" style={{ background: COR_DO_INDICADOR[energia.indicador] }} />
-          {t('hud.energia')} +{energia.geracao.toFixed(1)} −{energia.consumo.toFixed(1)} ·{' '}
-          {Math.floor(energia.banco)}/{energia.capacidade}
+          {t('hud.energia')} +{energia.geracao.toFixed(1)}/s −{energia.consumo.toFixed(1)}/s ·{' '}
+          {t('hud.banco')} {Math.floor(energia.banco)}/{energia.capacidade}
         </span>
       )}
       <span data-testid="corpos">

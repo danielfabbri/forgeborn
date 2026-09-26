@@ -8,7 +8,7 @@ import { getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import { type CustosId, dados } from '../data';
 import { custoDe } from '../producao/custos';
-import { comandar, dificuldade, personalidade, podePagar, tierPermitido, tipoDe } from './base';
+import { comandar, dificuldade, personalidade, podePagar, tierMilitar, tipoDe, vrDe } from './base';
 import { construir, impressoraComVaga } from './economia';
 import type { Quadro } from './quadro';
 
@@ -57,7 +57,7 @@ export function pesos(
   // mesmo jeito, a categoria que depende de um recurso sem fonte (nem estoque, nem jazida
   // elegível) espera, e o peso dela vai para as outras.
   const bloqueadas = LISTA.filter(
-    (c) => !tierPermitido(q.nivel, CATEGORIAS[c]) || !temFonte(q, estoque, CATEGORIAS[c]),
+    (c) => !tierMilitar(q.nivel, CATEGORIAS[c]) || !temFonte(q, estoque, CATEGORIAS[c]),
   );
   const bloqueado = bloqueadas.reduce((s, c) => s + resultado[c], 0);
   for (const c of bloqueadas) resultado[c] = 0;
@@ -114,6 +114,15 @@ export function prioridades(ctx: SystemContext, q: Quadro): Categoria[] {
  */
 export function decidirProducao(ctx: SystemContext, q: Quadro): void {
   if (ctx.state.energia[q.nacao]!.racionamento) return;
+  // IA-06 (D-66): teto de VR do exército (as filas contam).
+  const teto = dificuldade(q.nivel, 'vr_exercito_max');
+  if (teto > 0) {
+    const naFila = LISTA.reduce(
+      (s, c) => s + (q.naFila[CATEGORIAS[c]] ?? 0) * custoDe(CATEGORIAS[c]).vr,
+      0,
+    );
+    if (vrDe(ctx.state, q.exercito) + naFila >= teto) return;
+  }
   for (const categoria of prioridades(ctx, q)) {
     const item = CATEGORIAS[categoria];
     if (!podePagar(ctx.state, q.nacao, item)) continue;

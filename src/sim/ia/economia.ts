@@ -117,15 +117,22 @@ function decidirEnergia(ctx: SystemContext, q: Quadro): void {
  * Expansão (IA-07): Armazém junto à jazida explorada mais próxima que esteja a mais de
  * `ia_distancia_expansao_m` dos depósitos, até `expansoes_max`.
  */
-function decidirExpansao(ctx: SystemContext, q: Quadro): void {
+function decidirExpansao(ctx: SystemContext, q: Quadro, extras: CustosId[]): void {
   const expansoes = contarEstruturas(ctx, q, 'storage') + (q.naFila['storage'] ?? 0);
   if (expansoes >= dificuldade(q.nivel, 'expansoes_max')) return;
+  // IA-08: um recurso que as próximas compras pedem e que não tem jazida elegível (fora do
+  // alcance dos depósitos) puxa a expansão para uma jazida dele, sem esperar a meta de hovers.
+  const estoque = ctx.state.estoques[q.nacao]!;
+  const falta = extras
+    .flatMap((item) => RECURSOS.filter((r) => custoDe(item)[r] > estoque[r]))
+    .find((r) => !q.acessiveis.has(r));
   const pct = param(
     temTraco(q.nacao, 'expande cedo') ? 'ia_expansao_cedo_pct' : 'ia_expansao_hovers_pct',
   );
-  if (q.hovers.length < (metaDeHovers(q) * pct) / 100) return;
+  if (!falta && q.hovers.length < (metaDeHovers(q) * pct) / 100) return;
   const entregas = pontosDeEntrega(ctx, q.nacao);
   const candidatas = entitiesWith(ctx.state, 'jazida', 'position')
+    .filter((id) => !falta || getComponent(ctx.state, id, 'jazida')!.recurso === falta)
     .map((id) => direcaoDe(getComponent(ctx.state, id, 'position')!))
     .filter((d) => explorado(ctx, q.nacao, d))
     .filter((d) =>
@@ -188,5 +195,5 @@ export function decidirEconomia(ctx: SystemContext, q: Quadro, extras: CustosId[
   remanejarColeta(ctx, q, extras);
   decidirNave(ctx, q);
   decidirEnergia(ctx, q);
-  decidirExpansao(ctx, q);
+  decidirExpansao(ctx, q, extras);
 }

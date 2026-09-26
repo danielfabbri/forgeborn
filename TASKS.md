@@ -261,7 +261,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [~] **T-094 — Batedor e Sentinelas** · P · Spec: IA-01 · Dep: T-072, T-090 · Batedor com Hover de Observação pronto; Sentinelas esperam a T-072
 - [ ] **T-095 — Estabilidade e hierarquia de dificuldade** · M · Spec: INV-12, INV-14 · Dep: T-093, T-007
   - Aceite: INV-12 e INV-14 verdes com `sim:match` em 20 seeds.
-- [ ] **T-096 — IA evolui estruturas e usa as novas unidades** · G · Spec: IA-06, IA-08 – IA-10, D-66 · Dep: T-091, T-059, T-076
+- [x] **T-096 — IA evolui estruturas e usa as novas unidades** · G · Spec: IA-06, IA-08 – IA-10, D-66 · Dep: T-091, T-059, T-076 · Feito: 2026-09-26
   - Aceite: o Fácil constrói o plano de `dados:ia_plano` no minuto do nível sem passar de `vr_exercito_max` nem de `tiers_militares` no exército; a IA imprime e posiciona o satélite, fabrica e lança mísseis (curtos na defesa; longos do Normal para cima a cada `ia_missil_longo_intervalo_s`), planta minas perto da base, leva silo à expansão e bateria na onda; partida headless do Fácil constrói mais estruturas e não ataca antes de `primeiro_ataque_min`.
 
 ## M10 — Telas e Free Battle (MVP)
@@ -304,7 +304,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-128 — Base de Lançamento com torre vertical** · P · Spec: §12 (visual da Base de Lançamento) · Dep: T-121 · Feito: 2026-09-25
   - Aceite: o modelo tem uma torre vertical coerente com a subida do satélite.
-- [ ] **T-129 — Torres e canos apontam para o alvo** · M · Spec: ART-12, D-68 · Dep: T-120
+- [x] **T-129 — Torres e canos apontam para o alvo** · M · Spec: ART-12, D-68 · Dep: T-120 · Feito: 2026-09-26
   - Aceite: EX1, OPQ, Torre de Defesa, Nave, Antiaérea, drones e Lança-Mísseis giram só a torre ou os canos para o alvo; sem alvo, voltam para a frente.
 ## M13 — Campanha (v1.0)
 

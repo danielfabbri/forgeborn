@@ -6,10 +6,11 @@
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { EstadoDaIa } from '../core/state';
 import { param } from '../data';
-import { atualizarMemoria, dificuldade, type Nivel, niveis } from './base';
+import { atualizarMemoria, dificuldade, type Nivel, niveis, podePagar, vrDe } from './base';
 import { decidirBatedor } from './batedor';
 import { decidirEconomia } from './economia';
 import { decidirMilitar } from './militar';
+import { decidirPlanoDaIa, proximoDoPlano } from './plano';
 import { CATEGORIAS, decidirProducao, observar, prioridades } from './producao';
 import { metaDeHovers, montarQuadro, type Quadro } from './quadro';
 
@@ -48,8 +49,16 @@ export function sistemaIa(ctx: SystemContext): void {
     const militar = prioridades(ctx, q)
       .slice(0, 1)
       .map((c) => CATEGORIAS[c]);
-    decidirEconomia(ctx, q, militar);
-    decidirProducao(ctx, q);
+    // IA-08: o próximo item do plano também orienta a coleta.
+    const plano = proximoDoPlano(ctx, q);
+    decidirEconomia(ctx, q, plano ? [...militar, plano] : militar);
+    // IA-08 a IA-10 (D-66): estruturas e apoio do plano do nível, e o uso delas.
+    decidirPlanoDaIa(ctx, q);
+    // O plano esperando recursos tem a vez: com exército suficiente para uma onda, a produção
+    // militar espera (o Fácil evolui a base em vez de só acumular tropas).
+    const esperando = plano !== null && !podePagar(state, nacao, plano);
+    const exercitoPronto = vrDe(state, q.exercito) >= dificuldade(q.nivel, 'vr_exercito_ataque');
+    if (!(esperando && exercitoPronto)) decidirProducao(ctx, q);
     decidirMilitar(ctx, q);
     decidirBatedor(ctx, q);
   }

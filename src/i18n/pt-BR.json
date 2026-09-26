@@ -347,5 +347,7 @@
   "producao.misseis_disparar": "Clique direito no mapa para lançar o da frente.",
   "missil.recusado.alcance": "Fora do alcance do míssil da frente.",
   "missil.recusado.vazio": "Nenhum míssil pronto.",
-  "missil.recusado.recarga": "A base ainda está recarregando o lançador."
+  "missil.recusado.recarga": "A base ainda está recarregando o lançador.",
+  "hud.banco": "banco",
+  "hud.energia_ajuda": "Energia da rede da sua nação.\n+N/s: quanto a Nave e as usinas geram por segundo.\n−N/s: quanto a rede gastou por segundo nos últimos 10 s (impressão na Nave e nas bases, torres, antiaérea e portas de recarga).\nbanco atual/capacidade: a energia guardada. Se o banco zera com o gasto maior que a geração, entra o racionamento (indicador vermelho): torres atiram e portas carregam mais devagar.\nVerde: geração ≥ gasto. Amarelo: gastando mais que gera, mas com banco. Vermelho: banco quase vazio.\nUnidades não andam com o banco: cada uma tem a própria bateria (barra ciano). Com a bateria zerada, ela entra no Modo Reserva e anda bem devagar até recarregar."
 }

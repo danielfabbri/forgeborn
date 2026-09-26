@@ -8,7 +8,16 @@ import { getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import { type CustosId, dados } from '../data';
 import { custoDe } from '../producao/custos';
-import { comandar, dificuldade, personalidade, podePagar, tierMilitar, tipoDe, vrDe } from './base';
+import {
+  comandar,
+  dificuldade,
+  liberadoPara,
+  personalidade,
+  podePagar,
+  tierMilitar,
+  tipoDe,
+  vrDe,
+} from './base';
 import { construir, impressoraComVaga } from './economia';
 import type { Quadro } from './quadro';
 
@@ -57,7 +66,10 @@ export function pesos(
   // mesmo jeito, a categoria que depende de um recurso sem fonte (nem estoque, nem jazida
   // elegível) espera, e o peso dela vai para as outras.
   const bloqueadas = LISTA.filter(
-    (c) => !tierMilitar(q.nivel, CATEGORIAS[c]) || !temFonte(q, estoque, CATEGORIAS[c]),
+    (c) =>
+      !tierMilitar(q.nivel, CATEGORIAS[c]) ||
+      !liberadoPara(q, CATEGORIAS[c]) ||
+      !temFonte(q, estoque, CATEGORIAS[c]),
   );
   const bloqueado = bloqueadas.reduce((s, c) => s + resultado[c], 0);
   for (const c of bloqueadas) resultado[c] = 0;

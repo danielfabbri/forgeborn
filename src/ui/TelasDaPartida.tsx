@@ -6,7 +6,7 @@ import { t, type TextKey } from '../i18n';
 import { dados } from '../sim';
 import { type LinhaDoFim, total } from '../game/fimDePartida';
 import { Configuracoes } from './Configuracoes';
-import { acoesDaPartida, fimDePartida, menuDePausa, pausado } from './hud';
+import { acoesDaPartida, fimDaMissao, fimDePartida, menuDePausa, pausado } from './hud';
 
 export function MenuDePausa() {
   const menu = menuDePausa.value;
@@ -79,6 +79,7 @@ const LINHAS: ReadonlyArray<{ rotulo: TextKey; valor: (l: LinhaDoFim) => string 
 
 export function FimDePartida() {
   const fim = fimDePartida.value;
+  const missao = fimDaMissao.value;
   if (!fim) return null;
   const eu = fim.linhas[0]!;
   // Unidades por tipo (REG-23), do jogador.
@@ -97,6 +98,12 @@ export function FimDePartida() {
     >
       <div class="painel-fim">
         <h1>{t(`fim.${fim.resultado}` as TextKey)}</h1>
+        {missao && missao.estrelas > 0 && (
+          <p class="estrelas-missao" data-testid="fim-estrelas" data-estrelas={missao.estrelas}>
+            {'★'.repeat(missao.estrelas)}
+            {'☆'.repeat(3 - missao.estrelas)}
+          </p>
+        )}
         <p class="discreto">
           {t(`fim.motivo.${fim.motivo}` as TextKey)} ·{' '}
           {t('fim.duracao', { tempo: duracao(fim.duracao_s) })}
@@ -148,14 +155,14 @@ export function FimDePartida() {
         )}
         <div class="acoes">
           <button data-testid="fim-menu" onClick={acoesDaPartida.sair}>
-            {t('fim.menu')}
+            {t(missao ? 'fim.voltar_universo' : 'fim.menu')}
           </button>
           <button
-            class="primario"
+            class={missao && missao.estrelas > 0 ? '' : 'primario'}
             data-testid="fim-jogar-novamente"
             onClick={acoesDaPartida.jogarDeNovo}
           >
-            {t('fim.jogar_novamente')}
+            {t(missao ? 'fim.tentar_de_novo' : 'fim.jogar_novamente')}
           </button>
         </div>
       </div>

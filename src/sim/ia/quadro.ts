@@ -33,6 +33,8 @@ export interface Quadro {
   minutos: number;
   /** Recursos que a nação consegue obter agora: com jazida elegível (ECO-19) ou já minerados. */
   acessiveis: Set<RecursosId>;
+  /** CAM-02: itens liberados na missão (null fora da campanha). */
+  liberados: string[] | null;
 }
 
 export function montarQuadro(ctx: SystemContext, nacao: NacaoId): Quadro | null {
@@ -59,6 +61,7 @@ export function montarQuadro(ctx: SystemContext, nacao: NacaoId): Quadro | null 
     ),
     inimigos: inimigosVisiveis(ctx, nacao),
     naFila,
+    liberados: state.liberados,
     minutos: (ctx.tick * ctx.dt) / 60,
     acessiveis: new Set([
       ...jazidasElegiveis(ctx, nacao).map((j) => getComponent(state, j, 'jazida')!.recurso),

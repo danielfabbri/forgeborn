@@ -35,6 +35,11 @@ export function produz(tipoProdutor: string, item: CustosId): boolean {
   return custoDe(item).produzido_por.includes(tipoProdutor);
 }
 
+/** CAM-02 (D-73): o item está liberado na partida (fora da campanha, tudo está)? */
+export function liberado(state: { liberados: string[] | null }, item: string): boolean {
+  return state.liberados === null || state.liberados.includes(item);
+}
+
 /** PRD-04: paga o item por inteiro; sem recursos, recusa e emite AL-06 com o que falta. */
 export function pagar(
   ctx: SystemContext,

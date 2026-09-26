@@ -15,7 +15,7 @@ import {
 import { esconderCarregamento, mostrarCarregamento, pintar, progresso } from './telas/carregamento';
 
 const parametros = new URLSearchParams(location.search);
-const direto = ['partida', 'demo', 'e2e', 'estresse', 'ia', 'camera'].some((p) =>
+const direto = ['partida', 'campanha', 'demo', 'e2e', 'estresse', 'ia', 'camera'].some((p) =>
   parametros.has(p),
 );
 

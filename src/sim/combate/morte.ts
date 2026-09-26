@@ -202,6 +202,18 @@ export function eliminar(ctx: SystemContext, nacao: NacaoId): void {
   });
 }
 
+/** CAM-06 (D-73): nação sem Nave eliminada quando não tem mais estruturas nem unidades. */
+function semCorpos(state: SimState, nacao: NacaoId): boolean {
+  return !entitiesWith(state, 'owner').some((id) => {
+    if (getComponent(state, id, 'owner')!.nacao !== nacao) return false;
+    if (getComponent(state, id, 'autodestruicao') || getComponent(state, id, 'mine')) return false;
+    return (
+      getComponent(state, id, 'structure') !== undefined ||
+      getComponent(state, id, 'unit') !== undefined
+    );
+  });
+}
+
 /** REG-09: sem Nave e sem Impressora pronta. */
 function semForja(state: SimState, nacao: NacaoId): boolean {
   return !entitiesWith(state, 'owner').some((id) => {
@@ -272,7 +284,10 @@ export function sistemaMorte(ctx: SystemContext): void {
   }
   for (const nacao of state.nacoes) {
     const placar = state.placar[nacao]!;
-    if (placar.presente && !placar.eliminada && semForja(state, nacao)) eliminar(ctx, nacao);
+    const acabou = state.semForja.includes(nacao)
+      ? semCorpos(state, nacao)
+      : semForja(state, nacao);
+    if (placar.presente && !placar.eliminada && acabou) eliminar(ctx, nacao);
   }
   fimDePartida(ctx);
 }

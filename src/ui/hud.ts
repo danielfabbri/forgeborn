@@ -46,6 +46,8 @@ export const tooltip = signal<{ texto: string; x: number; y: number } | null>(nu
 
 /** FLX-12: fim de partida do jogador (resultado e estatísticas), ou null enquanto joga. */
 export const fimDePartida = signal<FimDaPartida | null>(null);
+/** CAM-08: resultado da missão da campanha (0 estrelas = derrota), ou null fora dela. */
+export const fimDaMissao = signal<{ estrelas: number; missao: string } | null>(null);
 
 /** REG-21/FLX-11: simulação pausada; o menu de pausa pode estar aberto ou não (pausa tática). */
 export const pausado = signal(false);

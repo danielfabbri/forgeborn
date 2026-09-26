@@ -40,3 +40,32 @@ export function irParaPartida(config: ConfigFreeBattle, seed = novaSeed()): void
 export function irParaMenu(): void {
   location.href = `${base()}?menu`;
 }
+
+/** CAM-01: a missão da campanha na URL (slot, missão e nação do slot). */
+export interface MissaoNaUrl {
+  slot: number;
+  missao: string;
+  nacao: string;
+}
+
+export function urlDaMissao(m: MissaoNaUrl): string {
+  const q = new URLSearchParams({ campanha: String(m.slot), missao: m.missao, nacao: m.nacao });
+  return `${base()}?${q.toString()}`;
+}
+
+export function lerMissaoDaUrl(parametros: URLSearchParams): MissaoNaUrl | null {
+  const slot = Number(parametros.get('campanha'));
+  const missao = parametros.get('missao');
+  const nacao = parametros.get('nacao');
+  if (!Number.isInteger(slot) || slot < 0 || !missao || !nacao) return null;
+  return { slot, missao, nacao };
+}
+
+export function irParaMissao(m: MissaoNaUrl): void {
+  location.href = urlDaMissao(m);
+}
+
+/** CAM-08: volta à Visão do Universo da campanha no slot. */
+export function irParaCampanha(slot: number): void {
+  location.href = `${base()}?menu=campanha&slot=${slot}`;
+}

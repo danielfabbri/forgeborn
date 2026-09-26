@@ -81,6 +81,11 @@ export function tierDe(item: CustosId): number {
   return custo.u > 0 ? 3 : custo.ti > 0 ? 2 : 1;
 }
 
+/** CAM-02: o item está liberado para o quadro (a IA não tenta o que não pode fazer). */
+export function liberadoPara(q: { liberados: string[] | null }, item: string): boolean {
+  return q.liberados === null || q.liberados.includes(item);
+}
+
 /** IA-06: o item cabe nos tiers da dificuldade? */
 export function tierPermitido(nivel: Nivel, item: CustosId): boolean {
   return tierDe(item) <= dificuldade(nivel, 'tiers_permitidos');

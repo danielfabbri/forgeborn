@@ -314,12 +314,12 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: EX1, OPQ, Torre de Defesa, Nave, Antiaérea, drones e Lança-Mísseis giram só a torre ou os canos para o alvo; sem alvo, voltam para a frente.
 ## M13 — Campanha (v1.0)
 
-- [ ] **T-130 — Persistência** · P · Spec: TEC-21, CAM-04, CAM-09 · Dep: T-102
+- [x] **T-130 — Persistência** · P · Spec: TEC-21, CAM-04, CAM-09 · Dep: T-102 · Feito: 2026-09-26
   - Aceite: 3 slots de campanha salvos em IndexedDB (com alternativa em localStorage): nação, missões concluídas, estrelas e melhor tempo; criar, continuar e apagar.
-- [ ] **T-131 — Escolha de nação, briefing e fluxo da campanha** · M · Spec: FLX-03, FLX-05, FLX-06, CAM-01, CAM-08, CAM-09 · Dep: T-130, T-103
+- [x] **T-131 — Escolha de nação, briefing e fluxo da campanha** · M · Spec: FLX-03, FLX-05, FLX-06, CAM-01, CAM-08, CAM-09 · Dep: T-130, T-103 · Feito: 2026-09-26
   - Aceite: Campanha → slot → (novo) Escolha de Nação → Universo → Briefing → Iniciar Pouso → partida da missão → fim com estrelas, salvo no slot, próxima missão desbloqueada.
-- [ ] **T-132 — Visão do Universo final** · M · Spec: FLX-04, CAM-03, ART-09 · Dep: T-131
-- [ ] **T-133 — Liberação progressiva de unidades** · P · Spec: CAM-02, D-73 · Dep: T-131
+- [x] **T-132 — Visão do Universo final** · M · Spec: FLX-04, CAM-03, ART-09 · Dep: T-131 · Feito: 2026-09-26
+- [x] **T-133 — Liberação progressiva de unidades** · P · Spec: CAM-02, D-73 · Dep: T-131 · Feito: 2026-09-26
   - Aceite: na missão, ordens de itens não liberados são recusadas para todas as nações e os cartões só mostram os liberados.
 - [ ] **T-134 — Missão 0 "Campo de Testes" (tutorial na Terra) e Missão 1 "Primeira Forja"** · G · Spec: CAM-05 – CAM-07, §14.5, §15, §18.2 · Dep: T-133, T-084
   - Aceite: cenário Terra — Campo de testes (céu azul, concreto com faixas, galpões e cercas); os 9 passos do tutorial em ordem (CAM-07), com destaque de interface e narração; alvos de treino e posto avançado eliminados ao perder tudo (CAM-06); tutorial pode ser pulado; a Missão 1 na Lua sem passos guiados.

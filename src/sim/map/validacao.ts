@@ -161,7 +161,8 @@ export function gerarMapaValido(
   const rejeitadas: MapaPronto['rejeitadas'] = [];
   for (let tentativa = 0; tentativa < VALIDACAO.maxTentativas; tentativa++) {
     const atual = seed + tentativa;
-    const mapa = gerarMapaLunar(atual, tamanho, zonas);
+    // §14.5: o Campo de testes da Terra é quase plano.
+    const mapa = gerarMapaLunar(atual, tamanho, zonas, cenario === 'terra_lab');
     const grades = derivarGrades(mapa);
     let jazidas: DistribuicaoDeJazidas;
     try {

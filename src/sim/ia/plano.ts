@@ -15,7 +15,7 @@ import { cargaDoSilo, pontosDeEntrega } from '../economia/estoque';
 import { avancar, norteEm, tangente } from '../map/esfera';
 import { custoDe } from '../producao/custos';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
-import { comandar, dosTipos, maisProximo, podePagar, tierPermitido } from './base';
+import { comandar, dosTipos, liberadoPara, maisProximo, podePagar, tierPermitido } from './base';
 import { construir, contarEstruturas, impressoraComVaga } from './economia';
 import type { Quadro } from './quadro';
 
@@ -52,7 +52,7 @@ export function proximoDoPlano(ctx: SystemContext, q: Quadro): CustosId | null {
   for (const linha of dados.ia_plano) {
     const item = linha.item as string;
     if (quantos(ctx, q, item) >= metaDo(q, linha)) continue;
-    if (!tierPermitido(q.nivel, item as CustosId)) continue;
+    if (!tierPermitido(q.nivel, item as CustosId) || !liberadoPara(q, item)) continue;
     if (item === 'nuclear_plant' && !temUranio(ctx, q)) continue;
     return item as CustosId;
   }
@@ -65,7 +65,7 @@ function decidirPlano(ctx: SystemContext, q: Quadro): void {
   for (const linha of dados.ia_plano) {
     const item = linha.item as string;
     if (quantos(ctx, q, item) >= metaDo(q, linha)) continue;
-    if (!tierPermitido(q.nivel, item as CustosId)) continue;
+    if (!tierPermitido(q.nivel, item as CustosId) || !liberadoPara(q, item)) continue;
     if (item === 'nuclear_plant' && !temUranio(ctx, q)) continue;
     if (!podePagar(ctx.state, q.nacao, item as CustosId)) return;
     if (ESTRUTURAS.has(item)) {

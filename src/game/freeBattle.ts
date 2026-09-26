@@ -51,7 +51,7 @@ export const NACOES: readonly NacoesId[] = dados.nacoes.map((n) => n.id);
 export const DIFICULDADES = valoresDe('dificuldade_oponente') as string[];
 /** Cenários com mapa (preset) implementado. */
 export const CENARIOS_IMPLEMENTADOS: readonly CenariosId[] = [
-  ...new Set(PRESETS_DE_MAPA.map((p) => p.cenario)),
+  ...new Set(PRESETS_DE_MAPA.filter((p) => !p.soCampanha).map((p) => p.cenario)),
 ];
 
 export function presetsDe(cenario: CenariosId, tamanho: TamanhosMapaId) {

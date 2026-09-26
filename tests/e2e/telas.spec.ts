@@ -51,10 +51,10 @@ test.describe('M10: telas', () => {
     expect(erros).toEqual([]);
   });
 
-  test('FLX-03/D-38: Seleção de Modo com Campanha desabilitada e Créditos', async ({ page }) => {
+  test('FLX-03/CAM-09: Seleção de Modo com Campanha habilitada e Créditos', async ({ page }) => {
     await page.goto('/?menu');
     await page.getByTestId('selecao-de-modo').waitFor();
-    await expect(page.getByTestId('modo-campanha')).toBeDisabled();
+    await expect(page.getByTestId('modo-campanha')).toBeEnabled();
     await page.getByTestId('modo-creditos').click();
     await page.getByTestId('creditos').waitFor();
   });

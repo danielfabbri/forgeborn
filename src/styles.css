@@ -1156,3 +1156,53 @@ body.em-cinematica #ui {
   vertical-align: middle;
   margin-right: 2px;
 }
+
+/* CAM-09/FLX-05/FLX-06: slots, Escolha de Nação e Briefing da campanha. */
+.slots .slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+}
+.cartoes-nacao {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+}
+.cartao-nacao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  border: 2px solid;
+  border-radius: 8px;
+  background: rgba(5, 10, 18, 0.8);
+  color: #dce9ff;
+  cursor: pointer;
+}
+.cartao-nacao .emblema {
+  width: 34px;
+  height: 34px;
+}
+.briefing dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  text-align: left;
+}
+.briefing dt {
+  color: #8fa3bf;
+}
+.briefing .item {
+  margin-right: 8px;
+}
+.briefing .item.novo {
+  color: #ffd27a;
+}
+.estrelas-missao {
+  font-size: 34px;
+  color: #ffd27a;
+  letter-spacing: 6px;
+}

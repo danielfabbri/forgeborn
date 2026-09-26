@@ -288,7 +288,15 @@ function alturaSulco(s: Sulco, p: Vec3, raioPlaneta: number): number {
   return -s.profundidade * q * q;
 }
 
-export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetria): MapaLunar {
+/** §14.5: relevo quase plano, sem crateras nem sulcos (Terra — Campo de testes). */
+const FATOR_RELEVO_PLANO = 0.3;
+
+export function gerarMapaLunar(
+  seed: number,
+  tamanho: TamanhosMapaId,
+  n: Simetria,
+  plano = false,
+): MapaLunar {
   const definicao = dados.tamanhos_mapa.find((t) => t.id === tamanho);
   if (!definicao) throw new Error(`Tamanho de mapa desconhecido: ${tamanho}`);
   const R = definicao.raio_m;
@@ -343,7 +351,7 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
 
   // Crateras (CEN-09).
   const crateras: Cratera[] = [];
-  for (const classe of G.classesCratera) {
+  for (const classe of plano ? [] : G.classesCratera) {
     const quantidade = Math.floor((classe.densidade * area) / n / 10000 + nextFloat(rng));
     for (let c = 0; c < quantidade; c++) {
       for (let tentativa = 0; tentativa < G.tentativas; tentativa++) {
@@ -391,14 +399,15 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
       const p = direcaoSorteada(rng);
       if (!longeDosCentrais(p, sigma)) continue;
       if (!respeitaZonas(p, 2 * sigma)) continue;
-      for (const q of replicas(p)) colinas.push({ d: q, altura, sigma });
+      const h = plano ? altura * FATOR_RELEVO_PLANO : altura;
+      for (const q of replicas(p)) colinas.push({ d: q, altura: h, sigma });
       break;
     }
   }
 
   // Sulcos (canais rasos e sinuosos), andando pela superfície com o rumo girando aos poucos.
   const sulcos: Sulco[] = [];
-  const quantidadeSulcos = inteiroEntre(rng, G.sulcos.porSetor);
+  const quantidadeSulcos = plano ? 0 : inteiroEntre(rng, G.sulcos.porSetor);
   for (let c = 0; c < quantidadeSulcos; c++) {
     for (let tentativa = 0; tentativa < 20; tentativa++) {
       const largura = entre(rng, G.sulcos.largura);
@@ -439,7 +448,7 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
       const q = aplicarRotacao(sigma, p);
       ruido += fbm3(q[0] * R, q[1] * R, q[2] * R, seedRuido, G.ruido.oitavas, G.ruido.frequencia);
     }
-    let h = (ruido / Math.sqrt(n)) * G.ruido.amplitude;
+    let h = (ruido / Math.sqrt(n)) * G.ruido.amplitude * (plano ? FATOR_RELEVO_PLANO : 1);
     for (const c of colinas) {
       const d = R * arco(c.d, p);
       if (d < 3 * c.sigma) h += c.altura * Math.exp(-(d * d) / (c.sigma * c.sigma));

@@ -20,7 +20,7 @@ import { moverPara } from '../units/ordens';
 import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 import { bordaDe } from './alcance';
-import { custoDe, ehItem, pagar, produz, reembolsar, tipoDoProdutor } from './custos';
+import { custoDe, ehItem, liberado, pagar, produz, reembolsar, tipoDoProdutor } from './custos';
 import { removerObra } from './obra';
 
 /** Folga (m) entre o casco da unidade nascida e a borda do produtor (apresentação). */
@@ -53,6 +53,8 @@ function corposComFila(ctx: SystemContext, nacao: NacaoId): number {
 export function cabeNaFila(ctx: SystemContext, produtor: EntityId, item: CustosId): boolean {
   const tipo = tipoDoProdutor(ctx, produtor);
   if (!tipo || !produz(tipo, item)) return false;
+  // CAM-02: na campanha, item não liberado é recusado.
+  if (!liberado(ctx.state, item)) return false;
   const fila = getComponent(ctx.state, produtor, 'producer')!.fila;
   // UNI-04 (D-55): um satélite por base de cada vez (nem vivo nem outro na fila).
   if (item === 'satellite') {

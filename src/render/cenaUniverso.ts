@@ -13,6 +13,7 @@ import {
   Line,
   LineBasicMaterial,
   LineDashedMaterial,
+  ShaderMaterial,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
@@ -49,7 +50,7 @@ export interface CorpoCeleste {
 export const CORPOS: readonly CorpoCeleste[] = [
   { id: 'sol', raio: 12, orbita: 0, angulo: 0, cor: '#ffcc55', cenarios: [] },
   { id: 'venus', raio: 3, orbita: 38, angulo: 2.4, cor: '#d9a25f', cenarios: ['venus'] },
-  { id: 'terra', raio: 3.4, orbita: 58, angulo: 0.3, cor: '#2d5b9a', cenarios: [] },
+  { id: 'terra', raio: 3.4, orbita: 58, angulo: 0.3, cor: '#2d5b9a', cenarios: ['terra_lab'] },
   {
     id: 'lua',
     pai: 'terra',
@@ -98,6 +99,40 @@ export interface OpcoesDoUniverso {
   /** Cor da nação do jogador (cenários concluídos). */
   corDoJogador: string;
   aoSelecionar(corpo: string): void;
+  /** CAM-03: estrelas do corpo na campanha (os concluídos mostram ★★☆). */
+  estrelasDe?(corpo: CorpoCeleste): { tem: number; max: number } | null;
+}
+
+/** ART-09 (apresentação): cor da atmosfera de cada corpo. */
+const ATMOSFERA: Record<string, string> = {
+  terra: '#6fb7ff',
+  venus: '#ffd98a',
+  marte: '#ff9a6a',
+  tita: '#ffb35c',
+  jupiter: '#ffd9b0',
+  saturno: '#ffe7b0',
+};
+
+/** Casca aditiva que brilha só na borda (fresnel), do lado de fora do corpo. */
+function materialDeAtmosfera(cor: string): ShaderMaterial {
+  return new ShaderMaterial({
+    uniforms: { cor: { value: new Color(cor) } },
+    vertexShader: `varying vec3 vNormal; varying vec3 vVista;
+      void main() {
+        vec4 mundo = modelViewMatrix * vec4(position, 1.0);
+        vNormal = normalize(normalMatrix * normal);
+        vVista = normalize(-mundo.xyz);
+        gl_Position = projectionMatrix * mundo;
+      }`,
+    fragmentShader: `uniform vec3 cor; varying vec3 vNormal; varying vec3 vVista;
+      void main() {
+        float borda = pow(1.0 - max(dot(vNormal, vVista), 0.0), 3.0);
+        gl_FragColor = vec4(cor * borda * 1.4, borda);
+      }`,
+    transparent: true,
+    blending: AdditiveBlending,
+    depthWrite: false,
+  });
 }
 
 interface Desenho {
@@ -200,6 +235,15 @@ export class CenaUniverso {
     malha.position.copy(this.posicoes.get(corpo.id)!);
     malha.userData.corpo = corpo.id;
     this.scene.add(malha);
+    // ART-09: atmosfera em rim light (fresnel) nos planetas e luas.
+    if (corpo.id !== 'sol') {
+      const atmosfera = new Mesh(
+        new SphereGeometry(corpo.raio * 1.08, 32, 16),
+        materialDeAtmosfera(ATMOSFERA[corpo.id] ?? '#9aa6b8'),
+      );
+      atmosfera.position.copy(malha.position);
+      this.scene.add(atmosfera);
+    }
 
     // Órbita em volta do Sol ou do planeta.
     if (corpo.orbita > 0) {
@@ -379,7 +423,15 @@ export class CenaUniverso {
     for (const d of this.desenhos) {
       const p = this.pontoDe(d.corpo.id);
       if (!p) continue;
-      const marca = d.estado === 'bloqueado' ? '🔒 ' : d.estado === 'concluido' ? '★ ' : '';
+      const estrelas = this.opcoes.estrelasDe?.(d.corpo) ?? null;
+      const marca =
+        d.estado === 'bloqueado'
+          ? '🔒 '
+          : estrelas && estrelas.tem > 0
+            ? `${'★'.repeat(estrelas.tem)}${'☆'.repeat(estrelas.max - estrelas.tem)} `
+            : d.estado === 'concluido'
+              ? '★ '
+              : '';
       const classe = `rotulo ${d.estado ?? 'neutro'}${d.corpo.id === this.selecionado ? ' selecionado' : ''}`;
       partes.push(
         `<div class="${classe}" data-corpo="${d.corpo.id}" style="left:${p.x}px;top:${p.y + 10}px">${marca}${this.nomeDe(d.corpo.id)}</div>`,

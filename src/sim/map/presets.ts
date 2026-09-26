@@ -13,6 +13,8 @@ export interface PresetDeMapa {
   /** Mínimo e máximo de jogadores. */
   jogadores: readonly [number, number];
   seed: number;
+  /** Só na campanha (fora do Free Battle), como o Campo de testes da Terra (§14.5). */
+  soCampanha?: boolean;
 }
 
 export const PRESETS_DE_MAPA: readonly PresetDeMapa[] = [
@@ -26,4 +28,22 @@ export const PRESETS_DE_MAPA: readonly PresetDeMapa[] = [
     seed: 24,
   },
   { id: 'oceanus_procellarum', cenario: 'lua', tamanho: 'g', zonas: 4, jogadores: [3, 4], seed: 1 },
+  // D-73: mapas da campanha v1.0 (Missão 0 na Terra e Missão 2 em Shackleton).
+  {
+    id: 'campo_de_testes',
+    cenario: 'terra_lab',
+    tamanho: 'p',
+    zonas: 2,
+    jogadores: [2, 2],
+    seed: 11,
+    soCampanha: true,
+  },
+  {
+    id: 'cratera_shackleton',
+    cenario: 'lua_shackleton',
+    tamanho: 'm',
+    zonas: 4,
+    jogadores: [2, 4],
+    seed: 42,
+  },
 ];

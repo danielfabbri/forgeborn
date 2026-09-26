@@ -106,14 +106,18 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     mare_imbrium: 'a40dd65f0c8a2907',
     mare_tranquillitatis: '41f84be3e7295a9f',
     oceanus_procellarum: '3a4d67d1b452b18f',
+    campo_de_testes: '52357d940524e982',
+    cratera_shackleton: 'c4f73f60503c4207',
   };
 
-  it('3 presets com os tamanhos e jogadores do §14.4', () => {
-    expect(PRESETS_DE_MAPA.map((p) => [p.id, p.tamanho, p.jogadores])).toEqual([
+  it('3 presets da Lua com os tamanhos e jogadores do §14.4 (mais os da campanha, D-73)', () => {
+    const lua = PRESETS_DE_MAPA.filter((p) => p.cenario === 'lua');
+    expect(lua.map((p) => [p.id, p.tamanho, p.jogadores])).toEqual([
       ['mare_imbrium', 'p', [2, 2]],
       ['mare_tranquillitatis', 'm', [2, 4]],
       ['oceanus_procellarum', 'g', [3, 4]],
     ]);
+    expect(PRESETS_DE_MAPA.find((p) => p.id === 'campo_de_testes')?.soCampanha).toBe(true);
     for (const preset of PRESETS_DE_MAPA) {
       const tamanho = dados.tamanhos_mapa.find((t) => t.id === preset.tamanho)!;
       expect(preset.jogadores[0]).toBeGreaterThanOrEqual(tamanho.min_jogadores);

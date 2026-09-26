@@ -51,6 +51,10 @@ export interface SimState {
   radar: Record<string, number[]>;
   /** §13: estado de cada nação controlada pela IA. */
   ias: Partial<Record<NacaoId, EstadoDaIa>>;
+  /** CAM-02 (D-73): itens liberados na missão (todas as nações), ou null fora da campanha. */
+  liberados: string[] | null;
+  /** CAM-06 (D-73): nações sem Nave, eliminadas ao perder todas as estruturas e unidades. */
+  semForja: NacaoId[];
   /** REG-11/REG-12: fim da partida, ou null. */
   resultado: { vencedor: NacaoId | null; motivo: 'eliminacao' | 'tempo'; tick: number } | null;
 }
@@ -146,6 +150,8 @@ export function createInitialState(
     commandQueue: [],
     nextCommandSeq: 0,
     versaoObstaculos: 0,
+    liberados: null,
+    semForja: [],
     estoques: Object.fromEntries(
       nacoes.map((n) => [n, porRecurso(() => 0)]),
     ) as SimState['estoques'],

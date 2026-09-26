@@ -32,7 +32,22 @@ import { textoDoAlerta } from '../ui/Alertas';
 import { type Alerta, CentralDeAlertas } from './alertas';
 import { estadoEm as estadoDoPouso, poseDaCinematica } from './cinematica';
 import { fimDaPartida } from './fimDePartida';
-import { irParaMenu, irParaPartida, lerPartidaDaUrl, novaSeed } from './navegacao';
+import {
+  irParaCampanha,
+  irParaMenu,
+  irParaPartida,
+  lerMissaoDaUrl,
+  lerPartidaDaUrl,
+  novaSeed,
+} from './navegacao';
+import {
+  comandosDaMissao,
+  estrelas,
+  lerSlot,
+  registrar,
+  resolverMissao,
+  salvarSlot,
+} from './campanha';
 import { ligarEntradaCamera } from '../input/cameraInput';
 import { ligarEntradaComandos } from '../input/comandoInput';
 import {
@@ -106,6 +121,7 @@ import { direcaoDe } from '../sim/units/superficie';
 import { explorado, visivelPara } from '../sim/visao/nevoa';
 import { satelitesAtivos } from '../sim/visao/satelite';
 import { alcanceDoProximo } from '../sim/combate/misseis';
+import { liberado } from '../sim/producao/custos';
 import { comandosDoJogo, sistemasDoJogo } from '../sim/units';
 import { debugStats } from '../ui/debugStats';
 import { mountUi } from '../ui/mount';
@@ -126,6 +142,7 @@ import {
   acoesDosParados,
   parados,
   type TipoDeParado,
+  fimDaMissao,
 } from '../ui/hud';
 import { acoesDoPainel, avisoProducao, fotosDoPainel, painelProducao } from '../ui/producao';
 
@@ -232,6 +249,9 @@ export function iniciarPartida(): void {
    * `?ia=` monta a configuração padrão com esse nível. A cena de demonstração usa o preset padrão.
    */
   const daUrl = lerPartidaDaUrl(parametros);
+  // CAM-01: a missão da campanha na URL (slot, missão e nação do slot).
+  const naUrl = lerMissaoDaUrl(parametros);
+  const daMissao = naUrl ? resolverMissao(naUrl.missao, naUrl.nacao as NacaoId, naUrl.slot) : null;
   const configDaPartida: ConfigFreeBattle =
     daUrl?.config ??
     (() => {
@@ -242,9 +262,11 @@ export function iniciarPartida(): void {
       return c;
     })();
   const seedDaPartida = daUrl?.seed ?? novaSeed();
-  const resolvida: PartidaResolvida | null = cenaDeDemonstracao
-    ? null
-    : resolver(configDaPartida, seedDaPartida);
+  const resolvida: PartidaResolvida | null = daMissao
+    ? daMissao.resolvida
+    : cenaDeDemonstracao
+      ? null
+      : resolver(configDaPartida, seedDaPartida);
   const preset = PRESETS_DE_MAPA.find((p) => p.id === 'mare_tranquillitatis')!;
   const pronto = resolvida
     ? gerarMapaValido(
@@ -357,7 +379,10 @@ export function iniciarPartida(): void {
     });
   } else {
     // T-104: jazidas, início (REG-04 a REG-08) e IAs da configuração.
-    for (const comando of comandosDeInicio(resolvida!, pronto)) sim.enqueue(comando);
+    const inicio = daMissao
+      ? comandosDaMissao(daMissao, pronto)
+      : comandosDeInicio(resolvida!, pronto);
+    for (const comando of inicio) sim.enqueue(comando);
   }
 
   const history = new PositionHistory();
@@ -669,6 +694,7 @@ export function iniciarPartida(): void {
     if (!fimDePartida.value) {
       const fim = fimDaPartida(sim.state, jogador, sim.tickHz, rendeu);
       if (fim) {
+        if (daMissao) registrarFimDaMissao(fim.resultado, fim.duracao_s);
         fimDePartida.value = fim;
         menuDePausa.value = 'fechado';
         pausado.value = true;
@@ -748,7 +774,7 @@ export function iniciarPartida(): void {
       );
     const entrada = comandos.estado;
     const tipoProdutor = produtorId !== undefined ? tipoDe(produtorId) : null;
-    const opcoes =
+    const todasAsOpcoes =
       tipoProdutor === 'ship'
         ? MENU_NAVE
         : tipoProdutor === 'satellite_uplink'
@@ -762,6 +788,8 @@ export function iniciarPartida(): void {
                 : entrada.menu === 'estruturas'
                   ? MENU_ESTRUTURAS
                   : [];
+    // CAM-02: na campanha, os cartões só mostram o que está liberado na missão.
+    const opcoes = todasAsOpcoes.filter((o) => liberado(sim.state, o.item));
     const obra = obraId !== undefined ? getComponent(sim.state, obraId, 'obra')! : null;
     painelProducao.value = {
       produtor:
@@ -883,8 +911,38 @@ export function iniciarPartida(): void {
     },
     { capture: true },
   );
+  /** CAM-03/CAM-08: o menor HP da Nave do jogador (%), medido a cada tick da missão. */
+  let naveMinimaPct = 100;
+  const acompanharNave = (): void => {
+    if (!daMissao) return;
+    for (const id of entitiesWith(sim.state, 'structure', 'owner', 'vida')) {
+      if (getComponent(sim.state, id, 'structure')!.tipo !== 'ship') continue;
+      if (getComponent(sim.state, id, 'owner')!.nacao !== jogador) continue;
+      const v = getComponent(sim.state, id, 'vida')!;
+      naveMinimaPct = Math.min(naveMinimaPct, (100 * v.hp) / v.max);
+    }
+  };
+  /** CAM-08: na vitória, estrelas e melhor tempo entram no slot (a próxima missão abre). */
+  const registrarFimDaMissao = (resultado: string, duracao_s: number): void => {
+    if (!daMissao) return;
+    const n =
+      resultado === 'vitoria'
+        ? estrelas(duracao_s, daMissao.missao.tempo_par_min, naveMinimaPct)
+        : 0;
+    fimDaMissao.value = { estrelas: n, missao: daMissao.missao.id };
+    if (n === 0) return;
+    void lerSlot(daMissao.slot).then((slot) => {
+      if (!slot) return;
+      return salvarSlot(
+        daMissao.slot,
+        registrar(slot, daMissao.missao.id, { estrelas: n, melhor_s: duracao_s }),
+      );
+    });
+  };
   const recarregarPartida = (novaSeedDaPartida: boolean) => {
-    if (resolvida) {
+    if (daMissao) {
+      location.reload();
+    } else if (resolvida) {
       irParaPartida(configDaPartida, novaSeedDaPartida ? novaSeed() : seedDaPartida);
     } else {
       location.reload();
@@ -894,7 +952,7 @@ export function iniciarPartida(): void {
   acoesDaPartida.abrirMenu = () => abrirMenuDePausa();
   acoesDaPartida.reiniciar = () => recarregarPartida(false);
   acoesDaPartida.jogarDeNovo = () => recarregarPartida(true);
-  acoesDaPartida.sair = () => irParaMenu();
+  acoesDaPartida.sair = () => (daMissao ? irParaCampanha(daMissao.slot) : irParaMenu());
   acoesDaPartida.renderSe = () => {
     // REG-13: render-se elimina a nação do jogador; a simulação roda o tick do comando.
     rendeu = true;
@@ -982,6 +1040,7 @@ export function iniciarPartida(): void {
       const inicio = performance.now();
       const eventos = sim.step();
       tickTotalMs += performance.now() - inicio;
+      acompanharNave();
       avisar(eventos);
       som.eventos(eventos);
       for (const alerta of centralDeAlertas.processar(

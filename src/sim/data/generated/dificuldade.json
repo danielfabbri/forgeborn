@@ -36,10 +36,24 @@
   },
   {
     "parametro": "tiers_permitidos",
+    "facil": 3,
+    "normal": 2,
+    "dificil": 3,
+    "brutal": 3
+  },
+  {
+    "parametro": "tiers_militares",
     "facil": 1,
     "normal": 2,
     "dificil": 3,
     "brutal": 3
+  },
+  {
+    "parametro": "vr_exercito_max",
+    "facil": 400,
+    "normal": 0,
+    "dificil": 0,
+    "brutal": 0
   },
   {
     "parametro": "micro",

@@ -960,6 +960,30 @@
     "descricao": "micro 3: OPQ e drones recuam com o inimigo a menos dessa fração do alcance"
   },
   {
+    "chave": "ia_minas_distancia_m",
+    "valor": 30,
+    "unidade": "m",
+    "descricao": "Distância da base em que a IA planta minas"
+  },
+  {
+    "chave": "ia_misseis_curtos",
+    "valor": 2,
+    "unidade": "mísseis",
+    "descricao": "Curtos que a IA mantém prontos"
+  },
+  {
+    "chave": "ia_misseis_longos",
+    "valor": 1,
+    "unidade": "mísseis",
+    "descricao": "Longos que a IA mantém prontos (Normal para cima)"
+  },
+  {
+    "chave": "ia_missil_longo_intervalo_s",
+    "valor": 90,
+    "unidade": "s",
+    "descricao": "Intervalo mínimo entre longos lançados pela IA"
+  },
+  {
     "chave": "tempestade_intervalo_min_s",
     "valor": 360,
     "unidade": "s",

@@ -172,7 +172,7 @@
     "en_disparo": 0,
     "fonte_en": null,
     "projetil": "missil",
-    "vel_projetil_m_s": 30
+    "vel_projetil_m_s": 15
   },
   {
     "id": "missil_longo",
@@ -189,7 +189,7 @@
     "en_disparo": 0,
     "fonte_en": null,
     "projetil": "missil",
-    "vel_projetil_m_s": 30
+    "vel_projetil_m_s": 12
   },
   {
     "id": "aa_missil",

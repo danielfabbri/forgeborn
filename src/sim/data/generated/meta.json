@@ -1,5 +1,5 @@
 {
-  "versao_spec": "0.20.0",
+  "versao_spec": "0.21.0",
   "tabelas": [
     "alertas",
     "armas",
@@ -10,6 +10,7 @@
     "estoque_inicial",
     "estruturas",
     "free_battle",
+    "ia_plano",
     "jazidas",
     "missoes",
     "moveis",

@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.20.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.21.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -143,6 +143,8 @@ export type DificuldadeParametro =
   | 'vr_exercito_ataque'
   | 'expansoes_max'
   | 'tiers_permitidos'
+  | 'tiers_militares'
+  | 'vr_exercito_max'
   | 'micro'
   | 'adapta_composicao'
   | 'bonus_coleta_pct'
@@ -218,6 +220,29 @@ export interface FreeBattleRow {
   opcao: FreeBattleOpcao;
   valores: number[] | string | string[];
   padrao: number | string;
+}
+
+export type IaPlanoItem =
+  | 'laser_tower'
+  | 'nuclear_plant'
+  | 'aa_battery'
+  | 'satellite_uplink'
+  | 'mag_tower'
+  | 'missile_silo'
+  | 'mobile_silo'
+  | 'mobile_battery'
+  | 'hover_minelayer';
+
+export interface IaPlanoRow {
+  item: IaPlanoItem;
+  facil: number;
+  normal: number;
+  dificil: number;
+  brutal: number;
+  min_facil: number;
+  min_normal: number;
+  min_dificil: number;
+  min_brutal: number;
 }
 
 export interface JazidasRow {
@@ -459,6 +484,10 @@ export type ParametrosChave =
   | 'ia_ondas_grandes_mult'
   | 'ia_ferido_pct'
   | 'ia_kite_pct'
+  | 'ia_minas_distancia_m'
+  | 'ia_misseis_curtos'
+  | 'ia_misseis_longos'
+  | 'ia_missil_longo_intervalo_s'
   | 'tempestade_intervalo_min_s'
   | 'tempestade_intervalo_max_s'
   | 'tempestade_duracao_s'
@@ -533,6 +562,7 @@ export interface Tabelas {
   estoque_inicial: EstoqueInicialRow[];
   estruturas: EstruturasRow[];
   free_battle: FreeBattleRow[];
+  ia_plano: IaPlanoRow[];
   jazidas: JazidasRow[];
   missoes: MissoesRow[];
   moveis: MoveisRow[];

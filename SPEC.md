@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.20.0 — rascunho para aprovação |
+| Versão do SPEC | 0.21.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -640,8 +640,8 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | mine_blast | explosivo | 150 | — | 2 | 0 | 4 | 40 | solo | 0 | — | gatilho | — |
 | sat_laser | laser | 20 | 2,0 | 60 | 0 | 0 | — | orbita | 0 | — | hitscan | — |
 | abrigo_laser | laser | 10 | 1,0 | 14 | 0 | 0 | — | solo+ar | 1 | rede | hitscan | — |
-| missil_curto | explosivo | 350 | 8,0 | 60 | 0 | 2 | 50 | solo | 0 | — | missil | 30 |
-| missil_longo | explosivo | 1200 | 8,0 | 250 | 0 | 4 | 50 | solo | 0 | — | missil | 30 |
+| missil_curto | explosivo | 350 | 8,0 | 60 | 0 | 2 | 50 | solo | 0 | — | missil | 15 |
+| missil_longo | explosivo | 1200 | 8,0 | 250 | 0 | 4 | 50 | solo | 0 | — | missil | 12 |
 | aa_missil | explosivo | 150 | 4,0 | 30 | 0 | 0 | — | ar+missil | 5 | rede | guiado | 40 |
 
 ### 8.5 Fichas das unidades
@@ -1053,8 +1053,11 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 - **IA-03** — Composição adaptativa (quando `adapta_composicao` = 1): muitos drones inimigos → mais EX1 e Torres; muitos EX1 → mais OPQ; muitos OPQ → mais Drone Laser e Bombardeiros; defesa pesada → mais OPQ e Bombardeiros; minas detectadas → mais Observação.
 - **IA-04** — Uma onda de ataque parte quando o VR do exército ≥ `vr_exercito_ataque` e o relógio passou de `primeiro_ataque_min`. O alvo é a nação inimiga conhecida mais próxima (na Brutal, a mais fraca). A onda recua se o VR do exército cair abaixo de `ia_recuo_vr_pct`% do inicial e o do defensor for maior.
 - **IA-05** — As IAs também atacam umas às outras (todos contra todos).
-- **IA-06** — A IA respeita `tiers_permitidos` (§8.1): 1 = só T1; 2 = T1 + T2; 3 = todos.
+- **IA-06** — A IA respeita `tiers_permitidos` (§8.1) nas estruturas e unidades de apoio e `tiers_militares` nas unidades de combate: 1 = só T1; 2 = T1 + T2; 3 = todos. Com `vr_exercito_max` > 0, a IA não imprime unidades de combate acima desse VR de exército (D-66).
 - **IA-07** — Ajustes da IA (D-34): mantém `ia_impressoras_alvo` Impressoras e `ia_batedores` Hovers de Observação batedores; enfileira até `ia_fila_por_produtor` itens por produtor; defende quando há inimigo visível a até `ia_raio_defesa_m` de uma estrutura própria; expande (Armazém junto a jazidas exploradas a mais de `ia_distancia_expansao_m` dos depósitos) a partir de `ia_expansao_hovers_pct`% da meta de hovers. Traços (§13.3): "meta de hovers" soma `ia_traco_meta_hovers_pct`%; "ondas grandes" multiplica `vr_exercito_ataque` por `ia_ondas_grandes_mult`; "expande cedo" usa `ia_expansao_cedo_pct`%.
+- **IA-08** — Plano de estruturas e apoio (`dados:ia_plano`): a partir do minuto `min_<nível>`, a IA mantém a quantidade da coluna do nível de cada item, na ordem da tabela, quando pode pagar (sem passar na frente da energia, IA-01). O Silo Móvel vai para a expansão mais distante do depósito; a Bateria Móvel acompanha a onda de ataque; o Hover de Plantio de Minas planta minas a `ia_minas_distancia_m` da base, na direção do inimigo conhecido mais próximo. Ao ver drones ou mísseis inimigos, a meta de Baterias Antiaéreas sobe 1 (D-66).
+- **IA-09** — Satélite: cada Base de Lançamento da IA imprime o satélite, que fica sobre o inimigo conhecido mais próximo (sem inimigo conhecido, sobre a própria base) (D-66).
+- **IA-10** — Mísseis: a IA mantém `ia_misseis_curtos` curtos prontos e, do Normal para cima, `ia_misseis_longos` longos. Curtos defendem: são lançados contra inimigos visíveis a até `ia_raio_defesa_m` de uma estrutura própria. Do Normal para cima, um longo é lançado contra uma estrutura inimiga conhecida (vista ou fantasma) no alcance, no máximo um a cada `ia_missil_longo_intervalo_s` (D-66).
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1073,6 +1076,10 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ia_ondas_grandes_mult | 1,25 | × | Multiplicador de `vr_exercito_ataque` do traço "ondas grandes" |
 | ia_ferido_pct | 25 | % | micro ≥ 2: unidade com HP abaixo disso recua |
 | ia_kite_pct | 60 | % | micro 3: OPQ e drones recuam com o inimigo a menos dessa fração do alcance |
+| ia_minas_distancia_m | 30 | m | Distância da base em que a IA planta minas |
+| ia_misseis_curtos | 2 | mísseis | Curtos que a IA mantém prontos |
+| ia_misseis_longos | 1 | mísseis | Longos que a IA mantém prontos (Normal para cima) |
+| ia_missil_longo_intervalo_s | 90 | s | Intervalo mínimo entre longos lançados pela IA |
 
 ### 13.2 Dificuldade
 
@@ -1086,11 +1093,30 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | primeiro_ataque_min | 18 | 7 | 5 | 4 |
 | vr_exercito_ataque | 250 | 700 | 1000 | 1200 |
 | expansoes_max | 1 | 2 | 3 | 4 |
-| tiers_permitidos | 1 | 2 | 3 | 3 |
+| tiers_permitidos | 3 | 2 | 3 | 3 |
+| tiers_militares | 1 | 2 | 3 | 3 |
+| vr_exercito_max | 400 | 0 | 0 | 0 |
 | micro | 0 | 1 | 2 | 3 |
 | adapta_composicao | 0 | 1 | 1 | 1 |
 | bonus_coleta_pct | -40 | 0 | 0 | 20 |
 | bonus_impressao_pct | -30 | 0 | 0 | 10 |
+
+### 13.2.1 Plano de estruturas e apoio
+
+Quantidades por nível e o minuto a partir do qual a IA busca cada item (IA-08). A Nuclear só entra com Urânio (ENE-06).
+
+<!-- dados:ia_plano -->
+| item | facil | normal | dificil | brutal | min_facil | min_normal | min_dificil | min_brutal |
+|---|---|---|---|---|---|---|---|---|
+| laser_tower | 2 | 3 | 4 | 5 | 0 | 0 | 0 | 0 |
+| nuclear_plant | 1 | 1 | 1 | 1 | 12 | 8 | 6 | 5 |
+| aa_battery | 1 | 2 | 2 | 3 | 12 | 9 | 7 | 6 |
+| satellite_uplink | 1 | 1 | 1 | 1 | 14 | 10 | 8 | 6 |
+| mag_tower | 1 | 1 | 2 | 2 | 15 | 11 | 9 | 7 |
+| missile_silo | 1 | 1 | 1 | 2 | 16 | 12 | 9 | 7 |
+| mobile_silo | 1 | 1 | 2 | 2 | 0 | 0 | 0 | 0 |
+| mobile_battery | 0 | 1 | 1 | 2 | 0 | 0 | 0 | 0 |
+| hover_minelayer | 1 | 1 | 2 | 2 | 0 | 0 | 0 | 0 |
 
 ### 13.3 Personalidades por nação
 
@@ -1307,6 +1333,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **ART-09** — Visão do Universo: planetas estilizados com atmosfera em rim light, órbitas finas e rótulos limpos.
 - **ART-10** — Interface com estética de "HUD de máquina": linhas finas, números em fonte monoespaçada e cor de destaque igual à da nação do jogador.
 - **ART-11** — **Sem noite** (D-26): o sol acompanha o ponto focal da câmera e incide nele sempre com a mesma elevação rasante; a Terra no céu também se posiciona em relação ao ponto focal. O lado do planeta que o jogador olha está sempre iluminado, com sombras longas.
+- **ART-12** — Unidades e estruturas com arma giram só a torre ou os canos para o alvo atual (o corpo segue o próprio rumo); sem alvo, a torre volta para a frente (D-68).
 
 ### 18.2 Ambientação por cenário
 
@@ -1557,6 +1584,9 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-63 | Base de Lança-Mísseis (HP 700; Fe 90, Si 40, Cu 40, Li 20, Ti 30; 60 s) com mísseis fabricados: curto (Fe 20, Cu 10, Li 5; 20 s; 60 m; 350 de dano; área de 2 m) e longo (Fe 60, Cu 30, Li 20, Ti 20, U 5; 45 s; 250 m; 1200 de dano; área de 4 m); até 5 por base; 8 s entre lançamentos. | Pedido do produto. | Aprovada |
 | D-64 | Bateria Antiaérea (HP 500; Fe 50, Si 20, Cu 25, Li 10, Ti 10; 30 s): um míssil a cada 4 s, 30 m, só mísseis e drones, 150 de dano, 5 EN; acerto de 90% até metade do alcance, 40% na borda. | Pedido do produto. | Aprovada |
 | D-65 | Torre Magnética (HP 600; Fe 70, Si 30, Cu 50, Li 20, Ti 15; 40 s): campo de 16 m, até 40% de lentidão e 6 EN/s de dreno no centro, metade em blindados; guarda até 400 EN e repassa até 8 EN/s a até 4 aliados. | Pedido do produto. | Aprovada |
+| D-66 | A IA evolui sem atacar mais: o Fácil constrói estruturas e apoio de todos os tiers com exército só T1 e teto de 400 VR; plano de estruturas por nível (`dados:ia_plano`); satélite sobre o inimigo; mísseis curtos para defesa e, do Normal para cima, longos contra estruturas a cada 90 s. | Pedido do produto: a IA ficava entre tímida e agressiva, sem usar as estruturas novas. | Aprovada |
+| D-67 | Mísseis mais lentos: curto 15 m/s e longo 12 m/s. | Pedido do produto. | Aprovada |
+| D-68 | Torres e canos das armas apontam para o alvo, sem girar o corpo inteiro. | Pedido do produto. | Aprovada |
 
 ---
 
@@ -1641,3 +1671,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.19.0 | 2026-09-25 | D-59 a D-62: Bateria Móvel (`bateria_en` 2000, `bateria_movel_raio_m` 1 casco a casco, ENE-18, ENE-23, ENE-24); Silo Móvel sem ancorar (ECO-22 a ECO-24, CTL-07; remove os tempos de ancorar e desancorar e o atalho T do silo); barras só nas selecionadas (UI-07); cartões de ação (UI-16); visual da Base de Lançamento. |
 | 0.19.1 | 2026-09-25 | CTL-10: o Silo Móvel deixa de ter habilidade no controle direto (não ancora mais, D-60). |
 | 0.20.0 | 2026-09-25 | D-63 a D-65: Base de Lança-Mísseis e mísseis (UNI-10, UNI-11; `missile_silo`, `missile_short`, `missile_long`, `missil_curto`, `missil_longo`, `misseis_max_base`), Bateria Antiaérea (UNI-12; `aa_battery`, `aa_missil`, `aa_acerto_*`) e Torre Magnética (UNI-13; `mag_tower`, `mag_*`); atalhos F, R, G, C e L. |
+| 0.21.0 | 2026-09-25 | D-66, D-67: IA-06 com `tiers_militares` e `vr_exercito_max` (Fácil com `tiers_permitidos` 3), IA-08 a IA-10 e `dados:ia_plano` (novos `ia_minas_distancia_m`, `ia_misseis_curtos`, `ia_misseis_longos`, `ia_missil_longo_intervalo_s`); `vel_projetil_m_s` dos mísseis 15 e 12; D-68 e ART-12 (torres e canos apontam para o alvo). |

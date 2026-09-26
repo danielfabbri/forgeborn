@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.20.0 |
+| Derivado de | `SPEC.md` v0.21.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -35,10 +35,10 @@
 | M6 Combate | T-060 – T-068 | Armas, dano, minas, explosões, eliminação e invariantes |
 | M7 Visão | T-070 – T-076 | Névoa de 3 estados, Sentinela, satélite, minimapa |
 | M8 HUD | T-080 – T-087 | Interface completa em pt-BR |
-| M9 IA | T-090 – T-095 | 4 dificuldades × 4 personalidades; IA × IA estável |
+| M9 IA | T-090 – T-096 | 4 dificuldades × 4 personalidades; IA × IA estável |
 | M10 Telas e Free Battle | T-100 – T-108 | **MVP: Free Battle Lua jogável do início ao fim** |
 | M11 Controle direto | T-110 – T-113 | 1ª e 3ª pessoa com Sincronia |
-| M12 Arte e áudio | T-120 – T-128 | Visual e som finais da Lua |
+| M12 Arte e áudio | T-120 – T-129 | Visual e som finais da Lua |
 | M13 Campanha | T-130 – T-135 | Universo + missões 1–2 → **v1.0** |
 | M14 Release web | T-140 – T-143 | Performance, compatibilidade e deploy |
 | M15 Pós-v1 | T-150 – T-159 | Cenários e missões 3–8, salvar partida, inglês |
@@ -261,6 +261,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [~] **T-094 — Batedor e Sentinelas** · P · Spec: IA-01 · Dep: T-072, T-090 · Batedor com Hover de Observação pronto; Sentinelas esperam a T-072
 - [ ] **T-095 — Estabilidade e hierarquia de dificuldade** · M · Spec: INV-12, INV-14 · Dep: T-093, T-007
   - Aceite: INV-12 e INV-14 verdes com `sim:match` em 20 seeds.
+- [ ] **T-096 — IA evolui estruturas e usa as novas unidades** · G · Spec: IA-06, IA-08 – IA-10, D-66 · Dep: T-091, T-059, T-076
+  - Aceite: o Fácil constrói o plano de `dados:ia_plano` no minuto do nível sem passar de `vr_exercito_max` nem de `tiers_militares` no exército; a IA imprime e posiciona o satélite, fabrica e lança mísseis (curtos na defesa; longos do Normal para cima a cada `ia_missil_longo_intervalo_s`), planta minas perto da base, leva silo à expansão e bateria na onda; partida headless do Fácil constrói mais estruturas e não ataca antes de `primeiro_ataque_min`.
 
 ## M10 — Telas e Free Battle (MVP)
 
@@ -302,6 +304,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-128 — Base de Lançamento com torre vertical** · P · Spec: §12 (visual da Base de Lançamento) · Dep: T-121 · Feito: 2026-09-25
   - Aceite: o modelo tem uma torre vertical coerente com a subida do satélite.
+- [ ] **T-129 — Torres e canos apontam para o alvo** · M · Spec: ART-12, D-68 · Dep: T-120
+  - Aceite: EX1, OPQ, Torre de Defesa, Nave, Antiaérea, drones e Lança-Mísseis giram só a torre ou os canos para o alvo; sem alvo, voltam para a frente.
 ## M13 — Campanha (v1.0)
 
 - [ ] **T-130 — Persistência** · P · Spec: TEC-21, CAM-04 · Dep: T-102

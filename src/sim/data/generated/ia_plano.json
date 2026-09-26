@@ -1,0 +1,101 @@
+[
+  {
+    "item": "laser_tower",
+    "facil": 2,
+    "normal": 3,
+    "dificil": 4,
+    "brutal": 5,
+    "min_facil": 0,
+    "min_normal": 0,
+    "min_dificil": 0,
+    "min_brutal": 0
+  },
+  {
+    "item": "nuclear_plant",
+    "facil": 1,
+    "normal": 1,
+    "dificil": 1,
+    "brutal": 1,
+    "min_facil": 12,
+    "min_normal": 8,
+    "min_dificil": 6,
+    "min_brutal": 5
+  },
+  {
+    "item": "aa_battery",
+    "facil": 1,
+    "normal": 2,
+    "dificil": 2,
+    "brutal": 3,
+    "min_facil": 12,
+    "min_normal": 9,
+    "min_dificil": 7,
+    "min_brutal": 6
+  },
+  {
+    "item": "satellite_uplink",
+    "facil": 1,
+    "normal": 1,
+    "dificil": 1,
+    "brutal": 1,
+    "min_facil": 14,
+    "min_normal": 10,
+    "min_dificil": 8,
+    "min_brutal": 6
+  },
+  {
+    "item": "mag_tower",
+    "facil": 1,
+    "normal": 1,
+    "dificil": 2,
+    "brutal": 2,
+    "min_facil": 15,
+    "min_normal": 11,
+    "min_dificil": 9,
+    "min_brutal": 7
+  },
+  {
+    "item": "missile_silo",
+    "facil": 1,
+    "normal": 1,
+    "dificil": 1,
+    "brutal": 2,
+    "min_facil": 16,
+    "min_normal": 12,
+    "min_dificil": 9,
+    "min_brutal": 7
+  },
+  {
+    "item": "mobile_silo",
+    "facil": 1,
+    "normal": 1,
+    "dificil": 2,
+    "brutal": 2,
+    "min_facil": 0,
+    "min_normal": 0,
+    "min_dificil": 0,
+    "min_brutal": 0
+  },
+  {
+    "item": "mobile_battery",
+    "facil": 0,
+    "normal": 1,
+    "dificil": 1,
+    "brutal": 2,
+    "min_facil": 0,
+    "min_normal": 0,
+    "min_dificil": 0,
+    "min_brutal": 0
+  },
+  {
+    "item": "hover_minelayer",
+    "facil": 1,
+    "normal": 1,
+    "dificil": 2,
+    "brutal": 2,
+    "min_facil": 0,
+    "min_normal": 0,
+    "min_dificil": 0,
+    "min_brutal": 0
+  }
+]

@@ -1,4 +1,5 @@
 import { corDaNacao, corDoRecurso, emblemaDe, modoDaltonico } from './paleta';
+import { criarFarol } from '../render/farol';
 import { DESTAQUES, TOTAL_DE_PASSOS, Tutorial } from './tutorial';
 import { ambientacaoDe } from '../render/ambientacao';
 import { criarLaboratorio } from '../render/laboratorio';
@@ -291,7 +292,17 @@ export function iniciarPartida(): void {
   const cenarioDaPartida: CenariosId = resolvida?.mapa.cenario ?? 'lua';
   const ambientacao = ambientacaoDe(cenarioDaPartida);
   view.ambientar(ambientacao);
-  const terreno = criarTerreno(pronto.mapa, nevoa, ambientacao);
+  // §14.5: plataformas nas zonas de pouso e pistas até os pontos médios (Campo de testes).
+  const pontosMedios = [...pronto.mapa.contestados, ...pronto.mapa.centrais];
+  const pistas = ambientacao.grama
+    ? {
+        zonas: pronto.mapa.zonasDePouso.map((z) => z.d),
+        segmentos: pontosMedios.flatMap((m) =>
+          m.zonasDePouso.map((k) => [pronto.mapa.zonasDePouso[k]!.d, m.d] as const),
+        ),
+      }
+    : null;
+  const terreno = criarTerreno(pronto.mapa, nevoa, ambientacao, pistas);
   terrenoAtual = terreno;
   terreno.aplicarLod(PRESETS_GRAFICOS[configuracoes.value.grafico].lod);
   const ceu = criarCeu(ambientacao);
@@ -299,9 +310,10 @@ export function iniciarPartida(): void {
   if (cenarioDaPartida === 'terra_lab') {
     view.scene.add(
       criarLaboratorio(
-        pronto.mapa.zonasDePouso.map((z) => z.d),
+        pronto.mapa.zonasDePouso,
         pronto.mapa.raio_m,
         (d) => alturaEm(pronto.mapa, d),
+        { pontos: pontosMedios.map((m) => m.d), segmentos: pistas?.segmentos ?? [] },
       ),
     );
   }
@@ -314,6 +326,11 @@ export function iniciarPartida(): void {
       resolvida ? resolvida.zonas[0]! : modoCamera === 'cinematica' ? 2 : 0
     ]!;
   const camera = criarEstadoCamera(zonaInicial.d, R);
+  // §14.5: na Terra a câmera não sobe até ver a curvatura do planeta.
+  if (ambientacao.tetoCamera !== null) {
+    camera.teto = ambientacao.tetoCamera;
+    camera.altura = camera.alturaAlvo = Math.min(camera.altura, camera.teto);
+  }
   if (modoCamera === 'geral') {
     camera.altura = camera.alturaAlvo = alturaMaxima(camera);
   } else if (modoCamera === 'cinematica') {
@@ -901,6 +918,7 @@ export function iniciarPartida(): void {
       satelites: satelitesAtivos(ctx)
         .filter((s) => s.nacao === jogador)
         .map((s) => ({ ponto: s.ponto, angulo: param('satelite_visao_m') / R })),
+      marcadores: pontoDoPasso6() ? [pontoDoPasso6()!] : [],
       campo: campoDaCamera(view.camera, R),
       agora: performance.now(),
     });
@@ -959,6 +977,20 @@ export function iniciarPartida(): void {
       el.classList.remove('tutorial-destaque');
   };
   mostrarPasso();
+  /** CAM-07: o ponto marcado enquanto o passo 6 está na tela (farol, minimapa e atalho). */
+  const pontoDoPasso6 = (): Vec3 | null =>
+    tutorial && !tutorialPulado && tutorial.passo === 6 ? tutorial.pontoMarcado : null;
+  const farol = tutorial
+    ? criarFarol(tutorial.pontoMarcado, R + alturaEm(pronto.mapa, tutorial.pontoMarcado))
+    : null;
+  if (farol) {
+    farol.visible = false;
+    view.scene.add(farol);
+  }
+  acoesDoTutorial.irAoPonto = () => {
+    const p = pontoDoPasso6();
+    if (p) centrarEm(camera, p);
+  };
   let destaqueEm = 0;
   /** O elemento que resolve o passo pulsa na interface. */
   const destacarPasso = (agora: number): void => {
@@ -1127,6 +1159,7 @@ export function iniciarPartida(): void {
         nevoa ? fantasmas.visiveis(leitura(), jogador) : [],
       );
       posicionarCamera(dtDoQuadro);
+      terreno.focar(camera.foco);
       jazidas.sync(sim.state, nevoa ? exploradoPeloJogador : null);
       // UI-11: emblemas das nações sobre os corpos no modo daltônico.
       emblemas.sync(unidades.corpos, modoDaltonico());
@@ -1138,6 +1171,10 @@ export function iniciarPartida(): void {
       sincronizarBarras();
       atualizarParados(performance.now());
       destacarPasso(performance.now());
+      if (farol) {
+        farol.visible = pontoDoPasso6() !== null;
+        farol.pulsar(performance.now());
+      }
       // VIS-06/VIS-08: sinais de radar e o círculo dos satélites do jogador.
       marcas.sync(
         sim.state.sinais[jogador] ?? [],
@@ -1365,7 +1402,12 @@ export function iniciarPartida(): void {
     const { olho, alvo, cima } = poseDaCamera(camera, chaoSuave);
     pontoFocal.set(...alvo);
     // ART-11: Sol e Terra no referencial local do foco.
-    ceu.atualizar(camera.foco, norteEm(camera.foco, camera.frente), pontoFocal);
+    ceu.atualizar(
+      camera.foco,
+      norteEm(camera.foco, camera.frente),
+      pontoFocal,
+      new Vector3(...olho),
+    );
     view.camera.up.set(...cima);
     view.camera.position.set(...olho);
     if (modoCamera === 'cinematica') {

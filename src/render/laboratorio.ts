@@ -27,11 +27,37 @@ function base(d: Vec3, rumo: Vec3, r: number): Matrix4 {
   return new Matrix4().makeBasis(frente, cima, lado).setPosition(d[0] * r, d[1] * r, d[2] * r);
 }
 
+/** Zona de pouso: centro e rumo das rampas (a cerca abre nelas). */
+export interface ZonaDoLaboratorio {
+  d: Vec3;
+  rampas: readonly Vec3[];
+}
+
+/** Árvores: quantas tentativas e as folgas (m) de zonas, pistas e pontos médios. */
+const TENTATIVAS_ARVORES = 700;
+const FOLGA_ZONA_M = 80;
+const FOLGA_PISTA_M = 9;
+const FOLGA_PONTO_M = 38;
+/** Abertura (rad, de cada lado) da cerca nas rampas. */
+const ABERTURA_RAMPA_RAD = 0.2;
+
+function distanciaAoArco(p: Vec3, a: Vec3, b: Vec3, raio: number): number {
+  const n = new Vector3(...produtoVetorial(a, b)).normalize();
+  const vp = new Vector3(...p);
+  const dentro =
+    new Vector3(...produtoVetorial(a, p)).dot(n) >= 0 &&
+    new Vector3(...produtoVetorial(p, b)).dot(n) >= 0;
+  if (!dentro) return Infinity;
+  return Math.abs(Math.asin(Math.max(-1, Math.min(1, vp.dot(n))))) * raio;
+}
+
 export function criarLaboratorio(
-  zonas: readonly Vec3[],
+  zonasDePouso: readonly ZonaDoLaboratorio[],
   raio: number,
   alturaEm: (d: Vec3) => number,
+  evitar: { pontos: readonly Vec3[]; segmentos: ReadonlyArray<readonly [Vec3, Vec3]> },
 ): Group {
+  const zonas = zonasDePouso.map((z) => z.d);
   const grupo = new Group();
   grupo.name = 'laboratorio';
   const parede = new MeshStandardMaterial({ color: '#c9ccd1', roughness: 0.8 });
@@ -80,25 +106,83 @@ export function criarLaboratorio(
   const paineis = new InstancedMesh(painel, tela, totalPostes);
   let p = 0;
   const volta = (2 * Math.PI * RAIO_CERCA_M) / POSTES_POR_CERCA;
-  for (const z of zonas) {
+  for (const zona of zonasDePouso) {
+    const z = zona.d;
     const norte = norteEm(z);
     for (let j = 0; j < POSTES_POR_CERCA; j++) {
       const a = (j / POSTES_POR_CERCA) * Math.PI * 2;
-      const passo = avancar(z, girar(norte, z, a), RAIO_CERCA_M / raio);
+      const rumoDoPoste = girar(norte, z, a);
+      // A cerca abre nas rampas (e nas pistas que saem delas).
+      const naRampa = zona.rampas.some(
+        (r) =>
+          Math.acos(Math.max(-1, Math.min(1, new Vector3(...r).dot(new Vector3(...rumoDoPoste))))) <
+          ABERTURA_RAMPA_RAD,
+      );
+      if (naRampa) continue;
+      const passo = avancar(z, rumoDoPoste, RAIO_CERCA_M / raio);
       const r = raio + alturaEm(passo.p) - 0.1;
       // O painel fica entre este poste e o próximo, alinhado à tangente do anel.
       const tangenteAnel = girar(passo.rumo, passo.p, Math.PI / 2);
       postes.setMatrixAt(p, base(passo.p, passo.rumo, r));
+      // `meio.rumo` já é a tangente do anel: o painel (comprido em x) segue a cerca.
       const meio = avancar(passo.p, tangenteAnel, volta / 2 / raio);
       const m = base(meio.p, meio.rumo, raio + alturaEm(meio.p) - 0.1);
-      m.multiply(new Matrix4().makeRotationY(Math.PI / 2).scale(new Vector3(volta, 1, 1)));
+      m.multiply(new Matrix4().makeScale(volta, 1, 1));
       paineis.setMatrixAt(p, m);
       p++;
     }
   }
+  postes.count = p;
+  paineis.count = p;
   postes.frustumCulled = false;
   paineis.frustumCulled = false;
   grupo.add(postes, paineis);
+
+  // Árvores na grama, longe das zonas, das pistas e dos pontos médios (jazidas e alvos).
+  let s = 7;
+  const sorte = () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  const tronco = new CylinderGeometry(0.25, 0.35, 2.4, 6).translate(0, 1.2, 0);
+  const copa = new ConeGeometry(2.1, 5.5, 8).translate(0, 5.2, 0);
+  const troncos = new InstancedMesh(
+    tronco,
+    new MeshStandardMaterial({ color: '#5b4128', roughness: 0.9 }),
+    TENTATIVAS_ARVORES,
+  );
+  const copas = new InstancedMesh(
+    copa,
+    new MeshStandardMaterial({ color: '#2f5a24', roughness: 0.85 }),
+    TENTATIVAS_ARVORES,
+  );
+  let t = 0;
+  for (let k = 0; k < TENTATIVAS_ARVORES; k++) {
+    const z = 2 * sorte() - 1;
+    const ang = sorte() * Math.PI * 2;
+    const rr = Math.sqrt(1 - z * z);
+    const d: Vec3 = [rr * Math.cos(ang), z, rr * Math.sin(ang)];
+    const longe = (a: Vec3, m: number) =>
+      Math.acos(Math.max(-1, Math.min(1, d[0] * a[0] + d[1] * a[1] + d[2] * a[2]))) * raio >= m;
+    if (!zonas.every((zz) => longe(zz, FOLGA_ZONA_M))) continue;
+    if (!evitar.pontos.every((pp) => longe(pp, FOLGA_PONTO_M))) continue;
+    if (evitar.segmentos.some(([a, b]) => distanciaAoArco(d, a, b, raio) < FOLGA_PISTA_M)) continue;
+    const escala = 0.7 + sorte() * 0.7;
+    const m = base(d, norteEm(d), raio + alturaEm(d) - 0.2).multiply(
+      new Matrix4().makeScale(escala, escala, escala),
+    );
+    troncos.setMatrixAt(t, m);
+    copas.setMatrixAt(t, m);
+    t++;
+  }
+  troncos.count = t;
+  copas.count = t;
+  for (const x of [troncos, copas]) {
+    x.castShadow = true;
+    x.receiveShadow = true;
+    x.frustumCulled = false;
+  }
+  grupo.add(troncos, copas);
 
   // O prédio do laboratório, perto da primeira zona (a do jogador).
   const z0 = zonas[0];

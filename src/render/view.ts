@@ -9,6 +9,7 @@ import {
   Color,
   DepthTexture,
   DirectionalLight,
+  Fog,
   HalfFloatType,
   type Material,
   type Object3D,
@@ -256,6 +257,11 @@ export function createView(
     focarSombras,
     ambientar: (a) => {
       scene.background = a.ceu ? a.ceu.clone() : new Color(0x000000);
+      // §14.5: névoa de distância na cor do horizonte.
+      scene.fog =
+        a.neblina && a.horizonte
+          ? new Fog(a.horizonte.clone(), a.neblina.perto, a.neblina.longe)
+          : null;
       ambiente.color.copy(a.ambiente.cor);
       ambiente.intensity = a.ambiente.intensidade;
       luzDaTerra.color.copy(a.secundaria.cor);

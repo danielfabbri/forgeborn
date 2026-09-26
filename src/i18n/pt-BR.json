@@ -406,8 +406,9 @@
   "tutorial.passo3": "Reúna recursos e imprima a Impressora 3D na Nave. É ela que constrói as estruturas.",
   "tutorial.passo4": "Minha rede precisa de energia. Com a Impressora selecionada, abra as estruturas (B) e construa uma Usina Solar.",
   "tutorial.passo5": "Construa um Armazém perto da jazida de Cobre: a viagem dos hovers fica mais curta.",
-  "tutorial.passo6": "Imprima um Hover de Observação e leve-o até o ponto marcado no mapa.",
+  "tutorial.passo6": "Imprima um Hover de Observação na Impressora (U). Depois selecione-o e clique com o botão direito no farol amarelo (também marcado com uma estrela no minimapa).",
   "tutorial.passo7": "Defesa fixa: construa uma Torre de Defesa. Ela atira sozinha no que entra no alcance.",
   "tutorial.passo8": "Muros bloqueiam; portões abrem só para mim. Construa um Muro e um Portão (arraste para girar).",
-  "tutorial.passo9": "Imprima 2 EX1 e destrua os alvos de treino. Clique com o botão direito num alvo para atacar."
+  "tutorial.passo9": "Imprima 2 EX1 e destrua os alvos de treino. Clique com o botão direito num alvo para atacar.",
+  "tutorial.ir_ao_ponto": "Mostrar o ponto marcado"
 }

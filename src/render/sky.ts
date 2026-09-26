@@ -8,6 +8,8 @@
  */
 import {
   BackSide,
+  CylinderGeometry,
+  Quaternion,
   BufferAttribute,
   type Color,
   BufferGeometry,
@@ -128,8 +130,11 @@ export interface Ceu {
   sol: Vector3;
   /** Direção (mundo) para a Terra no ponto focal atual. */
   terra: Vector3;
-  /** ART-11: reposiciona Sol e Terra para o ponto focal (direção) e o norte dele. */
-  atualizar(foco: Vec3, norte: Vec3, pontoFocal: Vector3): void;
+  /**
+   * ART-11: reposiciona Sol e Terra para o ponto focal (direção) e o norte dele. `olho` (a
+   * posição da câmera) assenta o fundo da Terra na borda do planeta vista dali (§14.5).
+   */
+  atualizar(foco: Vec3, norte: Vec3, pontoFocal: Vector3, olho?: Vector3): void;
 }
 
 /** §14.5: cúpula de céu diurno, do horizonte claro ao azul do alto (segue o ponto focal). */
@@ -158,6 +163,69 @@ function cupula(ceu: Color, horizonte: Color): Mesh<SphereGeometry, ShaderMateri
   );
 }
 
+/**
+ * §14.5: fundo da Terra: campos verdes em retalhos até o horizonte e duas cadeias de montanhas
+ * (a distante azulada, com neve; a próxima verde). Cilindro em volta do ponto focal, atrás do
+ * terreno (que o cobre onde existe), então o chão parece seguir além da borda do planeta.
+ */
+const RAIO_PANORAMA = 2500;
+/** Faixa (rad) de campos visível entre a borda do planeta e os morros. */
+const FAIXA_DE_CAMPOS = 0.06;
+function panorama(horizonte: Color): Mesh<CylinderGeometry, ShaderMaterial> {
+  const baixo = Math.tan((50 * Math.PI) / 180) * RAIO_PANORAMA;
+  const alto = Math.tan((14 * Math.PI) / 180) * RAIO_PANORAMA;
+  const geo = new CylinderGeometry(RAIO_PANORAMA, RAIO_PANORAMA, alto + baixo, 256, 1, true);
+  geo.translate(0, (alto - baixo) / 2, 0);
+  const malha = new Mesh(
+    geo,
+    new ShaderMaterial({
+      uniforms: { uHorizonte: { value: horizonte }, uBaixar: { value: 0 } },
+      vertexShader: `varying vec3 vLocal;
+        void main() {
+          vLocal = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `uniform vec3 uHorizonte; uniform float uBaixar; varying vec3 vLocal;
+        float cadeia(float az, float s) {
+          return 0.5 + 0.28 * sin(az * 3.0 + s) + 0.14 * sin(az * 7.0 + s * 2.3)
+            + 0.07 * sin(az * 17.0 + s * 5.1) + 0.035 * sin(az * 41.0 + s * 1.7);
+        }
+        void main() {
+          float el = atan(vLocal.y, length(vLocal.xz)) + uBaixar;
+          float az = atan(vLocal.z, vLocal.x);
+          float longe = 0.03 + 0.085 * cadeia(az, 1.3);
+          float perto = 0.012 + 0.04 * cadeia(az, 4.1);
+          vec3 cor;
+          if (el > longe) discard;
+          if (el > perto) {
+            // Montanhas distantes, azuladas pela distância, com neve no alto.
+            float t = (el - perto) / max(longe - perto, 0.001);
+            cor = mix(vec3(0.30, 0.38, 0.47), vec3(0.42, 0.50, 0.60), t);
+            float neve = smoothstep(longe - 0.018, longe - 0.004, el) * step(0.075, longe);
+            cor = mix(cor, vec3(0.92, 0.94, 0.97), neve);
+            cor = mix(cor, uHorizonte, 0.35);
+          } else if (el > 0.0) {
+            // Morros próximos, verdes escuros.
+            cor = mix(vec3(0.16, 0.27, 0.12), vec3(0.24, 0.36, 0.18), el / max(perto, 0.001));
+            cor = mix(cor, uHorizonte, 0.25);
+          } else {
+            // Campos até o horizonte: variação suave de tons, mais enevoada perto do horizonte.
+            float v = 0.5 + 0.25 * sin(az * 23.0 + el * 61.0) * sin(az * 9.0 - el * 37.0)
+              + 0.15 * sin(az * 57.0 + el * 13.0);
+            cor = mix(vec3(0.30, 0.44, 0.22), vec3(0.40, 0.52, 0.27), v);
+            cor = mix(cor, uHorizonte, smoothstep(-0.3, 0.0, el) * 0.6);
+          }
+          gl_FragColor = vec4(cor, 1.0);
+        }`,
+      side: BackSide,
+      depthWrite: false,
+    }),
+  );
+  malha.renderOrder = -1;
+  malha.frustumCulled = false;
+  return malha;
+}
+
 export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   const objeto = new Group();
   objeto.name = 'ceu';
@@ -169,11 +237,17 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
       ? cupula(ambientacao.ceu, ambientacao.horizonte)
       : null;
   if (domo) objeto.add(domo);
+  const fundo =
+    ambientacao.panorama && ambientacao.horizonte ? panorama(ambientacao.horizonte) : null;
+  if (fundo) objeto.add(fundo);
+  const girar = new Quaternion();
+  const acima = new Vector3(0, 1, 0);
+  const cimaLocal = new Vector3();
   const ceu: Ceu = {
     objeto,
     sol: ambientacao.sol.clone(),
     terra: DIRECAO_TERRA.clone(),
-    atualizar(foco, norte, pontoFocal) {
+    atualizar(foco, norte, pontoFocal, olho) {
       ceu.sol.copy(paraOMundo(ambientacao.sol, foco, norte));
       ceu.terra.copy(paraOMundo(DIRECAO_TERRA, foco, norte));
       if (astro) {
@@ -183,6 +257,18 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
       if (domo) {
         domo.position.copy(pontoFocal);
         domo.material.uniforms.uCima!.value.set(...foco);
+        domo.renderOrder = -2;
+        domo.frustumCulled = false;
+      }
+      if (fundo) {
+        // O fundo fica em volta do olho, com o horizonte dele logo acima da borda do planeta
+        // (o planeta pequeno se curva antes): os campos e as montanhas continuam o chão.
+        const centro = olho ?? pontoFocal;
+        cimaLocal.copy(centro).normalize();
+        fundo.quaternion.copy(girar.setFromUnitVectors(acima, cimaLocal));
+        fundo.position.copy(centro);
+        const razao = Math.min(1, pontoFocal.length() / Math.max(centro.length(), 1e-6));
+        fundo.material.uniforms.uBaixar!.value = olho ? Math.acos(razao) - FAIXA_DE_CAMPOS : 0;
       }
     },
   };

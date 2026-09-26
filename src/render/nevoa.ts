@@ -37,6 +37,7 @@ export const GLSL_NEVOA = `
 uniform sampler2D uNevoa;
 uniform float uNevoaN;
 uniform float uNevoaAtiva;
+uniform float uEscuroBrilho;
 
 vec2 uvNevoa(vec3 d) {
   vec3 a = abs(d);
@@ -69,6 +70,8 @@ vec3 aplicarNevoa(vec3 cor, vec3 d) {
   float explorado = smoothstep(0.1, 0.45, estado);
   float visivel = smoothstep(0.55, 0.9, estado);
   vec3 cinza = vec3(dot(cor, vec3(0.299, 0.587, 0.114))) * 0.4;
-  return mix(vec3(0.0), mix(cinza, cor, visivel), explorado);
+  // O escuro é preto na Lua; na Terra (§14.5), um cinza bem apagado do chão.
+  vec3 escuro = vec3(dot(cor, vec3(0.299, 0.587, 0.114))) * uEscuroBrilho;
+  return mix(escuro, mix(cinza, cor, visivel), explorado);
 }
 `;

@@ -148,6 +148,8 @@ export interface ConteudoDoMinimapa {
   sinais: readonly Vec3[];
   /** Satélites: centro e raio angular (rad) da visão. */
   satelites: ReadonlyArray<{ ponto: Vec3; angulo: number }>;
+  /** CAM-07: pontos marcados (o do passo 6 do tutorial), em amarelo pulsante. */
+  marcadores?: readonly Vec3[];
   /** Pontos do chão nas bordas da tela, em ordem (o campo da câmera). */
   campo: readonly Vec3[];
   agora: number;
@@ -268,6 +270,26 @@ export class Minimapa {
         else g.moveTo(p.x, p.y);
         aberto = true;
       }
+      g.stroke();
+    }
+
+    // CAM-07: ponto marcado (estrela amarela pulsante).
+    for (const m of c.marcadores ?? []) {
+      const p = tela(m);
+      if (!p) continue;
+      const pulso = 5 + 2 * Math.sin(c.agora / 200);
+      g.fillStyle = '#ffd27a';
+      g.strokeStyle = '#1a1206';
+      g.lineWidth = 1.5;
+      g.beginPath();
+      for (let k = 0; k < 10; k++) {
+        const r = k % 2 === 0 ? pulso : pulso * 0.45;
+        const a = -Math.PI / 2 + (k * Math.PI) / 5;
+        if (k === 0) g.moveTo(p.x + r * Math.cos(a), p.y + r * Math.sin(a));
+        else g.lineTo(p.x + r * Math.cos(a), p.y + r * Math.sin(a));
+      }
+      g.closePath();
+      g.fill();
       g.stroke();
     }
 

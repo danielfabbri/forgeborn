@@ -48,7 +48,10 @@ export const tooltip = signal<{ texto: string; x: number; y: number } | null>(nu
 export const fimDePartida = signal<FimDaPartida | null>(null);
 /** CAM-07: passo do tutorial na tela (null fora dele ou pulado). */
 export const tutorialNaTela = signal<{ passo: number; total: number } | null>(null);
-export const acoesDoTutorial: { pular: () => void } = { pular: () => {} };
+export const acoesDoTutorial: { pular: () => void; irAoPonto: () => void } = {
+  pular: () => {},
+  irAoPonto: () => {},
+};
 
 /** CAM-08: resultado da missão da campanha (0 estrelas = derrota), ou null fora dela. */
 export const fimDaMissao = signal<{ estrelas: number; missao: string } | null>(null);

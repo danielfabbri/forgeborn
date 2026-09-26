@@ -25,6 +25,23 @@ export interface Ambientacao {
   marcacoes: boolean;
   /** Gelo nas baixadas sombreadas (Shackleton). */
   gelo: boolean;
+  /** §14.5: grama no chão, com concreto só nas plataformas e pistas. */
+  grama: boolean;
+  /** §14.5: campos e montanhas ao fundo, até o horizonte. */
+  panorama: boolean;
+  /** Névoa de distância (cor do horizonte), ou null. */
+  neblina: { perto: number; longe: number } | null;
+  /** Altura máxima da câmera (m), ou null (a de CTL-16). */
+  tetoCamera: number | null;
+  /** Brilho do escuro da névoa de guerra (0 = preto). */
+  escuroBrilho: number;
+  /**
+   * §14.5: o chão longe do ponto focal se funde à cor dos campos ao fundo (esconde a borda do
+   * planeta pequeno): distâncias (m) de início e fim e a cor.
+   */
+  desvanecer: { perto: number; longe: number; cor: Color } | null;
+  /** Intensidade do detalhe de regolito (microcrateras) no chão. */
+  detalhe: number;
 }
 
 function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
@@ -45,6 +62,13 @@ const LUA: Ambientacao = {
   tinta: [1, 1, 1],
   marcacoes: false,
   gelo: false,
+  grama: false,
+  panorama: false,
+  neblina: null,
+  tetoCamera: null,
+  escuroBrilho: 0,
+  desvanecer: null,
+  detalhe: 1,
 };
 
 const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
@@ -71,6 +95,13 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     tinta: [1.75, 1.72, 1.66],
     marcacoes: true,
     gelo: false,
+    grama: true,
+    panorama: true,
+    neblina: { perto: 140, longe: 700 },
+    tetoCamera: 50,
+    escuroBrilho: 0.3,
+    desvanecer: { perto: 40, longe: 80, cor: new Color('#5f7d4a') },
+    detalhe: 0,
   },
 };
 

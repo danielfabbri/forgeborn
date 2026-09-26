@@ -47,6 +47,8 @@ export interface EstadoCameraRts {
   alturaAlvo: number;
   /** Raio do planeta (m). */
   raio: number;
+  /** §14.5: altura máxima do cenário (a Terra não mostra a curvatura). */
+  teto?: number;
 }
 
 export function criarEstadoCamera(foco: Vec3, raio: number): EstadoCameraRts {
@@ -60,9 +62,9 @@ export function criarEstadoCamera(foco: Vec3, raio: number): EstadoCameraRts {
   };
 }
 
-/** CTL-16: altura máxima do zoom (visão planetária). */
-export function alturaMaxima(estado: { raio: number }): number {
-  return (C.distanciaPlanetaria_raios - 1) * estado.raio;
+/** CTL-16: altura máxima do zoom (visão planetária); §14.5: na Terra, um teto menor. */
+export function alturaMaxima(estado: { raio: number; teto?: number }): number {
+  return Math.min((C.distanciaPlanetaria_raios - 1) * estado.raio, estado.teto ?? Infinity);
 }
 
 function suave(a: number, b: number, x: number): number {

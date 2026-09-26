@@ -14,6 +14,15 @@ export function PainelDoTutorial() {
           : t('tutorial.titulo', { n: estado.passo, total: estado.total })}
       </strong>
       {!concluido && <p>{t(`tutorial.passo${estado.passo}` as TextKey)}</p>}
+      {estado.passo === 6 && (
+        <button
+          type="button"
+          data-testid="tutorial-ir-ao-ponto"
+          onClick={() => acoesDoTutorial.irAoPonto()}
+        >
+          {t('tutorial.ir_ao_ponto')}
+        </button>
+      )}
       <button type="button" data-testid="tutorial-pular" onClick={() => acoesDoTutorial.pular()}>
         {t('tutorial.pular')}
       </button>

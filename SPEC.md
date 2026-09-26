@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.22.0 — rascunho para aprovação |
+| Versão do SPEC | 0.23.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -188,7 +188,7 @@ flowchart LR
 
 - **FLX-01** — **Splash e carregamento inicial.** Logo e barra de progresso enquanto carrega o núcleo do jogo (orçamento em TEC-18).
 - **FLX-02** — **Tela de Abertura.** Cena 3D em loop: a Terra escura, sem luzes de cidades, e quatro Arcas-Forja partindo em dobra. Título "FORGEBORN — Nascidos da Forja" e "Pressione qualquer tecla". A primeira interação DEVE desbloquear o áudio do navegador (TEC-22).
-- **FLX-03** — **Seleção de Modo.** Opções: **Free Battle**, **Campanha**, **Configurações**, **Créditos**. O fundo 3D continua o da abertura. Enquanto a Campanha não existir, o botão aparece desabilitado, com a dica de que estará disponível em breve (D-38).
+- **FLX-03** — **Seleção de Modo.** Opções: **Free Battle**, **Campanha**, **Configurações**, **Créditos**. O fundo 3D continua o da abertura. A Campanha abre a escolha de slot (CAM-09).
 - **FLX-04** — **Visão do Universo.** Sistema Solar estilizado em 3D (fora de escala) e navegável: arrastar gira, a roda do mouse aproxima, clicar num corpo foca nele. Corpos: Sol, Vênus, Terra + Lua, Marte + Fobos, Cinturão (Ceres), Júpiter + Europa, Saturno + Titã. Estados de um cenário: *bloqueado* (cinza, com cadeado), *disponível* (pulsando), *concluído* (cor da nação do jogador + estrelas). Uma linha tracejada de dobra liga a Terra ao alvo selecionado.
   - Em **Free Battle**, a tela lista os cenários implementados, todos disponíveis.
   - Em **Campanha**, lista as missões. Clicar abre o Briefing.
@@ -1080,6 +1080,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ia_misseis_curtos | 2 | mísseis | Curtos que a IA mantém prontos |
 | ia_misseis_longos | 1 | mísseis | Longos que a IA mantém prontos (Normal para cima) |
 | ia_missil_longo_intervalo_s | 90 | s | Intervalo mínimo entre longos lançados pela IA |
+| tutorial_raio_armazem_m | 30 | m | Distância máxima do Armazém do passo 5 do tutorial à jazida de Cobre |
 
 ### 13.2 Dificuldade
 
@@ -1143,6 +1144,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | id | nome | fator_solar | mult_vel_hover | mult_giro_hover | mult_en_drone | mult_visao | perfil_fe | perfil_si | perfil_cu | perfil_li | perfil_ti | perfil_u | evento | versao |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | lua | Lua | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 0,8 | 0,8 | 1,3 | 0,8 | — | mvp |
+| terra_lab | Terra — Campo de testes | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | — | v1.0 |
 | lua_shackleton | Lua — Cratera Shackleton | 0,7 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 0,8 | 0,8 | 1,0 | 1,2 | — | v1.0 |
 | marte | Marte | 0,6 | 1,0 | 1,0 | 1,0 | 1,0 | 1,4 | 1,0 | 1,0 | 0,9 | 0,8 | 1,0 | tempestade_poeira | v1.x |
 | fobos | Fobos | 0,6 | 1,1 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 1,0 | 1,0 | 0,8 | — | v1.x |
@@ -1189,6 +1191,11 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **CEN-14** — **Geometria do planeta.** Posições são pontos da esfera de raio `raio_m` mais uma altura radial. "Para cima" é a vertical local (do centro para o ponto). Distâncias horizontais (alcance, visão, raios de busca, pegadas) são **arcos de grande círculo** sobre a esfera de raio `raio_m`. A superfície é dividida numa **cubo-esfera equiangular**: 6 faces com a mesma grade, alinhadas aos eixos x, y e z. As zonas de pouso ficam em 4 vértices alternados do cubo (N = 4) ou nos centros das faces ±z (N = 2). Nas arestas do cubo as grades se emendam; nos 8 vértices do cubo cada célula tem 7 vizinhas em vez de 8.
 - **CEN-15** — **Norte** é a direção do polo norte (+y) ao longo da superfície. Os 8 rumos (VIS-07), o "norte" da câmera (CTL-02) e a orientação das pegadas (PRD-10) seguem essa referência. Nos polos, a menos de 1 m do eixo, vale o norte do ponto de onde o observador veio.
 
+### 14.5 Terra — Campo de testes (tutorial)
+
+- **Ambientação:** área de testes ao ar livre de um complexo de laboratório na Terra: céu azul com sol alto, chão de concreto com faixas e marcações, galpões e cercas ao redor (só cenário, sem colisão). Planeta pequeno (P), relevo quase plano, sem crateras.
+- **Uso:** só na Missão 0 (CAM-05); não aparece no Free Battle.
+
 ### 14.4 Lua (cenário do MVP)
 
 - **Ambientação:** uma lua pequena, com a curvatura visível e o horizonte próximo; regolito cinza, crateras, sol duro e rasante, sombras longas e negras, céu preto estrelado e **a Terra no céu, escura, sem luzes de cidades** (o plano-assinatura do jogo).
@@ -1200,31 +1207,31 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 ## 15. Campanha
 
 - **CAM-01** — A campanha é uma sequência de missões desbloqueadas em ordem e jogadas com a nação escolhida (FLX-05). Os oponentes são as demais nações, na ordem da coluna `oponentes`.
-- **CAM-02** — As unidades são liberadas aos poucos (coluna `libera`, cumulativa). No Free Battle tudo está liberado.
+- **CAM-02** — As unidades são liberadas aos poucos (coluna `libera`, cumulativa). No Free Battle tudo está liberado. Na missão, a liberação vale para todas as nações: item não liberado não pode ser impresso nem posicionado (a ordem é recusada) e não aparece nos cartões. O Satélite acompanha a Base de Lançamento, as minas o Hover de Plantio e os mísseis a Base de Lança-Mísseis (D-73).
 - **CAM-03** — Estrelas: ★ concluir; ★★ concluir em até `tempo_par_min`; ★★★ concluir em até `tempo_par_min` sem a Nave cair abaixo de 50% do HP.
 - **CAM-04** — O progresso é salvo automaticamente ao fim de cada missão (TEC-21). Há até 3 slots de campanha.
-- **CAM-05** — A Missão 1 é um tutorial guiado: passos com destaque na interface e narração da IA. Pode ser pulado.
+- **CAM-05** — A Missão 0 é um tutorial guiado no Campo de Testes de um laboratório na Terra (§14.5): passos com destaque na interface e narração da IA, usando as unidades móveis e fixas liberadas contra alvos de treino. Pode ser pulado. A campanha na Lua começa na Missão 1 (D-73).
+- **CAM-06** — **Oponentes sem Nave.** *Posto avançado* (`posto_passivo`, Missão 1): 2 Torres, 1 Armazém, 1 Usina Solar e 3 EX1 Defensivos em volta da zona de pouso oposta à do jogador; as armas só respondem no alcance. *Alvos de treino* (`alvos_treino`, Missão 0): 1 Armazém, 1 Usina Solar e 3 EX1 Passivos em volta do ponto marcado do passo 6; nunca disparam. Nenhum dos dois coleta, produz ou ataca. A nação é eliminada quando perde todas as estruturas e unidades (no lugar de REG-09), e a missão é vencida (D-73).
+- **CAM-07** — Passos do tutorial (Missão 0) e quando cada um se completa (na ordem; um passo só conta depois do anterior): (1) o Hover inicial entrega Ferro; (2) um 2º Hover de Exploração é impresso; (3) uma Impressora é impressa; (4) uma Usina Solar fica pronta; (5) um Armazém fica pronto a até `tutorial_raio_armazem_m` de uma jazida de Cobre; (6) um Hover de Observação é impresso e o ponto marcado (a zona central de ECO-08 mais próxima da Nave) fica visível; (7) uma Torre de Defesa fica pronta; (8) um Muro e um Portão ficam prontos; (9) 2 EX1 impressos e os alvos de treino destruídos. Cada passo mostra o texto, fala pela voz da IA (AUD-03) e destaca o elemento da interface que resolve o passo. **Pular tutorial** esconde os passos; o objetivo segue o mesmo (D-73).
+- **CAM-08** — Fim da missão: na vitória, as estrelas (CAM-03) e o melhor tempo entram no slot e a próxima missão é desbloqueada; a tela de fim mostra as estrelas e **Voltar ao Universo**. Na derrota, **Tentar de novo** ou **Voltar ao Universo**. O HP mínimo da Nave para a ★★★ é medido durante toda a missão (D-73).
+- **CAM-09** — **Slots.** Ao entrar na Campanha, o jogador escolhe um dos 3 slots: vazio (novo: Escolha de Nação, FLX-05) ou em uso (nação, missões concluídas e estrelas; **Continuar** ou **Apagar**, com confirmação). A Missão 2 usa o cenário Lua — Shackleton (§18.2) com a seed curada da missão (D-73).
 
 <!-- dados:missoes -->
 | ordem | id | cenario | nome | mapa | oponentes | objetivo | libera | tempo_par_min | versao |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | m01 | lua | Primeira Forja | p | posto_passivo | Tutorial; destruir o posto avançado inimigo | hover_explorer+printer+hover_ex1+hover_scout+laser_tower+storage+solar_plant | 20 | v1.0 |
-| 2 | m02 | lua_shackleton | Sombra Eterna | m | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq | 30 | v1.0 |
+| 0 | m00 | terra_lab | Campo de Testes | p | alvos_treino | Tutorial; destruir os alvos de treino | hover_explorer+printer+hover_ex1+hover_scout+laser_tower+storage+solar_plant+wall+gate | 20 | v1.0 |
+| 1 | m01 | lua | Primeira Forja | p | posto_passivo | Destruir o posto avançado inimigo | — | 20 | v1.0 |
+| 2 | m02 | lua_shackleton | Sombra Eterna | m | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq+aa_battery+mag_tower | 30 | v1.0 |
 | 3 | m03 | marte | Poeira Vermelha | m | normal+normal | Eliminar as nações rivais | nuclear_plant+hover_minelayer | 40 | v1.x |
 | 4 | m04 | fobos | Cerco em Fobos | p | dificil | Sobreviver 12 min; depois destruir a Nave inimiga | drone_laser+drone_bomber | 30 | v1.x |
-| 5 | m05 | ceres | Veios de Ceres | g | normal+dificil | Eliminar as nações rivais | satellite_uplink | 45 | v1.x |
+| 5 | m05 | ceres | Veios de Ceres | g | normal+dificil | Eliminar as nações rivais | satellite_uplink+missile_silo | 45 | v1.x |
 | 6 | m06 | venus | Inferno Ácido | m | dificil+dificil | Eliminar as nações rivais | — | 45 | v1.x |
 | 7 | m07 | europa | Sob o Gelo | g | normal+dificil+dificil | Eliminar as nações rivais | — | 55 | v1.x |
 | 8 | m08 | tita | Trono Único | g | dificil+dificil+brutal | Eliminar todas as nações | — | 60 | v1.x |
 
-**Missão 1 — Primeira Forja (tutorial).** Passos:
-1. Coletar Ferro com o Hover inicial.
-2. Imprimir um 2º Hover de Exploração na Nave.
-3. Reunir recursos e imprimir a Impressora 3D.
-4. Construir uma Usina Solar.
-5. Construir um Armazém perto da jazida de Cobre.
-6. Imprimir um Hover de Observação e explorar até o ponto marcado.
-7. Imprimir 4 EX1 e destruir o posto avançado inimigo: 2 Torres, 1 Armazém, 1 Usina Solar e 3 EX1. O posto (`posto_passivo`) não produz nem ataca; só se defende.
+**Missão 0 — Campo de Testes (tutorial, Terra).** Os 9 passos de CAM-07: coletar, imprimir o 2º Hover e a Impressora, energia com a Usina Solar, Armazém perto do Cobre, explorar com o Hover de Observação, Torre de Defesa, Muro e Portão e, por fim, EX1 contra os alvos de treino (`alvos_treino`), que nunca disparam.
+
+**Missão 1 — Primeira Forja (Lua).** A primeira missão de verdade: destruir o posto avançado inimigo (`posto_passivo`, CAM-06): 2 Torres, 1 Armazém, 1 Usina Solar e 3 EX1, que não produzem nem atacam; só se defendem.
 
 **Missão 4 — Cerco em Fobos.** A IA envia ondas a cada 90 s, crescentes em VR. Após 12 min assume o comportamento Difícil normal, e o objetivo muda para destruir a Nave inimiga. Perder a própria Nave é derrota.
 
@@ -1339,6 +1346,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 | Cenário | Céu | Solo | Luz | Assinatura visual |
 |---|---|---|---|---|
+| Terra — Campo de testes | Azul | Concreto com faixas e marcações | Sol alto, luz do dia | Galpões e cercas do laboratório |
 | Lua | Preto estrelado | Regolito cinza | Sol branco, duro, rasante | A Terra escura no horizonte |
 | Lua — Shackleton | Preto; sol rente ao horizonte | Regolito com gelo nas sombras | Baixa; sombras eternas | Bordas da cratera iluminadas |
 | Marte | Caramelo; pôr do sol azul | Ferrugem | Quente e difusa | Tempestades de poeira |
@@ -1591,6 +1599,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-70 | Unidades armadas do jogador começam na postura Defensiva (as da IA seguem Agressivas). | Pedido do produto: concentrar a tropa sem ela sair perseguindo. | Aprovada |
 | D-71 | Bateria Móvel sai cheia, sem liga/desliga, com suporte num raio de 8 m casco a casco (substitui o "encostada" e o botão de D-59). | Pedido do produto. | Aprovada |
 | D-72 | A Torre Magnética também repara as unidades móveis próprias no campo (`mag_reparo_hp_s`), no lugar de uma unidade reparadora móvel. | Pedido do produto: reparador móvel deixaria a tropa invencível. | Aprovada |
+| D-73 | Campanha v1.0: tutorial na Missão 0, no Campo de Testes de um laboratório na Terra, com as unidades móveis e fixas contra alvos de treino; a Missão 1 na Lua passa a ser a primeira missão de verdade (posto avançado). Liberação progressiva para todas as nações da missão (Muro e Portão na M0; Antiaérea e Torre Magnética na M2; Lança-Mísseis na M5); oponentes sem Nave eliminados ao perder tudo; passos com condição de conclusão; fim de missão com estrelas e slots. | Pedido do produto: começar a M13 com o tutorial na Terra. | Aprovada |
 
 ---
 
@@ -1677,3 +1686,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.20.0 | 2026-09-25 | D-63 a D-65: Base de Lança-Mísseis e mísseis (UNI-10, UNI-11; `missile_silo`, `missile_short`, `missile_long`, `missil_curto`, `missil_longo`, `misseis_max_base`), Bateria Antiaérea (UNI-12; `aa_battery`, `aa_missil`, `aa_acerto_*`) e Torre Magnética (UNI-13; `mag_tower`, `mag_*`); atalhos F, R, G, C e L. |
 | 0.21.0 | 2026-09-25 | D-66, D-67: IA-06 com `tiers_militares` e `vr_exercito_max` (Fácil com `tiers_permitidos` 3), IA-08 a IA-10 e `dados:ia_plano` (novos `ia_minas_distancia_m`, `ia_misseis_curtos`, `ia_misseis_longos`, `ia_missil_longo_intervalo_s`); `vel_projetil_m_s` dos mísseis 15 e 12; D-68 e ART-12 (torres e canos apontam para o alvo). |
 | 0.22.0 | 2026-09-26 | D-69 a D-72: ECO-19 (parado pelo jogador não é movido pela Diretiva); CMB-13 e §8.6 (armadas do jogador Defensivas); ENE-08, ENE-18, ENE-24, CTL-10, UI-16 e atalhos (Bateria Móvel cheia, sempre ativa, `bateria_movel_raio_m` 8, `bateria_movel_carga_inicial_pct` 100); UNI-13 (`mag_reparo_hp_s`). |
+| 0.23.0 | 2026-09-26 | D-73: Missão 0 (`m00`, cenário `terra_lab`, §14.5, §18.2, oponente `alvos_treino`) e Missão 1 sem tutorial em `dados:missoes` (libera de m00, m02 e m05); CAM-02, CAM-05 a CAM-09, FLX-03 (Campanha habilitada), `tutorial_raio_armazem_m`. |

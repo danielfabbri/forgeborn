@@ -990,6 +990,12 @@
     "descricao": "Intervalo mínimo entre longos lançados pela IA"
   },
   {
+    "chave": "tutorial_raio_armazem_m",
+    "valor": 30,
+    "unidade": "m",
+    "descricao": "Distância máxima do Armazém do passo 5 do tutorial à jazida de Cobre"
+  },
+  {
     "chave": "tempestade_intervalo_min_s",
     "valor": 360,
     "unidade": "s",

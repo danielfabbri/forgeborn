@@ -17,6 +17,23 @@
     "versao": "mvp"
   },
   {
+    "id": "terra_lab",
+    "nome": "Terra — Campo de testes",
+    "fator_solar": 1,
+    "mult_vel_hover": 1,
+    "mult_giro_hover": 1,
+    "mult_en_drone": 1,
+    "mult_visao": 1,
+    "perfil_fe": 1,
+    "perfil_si": 1,
+    "perfil_cu": 1,
+    "perfil_li": 1,
+    "perfil_ti": 1,
+    "perfil_u": 1,
+    "evento": null,
+    "versao": "v1.0"
+  },
+  {
     "id": "lua_shackleton",
     "nome": "Lua — Cratera Shackleton",
     "fator_solar": 0.7,

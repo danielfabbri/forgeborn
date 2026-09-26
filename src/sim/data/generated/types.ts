@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.22.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.23.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -67,6 +67,7 @@ export interface AtalhosRow {
 
 export type CenariosId =
   | 'lua'
+  | 'terra_lab'
   | 'lua_shackleton'
   | 'marte'
   | 'fobos'
@@ -489,6 +490,7 @@ export type ParametrosChave =
   | 'ia_misseis_curtos'
   | 'ia_misseis_longos'
   | 'ia_missil_longo_intervalo_s'
+  | 'tutorial_raio_armazem_m'
   | 'tempestade_intervalo_min_s'
   | 'tempestade_intervalo_max_s'
   | 'tempestade_duracao_s'

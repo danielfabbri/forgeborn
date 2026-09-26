@@ -1,5 +1,29 @@
 [
   {
+    "ordem": 0,
+    "id": "m00",
+    "cenario": "terra_lab",
+    "nome": "Campo de Testes",
+    "mapa": "p",
+    "oponentes": [
+      "alvos_treino"
+    ],
+    "objetivo": "Tutorial; destruir os alvos de treino",
+    "libera": [
+      "hover_explorer",
+      "printer",
+      "hover_ex1",
+      "hover_scout",
+      "laser_tower",
+      "storage",
+      "solar_plant",
+      "wall",
+      "gate"
+    ],
+    "tempo_par_min": 20,
+    "versao": "v1.0"
+  },
+  {
     "ordem": 1,
     "id": "m01",
     "cenario": "lua",
@@ -8,16 +32,8 @@
     "oponentes": [
       "posto_passivo"
     ],
-    "objetivo": "Tutorial; destruir o posto avançado inimigo",
-    "libera": [
-      "hover_explorer",
-      "printer",
-      "hover_ex1",
-      "hover_scout",
-      "laser_tower",
-      "storage",
-      "solar_plant"
-    ],
+    "objetivo": "Destruir o posto avançado inimigo",
+    "libera": null,
     "tempo_par_min": 20,
     "versao": "v1.0"
   },
@@ -34,7 +50,9 @@
     "libera": [
       "mobile_silo",
       "mobile_battery",
-      "hover_opq"
+      "hover_opq",
+      "aa_battery",
+      "mag_tower"
     ],
     "tempo_par_min": 30,
     "versao": "v1.0"
@@ -86,7 +104,8 @@
     ],
     "objetivo": "Eliminar as nações rivais",
     "libera": [
-      "satellite_uplink"
+      "satellite_uplink",
+      "missile_silo"
     ],
     "tempo_par_min": 45,
     "versao": "v1.x"

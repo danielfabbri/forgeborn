@@ -321,9 +321,9 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-132 — Visão do Universo final** · M · Spec: FLX-04, CAM-03, ART-09 · Dep: T-131 · Feito: 2026-09-26
 - [x] **T-133 — Liberação progressiva de unidades** · P · Spec: CAM-02, D-73 · Dep: T-131 · Feito: 2026-09-26
   - Aceite: na missão, ordens de itens não liberados são recusadas para todas as nações e os cartões só mostram os liberados.
-- [ ] **T-134 — Missão 0 "Campo de Testes" (tutorial na Terra) e Missão 1 "Primeira Forja"** · G · Spec: CAM-05 – CAM-07, §14.5, §15, §18.2 · Dep: T-133, T-084
+- [x] **T-134 — Missão 0 "Campo de Testes" (tutorial na Terra) e Missão 1 "Primeira Forja"** · G · Spec: CAM-05 – CAM-07, §14.5, §15, §18.2 · Dep: T-133, T-084 · Feito: 2026-09-26
   - Aceite: cenário Terra — Campo de testes (céu azul, concreto com faixas, galpões e cercas); os 9 passos do tutorial em ordem (CAM-07), com destaque de interface e narração; alvos de treino e posto avançado eliminados ao perder tudo (CAM-06); tutorial pode ser pulado; a Missão 1 na Lua sem passos guiados.
-- [ ] **T-135 — Cenário Shackleton e Missão 2 "Sombra Eterna"** · M · Spec: §14.1, §15 · Dep: T-134
+- [x] **T-135 — Cenário Shackleton e Missão 2 "Sombra Eterna"** · M · Spec: §14.1, §15 · Dep: T-134 · Feito: 2026-09-26
   - Aceite (**marco v1.0**): campanha 1–2 completa, com estrelas e progresso salvo; metas de TEC-15 cumpridas.
 
 ## M14 — Release web

@@ -80,7 +80,7 @@ test.describe('M10: telas', () => {
     await expect(page.getByTestId('preset-baixo')).toHaveClass(/ativa/);
   });
 
-  test('FLX-04: Universo com a Lua disponível e os outros cenários bloqueados', async ({
+  test('FLX-04: Universo com a Lua e Shackleton disponíveis e os outros cenários bloqueados', async ({
     page,
   }) => {
     await page.goto('/?menu');
@@ -97,7 +97,8 @@ test.describe('M10: telas', () => {
     const lua = await menus(page, (s) => s.corpoNaTela('lua'));
     await page.mouse.click(lua!.x, lua!.y);
     await expect(page.getByTestId('cenario-lua')).toHaveAttribute('data-estado', 'disponivel');
-    await expect(page.getByTestId('cenario-lua_shackleton')).toBeDisabled();
+    // D-73: Shackleton (mapa da campanha v1.0) também serve ao Free Battle.
+    await expect(page.getByTestId('cenario-lua_shackleton')).toBeEnabled();
   });
 
   test('FB-03/FB-02/FB-04: tamanho inválido desabilitado, zona escolhida, última configuração lembrada', async ({

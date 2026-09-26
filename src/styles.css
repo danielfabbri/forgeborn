@@ -1206,3 +1206,38 @@ body.em-cinematica #ui {
   color: #ffd27a;
   letter-spacing: 6px;
 }
+
+/* CAM-07: painel do tutorial e destaque do elemento que resolve o passo. */
+.painel-tutorial {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 560px;
+  padding: 10px 14px;
+  background: rgba(5, 10, 18, 0.88);
+  border: 1px solid #7fb8ff;
+  border-radius: 8px;
+  color: #dce9ff;
+  pointer-events: auto;
+  text-align: center;
+}
+.painel-tutorial p {
+  margin: 6px 0;
+}
+.tutorial-destaque {
+  outline: 2px solid #ffd27a !important;
+  box-shadow: 0 0 12px rgba(255, 210, 122, 0.8) !important;
+  animation: pulso-tutorial 1s ease-in-out infinite alternate;
+}
+@keyframes pulso-tutorial {
+  from {
+    outline-color: #ffd27a;
+  }
+  to {
+    outline-color: #ffffff;
+  }
+}
+body.em-controle-direto .painel-tutorial {
+  display: none;
+}

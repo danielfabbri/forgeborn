@@ -397,5 +397,17 @@
   "fim.voltar_universo": "Voltar ao Universo",
   "fim.tentar_de_novo": "Tentar de novo",
   "mapa.campo_de_testes": "Campo de Testes",
-  "mapa.cratera_shackleton": "Cratera Shackleton"
+  "mapa.cratera_shackleton": "Cratera Shackleton",
+  "tutorial.titulo": "Treinamento · passo {n} de {total}",
+  "tutorial.pular": "Pular tutorial",
+  "tutorial.concluido": "Treinamento concluído.",
+  "tutorial.passo1": "Preciso de Ferro. Selecione o Hover de Exploração e clique com o botão direito numa jazida de Ferro; depois ele entrega na Nave.",
+  "tutorial.passo2": "Mais mãos, mais forja. Selecione a Nave e imprima um segundo Hover de Exploração.",
+  "tutorial.passo3": "Reúna recursos e imprima a Impressora 3D na Nave. É ela que constrói as estruturas.",
+  "tutorial.passo4": "Minha rede precisa de energia. Com a Impressora selecionada, abra as estruturas (B) e construa uma Usina Solar.",
+  "tutorial.passo5": "Construa um Armazém perto da jazida de Cobre: a viagem dos hovers fica mais curta.",
+  "tutorial.passo6": "Imprima um Hover de Observação e leve-o até o ponto marcado no mapa.",
+  "tutorial.passo7": "Defesa fixa: construa uma Torre de Defesa. Ela atira sozinha no que entra no alcance.",
+  "tutorial.passo8": "Muros bloqueiam; portões abrem só para mim. Construa um Muro e um Portão (arraste para girar).",
+  "tutorial.passo9": "Imprima 2 EX1 e destrua os alvos de treino. Clique com o botão direito num alvo para atacar."
 }

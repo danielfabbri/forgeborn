@@ -2,6 +2,7 @@
  * Cena da partida: renderer, câmera, luzes, sombras em cascata do sol e pós-processamento
  * (ART-08, TEC-19): tone mapping ACES, bloom, SSAO a partir do preset Alto e grão de filme sutil.
  */
+import type { Ambientacao } from './ambientacao';
 import {
   ACESFilmicToneMapping,
   AmbientLight,
@@ -58,6 +59,8 @@ export interface View {
    * céu local do ponto focal.
    */
   focarSombras(alvo: Vector3, sol: Vector3, terra: Vector3): void;
+  /** §18.2: fundo, luz ambiente, luz secundária e intensidade do Sol do cenário. */
+  ambientar(a: Ambientacao): void;
   /** TEC-19: escala de resolução, sombras e SSAO do preset gráfico; vale na hora. */
   aplicarGraficos(escala: number, sombra: number, ssao?: boolean): void;
   render(): void;
@@ -134,7 +137,8 @@ export function createView(
   scene.background = new Color(0x000000);
 
   // Sem atmosfera: sombras quase pretas, com um leve preenchimento azulado da luz da Terra.
-  scene.add(new AmbientLight(0x8899aa, 0.12));
+  const ambiente = new AmbientLight(0x8899aa, 0.12);
+  scene.add(ambiente);
   const luzDaTerra = new DirectionalLight(0x7090ff, 0.35);
   scene.add(luzDaTerra, luzDaTerra.target);
 
@@ -250,6 +254,14 @@ export function createView(
     camera,
     renderer,
     focarSombras,
+    ambientar: (a) => {
+      scene.background = a.ceu ? a.ceu.clone() : new Color(0x000000);
+      ambiente.color.copy(a.ambiente.cor);
+      ambiente.intensity = a.ambiente.intensidade;
+      luzDaTerra.color.copy(a.secundaria.cor);
+      luzDaTerra.intensity = a.secundaria.intensidade;
+      for (const luz of csm.lights) luz.intensity = a.intensidadeSol;
+    },
     aplicarGraficos,
     render: () => {
       // Materiais novos (lotes, destroços) entram nas cascatas; a cada meio segundo basta.

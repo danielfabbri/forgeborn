@@ -4,6 +4,7 @@
  * faces emendam sem costura de iluminação). O detalhe do regolito é triplanar (em coordenadas
  * do mundo), porque coordenadas UV numa esfera teriam costura.
  */
+import { type Ambientacao, ambientacaoDe } from './ambientacao';
 import { GLSL_NEVOA, type NevoaRender } from './nevoa';
 import {
   BufferAttribute,
@@ -13,6 +14,7 @@ import {
   Mesh,
   MeshStandardMaterial,
   type Texture,
+  Vector3,
 } from 'three';
 import { normalizar, produtoVetorial, tangente, type Vec3 } from '../sim/map/esfera';
 import { alturaEm, direcaoDoVertice, type Heightmap, indiceDoVertice } from '../sim/map/heightmap';
@@ -207,6 +209,8 @@ function geometriaDoTile(
  */
 export function criarMaterialRegolito(
   nevoa: NevoaRender | null = null,
+  ambientacao: Ambientacao = ambientacaoDe('lua'),
+  raio = 0,
 ): MeshStandardMaterial & { texturas: Texture[] } {
   const texturas = criarTexturasRegolito();
   const material = new MeshStandardMaterial({
@@ -223,6 +227,11 @@ export function criarMaterialRegolito(
     shader.uniforms.uNevoa = { value: nevoa?.textura ?? null };
     shader.uniforms.uNevoaN = { value: nevoa?.n ?? 1 };
     shader.uniforms.uNevoaAtiva = { value: nevoa ? 1 : 0 };
+    // §18.2: tom do chão, marcações do Campo de testes e gelo de Shackleton.
+    shader.uniforms.uTinta = { value: new Vector3(...ambientacao.tinta) };
+    shader.uniforms.uMarcacoes = { value: ambientacao.marcacoes ? 1 : 0 };
+    shader.uniforms.uGelo = { value: ambientacao.gelo ? 1 : 0 };
+    shader.uniforms.uRaio = { value: raio };
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
@@ -243,6 +252,10 @@ vNormalMundo = normalize(mat3(modelMatrix) * objectNormal);`,
 uniform sampler2D uDetalhe;
 uniform sampler2D uNormais;
 uniform float uEscala;
+uniform vec3 uTinta;
+uniform float uMarcacoes;
+uniform float uGelo;
+uniform float uRaio;
 varying vec3 vPosMundo;
 varying vec3 vNormalMundo;
 ${GLSL_NEVOA}
@@ -264,7 +277,23 @@ vec3 wTri = pesosTriplanar(nGeo);
 vec3 pA = vPosMundo * uEscala;
 vec3 pB = vPosMundo * uEscala * 3.1 + vec3(0.37, 0.71, 0.13);
 vec3 detalhe = mix(triplanarCor(uDetalhe, pA, wTri), triplanarCor(uDetalhe, pB, wTri), 0.5);
-diffuseColor.rgb *= mix(vec3(0.9), detalhe, max(pertoDaCamera, 0.45));`,
+diffuseColor.rgb *= mix(vec3(0.9), detalhe, max(pertoDaCamera, 0.45));
+diffuseColor.rgb *= uTinta;
+if (uMarcacoes > 0.5) {
+  // Placas de concreto com juntas escuras e faixas amarelas de sinalização.
+  vec3 q = vPosMundo / 6.0;
+  vec3 g = abs(fract(q) - 0.5);
+  float junta = step(0.485, max(max(g.x, g.y), g.z));
+  diffuseColor.rgb *= 1.0 - junta * 0.35;
+  vec3 f = abs(fract(vPosMundo / 36.0) - 0.5);
+  float faixa = step(0.49, max(max(f.x, f.y), f.z));
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.95, 0.78, 0.18), faixa * 0.85);
+}
+if (uGelo > 0.5) {
+  float alt = length(vPosMundo) - uRaio;
+  float gelo = 1.0 - smoothstep(-4.0, 0.5, alt);
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.78, 0.86, 0.95), gelo * 0.55);
+}`,
       )
       .replace(
         '#include <opaque_fragment>',
@@ -299,8 +328,12 @@ function trechos(res: number, partes: number): Array<[number, number]> {
   );
 }
 
-export function criarTerreno(mapa: Heightmap, nevoa: NevoaRender | null = null): Terreno {
-  const material = criarMaterialRegolito(nevoa);
+export function criarTerreno(
+  mapa: Heightmap,
+  nevoa: NevoaRender | null = null,
+  ambientacao: Ambientacao = ambientacaoDe('lua'),
+): Terreno {
+  const material = criarMaterialRegolito(nevoa, ambientacao, mapa.raio_m);
   const objeto = new Group();
   objeto.name = 'terreno';
   const geometrias: BufferGeometry[] = [];

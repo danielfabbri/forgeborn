@@ -7,7 +7,9 @@
  * leste e vertical), então acompanham a câmera ao redor do planeta.
  */
 import {
+  BackSide,
   BufferAttribute,
+  type Color,
   BufferGeometry,
   Group,
   Mesh,
@@ -18,6 +20,7 @@ import {
   Vector3,
 } from 'three';
 import type { Vec3 } from '../sim/map/esfera';
+import { type Ambientacao, ambientacaoDe } from './ambientacao';
 
 function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
   const el = (elevacaoGraus * Math.PI) / 180;
@@ -129,20 +132,58 @@ export interface Ceu {
   atualizar(foco: Vec3, norte: Vec3, pontoFocal: Vector3): void;
 }
 
-export function criarCeu(): Ceu {
+/** §14.5: cúpula de céu diurno, do horizonte claro ao azul do alto (segue o ponto focal). */
+function cupula(ceu: Color, horizonte: Color): Mesh<SphereGeometry, ShaderMaterial> {
+  return new Mesh(
+    new SphereGeometry(DISTANCIA_CEU * 0.95, 32, 16),
+    new ShaderMaterial({
+      uniforms: {
+        uCeu: { value: ceu },
+        uHorizonte: { value: horizonte },
+        uCima: { value: new Vector3(0, 1, 0) },
+      },
+      vertexShader: `varying vec3 vDir;
+        void main() {
+          vDir = normalize(position);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `uniform vec3 uCeu; uniform vec3 uHorizonte; uniform vec3 uCima; varying vec3 vDir;
+        void main() {
+          float h = clamp(dot(normalize(vDir), uCima), 0.0, 1.0);
+          gl_FragColor = vec4(mix(uHorizonte, uCeu, pow(h, 0.45)), 1.0);
+        }`,
+      side: BackSide,
+      depthWrite: false,
+    }),
+  );
+}
+
+export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   const objeto = new Group();
   objeto.name = 'ceu';
-  const astro = terra();
-  objeto.add(estrelas(), astro);
+  const astro = ambientacao.terraNoCeu ? terra() : null;
+  if (ambientacao.estrelas) objeto.add(estrelas());
+  if (astro) objeto.add(astro);
+  const domo =
+    ambientacao.ceu && ambientacao.horizonte
+      ? cupula(ambientacao.ceu, ambientacao.horizonte)
+      : null;
+  if (domo) objeto.add(domo);
   const ceu: Ceu = {
     objeto,
-    sol: DIRECAO_SOL.clone(),
+    sol: ambientacao.sol.clone(),
     terra: DIRECAO_TERRA.clone(),
     atualizar(foco, norte, pontoFocal) {
-      ceu.sol.copy(paraOMundo(DIRECAO_SOL, foco, norte));
+      ceu.sol.copy(paraOMundo(ambientacao.sol, foco, norte));
       ceu.terra.copy(paraOMundo(DIRECAO_TERRA, foco, norte));
-      astro.position.copy(pontoFocal).addScaledVector(ceu.terra, DISTANCIA_CEU * 0.9);
-      astro.material.uniforms.uSol!.value.copy(ceu.sol);
+      if (astro) {
+        astro.position.copy(pontoFocal).addScaledVector(ceu.terra, DISTANCIA_CEU * 0.9);
+        astro.material.uniforms.uSol!.value.copy(ceu.sol);
+      }
+      if (domo) {
+        domo.position.copy(pontoFocal);
+        domo.material.uniforms.uCima!.value.set(...foco);
+      }
     },
   };
   return ceu;

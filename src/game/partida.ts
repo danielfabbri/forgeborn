@@ -1,4 +1,8 @@
 import { corDaNacao, corDoRecurso, emblemaDe, modoDaltonico } from './paleta';
+import { DESTAQUES, TOTAL_DE_PASSOS, Tutorial } from './tutorial';
+import { ambientacaoDe } from '../render/ambientacao';
+import { criarLaboratorio } from '../render/laboratorio';
+import type { CenariosId } from '../sim/data';
 import { effect } from '@preact/signals';
 import { Vector3 } from 'three';
 import { cenaDaNacao, destinoDaPatrulha, patrulheiro } from './cenaDemo';
@@ -43,6 +47,7 @@ import {
 import {
   comandosDaMissao,
   estrelas,
+  pontoMarcado,
   lerSlot,
   registrar,
   resolverMissao,
@@ -143,6 +148,8 @@ import {
   parados,
   type TipoDeParado,
   fimDaMissao,
+  acoesDoTutorial,
+  tutorialNaTela,
 } from '../ui/hud';
 import { acoesDoPainel, avisoProducao, fotosDoPainel, painelProducao } from '../ui/producao';
 
@@ -280,11 +287,24 @@ export function iniciarPartida(): void {
   const nevoaNaTela = !cenaDeDemonstracao || parametros.get('nevoa') === '1';
   const nevoa = nevoaNaTela ? new NevoaRender(pronto.grades.nevoa.esfera.n) : null;
   nevoa?.atualizar(undefined);
-  const terreno = criarTerreno(pronto.mapa, nevoa);
+  // §18.2/§14.5: céu, Sol, luz e chão do cenário (o Campo de testes ganha o laboratório).
+  const cenarioDaPartida: CenariosId = resolvida?.mapa.cenario ?? 'lua';
+  const ambientacao = ambientacaoDe(cenarioDaPartida);
+  view.ambientar(ambientacao);
+  const terreno = criarTerreno(pronto.mapa, nevoa, ambientacao);
   terrenoAtual = terreno;
   terreno.aplicarLod(PRESETS_GRAFICOS[configuracoes.value.grafico].lod);
-  const ceu = criarCeu();
+  const ceu = criarCeu(ambientacao);
   view.scene.add(terreno.objeto, ceu.objeto);
+  if (cenarioDaPartida === 'terra_lab') {
+    view.scene.add(
+      criarLaboratorio(
+        pronto.mapa.zonasDePouso.map((z) => z.d),
+        pronto.mapa.raio_m,
+        (d) => alturaEm(pronto.mapa, d),
+      ),
+    );
+  }
 
   // Câmera: RTS por padrão (CTL-01); `?camera=geral` abre na visão planetária (CTL-16) e
   // `?camera=cinematica` numa vista baixa que olha para a Terra no horizonte.
@@ -318,6 +338,8 @@ export function iniciarPartida(): void {
     resolvida?.nacoes ?? (estresse > 0 ? ['bra', 'usa', 'chn', 'rus'] : ['bra', 'usa']);
   const sim = createSim(seed, nacoes, {
     mundo: pronto,
+    // CEN-02: os modificadores do cenário valem na simulação.
+    cenario: cenarioDaPartida,
     systems: sistemasDoJogo,
     commandHandlers: { ...comandosDoJogo, ...debugCriarHandlers },
   });
@@ -560,6 +582,10 @@ export function iniciarPartida(): void {
           ponto: direcaoDe(getComponent(sim.state, id, 'position')!),
           raio: alcance.alcance,
         });
+    }
+    // CAM-07: o ponto marcado do passo 6.
+    if (tutorial && !tutorialPulado && tutorial.passo === 6) {
+      aneis.push({ ponto: tutorial.pontoMarcado, raio: 12 });
     }
     for (const id of entitiesWith(sim.state, 'magnetico', 'owner', 'position')) {
       if (getComponent(sim.state, id, 'owner')!.nacao !== jogador) continue;
@@ -911,6 +937,40 @@ export function iniciarPartida(): void {
     },
     { capture: true },
   );
+  /** CAM-05/CAM-07: o tutorial da Missão 0 (texto, voz e destaque do passo). */
+  const tutorial =
+    daMissao?.missao.ordem === 0
+      ? new Tutorial(
+          jogador,
+          pontoMarcado(pronto, pronto.mapa.zonasDePouso[daMissao.resolvida.zonas[0]!]!.d),
+        )
+      : null;
+  let tutorialPulado = false;
+  const mostrarPasso = (): void => {
+    if (!tutorial || tutorialPulado) return;
+    tutorialNaTela.value = { passo: tutorial.passo, total: TOTAL_DE_PASSOS };
+    const chave = tutorial.concluido ? 'tutorial.concluido' : `tutorial.passo${tutorial.passo}`;
+    falar(t(chave as TextKey), 'media');
+  };
+  acoesDoTutorial.pular = () => {
+    tutorialPulado = true;
+    tutorialNaTela.value = null;
+    for (const el of document.querySelectorAll('.tutorial-destaque'))
+      el.classList.remove('tutorial-destaque');
+  };
+  mostrarPasso();
+  let destaqueEm = 0;
+  /** O elemento que resolve o passo pulsa na interface. */
+  const destacarPasso = (agora: number): void => {
+    if (!tutorial || tutorialPulado || agora - destaqueEm < 250) return;
+    destaqueEm = agora;
+    const seletores = tutorial.concluido ? [] : (DESTAQUES[tutorial.passo] ?? []);
+    const alvos = new Set(seletores.flatMap((s) => [...document.querySelectorAll(s)]));
+    for (const el of document.querySelectorAll('.tutorial-destaque'))
+      if (!alvos.has(el)) el.classList.remove('tutorial-destaque');
+    for (const el of alvos) el.classList.add('tutorial-destaque');
+  };
+
   /** CAM-03/CAM-08: o menor HP da Nave do jogador (%), medido a cada tick da missão. */
   let naveMinimaPct = 100;
   const acompanharNave = (): void => {
@@ -1041,6 +1101,7 @@ export function iniciarPartida(): void {
       const eventos = sim.step();
       tickTotalMs += performance.now() - inicio;
       acompanharNave();
+      if (tutorial?.atualizar(leitura(), eventos)) mostrarPasso();
       avisar(eventos);
       som.eventos(eventos);
       for (const alerta of centralDeAlertas.processar(
@@ -1076,6 +1137,7 @@ export function iniciarPartida(): void {
       );
       sincronizarBarras();
       atualizarParados(performance.now());
+      destacarPasso(performance.now());
       // VIS-06/VIS-08: sinais de radar e o círculo dos satélites do jogador.
       marcas.sync(
         sim.state.sinais[jogador] ?? [],

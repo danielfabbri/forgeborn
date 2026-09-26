@@ -46,6 +46,10 @@ export const tooltip = signal<{ texto: string; x: number; y: number } | null>(nu
 
 /** FLX-12: fim de partida do jogador (resultado e estatísticas), ou null enquanto joga. */
 export const fimDePartida = signal<FimDaPartida | null>(null);
+/** CAM-07: passo do tutorial na tela (null fora dele ou pulado). */
+export const tutorialNaTela = signal<{ passo: number; total: number } | null>(null);
+export const acoesDoTutorial: { pular: () => void } = { pular: () => {} };
+
 /** CAM-08: resultado da missão da campanha (0 estrelas = derrota), ou null fora dela. */
 export const fimDaMissao = signal<{ estrelas: number; missao: string } | null>(null);
 

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.23.0 — rascunho para aprovação |
+| Versão do SPEC | 0.23.1 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1193,7 +1193,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 ### 14.5 Terra — Campo de testes (tutorial)
 
-- **Ambientação:** área de testes ao ar livre de um complexo de laboratório na Terra: céu azul com sol alto, chão de concreto com faixas e marcações, galpões e cercas ao redor (só cenário, sem colisão). Planeta pequeno (P), relevo quase plano, sem crateras.
+- **Ambientação:** área de testes ao ar livre de um complexo de laboratório na Terra: céu azul com sol alto e névoa de horizonte; plataformas e pistas de concreto com faixas nas zonas de pouso, grama no resto; galpões, cercas e o prédio do laboratório; campos verdes e montanhas ao fundo, até o horizonte (só cenário, sem colisão). O jogo segue no planeta pequeno (P) da simulação, mas a câmera não se afasta até ver a curvatura: a sensação é de um terreno plano na Terra.
 - **Uso:** só na Missão 0 (CAM-05); não aparece no Free Battle.
 
 ### 14.4 Lua (cenário do MVP)
@@ -1212,7 +1212,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **CAM-04** — O progresso é salvo automaticamente ao fim de cada missão (TEC-21). Há até 3 slots de campanha.
 - **CAM-05** — A Missão 0 é um tutorial guiado no Campo de Testes de um laboratório na Terra (§14.5): passos com destaque na interface e narração da IA, usando as unidades móveis e fixas liberadas contra alvos de treino. Pode ser pulado. A campanha na Lua começa na Missão 1 (D-73).
 - **CAM-06** — **Oponentes sem Nave.** *Posto avançado* (`posto_passivo`, Missão 1): 2 Torres, 1 Armazém, 1 Usina Solar e 3 EX1 Defensivos em volta da zona de pouso oposta à do jogador; as armas só respondem no alcance. *Alvos de treino* (`alvos_treino`, Missão 0): 1 Armazém, 1 Usina Solar e 3 EX1 Passivos em volta do ponto marcado do passo 6; nunca disparam. Nenhum dos dois coleta, produz ou ataca. A nação é eliminada quando perde todas as estruturas e unidades (no lugar de REG-09), e a missão é vencida (D-73).
-- **CAM-07** — Passos do tutorial (Missão 0) e quando cada um se completa (na ordem; um passo só conta depois do anterior): (1) o Hover inicial entrega Ferro; (2) um 2º Hover de Exploração é impresso; (3) uma Impressora é impressa; (4) uma Usina Solar fica pronta; (5) um Armazém fica pronto a até `tutorial_raio_armazem_m` de uma jazida de Cobre; (6) um Hover de Observação é impresso e o ponto marcado (a zona central de ECO-08 mais próxima da Nave) fica visível; (7) uma Torre de Defesa fica pronta; (8) um Muro e um Portão ficam prontos; (9) 2 EX1 impressos e os alvos de treino destruídos. Cada passo mostra o texto, fala pela voz da IA (AUD-03) e destaca o elemento da interface que resolve o passo. **Pular tutorial** esconde os passos; o objetivo segue o mesmo (D-73).
+- **CAM-07** — Passos do tutorial (Missão 0) e quando cada um se completa (na ordem; um passo só conta depois do anterior): (1) o Hover inicial entrega Ferro; (2) um 2º Hover de Exploração é impresso; (3) uma Impressora é impressa; (4) uma Usina Solar fica pronta; (5) um Armazém fica pronto a até `tutorial_raio_armazem_m` de uma jazida de Cobre; (6) um Hover de Observação é impresso e o ponto marcado (a zona central de ECO-08 mais próxima da Nave, mostrado por um farol no mundo e no minimapa) fica visível; (7) uma Torre de Defesa fica pronta; (8) um Muro e um Portão ficam prontos; (9) 2 EX1 impressos e os alvos de treino destruídos. Cada passo mostra o texto, fala pela voz da IA (AUD-03) e destaca o elemento da interface que resolve o passo. **Pular tutorial** esconde os passos; o objetivo segue o mesmo (D-73).
 - **CAM-08** — Fim da missão: na vitória, as estrelas (CAM-03) e o melhor tempo entram no slot e a próxima missão é desbloqueada; a tela de fim mostra as estrelas e **Voltar ao Universo**. Na derrota, **Tentar de novo** ou **Voltar ao Universo**. O HP mínimo da Nave para a ★★★ é medido durante toda a missão (D-73).
 - **CAM-09** — **Slots.** Ao entrar na Campanha, o jogador escolhe um dos 3 slots: vazio (novo: Escolha de Nação, FLX-05) ou em uso (nação, missões concluídas e estrelas; **Continuar** ou **Apagar**, com confirmação). A Missão 2 usa o cenário Lua — Shackleton (§18.2) com a seed curada da missão (D-73).
 
@@ -1687,3 +1687,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.21.0 | 2026-09-25 | D-66, D-67: IA-06 com `tiers_militares` e `vr_exercito_max` (Fácil com `tiers_permitidos` 3), IA-08 a IA-10 e `dados:ia_plano` (novos `ia_minas_distancia_m`, `ia_misseis_curtos`, `ia_misseis_longos`, `ia_missil_longo_intervalo_s`); `vel_projetil_m_s` dos mísseis 15 e 12; D-68 e ART-12 (torres e canos apontam para o alvo). |
 | 0.22.0 | 2026-09-26 | D-69 a D-72: ECO-19 (parado pelo jogador não é movido pela Diretiva); CMB-13 e §8.6 (armadas do jogador Defensivas); ENE-08, ENE-18, ENE-24, CTL-10, UI-16 e atalhos (Bateria Móvel cheia, sempre ativa, `bateria_movel_raio_m` 8, `bateria_movel_carga_inicial_pct` 100); UNI-13 (`mag_reparo_hp_s`). |
 | 0.23.0 | 2026-09-26 | D-73: Missão 0 (`m00`, cenário `terra_lab`, §14.5, §18.2, oponente `alvos_treino`) e Missão 1 sem tutorial em `dados:missoes` (libera de m00, m02 e m05); CAM-02, CAM-05 a CAM-09, FLX-03 (Campanha habilitada), `tutorial_raio_armazem_m`. |
+| 0.23.1 | 2026-09-26 | §14.5: ambientação da Terra (grama, pistas, montanhas ao fundo, câmera sem ver a curvatura); CAM-07: o ponto marcado tem farol no mundo e marca no minimapa. |

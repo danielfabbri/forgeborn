@@ -155,11 +155,6 @@
     "acao": "Descarregar agora"
   },
   {
-    "contexto": "mobile_battery",
-    "tecla": "T",
-    "acao": "Modo suporte liga/desliga"
-  },
-  {
     "contexto": "satellite_uplink",
     "tecla": "S",
     "acao": "Imprimir Satélite"

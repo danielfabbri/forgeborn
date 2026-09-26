@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.21.0 — rascunho para aprovação |
+| Versão do SPEC | 0.22.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -333,7 +333,7 @@ flowchart LR
 ### 5.5 Diretiva de Coleta (autonomia)
 
 - **ECO-18** — Cada nação tem uma Diretiva de Coleta: percentuais-alvo de hovers por recurso (padrões `diretiva_*_pct`), ajustáveis no painel de Diretivas.
-- **ECO-19** — Hover ocioso escolhe o recurso cuja fração atual de hovers está mais abaixo do alvo. Considera só jazidas **exploradas** a até `raio_diretiva_m` de um ponto de entrega; em empate, a jazida mais próxima. Ocioso quer dizer: recém-impresso sem ponto de encontro numa jazida, com a jazida esgotada e sem alternativa, ou parado por `hover_ocioso_alerta_s`.
+- **ECO-19** — Hover ocioso escolhe o recurso cuja fração atual de hovers está mais abaixo do alvo. Considera só jazidas **exploradas** a até `raio_diretiva_m` de um ponto de entrega; em empate, a jazida mais próxima. Ocioso quer dizer: recém-impresso sem ponto de encontro numa jazida, com a jazida esgotada e sem alternativa, ou parado por `hover_ocioso_alerta_s`. O hover parado por ordem do jogador conta como ocioso só para o aviso (AL-09) e o botão de parados (UI-15): a Diretiva não o move sozinha (D-69).
 - **ECO-20** — Ordem manual (clique direito numa jazida) prevalece. O hover fica nela até esgotar e depois segue ECO-06.
 - **ECO-21** — Recursos sem jazida elegível são ignorados na distribuição, e o painel mostra "sem jazida conhecida".
 
@@ -419,7 +419,7 @@ flowchart LR
 
 ### 6.3 Baterias das unidades
 
-- **ENE-08** — Toda unidade móvel tem bateria (`bateria_en`) e sai da impressão com ela cheia. Exceção: a Bateria Móvel sai com `bateria_movel_carga_inicial_pct`% do estoque.
+- **ENE-08** — Toda unidade móvel tem bateria (`bateria_en`) e sai da impressão com ela cheia. A Bateria Móvel sai com `bateria_movel_carga_inicial_pct`% do estoque (D-71).
 - **ENE-09** — Unidades só gastam energia ao realizar tarefas (regra do briefing). Unidade parada no solo gasta 0. Drones pairando gastam `pairar_en_s`; pousados, 0.
 - **ENE-10** — O custo de cada tarefa está na tabela abaixo.
 - **ENE-11** — **Estados de bateria.** *Normal*: acima de `limiar_bateria_baixa_pct`. *Baixa*: no limiar ou abaixo (ícone amarelo). *Reserva*: 0 EN. Na Reserva a unidade anda a `modo_reserva_vel_pct`% da velocidade e não executa tarefas (não dispara, não minera, não imprime, não entra em Sentinela), mas continua podendo receber recarga. Drone em voo que chega a 0 EN pousa onde está (em `tempo_pouso_s`) e só decola de novo depois de receber energia (D-28).
@@ -448,9 +448,9 @@ flowchart LR
 ### 6.5 Bateria Móvel
 
 - **ENE-17** — A Bateria Móvel enche o próprio estoque (`bateria_en`) em portas de recarga, como qualquer unidade.
-- **ENE-18** — **Modo suporte** (ligado por padrão): transfere energia para até `bateria_movel_max_alvos` unidades próprias **encostadas** (casco a até `bateria_movel_raio_m` do casco da Bateria Móvel, D-59), a `bateria_movel_taxa_por_alvo_en_s` cada. Atende unidades abaixo de `bateria_movel_limiar_alvo_pct`, começando pela de menor %; a unidade mandada a ela pelo clique direito vem antes e é atendida com qualquer nível, até 100% (D-57). Não há perdas. Funciona com a Bateria Móvel parada ou em movimento.
+- **ENE-18** — **Modo suporte** (sempre ativo, D-71): transfere energia para até `bateria_movel_max_alvos` unidades próprias com o casco a até `bateria_movel_raio_m` do casco da Bateria Móvel, a `bateria_movel_taxa_por_alvo_en_s` cada. Atende unidades abaixo de `bateria_movel_limiar_alvo_pct`, começando pela de menor %; a unidade mandada a ela pelo clique direito vem antes e é atendida com qualquer nível, até 100% (D-57). Não há perdas. Funciona com a Bateria Móvel parada ou em movimento.
 - **ENE-23** — Com a Bateria Móvel selecionada, o clique direito numa unidade própria a manda até ela; encostada, carrega essa unidade com qualquer nível, até 100%, antes das demais, e depois para. Outra ordem cancela (D-59).
-- **ENE-24** — A Bateria Móvel mostra se o suporte está ligado: com brilho ligado, sem brilho desligado; o cartão dela tem o botão de ligar e desligar (D-59).
+- **ENE-24** — A Bateria Móvel não liga nem desliga (D-71): brilha enquanto transfere energia.
 - **ENE-19** — O movimento da Bateria Móvel consome do mesmo estoque. Em `auto_recarga_bateria_movel_pct` ela interrompe o suporte e volta para recarregar.
 - **ENE-20** — Unidade recebendo energia de uma Bateria Móvel não procura porta de recarga enquanto a carga sobe.
 - **ENE-21** — Bateria Móvel destruída explode (CMB-23).
@@ -476,11 +476,11 @@ flowchart LR
 | en_reparo_impressora_s | 2,0 | EN/s | Reparo pela Impressora |
 | en_sentinela_s | 0,15 | EN/s | Modo Sentinela |
 | impulso_mult_en | 3 | × | Multiplicador de gasto de movimento no Impulso |
-| bateria_movel_raio_m | 1 | m | Folga casco a casco para o suporte (encostada) |
+| bateria_movel_raio_m | 8 | m | Raio do suporte, casco a casco |
 | bateria_movel_max_alvos | 4 | unidades | Alvos simultâneos do suporte |
 | bateria_movel_taxa_por_alvo_en_s | 5 | EN/s | Transferência por alvo |
 | bateria_movel_limiar_alvo_pct | 90 | % | Só atende unidades abaixo disso |
-| bateria_movel_carga_inicial_pct | 25 | % | Carga ao sair da impressão |
+| bateria_movel_carga_inicial_pct | 100 | % | Carga ao sair da impressão |
 | nuclear_consumo_u | 1 | u | Urânio consumido por ciclo |
 | nuclear_intervalo_s | 20 | s | Duração de um ciclo de combustível |
 | nuclear_religar_s | 3 | s | Tempo para religar a usina |
@@ -664,7 +664,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 #### Hover de Defesa EX1 — `hover_ex1`
 - **Papel:** linha de frente generalista; a única unidade de solo antiaérea móvel.
-- **Autonomia padrão:** postura Agressiva; auto-recarga militar.
+- **Autonomia padrão:** postura Defensiva (na IA, Agressiva, D-70); auto-recarga militar.
 - **Forte contra:** drones, hovers leves, assédio. **Fraco contra:** OPQ (alcance e explosivo), minas, Torres.
 - **Visual:** baixo e ágil, com canhão laser duplo curto.
 
@@ -706,7 +706,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 #### Bateria Móvel — `mobile_battery` ("Unidade de baterias móveis")
 - **Papel:** linha de energia móvel (§6.5). Sustenta exércitos, drones e impressoras longe da base.
-- **Comandos:** Modo suporte (liga/desliga, botão no cartão), Carregar unidade (clique direito, ENE-23).
+- **Comandos:** Carregar unidade (clique direito, ENE-23). O suporte é sempre ativo (D-71).
 - **Contra-jogo:** explode ao ser destruída (CMB-23), o que é perigoso para quem estiver perto.
 - **Visual:** módulos cilíndricos com brilho ciano pulsante e arcos de transferência até os alvos.
 
@@ -757,7 +757,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **Visual:** torre curta com casulos de mísseis apontados para cima.
 
 #### Torre Magnética — `mag_tower`
-- **UNI-13** — Campo eletromagnético de raio `mag_raio_m`. Unidades móveis inimigas no campo ficam mais lentas (até `mag_lentidao_max_pct` no centro) e perdem energia da bateria (até `mag_dreno_max_en_s` no centro); o efeito cai em linha até zero na borda e, em unidades blindadas, vale `mag_fator_blindada_pct`. Vários campos não se somam: vale o mais forte. A torre guarda o que drena até `mag_banco_max_en`; cheia, para de drenar até gastar parte. Ela repassa a até `mag_max_aliados` unidades próprias no campo, as de menor % primeiro, até `mag_repasse_en_s` cada (D-65).
+- **UNI-13** — Campo eletromagnético de raio `mag_raio_m`. Unidades móveis inimigas no campo ficam mais lentas (até `mag_lentidao_max_pct` no centro) e perdem energia da bateria (até `mag_dreno_max_en_s` no centro); o efeito cai em linha até zero na borda e, em unidades blindadas, vale `mag_fator_blindada_pct`. Vários campos não se somam: vale o mais forte. A torre guarda o que drena até `mag_banco_max_en`; cheia, para de drenar até gastar parte. Ela repassa a até `mag_max_aliados` unidades próprias no campo, as de menor % primeiro, até `mag_repasse_en_s` cada (D-65), e repara até `mag_max_aliados` unidades móveis próprias no campo, as mais feridas primeiro, a `mag_reparo_hp_s` cada (D-72).
 - **Visual:** coluna de bobinas com anéis que brilham enquanto o campo age.
 
 ### 8.6 Autonomia padrão (resumo)
@@ -766,12 +766,12 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 |---|---|---|
 | Hover de Exploração | Passiva | Coleta pela Diretiva; foge ao sofrer dano; auto-recarga de trabalhador |
 | Impressora 3D | Passiva | Auto-recarga de impressora; repara estruturas próximas quando ociosa |
-| EX1 e OPQ | Agressiva | Engajam inimigos na visão; auto-recarga militar fora de combate |
+| EX1 e OPQ | Defensiva (IA: Agressiva) | Engajam inimigos na visão e voltam ao ponto; auto-recarga militar fora de combate |
 | Plantio de Minas | Passiva | Fabrica minas sozinho; auto-recarga de trabalhador |
 | Observação | Passiva | Parado aguarda ordens; em Sentinela vigia e alerta |
-| Drones | Agressiva | Pousam quando ociosos; decolam contra inimigos na visão; auto-recarga de drone |
+| Drones | Defensiva (IA: Agressiva) | Pousam quando ociosos; decolam contra inimigos na visão; auto-recarga de drone |
 | Silo Móvel | Passiva | Ciclo automático ao encher |
-| Bateria Móvel | Passiva | Modo suporte; volta para recarregar |
+| Bateria Móvel | Passiva | Suporte sempre ativo; volta para recarregar |
 | Estruturas armadas | — | Disparam em qualquer alvo válido no alcance |
 
 ---
@@ -811,7 +811,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 ### 9.5 Aquisição de alvo e posturas
 
 - **CMB-12** — Prioridade automática de alvo: (1) quem está atacando a unidade; (2) unidades armadas; (3) unidades desarmadas; (4) estruturas armadas; (5) demais estruturas; (6) minas reveladas. Desempate: menor distância, depois menor HP.
-- **CMB-13** — Posturas: **Agressiva** (persegue até `leash_agressivo_m` da posição de origem); **Defensiva** (persegue até `leash_defensivo_m`); **Manter posição** (não se move, só dispara no alcance); **Passiva** (nunca dispara; padrão das desarmadas). Com o alvo mais perto que o `alcance_min_m` da arma, a unidade Agressiva ou Defensiva recua até poder disparar, dentro da coleira; em Manter posição, só não dispara (D-31).
+- **CMB-13** — Posturas: **Agressiva** (persegue até `leash_agressivo_m` da posição de origem); **Defensiva** (persegue até `leash_defensivo_m`); **Manter posição** (não se move, só dispara no alcance); **Passiva** (nunca dispara; padrão das desarmadas). As unidades armadas do jogador começam Defensivas; as da IA, Agressivas (D-70). Com o alvo mais perto que o `alcance_min_m` da arma, a unidade Agressiva ou Defensiva recua até poder disparar, dentro da coleira; em Manter posição, só não dispara (D-31).
 - **CMB-14** — **Ataque-movimento** (A + clique): a unidade se move e engaja inimigos no caminho; depois retoma o destino.
 - **CMB-15** — Ordem de ataque direta (clique direito num inimigo) sobrepõe a prioridade automática.
 
@@ -912,6 +912,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 | mag_banco_max_en | 400 | EN | Energia que a torre guarda |
 | mag_repasse_en_s | 8 | EN/s | Repasse por aliado no campo |
 | mag_max_aliados | 4 | unidades | Aliados atendidos ao mesmo tempo |
+| mag_reparo_hp_s | 4 | HP/s | Reparo por aliado no campo da Torre Magnética |
 | tempo_lancamento_satelite_s | 20 | s | Lançamento após a obra |
 | varredura_raio_m | 120 | m | Raio da Varredura Orbital |
 | varredura_duracao_s | 6 | s | Duração da Varredura |
@@ -1004,7 +1005,6 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | hover_minelayer | G | Campo minado |
 | drones | L | Pousar ou decolar |
 | mobile_silo | G | Descarregar agora |
-| mobile_battery | T | Modo suporte liga/desliga |
 | satellite_uplink | S | Imprimir Satélite |
 | satellite_uplink | T | Reposicionar satélite |
 | satellite_uplink | G | Varredura Orbital |
@@ -1021,7 +1021,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 
 - **CTL-08** — Com exatamente 1 unidade móvel própria selecionada, V entra em controle direto em 1ª pessoa. V de novo alterna entre 1ª e 3ª pessoa; Esc volta à visão RTS centrada na unidade. Estruturas não podem ser controladas no v1.
 - **CTL-09** — A simulação continua em tempo real; os outros corpos seguem autônomos; alertas e minimapa continuam visíveis. Com o jogo pausado, o controle direto também pausa.
-- **CTL-10** — Controles: W/S frente e ré, A/D deslocamento lateral, mouse orienta; clique esquerdo usa a arma principal (ou minera, no Hover de Exploração); clique direito usa a habilidade da unidade (D-42): Hover de Exploração descarrega no ponto de entrega ao alcance, Hover de Plantio planta mina, Hover de Observação liga ou desliga a Sentinela, drones pousam ou decolam e Bateria Móvel liga ou desliga o suporte; EX1, OPQ, Impressora e Silo Móvel (que descarrega sozinho ao encostar num depósito, D-60) não têm habilidade. Shift ativa o Impulso. A unidade em controle direto não age sozinha: não dispara, não foge, não sai para recarregar e não segue ordens (D-44).
+- **CTL-10** — Controles: W/S frente e ré, A/D deslocamento lateral, mouse orienta; clique esquerdo usa a arma principal (ou minera, no Hover de Exploração); clique direito usa a habilidade da unidade (D-42): Hover de Exploração descarrega no ponto de entrega ao alcance, Hover de Plantio planta mina, Hover de Observação liga ou desliga a Sentinela, drones pousam ou decolam; EX1, OPQ, Impressora, Silo Móvel e Bateria Móvel (que descarrega sozinho ao encostar num depósito, D-60) não têm habilidade. Shift ativa o Impulso. A unidade em controle direto não age sozinha: não dispara, não foge, não sai para recarregar e não segue ordens (D-44).
 - **CTL-11** — Mira: lasers acertam o que estiver sob a mira, dentro do alcance. O torpedo trava no alvo sob a mira se o clique for mantido por `trava_torpedo_s`; sem trava, sai reto e detona no primeiro corpo inimigo em que encostar ou, sem acertar nada, no tempo máximo de voo (D-40). Disparo sem alvo sob a mira sai e se perde: gasta `en_disparo` e a recarga (D-44). Bombas caem no ponto indicado por um marcador de impacto previsto.
 - **CTL-12** — **Sincronia:** a unidade em controle direto recebe +`controle_direto_bonus_dano_pct`% de dano e +`controle_direto_bonus_vel_pct`% de velocidade. **Impulso** (Shift): +`impulso_bonus_vel_pct`% de velocidade, com gasto de movimento × `impulso_mult_en`. Os bônus de velocidade somam (D-41).
 - **CTL-13** — Se a unidade for destruída, a tela mostra "SINAL PERDIDO" com estática por 1,5 s e volta à visão RTS.
@@ -1285,7 +1285,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **UI-13** — Jazidas: passar o mouse mostra, após o atraso de UI-09, o recurso e a quantidade restante. Clicar numa jazida a seleciona sozinha e o painel de seleção mostra o recurso, a quantidade restante sobre a inicial e os hovers designados. A jazida selecionada não recebe ordens.
 - **UI-14** — Cada ordem do clique direito mostra no ponto um sinalizador com forma e cor próprias e toca um som próprio: mover, atacar, coletar, descarregar (inclusive no Silo Móvel), recarregar, construir ou reparar, reciclar, patrulhar e reposicionar satélite.
 - **UI-15** — Dois botões fixos ao lado do minimapa: **mineradores parados** (Hovers de Exploração ociosos, ECO-19) e **impressoras paradas** (Impressoras sem item na fila, sem obra, reparo ou recarga e sem ordem de movimento). Cada botão mostra quantos há e fica em destaque quando há algum; o clique seleciona o próximo parado (em ciclo) e centraliza a câmera nele (D-58).
-- **UI-16** — Cartões de ação de unidades sem fila: o Hover de Plantio de Minas mostra a foto da mina; clicar nela (ou T) entra no modo de plantar e o clique no terreno escolhe o ponto (UNI-02). A Bateria Móvel mostra o botão do modo suporte (ENE-24) (D-62).
+- **UI-16** — Cartões de ação de unidades sem fila: o Hover de Plantio de Minas mostra a foto da mina; clicar nela (ou T) entra no modo de plantar e o clique no terreno escolhe o ponto (UNI-02). (D-62)
 
 ### 17.2 Alertas
 
@@ -1587,6 +1587,10 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-66 | A IA evolui sem atacar mais: o Fácil constrói estruturas e apoio de todos os tiers com exército só T1 e teto de 400 VR; plano de estruturas por nível (`dados:ia_plano`); satélite sobre o inimigo; mísseis curtos para defesa e, do Normal para cima, longos contra estruturas a cada 90 s. | Pedido do produto: a IA ficava entre tímida e agressiva, sem usar as estruturas novas. | Aprovada |
 | D-67 | Mísseis mais lentos: curto 15 m/s e longo 12 m/s. | Pedido do produto. | Aprovada |
 | D-68 | Torres e canos das armas apontam para o alvo, sem girar o corpo inteiro. | Pedido do produto. | Aprovada |
+| D-69 | A Diretiva de Coleta não move sozinha o hover que o jogador parou; ele só conta como ocioso para o aviso e o botão de parados. | Pedido do produto: mineradores iam sozinhos para jazidas perto do inimigo. | Aprovada |
+| D-70 | Unidades armadas do jogador começam na postura Defensiva (as da IA seguem Agressivas). | Pedido do produto: concentrar a tropa sem ela sair perseguindo. | Aprovada |
+| D-71 | Bateria Móvel sai cheia, sem liga/desliga, com suporte num raio de 8 m casco a casco (substitui o "encostada" e o botão de D-59). | Pedido do produto. | Aprovada |
+| D-72 | A Torre Magnética também repara as unidades móveis próprias no campo (`mag_reparo_hp_s`), no lugar de uma unidade reparadora móvel. | Pedido do produto: reparador móvel deixaria a tropa invencível. | Aprovada |
 
 ---
 
@@ -1672,3 +1676,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.19.1 | 2026-09-25 | CTL-10: o Silo Móvel deixa de ter habilidade no controle direto (não ancora mais, D-60). |
 | 0.20.0 | 2026-09-25 | D-63 a D-65: Base de Lança-Mísseis e mísseis (UNI-10, UNI-11; `missile_silo`, `missile_short`, `missile_long`, `missil_curto`, `missil_longo`, `misseis_max_base`), Bateria Antiaérea (UNI-12; `aa_battery`, `aa_missil`, `aa_acerto_*`) e Torre Magnética (UNI-13; `mag_tower`, `mag_*`); atalhos F, R, G, C e L. |
 | 0.21.0 | 2026-09-25 | D-66, D-67: IA-06 com `tiers_militares` e `vr_exercito_max` (Fácil com `tiers_permitidos` 3), IA-08 a IA-10 e `dados:ia_plano` (novos `ia_minas_distancia_m`, `ia_misseis_curtos`, `ia_misseis_longos`, `ia_missil_longo_intervalo_s`); `vel_projetil_m_s` dos mísseis 15 e 12; D-68 e ART-12 (torres e canos apontam para o alvo). |
+| 0.22.0 | 2026-09-26 | D-69 a D-72: ECO-19 (parado pelo jogador não é movido pela Diretiva); CMB-13 e §8.6 (armadas do jogador Defensivas); ENE-08, ENE-18, ENE-24, CTL-10, UI-16 e atalhos (Bateria Móvel cheia, sempre ativa, `bateria_movel_raio_m` 8, `bateria_movel_carga_inicial_pct` 100); UNI-13 (`mag_reparo_hp_s`). |

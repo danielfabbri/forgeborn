@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.21.0 |
+| Derivado de | `SPEC.md` v0.22.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -28,12 +28,12 @@
 |---|---|---|
 | M0 Fundação | T-000 – T-008 | Projeto roda; dados gerados do SPEC; simulação headless determinística |
 | M1 Mundo | T-010 – T-016 | Planeta lunar gerado por seed, grades, câmera RTS |
-| M2 Entidades e movimento | T-020 – T-026 | Selecionar e mover unidades placeholder com pathfinding |
-| M3 Economia | T-030 – T-037 | Coleta → entrega → estoque, com diretiva, silo e reciclagem |
+| M2 Entidades e movimento | T-020 – T-027 | Selecionar e mover unidades placeholder com pathfinding |
+| M3 Economia | T-030 – T-038 | Coleta → entrega → estoque, com diretiva, silo e reciclagem |
 | M4 Energia | T-040 – T-049 | Rede, baterias, recarga, usinas e Bateria Móvel |
 | M5 Produção | T-050 – T-059 | Filas, construção, assistência, reparo e início de partida |
 | M6 Combate | T-060 – T-068 | Armas, dano, minas, explosões, eliminação e invariantes |
-| M7 Visão | T-070 – T-076 | Névoa de 3 estados, Sentinela, satélite, minimapa |
+| M7 Visão | T-070 – T-077 | Névoa de 3 estados, Sentinela, satélite, minimapa |
 | M8 HUD | T-080 – T-087 | Interface completa em pt-BR |
 | M9 IA | T-090 – T-096 | 4 dificuldades × 4 personalidades; IA × IA estável |
 | M10 Telas e Free Battle | T-100 – T-108 | **MVP: Free Battle Lua jogável do início ao fim** |
@@ -120,6 +120,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: cada comando testado por comando serializado (TEC-07) e pela interface.
 - [x] **T-026 — Limites da nação** · P · Spec: REG-16 – REG-19 · Dep: T-006 · Feito: 2026-09-23
   - Aceite: uma ordem que excede `limite_corpos`, `limite_bases_lancamento` ou `limite_minas_ativas` é recusada e emite AL-11.
+- [ ] **T-027 — Postura Defensiva por padrão** · P · Spec: CMB-13, §8.6, D-70 · Dep: T-061
+  - Aceite: unidades armadas do jogador nascem Defensivas (perseguem até `leash_defensivo_m` e voltam); as da IA nascem Agressivas.
 
 ## M3 — Economia
 
@@ -140,6 +142,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: destroço = piso(receita × `rendimento_destroco_pct`%) por recurso; some no prazo; a sucata vira os recursos certos ao ser descarregada; o destroço do silo inclui `rendimento_carga_silo_pct`% da carga.
 - [x] **T-037 — Silo Móvel sem ancorar** · M · Spec: ECO-10, ECO-22 – ECO-24, CTL-07, CTL-10, UI-14, D-60 · Dep: T-035 · Feito: 2026-09-25
   - Aceite: o silo recebe parado ou andando (menos descarregando); descarrega sozinho ao encostar na Nave ou num Armazém; clique direito dos hovers no silo descarrega qualquer carga e eles voltam a minerar, com sinalizador de descarregar.
+- [ ] **T-038 — Diretiva não move quem o jogador parou** · P · Spec: ECO-19, D-69 · Dep: T-033
+  - Aceite: hover parado por ordem do jogador fica parado além de `hover_ocioso_alerta_s` (só conta para AL-09 e o botão de parados); recém-impresso e com jazida esgotada seguem pela Diretiva.
 
 ## M4 — Energia
 
@@ -228,6 +232,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: satélite visível no céu e selecionável; clique direito reposiciona a `satelite_vel_m_s` ou ataca satélite inimigo; `sat_laser` só atinge satélites e nada atinge satélite além dele; sem gasto de energia; cai com a base.
 - [x] **T-076 — Satélite impresso pela Base** · P · Spec: UNI-04, PRD-01, PRD-06, D-55 · Dep: T-075 · Feito: 2026-09-25
   - Aceite: a Base pronta não lança sozinha; S imprime o Satélite com a energia da rede, um por base de cada vez; pronto, lança em `tempo_lancamento_satelite_s`; custo e velocidade de `dados`.
+- [ ] **T-077 — Suporte em raio: Bateria Móvel sempre ativa e Torre Magnética que repara** · P · Spec: ENE-08, ENE-18, ENE-24, UNI-13, D-71, D-72 · Dep: T-049
+  - Aceite: a Bateria Móvel sai cheia, não liga nem desliga e atende no raio `bateria_movel_raio_m` casco a casco; a Torre Magnética repara até `mag_max_aliados` unidades próprias no campo a `mag_reparo_hp_s`.
 
 ## M8 — HUD e UX
 

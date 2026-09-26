@@ -337,9 +337,9 @@
   },
   {
     "chave": "bateria_movel_raio_m",
-    "valor": 1,
+    "valor": 8,
     "unidade": "m",
-    "descricao": "Folga casco a casco para o suporte (encostada)"
+    "descricao": "Raio do suporte, casco a casco"
   },
   {
     "chave": "bateria_movel_max_alvos",
@@ -361,7 +361,7 @@
   },
   {
     "chave": "bateria_movel_carga_inicial_pct",
-    "valor": 25,
+    "valor": 100,
     "unidade": "%",
     "descricao": "Carga ao sair da impressão"
   },
@@ -760,6 +760,12 @@
     "valor": 4,
     "unidade": "unidades",
     "descricao": "Aliados atendidos ao mesmo tempo"
+  },
+  {
+    "chave": "mag_reparo_hp_s",
+    "valor": 4,
+    "unidade": "HP/s",
+    "descricao": "Reparo por aliado no campo da Torre Magnética"
   },
   {
     "chave": "tempo_lancamento_satelite_s",

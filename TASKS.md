@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.25.0 |
+| Derivado de | `SPEC.md` v0.26.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -41,7 +41,7 @@
 | M12 Arte e áudio | T-120 – T-129 | Visual e som finais da Lua |
 | M13 Campanha | T-130 – T-135 | Universo + missões 1–2 → **v1.0** |
 | M14 Release web | T-140 – T-143 | Performance, compatibilidade e deploy |
-| M15 Pós-v1 | T-150 – T-159 | Cenários e missões 3–8, salvar partida, inglês |
+| M15 Pós-v1 | T-150 – T-160 | Cenários e missões 3–8, salvar partida, inglês |
 
 ## Caminho crítico até o MVP
 
@@ -344,8 +344,10 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [ ] **T-152 — Ceres e Missão 5** · M · Spec: §15
 - [ ] **T-153 — Vênus e Missão 6** · M · Spec: §15
 - [ ] **T-154 — Europa e Missão 7** · M · Spec: CEN-05, §15
-- [ ] **T-155 — Titã, lagos de metano e Missão 8** · G · Spec: CEN-04, §15
+- [ ] **T-155 — Titã e lagos de metano (Free Battle)** · G · Spec: CEN-02, CEN-04, PRD-10, §14.7, §18.2, AUD-02, D-78 · Dep: T-150
+  - Aceite: lagos de metano gerados pela seed nas quantidades e raios de CEN-04, simétricos, longe das zonas e sem jazidas; posicionar estrutura, muro ou mina num lago é recusado (motivo `lago`); hovers atravessam; `mult_en_drone` aplicado aos drones; 3 presets de Titã válidos; ambientação de Titã (céu laranja nebuloso, penumbra, lagos espelhados) e vento.
 - [ ] **T-156 — Salvar e carregar partida** · M · Spec: TEC-08
 - [ ] **T-157 — Remapeamento de teclas** · P · Spec: §22
 - [ ] **T-158 — Inglês (en-US)** · M · Spec: TEC-23, Q-04
 - [ ] **T-159 — Simulação em Web Worker** · M · Spec: TEC-10
+- [ ] **T-160 — Missão 8 "Trono Único" na campanha** · M · Spec: §15, D-78 · Dep: T-154, T-155

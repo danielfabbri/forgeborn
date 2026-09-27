@@ -1032,6 +1032,42 @@
     "descricao": "Antecedência do aviso AL-15"
   },
   {
+    "chave": "lagos_por_setor_p",
+    "valor": 2,
+    "unidade": "lagos",
+    "descricao": "Lagos de metano por setor de simetria no mapa P (CEN-04)"
+  },
+  {
+    "chave": "lagos_por_setor_m",
+    "valor": 1,
+    "unidade": "lagos",
+    "descricao": "Lagos de metano por setor de simetria no mapa M (CEN-04)"
+  },
+  {
+    "chave": "lagos_por_setor_g",
+    "valor": 2,
+    "unidade": "lagos",
+    "descricao": "Lagos de metano por setor de simetria no mapa G (CEN-04)"
+  },
+  {
+    "chave": "lago_raio_min_m",
+    "valor": 15,
+    "unidade": "m",
+    "descricao": "Raio mínimo de um lago de metano"
+  },
+  {
+    "chave": "lago_raio_max_m",
+    "valor": 35,
+    "unidade": "m",
+    "descricao": "Raio máximo de um lago de metano"
+  },
+  {
+    "chave": "lago_folga_zona_m",
+    "valor": 70,
+    "unidade": "m",
+    "descricao": "Distância mínima do centro de uma zona de pouso à borda de um lago"
+  },
+  {
     "chave": "macete_quantidade",
     "valor": 1000,
     "unidade": "unidades",

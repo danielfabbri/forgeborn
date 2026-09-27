@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.25.0 — rascunho para aprovação |
+| Versão do SPEC | 0.26.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -114,7 +114,7 @@
 |---|---|
 | **MVP — "Free Battle Lua"** | Todas as mecânicas, as 10 unidades móveis e as 6 estruturas, cenário Lua (mapas P/M/G), 1–3 IAs, névoa, HUD completo. Arte placeholder é aceitável. |
 | **v1.0** | MVP + controle direto em 1ª/3ª pessoa + telas finais (abertura, universo) + campanha, missões 0–3 (Terra, Lua e Marte, D-77) + arte e áudio finais + metas de performance. |
-| **v1.x** | Missões 4–8 e cenários Fobos, Ceres, Vênus, Europa e Titã; salvar/carregar partida; remapeamento de teclas; inglês. |
+| **v1.x** | Missões 4–8 e cenários Fobos, Ceres, Vênus e Europa (Titã já no Free Battle da v1.0, D-78); salvar/carregar partida; remapeamento de teclas; inglês. |
 | **Futuro** | Ver §22. |
 
 ---
@@ -513,7 +513,7 @@ flowchart LR
 
 ### 7.4 Construção de estruturas
 
-- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas e jazidas (com folga de `distancia_min_jazida_m`). A pegada é um quadrado no plano tangente, alinhado ao norte local (CEN-15). Unidades próprias dentro da pegada são empurradas para fora quando a obra começa. Entre posicionar e instalar o canteiro, a pegada fica reservada: nenhuma outra estrutura pode ser posicionada sobre ela, mas unidades passam (D-29).
+- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas e jazidas (com folga de `distancia_min_jazida_m`) e fora dos lagos de metano (CEN-04). A pegada é um quadrado no plano tangente, alinhado ao norte local (CEN-15). Unidades próprias dentro da pegada são empurradas para fora quando a obra começa. Entre posicionar e instalar o canteiro, a pegada fica reservada: nenhuma outra estrutura pode ser posicionada sobre ela, mas unidades passam (D-29).
 - **PRD-11** — A Impressora vai até o local (casco a até `raio_deposito_m` da borda da pegada, D-29), instala o **canteiro** e imprime a estrutura em camadas. O canteiro nasce com `hp_inicial_canteiro_pct`% do HP e ganha HP proporcional ao progresso. Dano sofrido durante a obra é descontado do HP final.
 - **PRD-12** — Estrutura em construção não funciona (não gera energia, não dispara, não recebe descargas) até chegar a 100%.
 - **PRD-13** — Canteiro abandonado não se degrada e pode ser retomado por qualquer Impressora ou Hover de Exploração próprio.
@@ -1151,10 +1151,10 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | ceres | Ceres | 0,35 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 0,8 | 1,0 | 1,3 | 1,5 | 1,5 | — | v1.x |
 | venus | Vênus | 0,25 | 1,0 | 1,0 | 1,5 | 0,9 | 1,2 | 1,2 | 1,0 | 0,8 | 1,0 | 1,2 | — | v1.x |
 | europa | Europa | 0,15 | 1,15 | 0,75 | 1,0 | 1,0 | 0,8 | 1,0 | 1,0 | 1,2 | 1,0 | 1,5 | — | v1.x |
-| tita | Titã | 0,1 | 1,0 | 1,0 | 0,75 | 0,85 | 1,0 | 1,0 | 1,2 | 1,0 | 1,2 | 1,2 | lagos_metano | v1.x |
+| tita | Titã | 0,1 | 1,0 | 1,0 | 0,75 | 0,85 | 1,0 | 1,0 | 1,2 | 1,0 | 1,2 | 1,2 | lagos_metano | v1.0 |
 
 - **CEN-03** — Evento `tempestade_poeira` (Marte): ocorre em intervalos sorteados pela seed entre `tempestade_intervalo_min_s` e `tempestade_intervalo_max_s` e dura `tempestade_duracao_s`. Durante o evento a visão de todos os corpos (névoa e detecção de alvos) é multiplicada por `tempestade_mult_visao` e a geração solar por `tempestade_mult_solar`. O aviso AL-15 sai `tempestade_aviso_s` antes.
-- **CEN-04** — Evento `lagos_metano` (Titã): regiões líquidas que hovers atravessam, mas onde não se pode construir.
+- **CEN-04** — Evento `lagos_metano` (Titã): lagos de metano nas baixadas do relevo, `lagos_por_setor_p`, `lagos_por_setor_m` ou `lagos_por_setor_g` por setor de simetria (conforme o tamanho do mapa; a contagem respeita a simetria de CEN-06), cada um com raio entre `lago_raio_min_m` e `lago_raio_max_m`, com a borda a pelo menos `lago_folga_zona_m` do centro de qualquer zona de pouso, longe dos pontos médios (ECO-08) e sem jazidas dentro. Hovers atravessam na velocidade normal e drones sobrevoam; nenhuma estrutura (inclusive Muro e Portão) nem mina pode ser posicionada sobre um lago (PRD-10, D-78).
 - **CEN-05** — Europa: `mult_vel_hover` e `mult_giro_hover` representam o gelo (mais rápido, gira pior).
 
 <!-- dados:parametros -->
@@ -1166,6 +1166,12 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | tempestade_mult_visao | 0,6 | × | Visão durante a tempestade |
 | tempestade_mult_solar | 0,5 | × | Geração solar durante a tempestade |
 | tempestade_aviso_s | 20 | s | Antecedência do aviso AL-15 |
+| lagos_por_setor_p | 2 | lagos | Lagos de metano por setor de simetria no mapa P (CEN-04) |
+| lagos_por_setor_m | 1 | lagos | Lagos de metano por setor de simetria no mapa M (CEN-04) |
+| lagos_por_setor_g | 2 | lagos | Lagos de metano por setor de simetria no mapa G (CEN-04) |
+| lago_raio_min_m | 15 | m | Raio mínimo de um lago de metano |
+| lago_raio_max_m | 35 | m | Raio máximo de um lago de metano |
+| lago_folga_zona_m | 70 | m | Distância mínima do centro de uma zona de pouso à borda de um lago |
 
 ### 14.2 Tamanhos de mapa
 
@@ -1207,6 +1213,13 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **Ambientação:** um planeta pequeno, com a curvatura visível como na Lua; céu caramelo de dia, mais claro no horizonte, com poeira em suspensão e sem estrelas; um Sol menor, com halo azulado em volta (o "pôr do sol azul" de Marte); solo cor de ferrugem com crateras e colinas; luz quente e difusa, sombras suaves. Na tempestade de poeira (CEN-03) o ar fica denso e alaranjado, o céu escurece, a poeira varre a tela e o vento aumenta (AUD-02).
 - **Presets:** *Utopia Planitia* (P, 2 jogadores), *Valles Marineris* (M, até 4), *Hellas Planitia* (G, 3–4).
 - **Eventos:** `tempestade_poeira` (CEN-03).
+
+### 14.7 Titã
+
+- **Ambientação:** uma lua pequena sob uma atmosfera espessa: céu laranja nebuloso e sem estrelas, o Sol só um brilho difuso atrás da névoa; penumbra, luz fraca e alaranjada, sombras quase apagadas; névoa densa que esconde a distância; solo de gelo e sedimentos (bege acinzentado com tons de ocre); os lagos de metano escuros e espelhados, refletindo o céu. Vento de fundo (AUD-02).
+- **Presets:** *Xanadu* (P, 2 jogadores), *Ligeia Mare* (M, até 4), *Kraken Mare* (G, 3–4).
+- **Eventos:** `lagos_metano` (CEN-04).
+- **Uso:** Free Battle na v1.0; a Missão 8 entra na campanha quando as Missões 4 a 7 existirem (D-78).
 
 ---
 
@@ -1618,6 +1631,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-75 | A `entrance.mp3` segue em todos os menus até a Visão do Universo e é cortada seco quando a `map.mp3` entra; todo botão habilitado toca um som curto quando o mouse passa sobre ele. | Pedido do produto. | Aprovada |
 | D-76 | Macetes digitados na partida para acelerar o teste das fases, começando pelos de recurso (TEC-27). | Pedido do produto. | Aprovada |
 | D-77 | Marte e a Missão 3 entram na v1.0 (antes em v1.x): cenário com ambientação própria, tempestade de poeira, 3 presets e a missão na campanha. | Pedido do produto: seguir a campanha para Marte depois das fases da Lua. | Aprovada |
+| D-78 | Titã entra na v1.0 só no Free Battle; a Missão 8 segue na v1.x, depois das Missões 4 a 7, para manter a ordem da campanha. Lagos de metano (CEN-04): 2/1/2 por setor de simetria nos mapas P/M/G (4, 4 e 8 lagos; a proposta de 3/5/7 não respeita a simetria de CEN-06), raio de 15 a 35 m, a 70 m das zonas de pouso, sem jazidas; hovers atravessam na velocidade normal; estruturas, muros e minas não. | Pedido do produto (criar Titã) e respostas às duas perguntas: "Titã só no Free Battle" e a proposta dos lagos. | Aprovada |
 
 ---
 
@@ -1710,3 +1724,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.23.3 | 2026-09-27 | D-75: AUD-01 (`entrance.mp3` até a Visão do Universo, corte seco para a `map.mp3`) e AUD-04 (som ao passar o mouse sobre botões). |
 | 0.24.0 | 2026-09-27 | D-76: TEC-27 (macetes na partida: "mais" + recurso soma `macete_quantidade` ao estoque). |
 | 0.25.0 | 2026-09-27 | D-77: Marte (`marte`) e a Missão 3 (`m03`) passam a v1.0; §14.6 (ambientação, presets e eventos de Marte); CEN-03 detalha que a visão reduzida vale para névoa e detecção; §2.1. |
+| 0.26.0 | 2026-09-27 | D-78: Titã (`tita`) na v1.0 (Free Battle); CEN-04 com `lagos_por_setor_p`, `lagos_por_setor_m`, `lagos_por_setor_g`, `lago_raio_min_m`, `lago_raio_max_m` e `lago_folga_zona_m`; PRD-10 recusa lagos; §14.7; §2.1. |

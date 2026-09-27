@@ -51,7 +51,7 @@
     "pegada_m": 6,
     "visao_m": 12,
     "deteccao_m": 0,
-    "geracao_en_s": 3,
+    "geracao_en_s": 4.5,
     "banco_en": 150,
     "portas": 1,
     "taxa_porta_en_s": 6,
@@ -161,6 +161,21 @@
     "portas": 0,
     "taxa_porta_en_s": 0,
     "manutencao_en_s": 0,
+    "deposito": false,
+    "arma": null
+  },
+  {
+    "id": "antenna",
+    "nome": "Antena",
+    "hp": 250,
+    "pegada_m": 3,
+    "visao_m": 100,
+    "deteccao_m": 0,
+    "geracao_en_s": 0,
+    "banco_en": 0,
+    "portas": 0,
+    "taxa_porta_en_s": 0,
+    "manutencao_en_s": 1,
     "deposito": false,
     "arma": null
   }

@@ -31,7 +31,9 @@
       "posto_passivo"
     ],
     "objetivo": "Destruir o posto avançado inimigo",
-    "libera": null,
+    "libera": [
+      "antenna"
+    ],
     "tempo_par_min": 40,
     "versao": "v1.0"
   },

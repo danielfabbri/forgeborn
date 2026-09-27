@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.2.0 — rascunho para aprovação |
+| Versão do SPEC | 1.3.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -299,12 +299,12 @@ flowchart LR
 <!-- dados:recursos -->
 | id | nome | vr | taxa_mineracao_u_s | raridade | cor | usos |
 |---|---|---|---|---|---|---|
-| fe | Ferro | 1 | 1,0 | comum | #B5562F | Chassis, blindagem, estruturas, esteiras |
-| si | Silício | 1 | 1,0 | comum | #9FB3C8 | Sensores, computadores, comunicação, painéis solares |
-| cu | Cobre | 1,5 | 0,8 | médio | #D9822B | Motores, cabos, lasers |
-| li | Lítio | 2 | 0,7 | médio | #E07BB5 | Baterias, capacitores |
-| ti | Titânio | 3 | 0,5 | raro | #5FD0E0 | Blindagem leve, armas, peças de alta resistência |
-| u | Urânio | 5 | 0,35 | muito raro | #C6F432 | Combustível nuclear, gerador do satélite |
+| fe | Ferro | 1 | 1,5 | comum | #B5562F | Chassis, blindagem, estruturas, esteiras |
+| si | Silício | 1 | 1,5 | comum | #9FB3C8 | Sensores, computadores, comunicação, painéis solares |
+| cu | Cobre | 1,5 | 1,2 | médio | #D9822B | Motores, cabos, lasers |
+| li | Lítio | 2 | 1,05 | médio | #E07BB5 | Baterias, capacitores |
+| ti | Titânio | 3 | 0,75 | raro | #5FD0E0 | Blindagem leve, armas, peças de alta resistência |
+| u | Urânio | 5 | 0,525 | muito raro | #C6F432 | Combustível nuclear, gerador do satélite |
 
 ### 5.2 Jazidas
 
@@ -372,7 +372,7 @@ flowchart LR
 | chave | valor | unidade | descricao |
 |---|---|---|---|
 | valor_x_vr | 10 | VR | Equivalência de 1x do briefing |
-| carga_hover_u | 10 | u | Carga máxima do Hover de Exploração |
+| carga_hover_u | 20 | u | Carga máxima do Hover de Exploração |
 | tempo_descarga_hover_s | 1,0 | s | Tempo para descarregar |
 | raio_deposito_m | 3 | m | Distância máxima da borda do ponto de entrega |
 | slots_por_jazida | 3 | hovers | Vagas simultâneas por jazida |
@@ -428,7 +428,7 @@ flowchart LR
 
 - **ENE-01** — Geração da rede = reator da Nave + Σ usinas solares × `fator_solar` do cenário (× eventos) + Σ usinas nucleares ligadas e abastecidas. Valores em `dados:estruturas`.
 - **ENE-02** — Capacidade do banco = Σ `banco_en` das estruturas vivas. Geração excedente com o banco cheio é perdida.
-- **ENE-03** — A rede alimenta: disparos de Torres e da defesa da Nave (`en_disparo`), manutenção de satélites em órbita, impressão feita pela Nave e portas de recarga.
+- **ENE-03** — A rede alimenta: disparos de Torres e da defesa da Nave (`en_disparo`), a manutenção das estruturas (`manutencao_en_s`, com a prioridade das defesas em ENE-04; sem energia, a estrutura não funciona), impressão feita pela Nave e portas de recarga.
 - **ENE-04** — **Racionamento.** Se o banco chega a 0 e a demanda do tick excede a geração, a energia disponível é distribuída nesta ordem de prioridade: (1) defesas; (2) impressão na Nave e na Base de Lançamento; (3) portas de recarga, divididas igualmente entre as unidades acopladas. Consumidor atendido em parte funciona proporcionalmente mais devagar (a torre dispara mais devagar, a porta carrega mais devagar). O satélite não consome da rede (UNI-05, D-51).
 - **ENE-05** — Destruir estruturas reduz geração e capacidade na hora. Se o banco passar da nova capacidade, o excedente se perde.
 - **ENE-06** — A **Usina Nuclear** consome `nuclear_consumo_u` de Urânio do estoque a cada `nuclear_intervalo_s` enquanto está ligada, mesmo com o banco cheio. Sem Urânio gera 0 e dispara AL-10. O jogador PODE desligá-la e religá-la (religar leva `nuclear_religar_s`).
@@ -512,7 +512,7 @@ flowchart LR
   - **Nave Inicial:** Hover de Exploração e Impressora 3D Móvel, e nada mais (regra do briefing).
   - **Impressora 3D Móvel:** todas as demais unidades móveis, inclusive o Hover de Exploração, e todas as estruturas. **Não** imprime Impressoras nem Naves.
   - **Hover de Plantio de Minas:** fabrica as próprias minas.
-  - **Base de Lançamento:** imprime o Satélite, um por base de cada vez (UNI-04, D-55).
+  - **Base de Lançamento:** imprime Satélites, quantos a nação quiser, um de cada vez na fila (UNI-04, D-83).
 - **PRD-02** — Só a Nave gera novas Impressoras. Perder a Nave não é derrota imediata, mas deixa a nação dependente das Impressoras que restam (REG-09).
 
 ### 7.2 Fila e pagamento
@@ -577,32 +577,33 @@ flowchart LR
 <!-- dados:custos -->
 | id | nome | categoria | produzido_por | fe | si | cu | li | ti | u | vr | ref_x | en_impressao | tempo_s |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hover_explorer | Hover de Exploração | movel | ship+printer | 15 | 10 | 4 | 0 | 0 | 0 | 31 | 3 | 20 | 12 |
-| printer | Impressora 3D Móvel | movel | ship | 15 | 10 | 6 | 3 | 0 | 0 | 40 | 4 | 25 | 20 |
-| hover_ex1 | Hover de Defesa EX1 | movel | printer | 30 | 10 | 16 | 8 | 0 | 0 | 80 | 8 | 50 | 18 |
-| hover_opq | Hover de Defesa OPQ | movel | printer | 35 | 10 | 12 | 6 | 15 | 0 | 120 | 12 | 70 | 25 |
-| hover_minelayer | Hover de Plantio de Minas | movel | printer | 30 | 15 | 10 | 10 | 10 | 0 | 110 | 11 | 65 | 22 |
-| hover_scout | Hover de Observação | movel | printer | 10 | 15 | 6 | 3 | 0 | 0 | 40 | 4 | 25 | 12 |
-| drone_bomber | Drone Bombardeiro | movel | printer | 20 | 16 | 16 | 15 | 20 | 0 | 150 | 15 | 90 | 30 |
-| drone_laser | Drone Laser | movel | printer | 15 | 15 | 20 | 12 | 12 | 0 | 120 | 12 | 70 | 25 |
-| mobile_silo | Silo Móvel | movel | printer | 50 | 15 | 14 | 7 | 0 | 0 | 100 | — | 60 | 20 |
-| mobile_battery | Bateria Móvel | movel | printer | 30 | 10 | 20 | 35 | 0 | 0 | 140 | 14 | 80 | 25 |
-| laser_tower | Torre de Defesa | estrutura | printer | 35 | 10 | 18 | 4 | 0 | 0 | 80 | 8 | 50 | 20 |
-| storage | Armazém | estrutura | printer | 110 | 40 | 20 | 0 | 0 | 0 | 180 | 18 | 100 | 35 |
-| solar_plant | Usina Solar Pequena | estrutura | printer | 30 | 60 | 20 | 15 | 0 | 0 | 150 | 15 | 80 | 30 |
-| nuclear_plant | Usina Nuclear | estrutura | printer | 60 | 20 | 30 | 10 | 15 | 8 | 230 | 23 | 140 | 50 |
-| satellite_uplink | Base de Lançamento | estrutura | printer | 120 | 100 | 40 | 30 | 40 | 0 | 460 | 45 | 300 | 80 |
-| satellite | Satélite | orbital | satellite_uplink | 120 | 90 | 75 | 60 | 90 | 15 | 787,5 | — | 525 | 90 |
-| wall | Muro | estrutura | printer | 20 | 5 | 0 | 0 | 0 | 0 | 25 | 2 | 10 | 8 |
-| gate | Portão | estrutura | printer | 40 | 15 | 10 | 0 | 0 | 0 | 70 | 7 | 25 | 12 |
-| missile_silo | Base de Lança-Mísseis | estrutura | printer | 90 | 40 | 40 | 20 | 30 | 0 | 320 | — | 200 | 60 |
-| aa_battery | Bateria Antiaérea | estrutura | printer | 50 | 20 | 25 | 10 | 10 | 0 | 157,5 | — | 80 | 30 |
-| mag_tower | Torre Magnética | estrutura | printer | 70 | 30 | 50 | 20 | 15 | 0 | 260 | — | 120 | 40 |
-| missile_short | Míssil de Curto Alcance | municao | missile_silo | 20 | 0 | 10 | 5 | 0 | 0 | 45 | — | 40 | 20 |
-| missile_long | Míssil de Longo Alcance | municao | missile_silo | 60 | 0 | 30 | 20 | 20 | 5 | 230 | — | 150 | 45 |
-| mine | Mina | municao | hover_minelayer | 6 | 0 | 2 | 1 | 0 | 0 | 11 | — | 20 | 6 |
+| hover_explorer | Hover de Exploração | movel | ship+printer | 15 | 10 | 4 | 0 | 0 | 0 | 31 | 3 | 20 | 7,2 |
+| printer | Impressora 3D Móvel | movel | ship | 15 | 10 | 6 | 3 | 0 | 0 | 40 | 4 | 25 | 12 |
+| hover_ex1 | Hover de Defesa EX1 | movel | printer | 30 | 10 | 16 | 8 | 0 | 0 | 80 | 8 | 50 | 10,8 |
+| hover_opq | Hover de Defesa OPQ | movel | printer | 35 | 10 | 12 | 6 | 15 | 0 | 120 | 12 | 70 | 15 |
+| hover_minelayer | Hover de Plantio de Minas | movel | printer | 30 | 15 | 10 | 10 | 10 | 0 | 110 | 11 | 65 | 13,2 |
+| hover_scout | Hover de Observação | movel | printer | 10 | 15 | 6 | 3 | 0 | 0 | 40 | 4 | 25 | 7,2 |
+| drone_bomber | Drone Bombardeiro | movel | printer | 20 | 16 | 16 | 15 | 20 | 0 | 150 | 15 | 90 | 18 |
+| drone_laser | Drone Laser | movel | printer | 15 | 15 | 20 | 12 | 12 | 0 | 120 | 12 | 70 | 15 |
+| mobile_silo | Silo Móvel | movel | printer | 50 | 15 | 14 | 7 | 0 | 0 | 100 | — | 60 | 12 |
+| mobile_battery | Bateria Móvel | movel | printer | 30 | 10 | 20 | 35 | 0 | 0 | 140 | 14 | 80 | 15 |
+| laser_tower | Torre de Defesa | estrutura | printer | 25 | 7 | 13 | 3 | 0 | 0 | 57,5 | 8 | 50 | 12 |
+| storage | Armazém | estrutura | printer | 77 | 28 | 14 | 0 | 0 | 0 | 126 | 18 | 100 | 21 |
+| solar_plant | Usina Solar Pequena | estrutura | printer | 21 | 42 | 14 | 11 | 0 | 0 | 106 | 15 | 80 | 18 |
+| nuclear_plant | Usina Nuclear | estrutura | printer | 42 | 14 | 21 | 7 | 11 | 6 | 164,5 | 23 | 140 | 30 |
+| satellite_uplink | Base de Lançamento | estrutura | printer | 84 | 70 | 28 | 21 | 28 | 0 | 322 | 45 | 300 | 48 |
+| satellite | Satélite | orbital | satellite_uplink | 120 | 90 | 75 | 60 | 90 | 15 | 787,5 | — | 525 | 54 |
+| wall | Muro | estrutura | printer | 14 | 4 | 0 | 0 | 0 | 0 | 18 | 2 | 10 | 4,8 |
+| gate | Portão | estrutura | printer | 28 | 11 | 7 | 0 | 0 | 0 | 49,5 | 7 | 25 | 7,2 |
+| missile_silo | Base de Lança-Mísseis | estrutura | printer | 63 | 28 | 28 | 14 | 21 | 0 | 224 | — | 200 | 36 |
+| aa_battery | Bateria Antiaérea | estrutura | printer | 35 | 14 | 18 | 7 | 7 | 0 | 111 | — | 80 | 18 |
+| mag_tower | Torre Magnética | estrutura | printer | 49 | 21 | 35 | 14 | 11 | 0 | 183,5 | — | 120 | 24 |
+| antenna | Antena | estrutura | printer | 30 | 50 | 30 | 0 | 0 | 0 | 125 | — | 50 | 12 |
+| missile_short | Míssil de Curto Alcance | municao | missile_silo | 20 | 0 | 10 | 5 | 0 | 0 | 45 | — | 40 | 12 |
+| missile_long | Míssil de Longo Alcance | municao | missile_silo | 60 | 0 | 30 | 20 | 20 | 5 | 230 | — | 150 | 27 |
+| mine | Mina | municao | hover_minelayer | 6 | 0 | 2 | 1 | 0 | 0 | 11 | — | 20 | 3,6 |
 
-Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação, Silo, Bateria Móvel, Torre, Armazém, Solar, Muro, Portão. **T2** (exige Ti) = OPQ, Plantio de Minas, Drones. **T3** (exige U) = Usina Nuclear, Base de Lançamento.
+Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação, Silo, Bateria Móvel, Torre, Armazém, Solar, Muro, Portão, Antena. **T2** (exige Ti) = OPQ, Plantio de Minas, Drones. **T3** (exige U) = Usina Nuclear, Base de Lançamento.
 
 ### 8.2 Unidades móveis
 
@@ -611,12 +612,12 @@ Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação
 <!-- dados:moveis -->
 | id | hp | blindagem | camada | vel_m_s | giro_graus_s | raio_m | visao_m | deteccao_m | bateria_en | mov_en_s | pairar_en_s | arma |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hover_explorer | 60 | leve | solo | 6,0 | 360 | 1,0 | 18 | 0 | 200 | 0,4 | 0 | — |
+| hover_explorer | 60 | leve | solo | 9 | 360 | 1,0 | 18 | 0 | 200 | 0,4 | 0 | — |
 | printer | 240 | blindada | solo | 4,0 | 180 | 1,8 | 16 | 0 | 800 | 0,8 | 0 | — |
-| hover_ex1 | 150 | blindada | solo | 5,5 | 270 | 1,3 | 22 | 0 | 300 | 0,5 | 0 | ex1_laser |
-| hover_opq | 230 | blindada | solo | 4,5 | 180 | 1,6 | 22 | 0 | 400 | 0,7 | 0 | opq_torpedo |
-| hover_minelayer | 90 | leve | solo | 5,0 | 240 | 1,3 | 18 | 0 | 300 | 0,5 | 0 | — |
-| hover_scout | 70 | leve | solo | 7,5 | 360 | 1,0 | 28 | 14 | 240 | 0,3 | 0 | — |
+| hover_ex1 | 150 | blindada | solo | 8,25 | 270 | 1,3 | 22 | 0 | 300 | 0,5 | 0 | ex1_laser |
+| hover_opq | 230 | blindada | solo | 6,75 | 180 | 1,6 | 22 | 0 | 400 | 0,7 | 0 | opq_torpedo |
+| hover_minelayer | 90 | leve | solo | 7,5 | 240 | 1,3 | 18 | 0 | 300 | 0,5 | 0 | — |
+| hover_scout | 70 | leve | solo | 11,25 | 360 | 1,0 | 28 | 14 | 240 | 0,3 | 0 | — |
 | drone_bomber | 90 | leve | ar | 11,0 | 240 | 1,2 | 18 | 0 | 400 | 1,6 | 0,4 | bomb |
 | drone_laser | 130 | blindada | ar | 12,0 | 300 | 1,0 | 22 | 0 | 360 | 1,4 | 0,4 | drone_laser_gun |
 | mobile_silo | 320 | blindada | solo | 4,0 | 150 | 2,2 | 14 | 0 | 500 | 1,0 | 0 | — |
@@ -632,7 +633,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | ship | Nave Inicial | 5000 | 16 | 32 | 16 | 5 | 1000 | 2 | 10 | 0 | sim | ship_pd |
 | laser_tower | Torre de Defesa | 450 | 3 | 20 | 0 | 0 | 0 | 0 | 0 | 0 | nao | tower_laser |
 | storage | Armazém | 900 | 8 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | sim | — |
-| solar_plant | Usina Solar Pequena | 350 | 6 | 12 | 0 | 3 | 150 | 1 | 6 | 0 | nao | — |
+| solar_plant | Usina Solar Pequena | 350 | 6 | 12 | 0 | 4,5 | 150 | 1 | 6 | 0 | nao | — |
 | nuclear_plant | Usina Nuclear | 700 | 8 | 12 | 0 | 12 | 300 | 3 | 12 | 0 | nao | — |
 | satellite_uplink | Base de Lançamento | 800 | 10 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | wall | Muro | 800 | 6 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
@@ -640,6 +641,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | missile_silo | Base de Lança-Mísseis | 700 | 8 | 14 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | aa_battery | Bateria Antiaérea | 500 | 4 | 24 | 0 | 0 | 0 | 0 | 0 | 0 | nao | aa_missil |
 | mag_tower | Torre Magnética | 600 | 5 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
+| antenna | Antena | 250 | 3 | 100 | 0 | 0 | 0 | 0 | 0 | 1 | nao | — |
 
 ### 8.4 Armas
 
@@ -751,7 +753,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **Visual:** reator compacto com aletas de dissipação incandescentes.
 
 #### Base de Lançamento + Satélite de Visualização — `satellite_uplink`
-- **UNI-04** — A Base de Lançamento pronta imprime o Satélite (item `satellite`, tecla S no cartão), um por base de cada vez: só aceita a ordem sem satélite vivo nem outro na fila. Impresso, o satélite sobe em `tempo_lancamento_satelite_s` (animação). Se a base for destruída durante a impressão ou o lançamento, o satélite se perde (D-55).
+- **UNI-04** — A Base de Lançamento pronta imprime Satélites (item `satellite`, tecla S no cartão), quantos a nação quiser, um de cada vez pela fila (D-83). Impresso, o satélite sobe em `tempo_lancamento_satelite_s` (animação). Se a base for destruída durante a impressão ou o lançamento, o satélite se perde (D-55).
 - **UNI-05** — O satélite em órbita é um corpo que o jogador vê no céu e seleciona: tem `satelite_hp` de HP e o laser orbital `sat_laser`, que só atinge outro satélite (camada `orbita`); não atira em nada no solo nem no ar, e só outro satélite o atinge. Dá visão persistente e Varredura Orbital (VIS-08). Não gasta energia (painéis próprios) e fica fora do racionamento. Selecionado, o clique direito no terreno o reposiciona e num satélite inimigo o ataca. Destruir a base derruba o satélite (D-51).
 - **UNI-06** — O satélite não detecta furtivos.
 - **Visual:** plataforma com torre de lançamento vertical, de onde o satélite sobe na vertical. Em órbita: ícone no minimapa e círculo de visão no chão.
@@ -775,6 +777,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 #### Torre Magnética — `mag_tower`
 - **UNI-13** — Campo eletromagnético de raio `mag_raio_m`. Unidades móveis inimigas no campo ficam mais lentas (até `mag_lentidao_max_pct` no centro) e perdem energia da bateria (até `mag_dreno_max_en_s` no centro); o efeito cai em linha até zero na borda e, em unidades blindadas, vale `mag_fator_blindada_pct`. Vários campos não se somam: vale o mais forte. A torre guarda o que drena até `mag_banco_max_en`; cheia, para de drenar até gastar parte. Ela repassa a até `mag_max_aliados` unidades próprias no campo, as de menor % primeiro, até `mag_repasse_en_s` cada (D-65), e repara até `mag_max_aliados` unidades móveis próprias no campo, as mais feridas primeiro, a `mag_reparo_hp_s` cada (D-72).
+- **UNI-14** — **Antena** (`antenna`, D-83): estrutura de observação de alta visibilidade: enxerga `visao_m` em volta (a maior visão fixa do jogo), não detecta furtivos, não tem arma e consome `manutencao_en_s` da rede; sem energia, não enxerga.
 - **Visual:** coluna de bobinas com anéis que brilham enquanto o campo age.
 
 ### 8.6 Autonomia padrão (resumo)
@@ -971,9 +974,9 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 - **CTL-01** — Visão de cima, estilo Age of Empires: câmera em perspectiva sobre um ponto focal na superfície, com "cima" na vertical local e inclinação padrão de 55°. O zoom (roda do mouse) vai de 15 m a 120 m de altura. Perto do solo a inclinação cai suavemente até ~35°, para uma vista cinematográfica. Acima de 120 m, vale CTL-16.
 - **CTL-02** — Pan pelas setas do teclado e pelas bordas da tela (desligável): o ponto focal anda pela superfície e a câmera vai junto, sem girar sozinha. Arrastar com o botão do meio gira em torno do ponto focal. Home volta ao norte (CEN-15).
-- **CTL-03** — O minimapa é um globo pequeno, com o norte para cima, que gira para mostrar o lado do ponto focal. Clique no minimapa move a câmera; clique direito no minimapa dá ordem de movimento.
+- **CTL-03** — O minimapa é um mapa-múndi do corpo (projeção equiretangular: longitude na horizontal, latitude na vertical), sempre com o norte para cima; ele só rola entre leste e oeste, acompanhando a longitude do ponto focal, e arrastar nele também rola leste–oeste. Clique no minimapa move a câmera; clique direito dá ordem de movimento (D-83).
 
-- **CTL-16** — **Visão planetária** (D-26): o zoom continua além de 120 m até mostrar o planeta inteiro, a 3,5 × `raio_m` do centro. Nessa faixa a inclinação vai a 90° (olhando para o centro do planeta) e o pan gira o globo. Seleção e ordens continuam valendo.
+- **CTL-16** — **Visão planetária** (D-26): o zoom continua além de 120 m até mostrar o planeta inteiro, a 3,5 × `raio_m` do centro. Nessa faixa a inclinação vai a 90° (olhando para o centro do planeta) e o pan gira o globo. Seleção e ordens continuam valendo. Nos corpos com atmosfera, ao afastar, o céu e a névoa do chão dão lugar ao espaço preto estrelado, e a atmosfera aparece como uma esfera em volta do corpo, com `atmosfera_opacidade_pct`% de opacidade no fim do zoom (D-83).
 
 ### 12.2 Seleção
 
@@ -1012,7 +1015,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ship | E | Imprimir Hover de Exploração |
 | ship | I | Imprimir Impressora 3D |
 | ship | Q | Recolher ou liberar os mineradores (CMB-28) |
-| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética |
+| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena |
 | missile_silo | C / L | Fabricar míssil curto / longo |
 | printer | U | Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, B Bombardeiro, L Drone Laser, V Silo, C Bateria |
 | hover_explorer | C | Coletar |
@@ -1250,7 +1253,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | ordem | id | cenario | nome | oponentes | objetivo | libera | tempo_par_min | versao |
 |---|---|---|---|---|---|---|---|---|
 | 0 | m00 | terra_lab | Campo de Testes | alvos_treino | Tutorial; destruir os alvos de treino | hover_explorer+printer+hover_ex1+hover_scout+laser_tower+storage+solar_plant+wall+gate | 20 | v1.0 |
-| 1 | m01 | lua | Primeira Forja | posto_passivo | Destruir o posto avançado inimigo | — | 40 | v1.0 |
+| 1 | m01 | lua | Primeira Forja | posto_passivo | Destruir o posto avançado inimigo | antenna | 40 | v1.0 |
 | 2 | m02 | lua_shackleton | Sombra Eterna | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq+aa_battery+mag_tower | 60 | v1.0 |
 | 3 | m03 | marte | Poeira Vermelha | normal+normal | Eliminar as nações rivais | nuclear_plant+hover_minelayer | 80 | v1.0 |
 | 4 | m04 | fobos | Cerco em Fobos | dificil | Sobreviver 12 min; depois destruir a Nave inimiga | drone_laser+drone_bomber | 60 | v1.x |
@@ -1316,7 +1319,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **UI-04** — Cartão de comandos: grade 4×3 com ícone, tecla e custo. O tooltip mostra receita completa, energia e tempo. Item sem recursos mostra em vermelho o que falta.
 - **UI-05** — Minimapa no canto inferior esquerdo (VIS-09). Clique move a câmera; alertas piscam no ponto.
 - **UI-06** — Alertas: pilha à esquerda com até 5 visíveis, clicáveis (levam ao local), com som e voz conforme `dados:alertas`.
-- **UI-07** — Barras sobre as unidades do jogador (as de outras nações não mostram barras, D-58): HP (verde → amarelo → vermelho) e EN (ciano). No modo automático aparecem só nas unidades selecionadas (D-61); Tab alterna para "sempre".
+- **UI-07** — Barras sobre as unidades do jogador (as de outras nações não mostram barras, D-58): HP (verde → amarelo → vermelho) e EN (ciano). No modo automático, as barras dos corpos selecionados aparecem com opacidade total e as dos demais corpos próprios (unidades e estruturas) com `barras_opacidade_nao_selecionados_pct`% (D-83); Tab alterna para "sempre" (todas com opacidade total).
 - **UI-08** — Posicionamento de estrutura: holograma da pegada em verde (válido) ou vermelho (inválido, com o motivo); raio de alcance e de visão desenhado no chão.
 - **UI-09** — Tooltips com atraso de 0,4 s. Toda unidade tem descrição do papel e "forte contra / fraco contra" (§8.5).
 - **UI-10** — A fila de impressão aparece sobre a Impressora ou a Nave selecionada e no painel.
@@ -1325,6 +1328,12 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **UI-15** — Dois botões fixos ao lado do minimapa: **mineradores parados** (Hovers de Exploração ociosos, ECO-19) e **impressoras paradas** (Impressoras sem item na fila, sem obra, reparo ou recarga e sem ordem de movimento). Cada botão mostra quantos há e fica em destaque quando há algum; o clique seleciona o próximo parado (em ciclo) e centraliza a câmera nele (D-58).
 - **UI-16** — Cartões de ação de unidades sem fila: o Hover de Plantio de Minas mostra a foto da mina; clicar nela (ou T) entra no modo de plantar e o clique no terreno escolhe o ponto (UNI-02). (D-62)
 - **UI-17** — Temperamento no HUD: cada nação adversária aparece com o seu estado em relação ao jogador (pacífica, em alerta com a contagem do prazo, ou inimiga), na cor dela. O minimapa mostra o domínio conhecido das outras nações (D-81).
+
+<!-- dados:parametros -->
+| chave | valor | unidade | descricao |
+|---|---|---|---|
+| barras_opacidade_nao_selecionados_pct | 30 | % | Opacidade das barras dos corpos próprios não selecionados (UI-07) |
+| atmosfera_opacidade_pct | 90 | % | Opacidade da esfera de atmosfera na visão planetária (CTL-16) |
 
 ### 17.2 Alertas
 
@@ -1458,7 +1467,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **TEC-24** — Toda regra implementada tem ao menos um teste que cita o ID no nome (ex.: `it('ECO-14: material só conta ao ser descarregado')`).
 - **TEC-25** — Runner headless: `npm run sim:match -- --seed N --ais normal,normal --max-min 40` roda partidas IA × IA sem render, para testes de estabilidade e invariantes (§21.3).
 - **TEC-26** — Overlay de depuração (Ctrl+Shift+D): FPS, tempo do tick, contagem de entidades, grades de navegação e névoa, estado das IAs e opção de ver pela perspectiva de qualquer nação.
-- **TEC-27** — Macetes (ferramenta de teste das fases, D-76): na partida, Enter abre um campo de texto no centro da tela. "mais" seguido do nome de um recurso de `dados:recursos`, em minúsculas e sem acento ("maisferro", "maissilicio", "maiscobre", "maislitio", "maistitanio", "maisuranio"), soma `macete_quantidade` ao estoque da nação do jogador, como Comando (TEC-07); maiúsculas, acentos e espaços são ignorados. Enter confirma e fecha; Esc fecha sem aplicar; texto desconhecido mostra um aviso e o campo segue aberto. Com o campo aberto, as teclas não viram atalhos do jogo.
+- **TEC-27** — Macetes (ferramenta de teste das fases, D-76): na partida, Enter abre um campo de texto no centro da tela. "mais" seguido do nome de um recurso de `dados:recursos`, em minúsculas e sem acento ("maisferro", "maissilicio", "maiscobre", "maislitio", "maistitanio", "maisuranio"), soma `macete_quantidade` ao estoque da nação do jogador, como Comando (TEC-07); "maistudo" soma `macete_quantidade` a todos os recursos (D-83); maiúsculas, acentos e espaços são ignorados. Enter confirma e fecha; Esc fecha sem aplicar; texto desconhecido mostra um aviso e o campo segue aberto. Com o campo aberto, as teclas não viram atalhos do jogo.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1651,6 +1660,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-80 | O escuro da névoa (VIS-01) deixa de ser preto absoluto: mostra a silhueta escura do relevo, em todos os cenários e também em 1ª e 3ª pessoa. A informação escondida continua a mesma (nada sobre o terreno). | Pedido do produto: "Na Lua, não quero ausência absoluta de cor no terreno… Quando ando com um personagem, não vejo como é o terreno." | Aprovada |
 | D-81 | Temperamento entre nações (REG-24 a REG-28): todas começam pacíficas; entrar no domínio de outra (60 m das estruturas, 20 m das unidades) gera aviso imediato, e ficar mais de 10 s vira guerra; dano abre a guerra na hora; a guerra esfria depois de 5 min sem combate e fora dos domínios. O disparo automático só mira inimigos (CMB-29); a IA obedece o aviso (menos a Brutal) e só ataca quem está em guerra com ela (IA-04, IA-05, IA-11). | Pedido do produto: "as civilizações poderiam pedir pra você se retirar antes de atacar… começa com todos pacíficos… se você não sair do território em 10 s, o status vira inimigo"; respostas: domínio 60/20 m, guerra esfria, disparo só em inimigos. | Aprovada |
 | D-82 | A IA pacífica provoca guerra conforme a dificuldade (IA-12): a onda entra no domínio do alvo e a guerra começa pelo aviso de 10 s; Fácil nunca, Normal só contra quem é mais fraco que ela, Difícil a mais próxima, Brutal a mais fraca. Mantém as guerras entre IAs e os invariantes de vitória (INV-12, INV-14). | Resposta do produto: "Sim, conforme a dificuldade". | Aprovada |
+| D-83 | Ritmo mais rápido e novos recursos: hovers ×1,5 de velocidade; estruturas ×0,7 de custo; `tempo_s` de tudo ×0,6; Usina Solar ×1,5 (`geracao_en_s` 4,5); `carga_hover_u` 20 e `taxa_mineracao_u_s` ×1,5; Antena (UNI-14, visão 100 m, 1 EN/s, liberada na Missão 1); satélites sem limite por base; macete "maistudo"; barras dos não selecionados a 30%; minimapa em mapa-múndi com o norte fixo; atmosfera como esfera a 90% na visão planetária. | Pedido do produto; respostas: hovers 1,5×, estruturas −30% e tempo −40%, solar 1,5×, antena com visão de 100 m. | Aprovada |
 
 ---
 
@@ -1748,3 +1758,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.0.1 | 2026-09-27 | D-80: VIS-01, o escuro mostra a silhueta do relevo. |
 | 1.1.0 | 2026-09-27 | D-81: §4.7 (REG-24 a REG-28, `dominio_estrutura_m`, `dominio_unidade_m`, `ultimato_s`, `guerra_esfria_s`), CMB-29, IA-04, IA-05, IA-11, UI-17, AL-19 a AL-22; §22. TEC-14: orçamento medido na Lua, com hierarquia (D-79). |
 | 1.2.0 | 2026-09-27 | D-82: IA-12 (provocação conforme a dificuldade); IA-04 e IA-11 remetem a ela. |
+| 1.3.0 | 2026-09-27 | D-83: `dados:custos` (estruturas ×0,7, `tempo_s` ×0,6, `antenna`), `dados:estruturas` (`geracao_en_s` da solar 4,5, `antenna`), `vel_m_s` dos hovers ×1,5, `taxa_mineracao_u_s` ×1,5, `carga_hover_u` 20, UNI-04, UNI-14, PRD-01, ENE-03, TEC-27, UI-07, CTL-03, CTL-16, atalho E Antena, Missão 1 libera a Antena; `barras_opacidade_nao_selecionados_pct`, `atmosfera_opacidade_pct`. |

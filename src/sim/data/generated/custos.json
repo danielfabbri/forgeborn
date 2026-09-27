@@ -16,7 +16,7 @@
     "vr": 31,
     "ref_x": 3,
     "en_impressao": 20,
-    "tempo_s": 12
+    "tempo_s": 7.2
   },
   {
     "id": "printer",
@@ -34,7 +34,7 @@
     "vr": 40,
     "ref_x": 4,
     "en_impressao": 25,
-    "tempo_s": 20
+    "tempo_s": 12
   },
   {
     "id": "hover_ex1",
@@ -52,7 +52,7 @@
     "vr": 80,
     "ref_x": 8,
     "en_impressao": 50,
-    "tempo_s": 18
+    "tempo_s": 10.8
   },
   {
     "id": "hover_opq",
@@ -70,7 +70,7 @@
     "vr": 120,
     "ref_x": 12,
     "en_impressao": 70,
-    "tempo_s": 25
+    "tempo_s": 15
   },
   {
     "id": "hover_minelayer",
@@ -88,7 +88,7 @@
     "vr": 110,
     "ref_x": 11,
     "en_impressao": 65,
-    "tempo_s": 22
+    "tempo_s": 13.2
   },
   {
     "id": "hover_scout",
@@ -106,7 +106,7 @@
     "vr": 40,
     "ref_x": 4,
     "en_impressao": 25,
-    "tempo_s": 12
+    "tempo_s": 7.2
   },
   {
     "id": "drone_bomber",
@@ -124,7 +124,7 @@
     "vr": 150,
     "ref_x": 15,
     "en_impressao": 90,
-    "tempo_s": 30
+    "tempo_s": 18
   },
   {
     "id": "drone_laser",
@@ -142,7 +142,7 @@
     "vr": 120,
     "ref_x": 12,
     "en_impressao": 70,
-    "tempo_s": 25
+    "tempo_s": 15
   },
   {
     "id": "mobile_silo",
@@ -160,7 +160,7 @@
     "vr": 100,
     "ref_x": null,
     "en_impressao": 60,
-    "tempo_s": 20
+    "tempo_s": 12
   },
   {
     "id": "mobile_battery",
@@ -178,7 +178,7 @@
     "vr": 140,
     "ref_x": 14,
     "en_impressao": 80,
-    "tempo_s": 25
+    "tempo_s": 15
   },
   {
     "id": "laser_tower",
@@ -187,16 +187,16 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 35,
-    "si": 10,
-    "cu": 18,
-    "li": 4,
+    "fe": 25,
+    "si": 7,
+    "cu": 13,
+    "li": 3,
     "ti": 0,
     "u": 0,
-    "vr": 80,
+    "vr": 57.5,
     "ref_x": 8,
     "en_impressao": 50,
-    "tempo_s": 20
+    "tempo_s": 12
   },
   {
     "id": "storage",
@@ -205,16 +205,16 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 110,
-    "si": 40,
-    "cu": 20,
+    "fe": 77,
+    "si": 28,
+    "cu": 14,
     "li": 0,
     "ti": 0,
     "u": 0,
-    "vr": 180,
+    "vr": 126,
     "ref_x": 18,
     "en_impressao": 100,
-    "tempo_s": 35
+    "tempo_s": 21
   },
   {
     "id": "solar_plant",
@@ -223,16 +223,16 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 30,
-    "si": 60,
-    "cu": 20,
-    "li": 15,
+    "fe": 21,
+    "si": 42,
+    "cu": 14,
+    "li": 11,
     "ti": 0,
     "u": 0,
-    "vr": 150,
+    "vr": 106,
     "ref_x": 15,
     "en_impressao": 80,
-    "tempo_s": 30
+    "tempo_s": 18
   },
   {
     "id": "nuclear_plant",
@@ -241,16 +241,16 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 60,
-    "si": 20,
-    "cu": 30,
-    "li": 10,
-    "ti": 15,
-    "u": 8,
-    "vr": 230,
+    "fe": 42,
+    "si": 14,
+    "cu": 21,
+    "li": 7,
+    "ti": 11,
+    "u": 6,
+    "vr": 164.5,
     "ref_x": 23,
     "en_impressao": 140,
-    "tempo_s": 50
+    "tempo_s": 30
   },
   {
     "id": "satellite_uplink",
@@ -259,16 +259,16 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 120,
-    "si": 100,
-    "cu": 40,
-    "li": 30,
-    "ti": 40,
+    "fe": 84,
+    "si": 70,
+    "cu": 28,
+    "li": 21,
+    "ti": 28,
     "u": 0,
-    "vr": 460,
+    "vr": 322,
     "ref_x": 45,
     "en_impressao": 300,
-    "tempo_s": 80
+    "tempo_s": 48
   },
   {
     "id": "satellite",
@@ -286,7 +286,7 @@
     "vr": 787.5,
     "ref_x": null,
     "en_impressao": 525,
-    "tempo_s": 90
+    "tempo_s": 54
   },
   {
     "id": "wall",
@@ -295,16 +295,16 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 20,
-    "si": 5,
+    "fe": 14,
+    "si": 4,
     "cu": 0,
     "li": 0,
     "ti": 0,
     "u": 0,
-    "vr": 25,
+    "vr": 18,
     "ref_x": 2,
     "en_impressao": 10,
-    "tempo_s": 8
+    "tempo_s": 4.8
   },
   {
     "id": "gate",
@@ -313,16 +313,16 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 40,
-    "si": 15,
-    "cu": 10,
+    "fe": 28,
+    "si": 11,
+    "cu": 7,
     "li": 0,
     "ti": 0,
     "u": 0,
-    "vr": 70,
+    "vr": 49.5,
     "ref_x": 7,
     "en_impressao": 25,
-    "tempo_s": 12
+    "tempo_s": 7.2
   },
   {
     "id": "missile_silo",
@@ -331,16 +331,16 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 90,
-    "si": 40,
-    "cu": 40,
-    "li": 20,
-    "ti": 30,
+    "fe": 63,
+    "si": 28,
+    "cu": 28,
+    "li": 14,
+    "ti": 21,
     "u": 0,
-    "vr": 320,
+    "vr": 224,
     "ref_x": null,
     "en_impressao": 200,
-    "tempo_s": 60
+    "tempo_s": 36
   },
   {
     "id": "aa_battery",
@@ -349,16 +349,16 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 50,
-    "si": 20,
-    "cu": 25,
-    "li": 10,
-    "ti": 10,
+    "fe": 35,
+    "si": 14,
+    "cu": 18,
+    "li": 7,
+    "ti": 7,
     "u": 0,
-    "vr": 157.5,
+    "vr": 111,
     "ref_x": null,
     "en_impressao": 80,
-    "tempo_s": 30
+    "tempo_s": 18
   },
   {
     "id": "mag_tower",
@@ -367,16 +367,34 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 70,
-    "si": 30,
-    "cu": 50,
-    "li": 20,
-    "ti": 15,
+    "fe": 49,
+    "si": 21,
+    "cu": 35,
+    "li": 14,
+    "ti": 11,
     "u": 0,
-    "vr": 260,
+    "vr": 183.5,
     "ref_x": null,
     "en_impressao": 120,
-    "tempo_s": 40
+    "tempo_s": 24
+  },
+  {
+    "id": "antenna",
+    "nome": "Antena",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 30,
+    "si": 50,
+    "cu": 30,
+    "li": 0,
+    "ti": 0,
+    "u": 0,
+    "vr": 125,
+    "ref_x": null,
+    "en_impressao": 50,
+    "tempo_s": 12
   },
   {
     "id": "missile_short",
@@ -394,7 +412,7 @@
     "vr": 45,
     "ref_x": null,
     "en_impressao": 40,
-    "tempo_s": 20
+    "tempo_s": 12
   },
   {
     "id": "missile_long",
@@ -412,7 +430,7 @@
     "vr": 230,
     "ref_x": null,
     "en_impressao": 150,
-    "tempo_s": 45
+    "tempo_s": 27
   },
   {
     "id": "mine",
@@ -430,6 +448,6 @@
     "vr": 11,
     "ref_x": null,
     "en_impressao": 20,
-    "tempo_s": 6
+    "tempo_s": 3.6
   }
 ]

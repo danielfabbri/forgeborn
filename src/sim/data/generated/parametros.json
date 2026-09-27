@@ -97,7 +97,7 @@
   },
   {
     "chave": "carga_hover_u",
-    "valor": 10,
+    "valor": 20,
     "unidade": "u",
     "descricao": "Carga máxima do Hover de Exploração"
   },
@@ -1078,6 +1078,18 @@
     "valor": 70,
     "unidade": "m",
     "descricao": "Distância mínima do centro de uma zona de pouso à borda de um lago"
+  },
+  {
+    "chave": "barras_opacidade_nao_selecionados_pct",
+    "valor": 30,
+    "unidade": "%",
+    "descricao": "Opacidade das barras dos corpos próprios não selecionados (UI-07)"
+  },
+  {
+    "chave": "atmosfera_opacidade_pct",
+    "valor": 90,
+    "unidade": "%",
+    "descricao": "Opacidade da esfera de atmosfera na visão planetária (CTL-16)"
   },
   {
     "chave": "macete_quantidade",

@@ -3,7 +3,7 @@
     "id": "fe",
     "nome": "Ferro",
     "vr": 1,
-    "taxa_mineracao_u_s": 1,
+    "taxa_mineracao_u_s": 1.5,
     "raridade": "comum",
     "cor": "#B5562F",
     "usos": "Chassis, blindagem, estruturas, esteiras"
@@ -12,7 +12,7 @@
     "id": "si",
     "nome": "Silício",
     "vr": 1,
-    "taxa_mineracao_u_s": 1,
+    "taxa_mineracao_u_s": 1.5,
     "raridade": "comum",
     "cor": "#9FB3C8",
     "usos": "Sensores, computadores, comunicação, painéis solares"
@@ -21,7 +21,7 @@
     "id": "cu",
     "nome": "Cobre",
     "vr": 1.5,
-    "taxa_mineracao_u_s": 0.8,
+    "taxa_mineracao_u_s": 1.2,
     "raridade": "médio",
     "cor": "#D9822B",
     "usos": "Motores, cabos, lasers"
@@ -30,7 +30,7 @@
     "id": "li",
     "nome": "Lítio",
     "vr": 2,
-    "taxa_mineracao_u_s": 0.7,
+    "taxa_mineracao_u_s": 1.05,
     "raridade": "médio",
     "cor": "#E07BB5",
     "usos": "Baterias, capacitores"
@@ -39,7 +39,7 @@
     "id": "ti",
     "nome": "Titânio",
     "vr": 3,
-    "taxa_mineracao_u_s": 0.5,
+    "taxa_mineracao_u_s": 0.75,
     "raridade": "raro",
     "cor": "#5FD0E0",
     "usos": "Blindagem leve, armas, peças de alta resistência"
@@ -48,7 +48,7 @@
     "id": "u",
     "nome": "Urânio",
     "vr": 5,
-    "taxa_mineracao_u_s": 0.35,
+    "taxa_mineracao_u_s": 0.525,
     "raridade": "muito raro",
     "cor": "#C6F432",
     "usos": "Combustível nuclear, gerador do satélite"

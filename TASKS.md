@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.23.3 |
+| Derivado de | `SPEC.md` v0.24.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -325,6 +325,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: cenário Terra — Campo de testes (céu azul, concreto com faixas, galpões e cercas); os 9 passos do tutorial em ordem (CAM-07), com destaque de interface e narração; alvos de treino e posto avançado eliminados ao perder tudo (CAM-06); tutorial pode ser pulado; a Missão 1 na Lua sem passos guiados.
 - [x] **T-135 — Cenário Shackleton e Missão 2 "Sombra Eterna"** · M · Spec: §14.1, §15 · Dep: T-134 · Feito: 2026-09-26
   - Aceite (**marco v1.0**): campanha 1–2 completa, com estrelas e progresso salvo; metas de TEC-15 cumpridas.
+- [ ] **T-136 — Macetes na partida** · P · Spec: TEC-27, D-76 · Dep: T-102
+  - Aceite: Enter abre o campo no centro; "maiscobre" (e os outros recursos) soma `macete_quantidade` ao estoque do jogador por Comando; texto desconhecido avisa; Esc fecha; digitar no campo não aciona atalhos.
 
 ## M14 — Release web
 

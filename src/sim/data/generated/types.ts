@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.23.3.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.24.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -496,7 +496,8 @@ export type ParametrosChave =
   | 'tempestade_duracao_s'
   | 'tempestade_mult_visao'
   | 'tempestade_mult_solar'
-  | 'tempestade_aviso_s';
+  | 'tempestade_aviso_s'
+  | 'macete_quantidade';
 
 export interface ParametrosRow {
   chave: ParametrosChave;

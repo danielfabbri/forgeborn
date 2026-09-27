@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.23.3 — rascunho para aprovação |
+| Versão do SPEC | 0.24.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1422,6 +1422,12 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **TEC-24** — Toda regra implementada tem ao menos um teste que cita o ID no nome (ex.: `it('ECO-14: material só conta ao ser descarregado')`).
 - **TEC-25** — Runner headless: `npm run sim:match -- --seed N --ais normal,normal --max-min 40` roda partidas IA × IA sem render, para testes de estabilidade e invariantes (§21.3).
 - **TEC-26** — Overlay de depuração (Ctrl+Shift+D): FPS, tempo do tick, contagem de entidades, grades de navegação e névoa, estado das IAs e opção de ver pela perspectiva de qualquer nação.
+- **TEC-27** — Macetes (ferramenta de teste das fases, D-76): na partida, Enter abre um campo de texto no centro da tela. "mais" seguido do nome de um recurso de `dados:recursos`, em minúsculas e sem acento ("maisferro", "maissilicio", "maiscobre", "maislitio", "maistitanio", "maisuranio"), soma `macete_quantidade` ao estoque da nação do jogador, como Comando (TEC-07); maiúsculas, acentos e espaços são ignorados. Enter confirma e fecha; Esc fecha sem aplicar; texto desconhecido mostra um aviso e o campo segue aberto. Com o campo aberto, as teclas não viram atalhos do jogo.
+
+<!-- dados:parametros -->
+| chave | valor | unidade | descricao |
+|---|---|---|---|
+| macete_quantidade | 1000 | unidades | Quanto cada macete "mais" + recurso soma ao estoque (TEC-27) |
 
 ---
 
@@ -1602,6 +1608,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-73 | Campanha v1.0: tutorial na Missão 0, no Campo de Testes de um laboratório na Terra, com as unidades móveis e fixas contra alvos de treino; a Missão 1 na Lua passa a ser a primeira missão de verdade (posto avançado). Liberação progressiva para todas as nações da missão (Muro e Portão na M0; Antiaérea e Torre Magnética na M2; Lança-Mísseis na M5); oponentes sem Nave eliminados ao perder tudo; passos com condição de conclusão; fim de missão com estrelas e slots. | Pedido do produto: começar a M13 com o tutorial na Terra. | Aprovada |
 | D-74 | As trilhas ficam em `src/audio/` com os nomes do produto (`entrance.mp3`, `map.mp3`, `soundtrack_N.mp3`) e a lista da partida é montada com o que houver na pasta na hora do build, sem limite nem sequência. Substitui os nomes e a pasta `public/audio/trilhas/` de AUD-01. | Pedido do produto: entregar as músicas e poder acrescentar trilhas só colocando o arquivo na pasta. | Aprovada |
 | D-75 | A `entrance.mp3` segue em todos os menus até a Visão do Universo e é cortada seco quando a `map.mp3` entra; todo botão habilitado toca um som curto quando o mouse passa sobre ele. | Pedido do produto. | Aprovada |
+| D-76 | Macetes digitados na partida para acelerar o teste das fases, começando pelos de recurso (TEC-27). | Pedido do produto. | Aprovada |
 
 ---
 
@@ -1692,3 +1699,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.23.1 | 2026-09-26 | §14.5: ambientação da Terra (grama, pistas, montanhas ao fundo, câmera sem ver a curvatura); CAM-07: o ponto marcado tem farol no mundo e marca no minimapa. |
 | 0.23.2 | 2026-09-27 | D-74: AUD-01 com as trilhas do produto em `src/audio/` (`entrance.mp3`, `map.mp3` e as `soundtrack_*.mp3` descobertas na pasta). |
 | 0.23.3 | 2026-09-27 | D-75: AUD-01 (`entrance.mp3` até a Visão do Universo, corte seco para a `map.mp3`) e AUD-04 (som ao passar o mouse sobre botões). |
+| 0.24.0 | 2026-09-27 | D-76: TEC-27 (macetes na partida: "mais" + recurso soma `macete_quantidade` ao estoque). |

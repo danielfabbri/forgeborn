@@ -1030,5 +1030,11 @@
     "valor": 20,
     "unidade": "s",
     "descricao": "Antecedência do aviso AL-15"
+  },
+  {
+    "chave": "macete_quantidade",
+    "valor": 1000,
+    "unidade": "unidades",
+    "descricao": "Quanto cada macete \"mais\" + recurso soma ao estoque (TEC-27)"
   }
 ]

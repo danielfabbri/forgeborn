@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.23.1 — rascunho para aprovação |
+| Versão do SPEC | 0.23.2 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1360,7 +1360,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 ## 19. Áudio
 
-- **AUD-01** — Música em arquivos na pasta `public/audio/trilhas/` (D-47): `trilha_abertura.mp3` na Tela de Abertura e na Seleção de Modo (o mesmo fundo, FLX-03), `trilha_menu.mp3` nos demais menus e `trilha1.mp3`, `trilha2.mp3`… na partida, tocadas em ordem embaralhada sem repetir a última, com transição cruzada de 4 s. Arquivo que falta é pulado; sem nenhum, o jogo segue sem música.
+- **AUD-01** — Música em arquivos na pasta `src/audio/` (D-47, D-74): `entrance.mp3` na Tela de Abertura e na Seleção de Modo (o mesmo fundo, FLX-03), `map.mp3` nos demais menus (a Visão do Universo, com o sistema solar, e as telas que partem dela), ambas em loop, e todas as `soundtrack_*.mp3` que estiverem na pasta na partida, tocadas em ordem embaralhada sem repetir a última, com transição cruzada de 4 s, sem fim. Uma trilha nova entra só por estar na pasta (qualquer número, sem precisar de sequência contínua). Arquivo que falta é pulado; sem nenhum, o jogo segue sem música.
 - **AUD-02** — Conceito sonoro: sem atmosfera (Lua), os sons do mundo são "percebidos" pela mente, como impactos graves e abafados, vibração do solo. Em 1ª pessoa ficam ainda mais internos (filtro passa-baixa). Cenários com atmosfera (Marte, Vênus, Titã) têm vento e sons mais abertos.
 - **AUD-03** — A voz da IA do jogador (alertas e tutorial) é sintética, calma e em pt-BR, sempre com legenda: a síntese de voz do navegador (Web Speech API) com uma voz pt-BR do sistema; sem voz pt-BR disponível, fica só a legenda (D-46). Uma fala por vez; um alerta mais urgente interrompe um menos urgente, e o de urgência igual ou menor não é falado (D-48).
 - **AUD-04** — SFX sintetizados em tempo real pela Web Audio API, sem arquivos (D-47), por unidade: movimento (zumbido do hover), mineração, impressão (servos e deposição), disparos por arma, explosões por porte, interface (clique, erro, confirmação).
@@ -1600,6 +1600,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-71 | Bateria Móvel sai cheia, sem liga/desliga, com suporte num raio de 8 m casco a casco (substitui o "encostada" e o botão de D-59). | Pedido do produto. | Aprovada |
 | D-72 | A Torre Magnética também repara as unidades móveis próprias no campo (`mag_reparo_hp_s`), no lugar de uma unidade reparadora móvel. | Pedido do produto: reparador móvel deixaria a tropa invencível. | Aprovada |
 | D-73 | Campanha v1.0: tutorial na Missão 0, no Campo de Testes de um laboratório na Terra, com as unidades móveis e fixas contra alvos de treino; a Missão 1 na Lua passa a ser a primeira missão de verdade (posto avançado). Liberação progressiva para todas as nações da missão (Muro e Portão na M0; Antiaérea e Torre Magnética na M2; Lança-Mísseis na M5); oponentes sem Nave eliminados ao perder tudo; passos com condição de conclusão; fim de missão com estrelas e slots. | Pedido do produto: começar a M13 com o tutorial na Terra. | Aprovada |
+| D-74 | As trilhas ficam em `src/audio/` com os nomes do produto (`entrance.mp3`, `map.mp3`, `soundtrack_N.mp3`) e a lista da partida é montada com o que houver na pasta na hora do build, sem limite nem sequência. Substitui os nomes e a pasta `public/audio/trilhas/` de AUD-01. | Pedido do produto: entregar as músicas e poder acrescentar trilhas só colocando o arquivo na pasta. | Aprovada |
 
 ---
 
@@ -1688,3 +1689,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.22.0 | 2026-09-26 | D-69 a D-72: ECO-19 (parado pelo jogador não é movido pela Diretiva); CMB-13 e §8.6 (armadas do jogador Defensivas); ENE-08, ENE-18, ENE-24, CTL-10, UI-16 e atalhos (Bateria Móvel cheia, sempre ativa, `bateria_movel_raio_m` 8, `bateria_movel_carga_inicial_pct` 100); UNI-13 (`mag_reparo_hp_s`). |
 | 0.23.0 | 2026-09-26 | D-73: Missão 0 (`m00`, cenário `terra_lab`, §14.5, §18.2, oponente `alvos_treino`) e Missão 1 sem tutorial em `dados:missoes` (libera de m00, m02 e m05); CAM-02, CAM-05 a CAM-09, FLX-03 (Campanha habilitada), `tutorial_raio_armazem_m`. |
 | 0.23.1 | 2026-09-26 | §14.5: ambientação da Terra (grama, pistas, montanhas ao fundo, câmera sem ver a curvatura); CAM-07: o ponto marcado tem farol no mundo e marca no minimapa. |
+| 0.23.2 | 2026-09-27 | D-74: AUD-01 com as trilhas do produto em `src/audio/` (`entrance.mp3`, `map.mp3` e as `soundtrack_*.mp3` descobertas na pasta). |

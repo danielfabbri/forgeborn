@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.23.1.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.23.2.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =

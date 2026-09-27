@@ -1207,6 +1207,36 @@ body.em-cinematica #ui {
   letter-spacing: 6px;
 }
 
+/* TEC-27: campo de macetes no centro da tela. */
+.campo-macetes {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(5, 10, 18, 0.92);
+  border: 1px solid #7fb8ff;
+  border-radius: 8px;
+  pointer-events: auto;
+  z-index: 50;
+}
+.campo-macetes input {
+  width: min(360px, 80vw);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 16px;
+  color: #dce9ff;
+  background: #0b1524;
+  border: 1px solid #35557f;
+  border-radius: 4px;
+}
+.campo-macetes small {
+  color: #ff8a7a;
+}
+
 /* CAM-07: painel do tutorial e destaque do elemento que resolve o passo. */
 .painel-tutorial {
   position: absolute;

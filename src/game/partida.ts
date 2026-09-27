@@ -116,6 +116,8 @@ import {
   DEBUG_ESTOQUE_COMMAND,
   debugCriarHandlers,
 } from '../sim/debug/criar';
+import { comandosDeMacete, MACETE_COMMAND } from '../sim/debug/macete';
+import { interpretarMacete } from './macetes';
 import { emTransito, estoque, SEMEAR_JAZIDAS_COMMAND } from '../sim/economia';
 import { DEBUG_ENCHER_BANCO_COMMAND, leituraDaRede } from '../sim/energia';
 import { avancar, normalizar, norteEm, tangente, type Vec3 } from '../sim/map/esfera';
@@ -151,6 +153,9 @@ import {
   fimDaMissao,
   acoesDoTutorial,
   tutorialNaTela,
+  acoesDoMacete,
+  maceteAberto,
+  maceteDesconhecido,
 } from '../ui/hud';
 import { acoesDoPainel, avisoProducao, fotosDoPainel, painelProducao } from '../ui/producao';
 
@@ -358,7 +363,7 @@ export function iniciarPartida(): void {
     // CEN-02: os modificadores do cenário valem na simulação.
     cenario: cenarioDaPartida,
     systems: sistemasDoJogo,
-    commandHandlers: { ...comandosDoJogo, ...debugCriarHandlers },
+    commandHandlers: { ...comandosDoJogo, ...debugCriarHandlers, ...comandosDeMacete },
   });
 
   // `?demo` (e os testes E2E): cena de demonstração com uma unidade e uma estrutura de cada tipo.
@@ -1124,6 +1129,37 @@ export function iniciarPartida(): void {
     e.preventDefault();
     irAoAlerta(ultimo);
   });
+
+  // TEC-27 (D-76): Enter abre o campo de macetes; o macete entra na simulação como Comando.
+  acoesDoMacete.enviar = (texto) => {
+    const macete = interpretarMacete(texto);
+    if (!macete) return false;
+    sim.enqueue({
+      tick: sim.state.tick,
+      nacao: jogador,
+      tipo: MACETE_COMMAND,
+      dados: { recurso: macete.recurso },
+    });
+    return true;
+  };
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.repeat || maceteAberto.value || direto?.ativo != null) return;
+    if (pouso.ativo || menuDePausa.value !== 'fechado' || fimDePartida.value) return;
+    if ((e.target as HTMLElement | null)?.closest?.('input, textarea, select')) return;
+    e.preventDefault();
+    maceteDesconhecido.value = false;
+    maceteAberto.value = true;
+  });
+  // Com o campo aberto, nenhuma tecla chega aos atalhos (nem antes de o campo ganhar o foco).
+  const segurarTecla = (e: KeyboardEvent) => {
+    if (!maceteAberto.value) return;
+    const campo = document.querySelector<HTMLInputElement>('[data-testid="macetes-campo"]');
+    if (campo && e.target === campo) return;
+    e.stopImmediatePropagation();
+    campo?.focus();
+  };
+  window.addEventListener('keydown', segurarTecla, { capture: true });
+  window.addEventListener('keyup', segurarTecla, { capture: true });
 
   const loop = createFixedLoop({
     tickHz: sim.tickHz,

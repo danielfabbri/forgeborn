@@ -7,6 +7,7 @@ import { HudControleDireto } from './ControleDireto';
 import { PilhaDeAlertas } from './Alertas';
 import { BotoesDeParados } from './Parados';
 import { PainelDoTutorial } from './Tutorial';
+import { CampoDeMacetes } from './Macetes';
 
 export function App() {
   return (
@@ -18,6 +19,7 @@ export function App() {
       <PilhaDeAlertas />
       <BotoesDeParados />
       <PainelDoTutorial />
+      <CampoDeMacetes />
       <HudControleDireto />
       <MenuDePausa />
       <FimDePartida />

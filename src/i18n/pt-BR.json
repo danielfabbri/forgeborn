@@ -400,6 +400,8 @@
   "mapa.cratera_shackleton": "Cratera Shackleton",
   "tutorial.titulo": "Treinamento · passo {n} de {total}",
   "tutorial.pular": "Pular tutorial",
+  "macete.dica": "Digite um macete (ex.: maiscobre) e Enter; Esc fecha",
+  "macete.desconhecido": "Macete desconhecido",
   "tutorial.concluido": "Treinamento concluído.",
   "tutorial.passo1": "Preciso de Ferro. Selecione o Hover de Exploração e clique com o botão direito numa jazida de Ferro; depois ele entrega na Nave.",
   "tutorial.passo2": "Mais mãos, mais forja. Selecione a Nave e imprima um segundo Hover de Exploração.",

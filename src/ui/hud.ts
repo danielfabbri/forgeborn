@@ -58,6 +58,11 @@ export const fimDaMissao = signal<{ estrelas: number; missao: string } | null>(n
 
 /** REG-21/FLX-11: simulação pausada; o menu de pausa pode estar aberto ou não (pausa tática). */
 export const pausado = signal(false);
+/** TEC-27: o campo de macetes está aberto. */
+export const maceteAberto = signal(false);
+export const maceteDesconhecido = signal(false);
+/** TEC-27: aplica um macete; false = texto desconhecido. */
+export const acoesDoMacete: { enviar: (texto: string) => boolean } = { enviar: () => false };
 export const menuDePausa = signal<'fechado' | 'aberto' | 'configuracoes'>('fechado');
 
 /** Ações do menu de pausa e do fim de partida, ligadas pela partida. */

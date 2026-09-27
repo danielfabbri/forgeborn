@@ -1,5 +1,5 @@
 {
-  "versao_spec": "0.26.0",
+  "versao_spec": "1.0.0",
   "tabelas": [
     "alertas",
     "armas",
@@ -18,7 +18,6 @@
     "nacoes",
     "parametros",
     "personalidades",
-    "recursos",
-    "tamanhos_mapa"
+    "recursos"
   ]
 }

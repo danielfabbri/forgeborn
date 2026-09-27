@@ -1032,22 +1032,10 @@
     "descricao": "Antecedência do aviso AL-15"
   },
   {
-    "chave": "lagos_por_setor_p",
-    "valor": 2,
+    "chave": "lagos_por_setor",
+    "valor": 4,
     "unidade": "lagos",
-    "descricao": "Lagos de metano por setor de simetria no mapa P (CEN-04)"
-  },
-  {
-    "chave": "lagos_por_setor_m",
-    "valor": 1,
-    "unidade": "lagos",
-    "descricao": "Lagos de metano por setor de simetria no mapa M (CEN-04)"
-  },
-  {
-    "chave": "lagos_por_setor_g",
-    "valor": 2,
-    "unidade": "lagos",
-    "descricao": "Lagos de metano por setor de simetria no mapa G (CEN-04)"
+    "descricao": "Lagos de metano por setor de simetria (CEN-04)"
   },
   {
     "chave": "lago_raio_min_m",

@@ -15,10 +15,10 @@
   },
   {
     "parametro": "primeiro_ataque_min",
-    "facil": 18,
-    "normal": 7,
-    "dificil": 5,
-    "brutal": 4
+    "facil": 45,
+    "normal": 18,
+    "dificil": 13,
+    "brutal": 10
   },
   {
     "parametro": "vr_exercito_ataque",

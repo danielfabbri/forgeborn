@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.26.0 |
+| Derivado de | `SPEC.md` v1.0.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -42,6 +42,7 @@
 | M13 Campanha | T-130 – T-135 | Universo + missões 1–2 → **v1.0** |
 | M14 Release web | T-140 – T-143 | Performance, compatibilidade e deploy |
 | M15 Pós-v1 | T-150 – T-160 | Cenários e missões 3–8, salvar partida, inglês |
+| M16 Vastidão | T-161 – T-169 | Corpos do tamanho proporcional, ritmo de exploração (D-79) |
 
 ## Caminho crítico até o MVP
 
@@ -351,3 +352,10 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [ ] **T-158 — Inglês (en-US)** · M · Spec: TEC-23, Q-04
 - [ ] **T-159 — Simulação em Web Worker** · M · Spec: TEC-10
 - [ ] **T-160 — Missão 8 "Trono Único" na campanha** · M · Spec: §15, D-78 · Dep: T-154, T-155
+
+## M16 — Vastidão (D-79)
+
+- [ ] **T-161 — Tamanho de cada corpo pelo cenário** · G · Spec: CEN-16, CEN-06, CEN-04, FB-03, `dados:cenarios`, `dados:missoes`, `dados:free_battle`, P6, D-79 · Dep: T-155
+  - Aceite: o raio do mapa vem de `raio_m` do cenário; o Free Battle não oferece tamanho e desabilita presets que não comportam os jogadores; presets de todos os cenários válidos com os novos raios; missões sem a coluna `mapa`; Titã com `lagos_por_setor`; a partida no maior corpo implementado abre em tempo aceitável (P5).
+- [ ] **T-162 — Ritmo de exploração** · P · Spec: `primeiro_ataque_min`, EXP-03, EXP-04, INV-12, INV-14, D-79 · Dep: T-161
+  - Aceite: `primeiro_ataque_min` novo aplicado pela IA; INV-12 e INV-14 verificados (headless) no mapa novo da Lua.

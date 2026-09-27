@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.26.0 — rascunho para aprovação |
+| Versão do SPEC | 1.0.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -93,6 +93,7 @@
 | P3 | **Contra-jogo legível** | Cada unidade tem um papel e um contra claros (§21.1). Nenhuma unidade é "melhor em tudo". |
 | P4 | **Beleza desolada** | Mundos vazios, luz dura, a Terra escura no céu. Cada cenário é um cartão-postal melancólico. |
 | P5 | **Clique e jogue** | Sem instalação. Roda em notebook intermediário. A partida começa em segundos. |
+| P6 | **Vastidão** | Cada corpo celeste tem o seu tamanho, proporcional ao real: há espaço para explorar, colonizar e parar para admirar o lugar. A guerra chega devagar; a expansão vem antes da batalha (D-79). |
 
 ### 1.3 Público e plataforma
 
@@ -103,8 +104,8 @@
 
 - **EXP-01** — Primeira decisão significativa em até 10 s após o pouso.
 - **EXP-02** — 1ª Impressora 3D pronta entre 1:10 e 2:30, conforme a abertura escolhida (§21.4).
-- **EXP-03** — 1º contato militar contra IA Normal entre 6 e 8 min.
-- **EXP-04** — Duração: 1v1 Normal em 18–25 min; 1v3 Normal em 35–45 min.
+- **EXP-03** — 1º contato militar contra IA Normal entre 16 e 22 min (D-79).
+- **EXP-04** — Duração: 1v1 Normal em 40–60 min; 1v3 Normal em 60–90 min (D-79).
 - **EXP-05** — Jogável no Normal com ~30–40 ações por minuto, graças à autonomia.
 - **EXP-06** — Toda perda é explicável: os alertas dizem o quê, onde e por quê.
 
@@ -1091,7 +1092,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 |---|---|---|---|---|
 | reacao_s | 4,0 | 1,5 | 0,8 | 0,4 |
 | meta_hovers | 6 | 18 | 26 | 32 |
-| primeiro_ataque_min | 18 | 7 | 5 | 4 |
+| primeiro_ataque_min | 45 | 18 | 13 | 10 |
 | vr_exercito_ataque | 250 | 700 | 1000 | 1200 |
 | expansoes_max | 1 | 2 | 3 | 4 |
 | tiers_permitidos | 3 | 2 | 3 | 3 |
@@ -1141,20 +1142,20 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **CEN-02** — Modificadores multiplicam os valores-base das tabelas; nunca os substituem. `perfil_*` multiplica as quantidades de `dados:jazidas`. `mult_en_drone` multiplica `mov_en_s` e `pairar_en_s` dos drones.
 
 <!-- dados:cenarios -->
-| id | nome | fator_solar | mult_vel_hover | mult_giro_hover | mult_en_drone | mult_visao | perfil_fe | perfil_si | perfil_cu | perfil_li | perfil_ti | perfil_u | evento | versao |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| lua | Lua | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 0,8 | 0,8 | 1,3 | 0,8 | — | mvp |
-| terra_lab | Terra — Campo de testes | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | — | v1.0 |
-| lua_shackleton | Lua — Cratera Shackleton | 0,7 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 0,8 | 0,8 | 1,0 | 1,2 | — | v1.0 |
-| marte | Marte | 0,6 | 1,0 | 1,0 | 1,0 | 1,0 | 1,4 | 1,0 | 1,0 | 0,9 | 0,8 | 1,0 | tempestade_poeira | v1.0 |
-| fobos | Fobos | 0,6 | 1,1 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 1,0 | 1,0 | 0,8 | — | v1.x |
-| ceres | Ceres | 0,35 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 0,8 | 1,0 | 1,3 | 1,5 | 1,5 | — | v1.x |
-| venus | Vênus | 0,25 | 1,0 | 1,0 | 1,5 | 0,9 | 1,2 | 1,2 | 1,0 | 0,8 | 1,0 | 1,2 | — | v1.x |
-| europa | Europa | 0,15 | 1,15 | 0,75 | 1,0 | 1,0 | 0,8 | 1,0 | 1,0 | 1,2 | 1,0 | 1,5 | — | v1.x |
-| tita | Titã | 0,1 | 1,0 | 1,0 | 0,75 | 0,85 | 1,0 | 1,0 | 1,2 | 1,0 | 1,2 | 1,2 | lagos_metano | v1.0 |
+| id | nome | raio_m | fator_solar | mult_vel_hover | mult_giro_hover | mult_en_drone | mult_visao | perfil_fe | perfil_si | perfil_cu | perfil_li | perfil_ti | perfil_u | evento | versao |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| lua | Lua | 400 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 0,8 | 0,8 | 1,3 | 0,8 | — | mvp |
+| terra_lab | Terra — Campo de testes | 108 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | — | v1.0 |
+| lua_shackleton | Lua — Cratera Shackleton | 400 | 0,7 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 0,8 | 0,8 | 1,0 | 1,2 | — | v1.0 |
+| marte | Marte | 500 | 0,6 | 1,0 | 1,0 | 1,0 | 1,0 | 1,4 | 1,0 | 1,0 | 0,9 | 0,8 | 1,0 | tempestade_poeira | v1.0 |
+| fobos | Fobos | 150 | 0,6 | 1,1 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 1,0 | 1,0 | 0,8 | — | v1.x |
+| ceres | Ceres | 260 | 0,35 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 0,8 | 1,0 | 1,3 | 1,5 | 1,5 | — | v1.x |
+| venus | Vênus | 610 | 0,25 | 1,0 | 1,0 | 1,5 | 0,9 | 1,2 | 1,2 | 1,0 | 0,8 | 1,0 | 1,2 | — | v1.x |
+| europa | Europa | 385 | 0,15 | 1,15 | 0,75 | 1,0 | 1,0 | 0,8 | 1,0 | 1,0 | 1,2 | 1,0 | 1,5 | — | v1.x |
+| tita | Titã | 455 | 0,1 | 1,0 | 1,0 | 0,75 | 0,85 | 1,0 | 1,0 | 1,2 | 1,0 | 1,2 | 1,2 | lagos_metano | v1.0 |
 
 - **CEN-03** — Evento `tempestade_poeira` (Marte): ocorre em intervalos sorteados pela seed entre `tempestade_intervalo_min_s` e `tempestade_intervalo_max_s` e dura `tempestade_duracao_s`. Durante o evento a visão de todos os corpos (névoa e detecção de alvos) é multiplicada por `tempestade_mult_visao` e a geração solar por `tempestade_mult_solar`. O aviso AL-15 sai `tempestade_aviso_s` antes.
-- **CEN-04** — Evento `lagos_metano` (Titã): lagos de metano nas baixadas do relevo, `lagos_por_setor_p`, `lagos_por_setor_m` ou `lagos_por_setor_g` por setor de simetria (conforme o tamanho do mapa; a contagem respeita a simetria de CEN-06), cada um com raio entre `lago_raio_min_m` e `lago_raio_max_m`, com a borda a pelo menos `lago_folga_zona_m` do centro de qualquer zona de pouso, longe dos pontos médios (ECO-08) e sem jazidas dentro. Hovers atravessam na velocidade normal e drones sobrevoam; nenhuma estrutura (inclusive Muro e Portão) nem mina pode ser posicionada sobre um lago (PRD-10, D-78).
+- **CEN-04** — Evento `lagos_metano` (Titã): lagos de metano nas baixadas do relevo, `lagos_por_setor` por setor de simetria (a contagem respeita a simetria de CEN-06), cada um com raio entre `lago_raio_min_m` e `lago_raio_max_m`, com a borda a pelo menos `lago_folga_zona_m` do centro de qualquer zona de pouso, longe dos pontos médios (ECO-08) e sem jazidas dentro. Hovers atravessam na velocidade normal e drones sobrevoam; nenhuma estrutura (inclusive Muro e Portão) nem mina pode ser posicionada sobre um lago (PRD-10, D-78).
 - **CEN-05** — Europa: `mult_vel_hover` e `mult_giro_hover` representam o gelo (mais rápido, gira pior).
 
 <!-- dados:parametros -->
@@ -1166,27 +1167,18 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | tempestade_mult_visao | 0,6 | × | Visão durante a tempestade |
 | tempestade_mult_solar | 0,5 | × | Geração solar durante a tempestade |
 | tempestade_aviso_s | 20 | s | Antecedência do aviso AL-15 |
-| lagos_por_setor_p | 2 | lagos | Lagos de metano por setor de simetria no mapa P (CEN-04) |
-| lagos_por_setor_m | 1 | lagos | Lagos de metano por setor de simetria no mapa M (CEN-04) |
-| lagos_por_setor_g | 2 | lagos | Lagos de metano por setor de simetria no mapa G (CEN-04) |
+| lagos_por_setor | 4 | lagos | Lagos de metano por setor de simetria (CEN-04) |
 | lago_raio_min_m | 15 | m | Raio mínimo de um lago de metano |
 | lago_raio_max_m | 35 | m | Raio máximo de um lago de metano |
 | lago_folga_zona_m | 70 | m | Distância mínima do centro de uma zona de pouso à borda de um lago |
 
-### 14.2 Tamanhos de mapa
+### 14.2 Tamanho dos corpos
 
-<!-- dados:tamanhos_mapa -->
-| id | raio_m | min_jogadores | max_jogadores | uso |
-|---|---|---|---|---|
-| p | 108 | 2 | 2 | 1v1 rápido |
-| m | 144 | 2 | 4 | Padrão |
-| g | 180 | 3 | 4 | 1v2, 1v3 e campanha tardia |
-
-`raio_m` = raio do planeta. A área de cada tamanho equivale à dos antigos mapas quadrados de 384, 512 e 640 m de lado (D-24).
+- **CEN-16** — O raio do planeta é o `raio_m` do cenário em `dados:cenarios`; não há escolha de tamanho (D-79). O raio segue a raiz cúbica do raio real do corpo, com a Lua em 400 m: a ordem de tamanho do Sistema Solar se mantém e a diferença cabe no navegador. Fobos fica no mínimo de 150 m. O Campo de testes da Terra (§14.5) é só a área do laboratório. Qualquer corpo recebe de 2 a 4 jogadores: com 2, o mapa usa N = 2 ou o preset de N = 4 escolhido; com 3 ou 4, N = 4.
 
 ### 14.3 Gerador de mapas (por seed)
 
-- **CEN-06** — O mapa é um **planeta esférico** de raio `raio_m` (§14.2), sem borda: dá para dar a volta nele (D-24). É gerado por seed com **simetria rotacional** entre as zonas de pouso (N = 2 ou 4). Com N = 2, a simetria é a meia-volta em torno de um eixo perpendicular ao eixo das zonas. Com N = 4, é o grupo das 4 rotações (a identidade e as meias-voltas em torno dos 3 eixos da grade, CEN-14) que leva qualquer zona a qualquer outra. Partidas de 3 jogadores usam o mapa de 4 com uma zona vazia.
+- **CEN-06** — O mapa é um **planeta esférico** de raio `raio_m` do cenário (CEN-16), sem borda: dá para dar a volta nele (D-24). É gerado por seed com **simetria rotacional** entre as zonas de pouso (N = 2 ou 4). Com N = 2, a simetria é a meia-volta em torno de um eixo perpendicular ao eixo das zonas. Com N = 4, é o grupo das 4 rotações (a identidade e as meias-voltas em torno dos 3 eixos da grade, CEN-14) que leva qualquer zona a qualquer outra. Partidas de 3 jogadores usam o mapa de 4 com uma zona vazia.
 - **CEN-07** — Zonas de pouso: com N = 2, em pontos antípodas; com N = 4, nos vértices de um tetraedro regular inscrito, todas à mesma distância umas das outras. Os pontos médios dos arcos entre pares de zonas recebem as zonas contestadas e as centrais (ECO-08).
 - **CEN-08** — Cada zona de pouso é um platô plano (inclinação < 5° em relação à vertical local) de raio 50 m, com 2–3 saídas (rampas de pelo menos 12 m de largura). "Plano" numa esfera é altura radial constante: o platô acompanha a curvatura.
 - **CEN-09** — Relevo: crateras (raio 10–60 m, borda até 8 m de altura, bordas acima de 30° intransponíveis salvo brechas), colinas suaves e sulcos, cobrindo o planeta inteiro. Não há borda de mapa.
@@ -1205,19 +1197,19 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 ### 14.4 Lua (cenário do MVP)
 
 - **Ambientação:** uma lua pequena, com a curvatura visível e o horizonte próximo; regolito cinza, crateras, sol duro e rasante, sombras longas e negras, céu preto estrelado e **a Terra no céu, escura, sem luzes de cidades** (o plano-assinatura do jogo).
-- **Presets:** *Mare Imbrium* (P, 2 jogadores), *Mare Tranquillitatis* (M, até 4), *Oceanus Procellarum* (G, 3–4).
+- **Presets:** *Mare Imbrium* (N = 2, 2 jogadores), *Mare Tranquillitatis* (N = 4, 2–4), *Oceanus Procellarum* (N = 4, 3–4).
 - **Eventos:** nenhum.
 
 ### 14.6 Marte
 
 - **Ambientação:** um planeta pequeno, com a curvatura visível como na Lua; céu caramelo de dia, mais claro no horizonte, com poeira em suspensão e sem estrelas; um Sol menor, com halo azulado em volta (o "pôr do sol azul" de Marte); solo cor de ferrugem com crateras e colinas; luz quente e difusa, sombras suaves. Na tempestade de poeira (CEN-03) o ar fica denso e alaranjado, o céu escurece, a poeira varre a tela e o vento aumenta (AUD-02).
-- **Presets:** *Utopia Planitia* (P, 2 jogadores), *Valles Marineris* (M, até 4), *Hellas Planitia* (G, 3–4).
+- **Presets:** *Utopia Planitia* (N = 2, 2 jogadores), *Valles Marineris* (N = 4, 2–4), *Hellas Planitia* (N = 4, 3–4).
 - **Eventos:** `tempestade_poeira` (CEN-03).
 
 ### 14.7 Titã
 
 - **Ambientação:** uma lua pequena sob uma atmosfera espessa: céu laranja nebuloso e sem estrelas, o Sol só um brilho difuso atrás da névoa; penumbra, luz fraca e alaranjada, sombras quase apagadas; névoa densa que esconde a distância; solo de gelo e sedimentos (bege acinzentado com tons de ocre); os lagos de metano escuros e espelhados, refletindo o céu. Vento de fundo (AUD-02).
-- **Presets:** *Xanadu* (P, 2 jogadores), *Ligeia Mare* (M, até 4), *Kraken Mare* (G, 3–4).
+- **Presets:** *Xanadu* (N = 2, 2 jogadores), *Ligeia Mare* (N = 4, 2–4), *Kraken Mare* (N = 4, 3–4).
 - **Eventos:** `lagos_metano` (CEN-04).
 - **Uso:** Free Battle na v1.0; a Missão 8 entra na campanha quando as Missões 4 a 7 existirem (D-78).
 
@@ -1236,17 +1228,17 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **CAM-09** — **Slots.** Ao entrar na Campanha, o jogador escolhe um dos 3 slots: vazio (novo: Escolha de Nação, FLX-05) ou em uso (nação, missões concluídas e estrelas; **Continuar** ou **Apagar**, com confirmação). A Missão 2 usa o cenário Lua — Shackleton (§18.2) com a seed curada da missão (D-73).
 
 <!-- dados:missoes -->
-| ordem | id | cenario | nome | mapa | oponentes | objetivo | libera | tempo_par_min | versao |
-|---|---|---|---|---|---|---|---|---|---|
-| 0 | m00 | terra_lab | Campo de Testes | p | alvos_treino | Tutorial; destruir os alvos de treino | hover_explorer+printer+hover_ex1+hover_scout+laser_tower+storage+solar_plant+wall+gate | 20 | v1.0 |
-| 1 | m01 | lua | Primeira Forja | p | posto_passivo | Destruir o posto avançado inimigo | — | 20 | v1.0 |
-| 2 | m02 | lua_shackleton | Sombra Eterna | m | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq+aa_battery+mag_tower | 30 | v1.0 |
-| 3 | m03 | marte | Poeira Vermelha | m | normal+normal | Eliminar as nações rivais | nuclear_plant+hover_minelayer | 40 | v1.0 |
-| 4 | m04 | fobos | Cerco em Fobos | p | dificil | Sobreviver 12 min; depois destruir a Nave inimiga | drone_laser+drone_bomber | 30 | v1.x |
-| 5 | m05 | ceres | Veios de Ceres | g | normal+dificil | Eliminar as nações rivais | satellite_uplink+missile_silo | 45 | v1.x |
-| 6 | m06 | venus | Inferno Ácido | m | dificil+dificil | Eliminar as nações rivais | — | 45 | v1.x |
-| 7 | m07 | europa | Sob o Gelo | g | normal+dificil+dificil | Eliminar as nações rivais | — | 55 | v1.x |
-| 8 | m08 | tita | Trono Único | g | dificil+dificil+brutal | Eliminar todas as nações | — | 60 | v1.x |
+| ordem | id | cenario | nome | oponentes | objetivo | libera | tempo_par_min | versao |
+|---|---|---|---|---|---|---|---|---|
+| 0 | m00 | terra_lab | Campo de Testes | alvos_treino | Tutorial; destruir os alvos de treino | hover_explorer+printer+hover_ex1+hover_scout+laser_tower+storage+solar_plant+wall+gate | 20 | v1.0 |
+| 1 | m01 | lua | Primeira Forja | posto_passivo | Destruir o posto avançado inimigo | — | 40 | v1.0 |
+| 2 | m02 | lua_shackleton | Sombra Eterna | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq+aa_battery+mag_tower | 60 | v1.0 |
+| 3 | m03 | marte | Poeira Vermelha | normal+normal | Eliminar as nações rivais | nuclear_plant+hover_minelayer | 80 | v1.0 |
+| 4 | m04 | fobos | Cerco em Fobos | dificil | Sobreviver 12 min; depois destruir a Nave inimiga | drone_laser+drone_bomber | 60 | v1.x |
+| 5 | m05 | ceres | Veios de Ceres | normal+dificil | Eliminar as nações rivais | satellite_uplink+missile_silo | 90 | v1.x |
+| 6 | m06 | venus | Inferno Ácido | dificil+dificil | Eliminar as nações rivais | — | 90 | v1.x |
+| 7 | m07 | europa | Sob o Gelo | normal+dificil+dificil | Eliminar as nações rivais | — | 110 | v1.x |
+| 8 | m08 | tita | Trono Único | dificil+dificil+brutal | Eliminar todas as nações | — | 120 | v1.x |
 
 **Missão 0 — Campo de Testes (tutorial, Terra).** Os 9 passos de CAM-07: coletar, imprimir o 2º Hover e a Impressora, energia com a Usina Solar, Armazém perto do Cobre, explorar com o Hover de Observação, Torre de Defesa, Muro e Portão e, por fim, EX1 contra os alvos de treino (`alvos_treino`), que nunca disparam.
 
@@ -1268,8 +1260,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | nacao_oponente | aleatoria+nações restantes | aleatoria |
 | dificuldade_oponente | facil+normal+dificil+brutal | normal |
 | cenario | cenários implementados | lua |
-| tamanho_mapa | p+m+g | m |
-| mapa | presets+aleatoria | preset do tamanho |
+| mapa | presets+aleatoria | 1º preset do cenário |
 | zona_pouso | aleatoria+escolher | aleatoria |
 | recursos_iniciais | padrao+alto | padrao |
 | nevoa | normal+explorado+revelado | normal |
@@ -1279,7 +1270,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 - **FB-01** — Névoa "explorado": o mapa inteiro começa em névoa, sem escuro absoluto. "Revelado": tudo visível o tempo todo. A camuflagem (CMB-22) continua valendo nos dois: minas e Sentinelas só aparecem para detectores (D-37).
 - **FB-02** — Zona de pouso "escolher": o jogador clica numa zona livre na pré-visualização; as IAs sorteiam as restantes.
-- **FB-03** — O tamanho de mapa respeita `dados:tamanhos_mapa`; opções inválidas ficam desabilitadas com explicação.
+- **FB-03** — O tamanho do planeta é o do cenário (CEN-16), sem escolha. Presets que não comportam o número de jogadores ficam desabilitados com explicação (D-79).
 - **FB-04** — Cada oponente tem nação e dificuldade próprias. As últimas opções usadas ficam salvas (TEC-21).
 
 ---
@@ -1504,9 +1495,9 @@ Confrontos de referência (simulação com foco de fogo e aproximação pelo alc
 - **INV-09** — O reator da Nave sozinho sustenta 8 Hovers minerando sem parar e sem zerar o banco.
 - **INV-10** — Nenhuma unidade armada zera a bateria em menos de 45 s de combate contínuo com movimento.
 - **INV-11** — EX1 contra EX1 (1 contra 1): tempo de abate entre 10 s e 20 s.
-- **INV-12** — IA Normal × IA Normal (headless, 20 seeds, Lua M): pelo menos 95% das partidas terminam com vitória antes de 45 min, sem exceções nem travamentos.
+- **INV-12** — IA Normal × IA Normal (headless, 20 seeds, Lua): pelo menos 95% das partidas terminam com vitória antes de 90 min, sem exceções nem travamentos (D-79).
 - **INV-13** — Um OPQ no alcance máximo destrói 1 Torre sem sofrer dano.
-- **INV-14** — Em 20 seeds (Lua M, 1v1, personalidades sorteadas): Normal vence Fácil em ≥ 80%; Difícil vence Normal em ≥ 70%; Brutal vence Difícil em ≥ 60%.
+- **INV-14** — Em 20 seeds (Lua, 1v1, personalidades sorteadas): Normal vence Fácil em ≥ 80%; Difícil vence Normal em ≥ 70%; Brutal vence Difícil em ≥ 60%.
 
 ### 21.4 Abertura de referência (informativo)
 
@@ -1632,6 +1623,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-76 | Macetes digitados na partida para acelerar o teste das fases, começando pelos de recurso (TEC-27). | Pedido do produto. | Aprovada |
 | D-77 | Marte e a Missão 3 entram na v1.0 (antes em v1.x): cenário com ambientação própria, tempestade de poeira, 3 presets e a missão na campanha. | Pedido do produto: seguir a campanha para Marte depois das fases da Lua. | Aprovada |
 | D-78 | Titã entra na v1.0 só no Free Battle; a Missão 8 segue na v1.x, depois das Missões 4 a 7, para manter a ordem da campanha. Lagos de metano (CEN-04): 2/1/2 por setor de simetria nos mapas P/M/G (4, 4 e 8 lagos; a proposta de 3/5/7 não respeita a simetria de CEN-06), raio de 15 a 35 m, a 70 m das zonas de pouso, sem jazidas; hovers atravessam na velocidade normal; estruturas, muros e minas não. | Pedido do produto (criar Titã) e respostas às duas perguntas: "Titã só no Free Battle" e a proposta dos lagos. | Aprovada |
+| D-79 | Vastidão: cada corpo tem o próprio raio (`raio_m` em `dados:cenarios`, raiz cúbica do raio real, Lua 400 m; CEN-16), sem escolha de tamanho no Free Battle; 2 a 4 jogadores em qualquer corpo; `primeiro_ataque_min` ×2,5; novo pilar P6; EXP-03, EXP-04, INV-12 e os tempos-par das missões 1–8 (×2) ajustados ao ritmo novo; lagos de Titã passam a `lagos_por_setor`. Substitui dados:tamanhos_mapa e as chaves lagos_por_setor_p/m/g (IDs não reutilizados, GOV-03). | Pedido do produto: "Cada cenário deve ter o seu próprio tamanho… Quero mais vastidão… menos batalha rápida e mais colonização, exploração, com tempo pra admirar estar em outro planeta." Respostas: raiz cúbica; 2 a 4 em qualquer corpo; IA ataca bem mais tarde. | Aprovada |
 
 ---
 
@@ -1691,7 +1683,7 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.1.3 | 2026-09-23 | TEC-14: A* direto na grade (0,4 ms no mapa G, medido em T-023); hierarquia só se o orçamento estourar. |
 | 0.1.4 | 2026-09-23 | Q-06: raio de colisão da jazida em aberto. |
 | 0.1.5 | 2026-09-23 | Q-07: conflito de Ctrl+1..9 com atalhos do navegador. |
-| 0.2.0 | 2026-09-23 | Planeta esférico (D-24 a D-26): `dados:tamanhos_mapa` troca o lado do quadrado por `raio_m`; CEN-06 a CEN-09, CEN-13, ECO-08, PRD-10, MOV-01, MOV-02, CTL-01 a CTL-03, VIS-07, TEC-13 e TEC-14 reescritas; novas CEN-14, CEN-15, CTL-16 e ART-11. |
+| 0.2.0 | 2026-09-23 | Planeta esférico (D-24 a D-26): dados:tamanhos_mapa (retirada em 1.0.0) troca o lado do quadrado por `raio_m`; CEN-06 a CEN-09, CEN-13, ECO-08, PRD-10, MOV-01, MOV-02, CTL-01 a CTL-03, VIS-07, TEC-13 e TEC-14 reescritas; novas CEN-14, CEN-15, CTL-16 e ART-11. |
 | 0.2.1 | 2026-09-23 | ECO-08: pares espelhados nos pontos médios simétricos (a única forma de todas as zonas verem as mesmas distâncias); TEC-13: variação real do tamanho das células. |
 | 0.3.0 | 2026-09-23 | D-27 (responde Q-06): raio da jazida acompanha a quantidade; novas chaves `raio_jazida_max_m`, `raio_jazida_min_m` e `distancia_mineracao_m`; ECO-05, ECO-09 e ECO-11 (distâncias medidas pelo casco) reescritas. |
 | 0.3.1 | 2026-09-23 | INV-01: a distância de 30 m é entre centros (como em `dados:jazidas`) e só conta o que foi descarregado. |
@@ -1724,4 +1716,5 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.23.3 | 2026-09-27 | D-75: AUD-01 (`entrance.mp3` até a Visão do Universo, corte seco para a `map.mp3`) e AUD-04 (som ao passar o mouse sobre botões). |
 | 0.24.0 | 2026-09-27 | D-76: TEC-27 (macetes na partida: "mais" + recurso soma `macete_quantidade` ao estoque). |
 | 0.25.0 | 2026-09-27 | D-77: Marte (`marte`) e a Missão 3 (`m03`) passam a v1.0; §14.6 (ambientação, presets e eventos de Marte); CEN-03 detalha que a visão reduzida vale para névoa e detecção; §2.1. |
-| 0.26.0 | 2026-09-27 | D-78: Titã (`tita`) na v1.0 (Free Battle); CEN-04 com `lagos_por_setor_p`, `lagos_por_setor_m`, `lagos_por_setor_g`, `lago_raio_min_m`, `lago_raio_max_m` e `lago_folga_zona_m`; PRD-10 recusa lagos; §14.7; §2.1. |
+| 0.26.0 | 2026-09-27 | D-78: Titã (`tita`) na v1.0 (Free Battle); CEN-04 com lagos_por_setor_p, lagos_por_setor_m, lagos_por_setor_g (retiradas em 1.0.0), `lago_raio_min_m`, `lago_raio_max_m` e `lago_folga_zona_m`; PRD-10 recusa lagos; §14.7; §2.1. |
+| 1.0.0 | 2026-09-27 | D-79 (MAJOR: novo pilar P6 Vastidão): `raio_m` em `dados:cenarios` e CEN-16 no lugar de dados:tamanhos_mapa; FB-03 e `dados:free_battle` sem tamanho; `dados:missoes` sem a coluna `mapa` e com tempos-par ×2 (exceto m00); `primeiro_ataque_min` ×2,5; EXP-03, EXP-04, INV-12, INV-14; CEN-04 com `lagos_por_setor`. |

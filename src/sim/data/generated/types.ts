@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.26.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.0.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -79,6 +79,7 @@ export type CenariosId =
 export interface CenariosRow {
   id: CenariosId;
   nome: string;
+  raio_m: number;
   fator_solar: number;
   mult_vel_hover: number;
   mult_giro_hover: number;
@@ -208,7 +209,6 @@ export type FreeBattleOpcao =
   | 'nacao_oponente'
   | 'dificuldade_oponente'
   | 'cenario'
-  | 'tamanho_mapa'
   | 'mapa'
   | 'zona_pouso'
   | 'recursos_iniciais'
@@ -261,7 +261,6 @@ export interface MissoesRow {
   id: string;
   cenario: string;
   nome: string;
-  mapa: string;
   oponentes: string[];
   objetivo: string;
   libera: string[] | null;
@@ -497,9 +496,7 @@ export type ParametrosChave =
   | 'tempestade_mult_visao'
   | 'tempestade_mult_solar'
   | 'tempestade_aviso_s'
-  | 'lagos_por_setor_p'
-  | 'lagos_por_setor_m'
-  | 'lagos_por_setor_g'
+  | 'lagos_por_setor'
   | 'lago_raio_min_m'
   | 'lago_raio_max_m'
   | 'lago_folga_zona_m'
@@ -549,19 +546,6 @@ export interface RecursosRow {
   usos: string;
 }
 
-export type TamanhosMapaId =
-  | 'p'
-  | 'm'
-  | 'g';
-
-export interface TamanhosMapaRow {
-  id: TamanhosMapaId;
-  raio_m: number;
-  min_jogadores: number;
-  max_jogadores: number;
-  uso: string;
-}
-
 export interface Tabelas {
   alertas: AlertasRow[];
   armas: ArmasRow[];
@@ -581,5 +565,4 @@ export interface Tabelas {
   parametros: ParametrosRow[];
   personalidades: PersonalidadesRow[];
   recursos: RecursosRow[];
-  tamanhos_mapa: TamanhosMapaRow[];
 }

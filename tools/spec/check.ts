@@ -174,7 +174,6 @@ function checkReferences(spec: ParsedSpec, issues: Issue[]): void {
   );
   refs('missoes', 'cenario', idsOf(t('cenarios')), 'dados:cenarios');
   refs('missoes', 'libera', custos, 'dados:custos');
-  refs('missoes', 'mapa', idsOf(t('tamanhos_mapa')), 'dados:tamanhos_mapa');
   refs('personalidades', 'nacao', idsOf(t('nacoes')), 'dados:nacoes');
 }
 

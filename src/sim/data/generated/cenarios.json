@@ -2,6 +2,7 @@
   {
     "id": "lua",
     "nome": "Lua",
+    "raio_m": 400,
     "fator_solar": 1,
     "mult_vel_hover": 1,
     "mult_giro_hover": 1,
@@ -19,6 +20,7 @@
   {
     "id": "terra_lab",
     "nome": "Terra — Campo de testes",
+    "raio_m": 108,
     "fator_solar": 1,
     "mult_vel_hover": 1,
     "mult_giro_hover": 1,
@@ -36,6 +38,7 @@
   {
     "id": "lua_shackleton",
     "nome": "Lua — Cratera Shackleton",
+    "raio_m": 400,
     "fator_solar": 0.7,
     "mult_vel_hover": 1,
     "mult_giro_hover": 1,
@@ -53,6 +56,7 @@
   {
     "id": "marte",
     "nome": "Marte",
+    "raio_m": 500,
     "fator_solar": 0.6,
     "mult_vel_hover": 1,
     "mult_giro_hover": 1,
@@ -70,6 +74,7 @@
   {
     "id": "fobos",
     "nome": "Fobos",
+    "raio_m": 150,
     "fator_solar": 0.6,
     "mult_vel_hover": 1.1,
     "mult_giro_hover": 1,
@@ -87,6 +92,7 @@
   {
     "id": "ceres",
     "nome": "Ceres",
+    "raio_m": 260,
     "fator_solar": 0.35,
     "mult_vel_hover": 1,
     "mult_giro_hover": 1,
@@ -104,6 +110,7 @@
   {
     "id": "venus",
     "nome": "Vênus",
+    "raio_m": 610,
     "fator_solar": 0.25,
     "mult_vel_hover": 1,
     "mult_giro_hover": 1,
@@ -121,6 +128,7 @@
   {
     "id": "europa",
     "nome": "Europa",
+    "raio_m": 385,
     "fator_solar": 0.15,
     "mult_vel_hover": 1.15,
     "mult_giro_hover": 0.75,
@@ -138,6 +146,7 @@
   {
     "id": "tita",
     "nome": "Titã",
+    "raio_m": 455,
     "fator_solar": 0.1,
     "mult_vel_hover": 1,
     "mult_giro_hover": 1,

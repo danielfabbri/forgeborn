@@ -31,6 +31,8 @@ import {
 } from './configuracoes';
 import { somInterno, tocarSom } from '../audio/sfx';
 import { SomDaPartida } from '../audio/somDaPartida';
+import { Poeira } from '../render/poeira';
+import { tempestadeAtiva } from '../sim/cenario/tempestade';
 import { trilhas } from '../audio/trilhas';
 import { falar } from '../audio/voz';
 import { textoDoAlerta } from '../ui/Alertas';
@@ -312,6 +314,18 @@ export function iniciarPartida(): void {
   terreno.aplicarLod(PRESETS_GRAFICOS[configuracoes.value.grafico].lod);
   const ceu = criarCeu(ambientacao);
   view.scene.add(terreno.objeto, ceu.objeto);
+  // CEN-03/§14.6: a tempestade de poeira (força 0 a 1, suavizada) no céu, na névoa, na luz e no ar.
+  const poeira = ambientacao.tempestade ? new Poeira(ambientacao.tempestade.cor) : null;
+  if (poeira) view.scene.add(poeira.objeto);
+  let forcaDaTempestade = 0;
+  const atualizarClima = (dt: number): void => {
+    if (!poeira) return;
+    const alvo = tempestadeAtiva(sim.state) ? 1 : 0;
+    forcaDaTempestade += (alvo - forcaDaTempestade) * (1 - Math.exp(-dt / 2.5));
+    view.clima(forcaDaTempestade);
+    ceu.clima(forcaDaTempestade);
+    poeira.atualizar(forcaDaTempestade, camera.foco, pontoFocal, dt);
+  };
   if (cenarioDaPartida === 'terra_lab') {
     view.scene.add(
       criarLaboratorio(
@@ -1110,7 +1124,13 @@ export function iniciarPartida(): void {
       if ((getComponent(sim.state, c.id, 'locomotion')?.speed ?? 0) > 0.2) movendo++;
       if (getComponent(sim.state, c.id, 'coleta')?.estado === 'minerando') minerando++;
     }
-    som.ambiente.atualizar(movendo / 4, minerando / 2);
+    // AUD-02: vento nos cenários com atmosfera, mais forte na tempestade (CEN-03).
+    som.ambiente.atualizar(
+      movendo / 4,
+      minerando / 2,
+      ambientacao.vento +
+        (1 - ambientacao.vento) * forcaDaTempestade * (ambientacao.vento > 0 ? 1 : 0),
+    );
     somInterno(direto?.ativo != null && direto.modo === '1p');
   };
   /** UI-06 (apresentação): cada alerta fica 10 s na pilha. */
@@ -1196,6 +1216,7 @@ export function iniciarPartida(): void {
       );
       posicionarCamera(dtDoQuadro);
       terreno.focar(camera.foco);
+      atualizarClima(dtDoQuadro);
       jazidas.sync(sim.state, nevoa ? exploradoPeloJogador : null);
       // UI-11: emblemas das nações sobre os corpos no modo daltônico.
       emblemas.sync(unidades.corpos, modoDaltonico());

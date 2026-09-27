@@ -28,6 +28,7 @@ import { emReserva, gastar } from '../energia/bateria';
 import { fluxoPara, navegavel, navegavelDe } from './navegacao';
 import { ALTURA_HOVER_M, altitudeDrone, statsMovel } from './stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from './superficie';
+import { multVisao } from '../cenario/tempestade';
 
 type Locomocao = ComponentMap['locomotion'];
 
@@ -120,7 +121,7 @@ function inimigoVisivel(ctx: SystemContext, id: EntityId): boolean {
   const { state } = ctx;
   const dono = getComponent(state, id, 'owner')!.nacao;
   const d = direcaoDe(getComponent(state, id, 'position')!);
-  const visao = statsMovel(getComponent(state, id, 'unit')!.tipo).visao_m;
+  const visao = statsMovel(getComponent(state, id, 'unit')!.tipo).visao_m * multVisao(state);
   return entitiesWith(state, 'owner', 'position').some((outro) => {
     if (getComponent(state, outro, 'owner')!.nacao === dono) return false;
     return distanciaM(ctx, d, direcaoDe(getComponent(state, outro, 'position')!)) <= visao;

@@ -10,6 +10,7 @@ import type { EstadoDaRede, SimState } from '../core/state';
 import type { EntityId, NacaoId } from '../core/types';
 import { dados } from '../data';
 import { statsEstrutura } from '../units/stats';
+import { multSolarDoEvento } from '../cenario/tempestade';
 
 /** Segundos da janela de consumo médio do HUD (ENE-22). */
 const JANELA_CONSUMO_S = 10;
@@ -38,7 +39,7 @@ export function geracaoDaRede(state: SimState, nacao: NacaoId): number {
     const tipo = getComponent(state, id, 'structure')!.tipo;
     const base = statsEstrutura(tipo).geracao_en_s;
     if (base <= 0) continue;
-    if (tipo === 'solar_plant') total += base * fatorSolar(state);
+    if (tipo === 'solar_plant') total += base * fatorSolar(state) * multSolarDoEvento(state);
     else if (tipo === 'nuclear_plant') total += reatorGerando(state, id) ? base : 0;
     else total += base;
   }

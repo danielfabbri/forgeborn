@@ -130,7 +130,7 @@ test.describe('M10: telas', () => {
     await expect(page.getByTestId('preset-baixo')).toHaveClass(/ativa/);
   });
 
-  test('FLX-04: Universo com a Lua e Shackleton disponíveis e os outros cenários bloqueados', async ({
+  test('FLX-04/D-77: Universo com Lua, Shackleton e Marte disponíveis e os outros bloqueados', async ({
     page,
   }) => {
     await page.goto('/?menu');
@@ -138,12 +138,18 @@ test.describe('M10: telas', () => {
     await page.waitForTimeout(1200);
     const marte = await menus(page, (s) => s.corpoNaTela('marte'));
     await page.mouse.click(marte!.x, marte!.y);
-    await expect(page.getByTestId('cenario-marte')).toBeDisabled();
-    await expect(page.getByTestId('cenario-marte')).toHaveAttribute('data-estado', 'bloqueado');
-    // Afasta com a roda para achar a Lua de novo e clica nela.
-    await page.mouse.move(640, 360);
-    for (let k = 0; k < 12; k++) await page.mouse.wheel(0, 400);
+    await expect(page.getByTestId('cenario-marte')).toBeEnabled();
+    await expect(page.getByTestId('cenario-marte')).toHaveAttribute('data-estado', 'disponivel');
+    // Fobos (v1.x) segue bloqueado (espera a câmera terminar de ir até Marte).
     await page.waitForTimeout(1500);
+    const fobos = await menus(page, (s) => s.corpoNaTela('fobos'));
+    await page.mouse.click(fobos!.x, fobos!.y);
+    await expect(page.getByTestId('cenario-fobos')).toBeDisabled();
+    await expect(page.getByTestId('cenario-fobos')).toHaveAttribute('data-estado', 'bloqueado');
+    // De volta à vista inicial para clicar na Lua.
+    await page.goto('/?menu');
+    await page.getByTestId('modo-free-battle').click();
+    await page.waitForTimeout(1200);
     const lua = await menus(page, (s) => s.corpoNaTela('lua'));
     await page.mouse.click(lua!.x, lua!.y);
     await expect(page.getByTestId('cenario-lua')).toHaveAttribute('data-estado', 'disponivel');

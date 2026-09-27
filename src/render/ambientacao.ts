@@ -42,6 +42,15 @@ export interface Ambientacao {
   desvanecer: { perto: number; longe: number; cor: Color } | null;
   /** Intensidade do detalhe de regolito (microcrateras) no chão. */
   detalhe: number;
+  /** §14.6: disco do Sol no céu, com halo (o "pôr do sol azul" de Marte), ou null. */
+  solNoCeu: { cor: Color; halo: Color } | null;
+  /**
+   * §14.6/CEN-03: como fica o ar na tempestade de poeira (cor da poeira, névoa densa e quanto
+   * da luz direta passa), ou null se o cenário não tem tempestade.
+   */
+  tempestade: { cor: Color; neblina: { perto: number; longe: number }; luz: number } | null;
+  /** AUD-02: força do vento de fundo (0 = sem atmosfera). */
+  vento: number;
 }
 
 function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
@@ -69,6 +78,9 @@ const LUA: Ambientacao = {
   escuroBrilho: 0,
   desvanecer: null,
   detalhe: 1,
+  solNoCeu: null,
+  tempestade: null,
+  vento: 0,
 };
 
 const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
@@ -102,6 +114,28 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     escuroBrilho: 0.3,
     desvanecer: { perto: 40, longe: 80, cor: new Color('#5f7d4a') },
     detalhe: 0,
+    solNoCeu: null,
+    tempestade: null,
+    vento: 0,
+  },
+  // §14.6: céu caramelo, Sol menor com halo azulado, solo ferrugem, luz quente e difusa.
+  marte: {
+    ...LUA,
+    ceu: new Color('#a8704a'),
+    horizonte: new Color('#d4a377'),
+    estrelas: false,
+    terraNoCeu: false,
+    sol: direcao(34, -40),
+    intensidadeSol: 2.4,
+    ambiente: { cor: new Color('#e0b08a'), intensidade: 0.34 },
+    secundaria: { cor: new Color('#d69a6a'), intensidade: 0.3 },
+    tinta: [1.9, 1.05, 0.66],
+    neblina: { perto: 90, longe: 420 },
+    escuroBrilho: 0.12,
+    detalhe: 0.8,
+    solNoCeu: { cor: new Color('#fff4e0'), halo: new Color('#8fb4e8') },
+    tempestade: { cor: new Color('#a8683e'), neblina: { perto: 30, longe: 170 }, luz: 0.55 },
+    vento: 0.3,
   },
 };
 

@@ -8,6 +8,7 @@ import type { EntityId } from '../core/types';
 import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM } from '../units/superficie';
 import { visivelPara } from '../visao/nevoa';
+import { multVisao } from '../cenario/tempestade';
 
 const BLOQUEIOS = new Set(['wall', 'gate']);
 
@@ -40,7 +41,7 @@ export function passoBrechas(ctx: SystemContext): void {
       if (getComponent(state, b, 'owner')!.nacao === nacao) continue;
       if (!visivelPara(ctx, nacao, b)) continue;
       const dist = distanciaM(ctx, d, direcaoDe(getComponent(state, b, 'position')!));
-      if (dist <= stats.visao_m && dist < menor) {
+      if (dist <= stats.visao_m * multVisao(state) && dist < menor) {
         menor = dist;
         melhor = b;
       }

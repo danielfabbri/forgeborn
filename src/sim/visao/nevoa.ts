@@ -14,6 +14,7 @@ import { celulaDe, centroDaCelula, type Grade } from '../map/grids';
 import { statsEstrutura, statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM } from '../units/superficie';
 import { satelitesAtivos, varredurasAtivas } from './satelite';
+import { multVisao } from '../cenario/tempestade';
 
 export const ESCURO = 0;
 export const NEVOA = 1;
@@ -70,6 +71,10 @@ function gradeDa(state: SimState, nacao: NacaoId, celulas: number): number[] {
 
 /** Raio de visão do corpo (VIS-02, VIS-03); canteiros e reservas não enxergam. */
 function visaoDe(state: SimState, id: EntityId): number {
+  return visaoBase(state, id) * multVisao(state);
+}
+
+function visaoBase(state: SimState, id: EntityId): number {
   const unidade = getComponent(state, id, 'unit');
   if (unidade) {
     // UNI-03: em Sentinela, a visão é `sentinela_visao_m`.

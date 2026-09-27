@@ -5,6 +5,7 @@ import {
   liberadosNa,
   missoes,
   registrar,
+  resolverMissao,
   type SlotDeCampanha,
 } from '../../src/game/campanha';
 import { dados } from '../../src/sim';
@@ -41,9 +42,25 @@ describe('T-130/T-133 — CAM-01 a CAM-04, CAM-08, D-73: campanha', () => {
     expect(desbloqueada(slot, m2!.id)).toBe(false);
     slot = registrar(slot, m0!.id, { estrelas: 1, melhor_s: 700 });
     expect(slot.missoes[m0!.id]).toEqual({ estrelas: 2, melhor_s: 700 });
-    // Missões de versões futuras (v1.x) ficam fechadas mesmo com a anterior concluída.
-    const m03 = missoes().find((m) => m.id === 'm03')!;
+    // D-77: a Missão 3 (Marte) abre depois da 2; as de versões futuras (v1.x) seguem fechadas.
+    slot = registrar(slot, 'm01', { estrelas: 1, melhor_s: 1 });
+    expect(desbloqueada(slot, 'm03')).toBe(false);
     slot = registrar(slot, 'm02', { estrelas: 1, melhor_s: 1 });
-    expect(desbloqueada(slot, m03.id)).toBe(false);
+    expect(desbloqueada(slot, 'm03')).toBe(true);
+    slot = registrar(slot, 'm03', { estrelas: 1, melhor_s: 1 });
+    expect(desbloqueada(slot, 'm04')).toBe(false);
+  });
+
+  it('D-77: a Missão 3 é em Valles Marineris (Marte), contra duas IAs Normais com Nave', () => {
+    const pm = resolverMissao('m03', 'bra', 0)!;
+    expect(pm.resolvida.mapa).toMatchObject({ cenario: 'marte', tamanho: 'm', zonas: 4 });
+    expect(pm.semNave).toEqual([]);
+    expect(Object.values(pm.resolvida.ias)).toEqual(['normal', 'normal']);
+    expect(pm.resolvida.nacoes).toHaveLength(3);
+    expect(new Set(pm.resolvida.zonas).size).toBe(3);
+    // CAM-02: a Missão 3 libera a Usina Nuclear e o Hover de Plantio (com as minas).
+    expect(liberadosNa('m03')).toEqual(
+      expect.arrayContaining(['nuclear_plant', 'hover_minelayer', 'mine']),
+    );
   });
 });

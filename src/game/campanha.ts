@@ -126,6 +126,7 @@ const MAPA_DA_MISSAO: Record<string, string> = {
   m00: 'campo_de_testes',
   m01: 'mare_imbrium',
   m02: 'cratera_shackleton',
+  m03: 'valles_marineris',
 };
 
 /** Oponentes sem Nave (CAM-06): o tipo e onde são montados. */

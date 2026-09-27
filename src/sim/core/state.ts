@@ -3,6 +3,7 @@ import { type CenariosId, dados, param, type RecursosId } from '../data';
 import type { ComponentMap, ComponentName } from './components';
 import { type RngState, seedRng } from './rng';
 import type { EntityId, NacaoId, QueuedCommand } from './types';
+import type { EstadoDaTempestade } from '../cenario/tempestade';
 
 export type ComponentStores = { [K in ComponentName]?: Record<EntityId, ComponentMap[K]> };
 
@@ -55,6 +56,8 @@ export interface SimState {
   liberados: string[] | null;
   /** CAM-06 (D-73): nações sem Nave, eliminadas ao perder todas as estruturas e unidades. */
   semForja: NacaoId[];
+  /** CEN-03: próxima (ou atual) tempestade de poeira; só em cenários com o evento. */
+  tempestade?: EstadoDaTempestade;
   /** REG-11/REG-12: fim da partida, ou null. */
   resultado: { vencedor: NacaoId | null; motivo: 'eliminacao' | 'tempo'; tick: number } | null;
 }

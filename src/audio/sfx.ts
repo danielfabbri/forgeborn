@@ -264,6 +264,7 @@ export function tocarSom(som: Som, volume = 1): void {
 export class Ambiente {
   private zumbido: { osc: OscillatorNode; ganho: GainNode } | null = null;
   private atrito: { fonte: AudioBufferSourceNode; ganho: GainNode } | null = null;
+  private vento: { ganho: GainNode; filtro: BiquadFilterNode } | null = null;
 
   private montar(): boolean {
     if (this.zumbido) return true;
@@ -292,16 +293,39 @@ export class Ambiente {
     fonte.connect(banda).connect(ganhoAtrito).connect(a.canais.ambiente);
     fonte.start();
     this.atrito = { fonte, ganho: ganhoAtrito };
+    // AUD-02: vento, ruído grave com o filtro oscilando devagar (rajadas).
+    const ar = a.ctx.createBufferSource();
+    ar.buffer = bufferDeRuido(a.ctx);
+    ar.loop = true;
+    ar.playbackRate.value = 0.5;
+    const filtroVento = a.ctx.createBiquadFilter();
+    filtroVento.type = 'lowpass';
+    filtroVento.frequency.value = 500;
+    filtroVento.Q.value = 3;
+    const rajada = a.ctx.createOscillator();
+    rajada.frequency.value = 0.13;
+    const amplitude = a.ctx.createGain();
+    amplitude.gain.value = 260;
+    rajada.connect(amplitude).connect(filtroVento.frequency);
+    rajada.start();
+    const ganhoVento = a.ctx.createGain();
+    ganhoVento.gain.value = 0;
+    ar.connect(filtroVento).connect(ganhoVento).connect(a.canais.ambiente);
+    ar.start();
+    this.vento = { ganho: ganhoVento, filtro: filtroVento };
     return true;
   }
 
-  atualizar(movimento: number, mineracao: number): void {
+  /** `vento` 0..1 (AUD-02): 0 no vácuo; sobe na tempestade. */
+  atualizar(movimento: number, mineracao: number, vento = 0): void {
     if (!this.montar()) return;
     const a = audio()!;
     const t = a.ctx.currentTime;
     this.zumbido!.ganho.gain.setTargetAtTime(Math.min(1, movimento) * 0.25, t, 0.3);
     this.zumbido!.osc.frequency.setTargetAtTime(52 + Math.min(1, movimento) * 14, t, 0.5);
     this.atrito!.ganho.gain.setTargetAtTime(Math.min(1, mineracao) * 0.12, t, 0.3);
+    this.vento!.ganho.gain.setTargetAtTime(Math.min(1, vento) * 0.5, t, 1.2);
+    this.vento!.filtro.Q.setTargetAtTime(2 + vento * 3, t, 1.2);
   }
 
   parar(): void {

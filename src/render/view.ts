@@ -62,6 +62,8 @@ export interface View {
   focarSombras(alvo: Vector3, sol: Vector3, terra: Vector3): void;
   /** §18.2: fundo, luz ambiente, luz secundária e intensidade do Sol do cenário. */
   ambientar(a: Ambientacao): void;
+  /** CEN-03: força da tempestade de poeira (0 a 1): névoa densa, fundo de poeira, luz fraca. */
+  clima(forca: number): void;
   /** TEC-19: escala de resolução, sombras e SSAO do preset gráfico; vale na hora. */
   aplicarGraficos(escala: number, sombra: number, ssao?: boolean): void;
   render(): void;
@@ -138,6 +140,7 @@ export function createView(
   scene.background = new Color(0x000000);
 
   // Sem atmosfera: sombras quase pretas, com um leve preenchimento azulado da luz da Terra.
+  let ambientacaoAtual: Ambientacao | null = null;
   const ambiente = new AmbientLight(0x8899aa, 0.12);
   scene.add(ambiente);
   const luzDaTerra = new DirectionalLight(0x7090ff, 0.35);
@@ -255,7 +258,28 @@ export function createView(
     camera,
     renderer,
     focarSombras,
+    clima: (forca) => {
+      const a = ambientacaoAtual;
+      const t = a?.tempestade;
+      if (!a || !t) return;
+      const base = a.neblina ?? { perto: 400, longe: 2000 };
+      const cor = (a.horizonte ?? new Color(0, 0, 0)).clone().lerp(t.cor, forca);
+      if (scene.fog instanceof Fog) {
+        scene.fog.color.copy(cor);
+        scene.fog.near = base.perto + (t.neblina.perto - base.perto) * forca;
+        scene.fog.far = base.longe + (t.neblina.longe - base.longe) * forca;
+      }
+      if (scene.background instanceof Color) {
+        scene.background.copy(a.ceu ?? new Color(0, 0, 0)).lerp(t.cor, forca);
+      }
+      const luz = 1 + (t.luz - 1) * forca;
+      for (const l of csm.lights) l.intensity = a.intensidadeSol * luz;
+      // A luz que sobra fica difusa: o ambiente sobe um pouco e pega a cor da poeira.
+      ambiente.color.copy(a.ambiente.cor).lerp(t.cor, forca * 0.5);
+      ambiente.intensity = a.ambiente.intensidade * (1 + 0.4 * forca);
+    },
     ambientar: (a) => {
+      ambientacaoAtual = a;
       scene.background = a.ceu ? a.ceu.clone() : new Color(0x000000);
       // §14.5: névoa de distância na cor do horizonte.
       scene.fog =

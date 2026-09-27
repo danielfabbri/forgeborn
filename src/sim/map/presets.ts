@@ -46,4 +46,8 @@ export const PRESETS_DE_MAPA: readonly PresetDeMapa[] = [
     jogadores: [2, 4],
     seed: 42,
   },
+  // §14.6 (D-77): Marte.
+  { id: 'utopia_planitia', cenario: 'marte', tamanho: 'p', zonas: 2, jogadores: [2, 2], seed: 7 },
+  { id: 'valles_marineris', cenario: 'marte', tamanho: 'm', zonas: 4, jogadores: [2, 4], seed: 13 },
+  { id: 'hellas_planitia', cenario: 'marte', tamanho: 'g', zonas: 4, jogadores: [3, 4], seed: 5 },
 ];

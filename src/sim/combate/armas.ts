@@ -21,6 +21,7 @@ import { visivelPara } from '../visao/nevoa';
 import { ALTURA_HOVER_M, statsMovel } from '../units/stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from '../units/superficie';
 import { aplicarDano, camadaDe, danoContra, type TipoDeDano } from './dano';
+import { multVisao } from '../cenario/tempestade';
 
 const armas = new Map(dados.armas.map((a) => [a.id, a]));
 
@@ -411,7 +412,7 @@ function passoUnidade(ctx: SystemContext, id: EntityId, pendente: Pendente): voi
 
   const manter = ordem.tipo === 'manter' || componente.postura === 'manter';
   const soNoAlcance = manter || ordem.tipo === 'mover';
-  const visao = statsMovel(getComponent(state, id, 'unit')!.tipo).visao_m;
+  const visao = statsMovel(getComponent(state, id, 'unit')!.tipo).visao_m * multVisao(state);
   const metros = coleiraDa(componente.postura);
 
   // Patrulha e ataque-movimento (CMB-14): engajam o que aparecer na visão e depois retomam.

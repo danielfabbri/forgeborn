@@ -69,7 +69,8 @@ vec3 aplicarNevoa(vec3 cor, vec3 d) {
   float estado = texture2D(uNevoa, uvNevoa(normalize(d))).r;
   float explorado = smoothstep(0.1, 0.45, estado);
   float visivel = smoothstep(0.55, 0.9, estado);
-  vec3 cinza = vec3(dot(cor, vec3(0.299, 0.587, 0.114))) * 0.4;
+  // VIS-01: dessaturado e escurecido, guardando um pouco do tom do chão (a ferrugem de Marte).
+  vec3 cinza = mix(vec3(dot(cor, vec3(0.299, 0.587, 0.114))), cor, 0.35) * 0.4;
   // O escuro é preto na Lua; na Terra (§14.5), um cinza bem apagado do chão.
   vec3 escuro = vec3(dot(cor, vec3(0.299, 0.587, 0.114))) * uEscuroBrilho;
   return mix(escuro, mix(cinza, cor, visivel), explorado);

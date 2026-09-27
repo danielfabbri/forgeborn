@@ -4,6 +4,7 @@
  */
 import { performance } from 'node:perf_hooks';
 import { createSim, dados, type NacaoId, type Sim } from '../../src/sim';
+import type { CenariosId } from '../../src/sim/data';
 import { SEMEAR_JAZIDAS_COMMAND } from '../../src/sim/economia';
 import { ATIVAR_IA_COMMAND } from '../../src/sim/ia';
 import { gerarMapaValido } from '../../src/sim/map/validacao';
@@ -18,6 +19,8 @@ export interface MatchOptions {
   maxMin: number;
   /** Nações de cada IA (padrão: as primeiras de `dados:nacoes`). */
   nacoes?: NacaoId[];
+  /** Cenário (padrão: Lua). */
+  cenario?: CenariosId;
 }
 
 export interface MatchResult {
@@ -39,7 +42,13 @@ export function niveisDeIa(): string[] {
 }
 
 /** Monta a partida (mapa, início, jazidas e IAs) sem rodar. */
-export function criarPartida({ seed, ias, maxMin, nacoes: escolhidas }: MatchOptions): {
+export function criarPartida({
+  seed,
+  ias,
+  maxMin,
+  nacoes: escolhidas,
+  cenario = 'lua',
+}: MatchOptions): {
   sim: Sim;
   nacoes: NacaoId[];
 } {
@@ -55,8 +64,9 @@ export function criarPartida({ seed, ias, maxMin, nacoes: escolhidas }: MatchOpt
   if (!(maxMin > 0)) throw new Error(`Duração inválida: ${maxMin} min`);
 
   const nacoes = escolhidas ?? dados.nacoes.slice(0, ias.length).map((nacao) => nacao.id);
-  const pronto = gerarMapaValido(seed, 'm', ias.length > 2 ? 4 : 2, 'lua');
+  const pronto = gerarMapaValido(seed, 'm', ias.length > 2 ? 4 : 2, cenario);
   const sim = createSim(seed, nacoes, {
+    cenario,
     mundo: pronto,
     systems: sistemasDoJogo,
     commandHandlers: comandosDoJogo,

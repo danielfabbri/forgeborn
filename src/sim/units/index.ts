@@ -6,6 +6,7 @@ import { sistemaVisao } from '../visao/nevoa';
 import { comandosDaEnergia, sistemaEnergia } from '../energia';
 import { comandosDaProducao, sistemaProducao } from '../producao';
 import { sistemaMovimento } from './movimento';
+import { sistemaTempestade } from '../cenario/tempestade';
 import { comandosDeMovimento } from './ordens';
 
 export { criarEstrutura, criarMina, criarUnidade, dentroDoLimite, type Limite } from './criar';
@@ -16,7 +17,11 @@ export { comandosDeMovimento, formacao } from './ordens';
 export const sistemasDoJogo: Partial<Record<GameSystemId, SystemFn>> = {
   ia: sistemaIa,
   producao: sistemaProducao,
-  energia: sistemaEnergia,
+  // CEN-03: a tempestade do tick é decidida antes da energia e da visão.
+  energia: (ctx) => {
+    sistemaTempestade(ctx);
+    sistemaEnergia(ctx);
+  },
   movimento: sistemaMovimento,
   economia: sistemaEconomia,
   combate: sistemaCombate,

@@ -108,6 +108,9 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     oceanus_procellarum: '3a4d67d1b452b18f',
     campo_de_testes: '52357d940524e982',
     cratera_shackleton: 'c4f73f60503c4207',
+    utopia_planitia: '17fb746699095f0f',
+    valles_marineris: 'b2ef0cc2cc597ff5',
+    hellas_planitia: '112571a86431f4d9',
   };
 
   it('3 presets da Lua com os tamanhos e jogadores do §14.4 (mais os da campanha, D-73)', () => {
@@ -124,6 +127,15 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
       expect(preset.jogadores[1]).toBeLessThanOrEqual(tamanho.max_jogadores);
       expect(preset.zonas).toBeGreaterThanOrEqual(preset.jogadores[1]);
     }
+  });
+
+  it('§14.6/D-77: 3 presets de Marte com os tamanhos e jogadores do SPEC', () => {
+    const marte = PRESETS_DE_MAPA.filter((p) => p.cenario === 'marte');
+    expect(marte.map((p) => [p.id, p.tamanho, p.jogadores])).toEqual([
+      ['utopia_planitia', 'p', [2, 2]],
+      ['valles_marineris', 'm', [2, 4]],
+      ['hellas_planitia', 'g', [3, 4]],
+    ]);
   });
 
   it.each(PRESETS_DE_MAPA)('$id: seed válida de primeira e heightmap fixado', (preset) => {

@@ -11,7 +11,7 @@ import {
   CylinderGeometry,
   Quaternion,
   BufferAttribute,
-  type Color,
+  Color,
   BufferGeometry,
   Group,
   Mesh,
@@ -126,6 +126,8 @@ export function terra(raio = 170): Mesh<SphereGeometry, ShaderMaterial> {
 
 export interface Ceu {
   objeto: Group;
+  /** CEN-03: força da tempestade de poeira (0 a 1) no céu. */
+  clima(forca: number): void;
   /** Direção (mundo) para o Sol no ponto focal atual. */
   sol: Vector3;
   /** Direção (mundo) para a Terra no ponto focal atual. */
@@ -137,8 +139,16 @@ export interface Ceu {
   atualizar(foco: Vec3, norte: Vec3, pontoFocal: Vector3, olho?: Vector3): void;
 }
 
-/** §14.5: cúpula de céu diurno, do horizonte claro ao azul do alto (segue o ponto focal). */
-function cupula(ceu: Color, horizonte: Color): Mesh<SphereGeometry, ShaderMaterial> {
+/**
+ * §14.5/§14.6: cúpula de céu diurno, do horizonte claro ao alto (segue o ponto focal); com
+ * `sol`, o disco do Sol e o halo em volta. `uPoeira`/`uForca`: a tempestade (CEN-03) fecha o céu.
+ */
+function cupula(
+  ceu: Color,
+  horizonte: Color,
+  sol: Ambientacao['solNoCeu'],
+  poeira: Color | null,
+): Mesh<SphereGeometry, ShaderMaterial> {
   return new Mesh(
     new SphereGeometry(DISTANCIA_CEU * 0.95, 32, 16),
     new ShaderMaterial({
@@ -146,16 +156,33 @@ function cupula(ceu: Color, horizonte: Color): Mesh<SphereGeometry, ShaderMateri
         uCeu: { value: ceu },
         uHorizonte: { value: horizonte },
         uCima: { value: new Vector3(0, 1, 0) },
+        uSol: { value: new Vector3(0, 1, 0) },
+        uTemSol: { value: sol ? 1 : 0 },
+        uCorSol: { value: sol?.cor.clone() ?? new Color(1, 1, 1) },
+        uHalo: { value: sol?.halo.clone() ?? new Color(1, 1, 1) },
+        uPoeira: { value: poeira?.clone() ?? new Color(0, 0, 0) },
+        uForca: { value: 0 },
       },
       vertexShader: `varying vec3 vDir;
         void main() {
           vDir = normalize(position);
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }`,
-      fragmentShader: `uniform vec3 uCeu; uniform vec3 uHorizonte; uniform vec3 uCima; varying vec3 vDir;
+      fragmentShader: `uniform vec3 uCeu; uniform vec3 uHorizonte; uniform vec3 uCima;
+        uniform vec3 uSol; uniform float uTemSol; uniform vec3 uCorSol; uniform vec3 uHalo;
+        uniform vec3 uPoeira; uniform float uForca; varying vec3 vDir;
         void main() {
-          float h = clamp(dot(normalize(vDir), uCima), 0.0, 1.0);
-          gl_FragColor = vec4(mix(uHorizonte, uCeu, pow(h, 0.45)), 1.0);
+          vec3 dir = normalize(vDir);
+          float h = clamp(dot(dir, uCima), 0.0, 1.0);
+          vec3 cor = mix(uHorizonte, uCeu, pow(h, 0.45));
+          if (uTemSol > 0.5) {
+            float c = max(dot(dir, normalize(uSol)), 0.0);
+            // Halo azulado largo e o disco pequeno e claro.
+            cor = mix(cor, uHalo, pow(c, 40.0) * 0.75 * (1.0 - uForca));
+            cor = mix(cor, uCorSol, smoothstep(0.9993, 0.9997, c) * (1.0 - 0.8 * uForca));
+          }
+          cor = mix(cor, uPoeira, uForca * 0.75);
+          gl_FragColor = vec4(cor, 1.0);
         }`,
       side: BackSide,
       depthWrite: false,
@@ -234,7 +261,12 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   if (astro) objeto.add(astro);
   const domo =
     ambientacao.ceu && ambientacao.horizonte
-      ? cupula(ambientacao.ceu, ambientacao.horizonte)
+      ? cupula(
+          ambientacao.ceu,
+          ambientacao.horizonte,
+          ambientacao.solNoCeu,
+          ambientacao.tempestade?.cor ?? null,
+        )
       : null;
   if (domo) objeto.add(domo);
   const fundo =
@@ -247,6 +279,9 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
     objeto,
     sol: ambientacao.sol.clone(),
     terra: DIRECAO_TERRA.clone(),
+    clima(forca) {
+      if (domo) domo.material.uniforms.uForca!.value = forca;
+    },
     atualizar(foco, norte, pontoFocal, olho) {
       ceu.sol.copy(paraOMundo(ambientacao.sol, foco, norte));
       ceu.terra.copy(paraOMundo(DIRECAO_TERRA, foco, norte));
@@ -257,6 +292,7 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
       if (domo) {
         domo.position.copy(pontoFocal);
         domo.material.uniforms.uCima!.value.set(...foco);
+        domo.material.uniforms.uSol!.value.copy(ceu.sol);
         domo.renderOrder = -2;
         domo.frustumCulled = false;
       }

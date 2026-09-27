@@ -12,7 +12,8 @@ export function passoUsinas(ctx: SystemContext): void {
   const { state, dt } = ctx;
   for (const id of entitiesWith(state, 'reator', 'owner')) {
     const reator = getComponent(state, id, 'reator')!;
-    if (!reator.ligado) continue;
+    // PRD-12: em obra a usina não funciona (nem queima Urânio, nem avisa que falta).
+    if (!reator.ligado || getComponent(state, id, 'obra')) continue;
     if (reator.religando_s > 0) {
       reator.religando_s = Math.max(0, reator.religando_s - dt);
       continue;

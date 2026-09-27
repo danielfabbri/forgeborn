@@ -441,6 +441,26 @@ describe('T-044 — ENE-06, ENE-07: usinas', () => {
     sim.run(2);
     expect(rede(sim).geracao).toBe(statsEstrutura('nuclear_plant').geracao_en_s);
   });
+
+  it('ENE-06/PRD-12: em obra a nuclear não queima Urânio nem dispara AL-10', () => {
+    const sim = partida(mundoLiso());
+    const [usina] = criar(sim, [{ estrutura: 'nuclear_plant', x: 0, z: 0 }]);
+    // O canteiro recém-posicionado, ainda sem progresso.
+    setComponent(sim.state, usina!, 'obra', {
+      progresso: 0,
+      instalada: false,
+      pago: {},
+      construtores: [],
+    } as never);
+    const eventos: SimEvent[] = [];
+    sim.state.estoques.bra.u = 0;
+    for (let t = 0; t < 3 * param('nuclear_intervalo_s') * sim.tickHz; t++)
+      eventos.push(...sim.step());
+    expect(eventos.filter((e) => e.tipo === 'alerta')).toEqual([]);
+    sim.state.estoques.bra.u = 5;
+    sim.run(Math.round(3 * param('nuclear_intervalo_s') * sim.tickHz));
+    expect(sim.state.estoques.bra.u).toBe(5);
+  });
 });
 
 describe('T-045 — ENE-17 a ENE-20: Bateria Móvel', () => {

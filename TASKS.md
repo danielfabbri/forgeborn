@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.23.2 |
+| Derivado de | `SPEC.md` v0.23.3 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -304,7 +304,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-123 — VFX de combate** · M · Spec: ART-07 · Dep: T-062, T-066 · Feito: 2026-09-25 (o rastro de dobra da abertura veio com a T-101)
 - [x] **T-124 — Iluminação, pós-processamento e presets** · M · Spec: ART-08, TEC-19 · Dep: T-014 · Feito: 2026-09-25 (o fator de partículas é usado pelos VFX da T-123)
 - [x] **T-125 — Cinemática de pouso** · M · Spec: FLX-09 · Dep: T-121 · Feito: 2026-09-25
-- [x] **T-126 — Áudio** · G · Spec: AUD-01 – AUD-05, D-46, D-47, D-74 · Dep: T-084 · Feito: 2026-09-25 (as trilhas são arquivos do produto em src/audio/: entrance, map e soundtrack_*, D-74)
+- [x] **T-126 — Áudio** · G · Spec: AUD-01 – AUD-05, D-46, D-47, D-74, D-75 · Dep: T-084 · Feito: 2026-09-25 (as trilhas são arquivos do produto em src/audio/: entrance, map e soundtrack_*, D-74)
   - Aceite: trilhas por contexto com transição cruzada e arquivos faltando pulados; SFX sintetizados por unidade e interface; voz TTS pt-BR com legenda; volumes por canal nas Configurações.
 - [x] **T-127 — Acessibilidade** · M · Spec: UI-11, UI-12 · Dep: T-080 · Feito: 2026-09-25 (paletas daltônicas a partir da Okabe-Ito; legendas pela pilha de alertas; escala, 0,75× e pausa tática já existiam)
 

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.1.0 — rascunho para aprovação |
+| Versão do SPEC | 1.2.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1069,14 +1069,15 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
   - **Batedor:** explora com Hovers de Observação e planta Sentinelas nas rotas.
 - **IA-02** — A IA **não trapaceia a visão** em nenhuma dificuldade: usa a própria névoa.
 - **IA-03** — Composição adaptativa (quando `adapta_composicao` = 1): muitos drones inimigos → mais EX1 e Torres; muitos EX1 → mais OPQ; muitos OPQ → mais Drone Laser e Bombardeiros; defesa pesada → mais OPQ e Bombardeiros; minas detectadas → mais Observação.
-- **IA-04** — Uma onda de ataque parte quando o VR do exército ≥ `vr_exercito_ataque` e o relógio passou de `primeiro_ataque_min`. O alvo é a nação conhecida mais próxima com quem a IA está em guerra (na Brutal, a mais fraca); sem nação em guerra, não há onda (D-81). A onda recua se o VR do exército cair abaixo de `ia_recuo_vr_pct`% do inicial e o do defensor for maior.
+- **IA-04** — Uma onda de ataque parte quando o VR do exército ≥ `vr_exercito_ataque` e o relógio passou de `primeiro_ataque_min`. O alvo é a nação conhecida mais próxima com quem a IA está em guerra (na Brutal, a mais fraca); sem nação em guerra, vale a provocação (IA-12). A onda recua se o VR do exército cair abaixo de `ia_recuo_vr_pct`% do inicial e o do defensor for maior.
 - **IA-05** — As IAs também guerreiam entre si, pelas mesmas regras de temperamento (REG-24 a REG-28): só atacam nações com quem estão em guerra (D-81).
 - **IA-06** — A IA respeita `tiers_permitidos` (§8.1) nas estruturas e unidades de apoio e `tiers_militares` nas unidades de combate: 1 = só T1; 2 = T1 + T2; 3 = todos. Com `vr_exercito_max` > 0, a IA não imprime unidades de combate acima desse VR de exército (D-66).
 - **IA-07** — Ajustes da IA (D-34): mantém `ia_impressoras_alvo` Impressoras e `ia_batedores` Hovers de Observação batedores; enfileira até `ia_fila_por_produtor` itens por produtor; defende quando há inimigo visível a até `ia_raio_defesa_m` de uma estrutura própria; expande (Armazém junto a jazidas exploradas a mais de `ia_distancia_expansao_m` dos depósitos) a partir de `ia_expansao_hovers_pct`% da meta de hovers. Traços (§13.3): "meta de hovers" soma `ia_traco_meta_hovers_pct`%; "ondas grandes" multiplica `vr_exercito_ataque` por `ia_ondas_grandes_mult`; "expande cedo" usa `ia_expansao_cedo_pct`%.
 - **IA-08** — Plano de estruturas e apoio (`dados:ia_plano`): a partir do minuto `min_<nível>`, a IA mantém a quantidade da coluna do nível de cada item, na ordem da tabela, quando pode pagar (sem passar na frente da energia, IA-01). O Silo Móvel vai para a expansão mais distante do depósito; a Bateria Móvel acompanha a onda de ataque; o Hover de Plantio de Minas planta minas a `ia_minas_distancia_m` da base, na direção do inimigo conhecido mais próximo. Ao ver drones ou mísseis inimigos, a meta de Baterias Antiaéreas sobe 1 (D-66).
 - **IA-09** — Satélite: cada Base de Lançamento da IA imprime o satélite, que fica sobre o inimigo conhecido mais próximo (sem inimigo conhecido, sobre a própria base) (D-66).
 - **IA-10** — Mísseis: a IA mantém `ia_misseis_curtos` curtos prontos e, do Normal para cima, `ia_misseis_longos` longos. Curtos defendem: são lançados contra inimigos visíveis a até `ia_raio_defesa_m` de uma estrutura própria. Do Normal para cima, um longo é lançado contra uma estrutura inimiga conhecida (vista ou fantasma) no alcance, no máximo um a cada `ia_missil_longo_intervalo_s` (D-66).
-- **IA-11** — Temperamento da IA (D-81): avisada (REG-26), recolhe os corpos do domínio alheio antes do prazo, menos na Brutal, que fica. A IA escolhe expansões e rotas de batedor fora do domínio de nações pacíficas com ela, menos na Brutal.
+- **IA-11** — Temperamento da IA (D-81): avisada (REG-26), recolhe os corpos do domínio alheio antes do prazo, menos na Brutal e na onda de provocação (IA-12), que ficam. A IA escolhe expansões e rotas de batedor fora do domínio de nações pacíficas com ela, menos na Brutal.
+- **IA-12** — Provocação (D-82): sem nenhuma guerra, quando a onda estaria pronta (IA-04), a IA escolhe um alvo e manda a onda para o domínio dele, ignorando o aviso; a guerra começa pelo prazo de REG-26. Fácil nunca provoca. Normal só provoca a nação conhecida mais fraca (menos estruturas conhecidas) e só se ela tiver menos estruturas que a própria IA. Difícil provoca a mais próxima; Brutal, a mais fraca.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1649,6 +1650,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-79 | Vastidão: cada corpo tem o próprio raio (`raio_m` em `dados:cenarios`, raiz cúbica do raio real, Lua 400 m; CEN-16), sem escolha de tamanho no Free Battle; 2 a 4 jogadores em qualquer corpo; `primeiro_ataque_min` ×2,5; novo pilar P6; EXP-03, EXP-04, INV-12 e os tempos-par das missões 1–8 (×2) ajustados ao ritmo novo; lagos de Titã passam a `lagos_por_setor`. Substitui dados:tamanhos_mapa e as chaves lagos_por_setor_p/m/g (IDs não reutilizados, GOV-03). | Pedido do produto: "Cada cenário deve ter o seu próprio tamanho… Quero mais vastidão… menos batalha rápida e mais colonização, exploração, com tempo pra admirar estar em outro planeta." Respostas: raiz cúbica; 2 a 4 em qualquer corpo; IA ataca bem mais tarde. | Aprovada |
 | D-80 | O escuro da névoa (VIS-01) deixa de ser preto absoluto: mostra a silhueta escura do relevo, em todos os cenários e também em 1ª e 3ª pessoa. A informação escondida continua a mesma (nada sobre o terreno). | Pedido do produto: "Na Lua, não quero ausência absoluta de cor no terreno… Quando ando com um personagem, não vejo como é o terreno." | Aprovada |
 | D-81 | Temperamento entre nações (REG-24 a REG-28): todas começam pacíficas; entrar no domínio de outra (60 m das estruturas, 20 m das unidades) gera aviso imediato, e ficar mais de 10 s vira guerra; dano abre a guerra na hora; a guerra esfria depois de 5 min sem combate e fora dos domínios. O disparo automático só mira inimigos (CMB-29); a IA obedece o aviso (menos a Brutal) e só ataca quem está em guerra com ela (IA-04, IA-05, IA-11). | Pedido do produto: "as civilizações poderiam pedir pra você se retirar antes de atacar… começa com todos pacíficos… se você não sair do território em 10 s, o status vira inimigo"; respostas: domínio 60/20 m, guerra esfria, disparo só em inimigos. | Aprovada |
+| D-82 | A IA pacífica provoca guerra conforme a dificuldade (IA-12): a onda entra no domínio do alvo e a guerra começa pelo aviso de 10 s; Fácil nunca, Normal só contra quem é mais fraco que ela, Difícil a mais próxima, Brutal a mais fraca. Mantém as guerras entre IAs e os invariantes de vitória (INV-12, INV-14). | Resposta do produto: "Sim, conforme a dificuldade". | Aprovada |
 
 ---
 
@@ -1745,3 +1747,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.0.0 | 2026-09-27 | D-79 (MAJOR: novo pilar P6 Vastidão): `raio_m` em `dados:cenarios` e CEN-16 no lugar de dados:tamanhos_mapa; FB-03 e `dados:free_battle` sem tamanho; `dados:missoes` sem a coluna `mapa` e com tempos-par ×2 (exceto m00); `primeiro_ataque_min` ×2,5; EXP-03, EXP-04, INV-12, INV-14; CEN-04 com `lagos_por_setor`. |
 | 1.0.1 | 2026-09-27 | D-80: VIS-01, o escuro mostra a silhueta do relevo. |
 | 1.1.0 | 2026-09-27 | D-81: §4.7 (REG-24 a REG-28, `dominio_estrutura_m`, `dominio_unidade_m`, `ultimato_s`, `guerra_esfria_s`), CMB-29, IA-04, IA-05, IA-11, UI-17, AL-19 a AL-22; §22. TEC-14: orçamento medido na Lua, com hierarquia (D-79). |
+| 1.2.0 | 2026-09-27 | D-82: IA-12 (provocação conforme a dificuldade); IA-04 e IA-11 remetem a ela. |

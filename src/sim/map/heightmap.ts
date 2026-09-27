@@ -19,6 +19,7 @@ import {
   tanDaDivisao,
   type Vec3,
 } from './esfera';
+import type { Lago } from './lagos';
 
 export const ALTURA_BASE_M = 100;
 
@@ -28,6 +29,8 @@ export interface Heightmap {
   resolucao: number;
   /** 6 × (resolucao + 1)² alturas codificadas. */
   alturas: Uint16Array;
+  /** CEN-04: lagos de metano (só em Titã). */
+  lagos?: Lago[];
 }
 
 export function codificarAltura(h: number): number {

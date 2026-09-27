@@ -111,6 +111,9 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     utopia_planitia: '17fb746699095f0f',
     valles_marineris: 'b2ef0cc2cc597ff5',
     hellas_planitia: '112571a86431f4d9',
+    xanadu: '585b3f97fe33bce6',
+    ligeia_mare: '6d7a9d14a9bbdfc5',
+    kraken_mare: '57976b7fd2942aab',
   };
 
   it('3 presets da Lua com os tamanhos e jogadores do §14.4 (mais os da campanha, D-73)', () => {
@@ -135,6 +138,15 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
       ['utopia_planitia', 'p', [2, 2]],
       ['valles_marineris', 'm', [2, 4]],
       ['hellas_planitia', 'g', [3, 4]],
+    ]);
+  });
+
+  it('§14.7/D-78: 3 presets de Titã com os tamanhos e jogadores do SPEC', () => {
+    const tita = PRESETS_DE_MAPA.filter((p) => p.cenario === 'tita');
+    expect(tita.map((p) => [p.id, p.tamanho, p.jogadores])).toEqual([
+      ['xanadu', 'p', [2, 2]],
+      ['ligeia_mare', 'm', [2, 4]],
+      ['kraken_mare', 'g', [3, 4]],
     ]);
   });
 

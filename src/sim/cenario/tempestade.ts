@@ -8,7 +8,8 @@
 import type { SystemContext } from '../core/pipeline';
 import { nextInt } from '../core/rng';
 import type { SimState } from '../core/state';
-import { dados, param } from '../data';
+import { param } from '../data';
+import { cenarioDe } from './modificadores';
 
 export interface EstadoDaTempestade {
   /** Tick em que a próxima (ou a atual) começa. */
@@ -18,8 +19,6 @@ export interface EstadoDaTempestade {
   /** O AL-15 desta tempestade já saiu. */
   avisada: boolean;
 }
-
-const cenarioDe = (state: SimState) => dados.cenarios.find((c) => c.id === state.cenario);
 
 export function temTempestade(state: SimState): boolean {
   return cenarioDe(state)?.evento === 'tempestade_poeira';

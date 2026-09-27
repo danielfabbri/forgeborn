@@ -56,9 +56,10 @@ import { cabeNaFila, enfileirar } from './fila';
 import { explorado } from '../visao/nevoa';
 import { bonusDaNacao } from '../ia/base';
 import { encerrarTrabalho } from './trabalho';
+import { emLago } from '../map/lagos';
 
 /** PRD-10: por que o local não serve (UI-08), ou null se serve. */
-export type MotivoRecusa = 'inexplorado' | 'inclinacao' | 'ocupado' | 'jazida';
+export type MotivoRecusa = 'inexplorado' | 'inclinacao' | 'ocupado' | 'jazida' | 'lago';
 
 /** Base local (leste, norte) no plano tangente em d, alinhada ao norte local (CEN-15). */
 function baseLocal(d: Vec3): { leste: Vec3; norte: Vec3 } {
@@ -131,6 +132,8 @@ export function validarPosicionamento(
         const p = normalizar(soma(d, soma(escalar(eixoA, e / R), escalar(eixoB, s / R))));
         // Terreno explorado pela nação (VIS-01).
         if (nacao && !explorado(ctx, nacao, p)) return 'inexplorado';
+        // CEN-04: nada sobre os lagos de metano.
+        if (emLago(ctx.mundo.mapa, p)) return 'lago';
         if (!ehConstruivel(grade, celulaDe(grade, p))) return 'inclinacao';
       }
     }

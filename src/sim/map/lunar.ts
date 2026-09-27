@@ -9,7 +9,7 @@
  * (CEN-14) e ângulo a partir de um rumo de referência que gira junto com a feição.
  */
 import { nextFloat, nextU32, type RngState, seedRng } from '../core/rng';
-import { dados, type TamanhosMapaId } from '../data';
+import { dados, param, type TamanhosMapaId } from '../data';
 import {
   aplicarRotacao,
   arco,
@@ -34,6 +34,7 @@ import {
   verticeRotacionado,
 } from './heightmap';
 import { fbm3 } from './noise';
+import type { Lago } from './lagos';
 
 export type { Simetria };
 
@@ -74,6 +75,12 @@ export const GERADOR_LUA = {
   saidaRampa: 20,
   /** Resolução do heightmap: ~1 m entre vértices (CEN-13). */
   texel_m: 1,
+  /**
+   * CEN-04: bacia do lago. O fundo desce `profundidade` abaixo da água no centro e chega à
+   * margem (`margem` acima da água) exatamente no raio; fora dele o chão volta ao relevo natural
+   * numa faixa de `transicao` × o raio.
+   */
+  lago: { profundidade: 3, margem: 0.15, transicao: 0.5, amostras: 24, tentativas: 200 },
 } as const;
 
 const G = GERADOR_LUA;
@@ -296,6 +303,7 @@ export function gerarMapaLunar(
   tamanho: TamanhosMapaId,
   n: Simetria,
   plano = false,
+  lagosPorSetor = 0,
 ): MapaLunar {
   const definicao = dados.tamanhos_mapa.find((t) => t.id === tamanho);
   if (!definicao) throw new Error(`Tamanho de mapa desconhecido: ${tamanho}`);
@@ -442,7 +450,7 @@ export function gerarMapaLunar(
     }
   }
 
-  const alturaNatural = (p: Vec3): number => {
+  const alturaSemLagos = (p: Vec3): number => {
     let ruido = 0;
     for (const sigma of grupo) {
       const q = aplicarRotacao(sigma, p);
@@ -455,6 +463,45 @@ export function gerarMapaLunar(
     }
     for (const c of crateras) h += alturaCratera(c, p, R);
     for (const s of sulcos) h += alturaSulco(s, p, R);
+    return h;
+  };
+
+  // CEN-04: lagos de metano (Titã), sorteados por último para não mudar os outros cenários.
+  const lagos: Lago[] = [];
+  for (let c = 0; c < lagosPorSetor; c++) {
+    for (let tentativa = 0; tentativa < G.lago.tentativas; tentativa++) {
+      const raio = entre(rng, [param('lago_raio_min_m'), param('lago_raio_max_m')]);
+      const p = direcaoSorteada(rng);
+      if (zonasDePouso.some((z) => R * arco(z.d, p) < param('lago_folga_zona_m') + raio)) continue;
+      if (!respeitaZonas(p, raio)) continue;
+      if (!longeDosCentrais(p, raio)) continue;
+      const copias = replicas(p);
+      if (copias.slice(1).some((q) => R * arco(p, q) < 2.2 * raio)) continue;
+      if (lagos.some((o) => R * arco(p, o.d) < 1.2 * (raio + o.raio))) continue;
+      // O nível da água é a média do chão natural na borda do lago.
+      const ref = rumoSorteado(rng, p);
+      let soma = 0;
+      for (let k = 0; k < G.lago.amostras; k++) {
+        const rumo = normalizar(girar(ref, p, (k / G.lago.amostras) * TAU));
+        soma += alturaSemLagos(avancar(p, rumo, raio / R).p);
+      }
+      const nivel = soma / G.lago.amostras;
+      for (const q of copias) lagos.push({ d: q, raio, nivel });
+      break;
+    }
+  }
+  const alturaNatural = (p: Vec3): number => {
+    const h = alturaSemLagos(p);
+    for (const l of lagos) {
+      const d = R * arco(l.d, p);
+      const fim = l.raio * (1 + G.lago.transicao);
+      if (d >= fim) continue;
+      const margem = l.nivel + G.lago.margem;
+      if (d <= l.raio) {
+        return margem - (G.lago.profundidade + G.lago.margem) * (1 - (d / l.raio) ** 2);
+      }
+      return margem + (h - margem) * smoothstep(l.raio, fim, d);
+    }
     return h;
   };
 
@@ -510,5 +557,6 @@ export function gerarMapaLunar(
     contestados: geo.contestados,
     centrais: geo.centrais,
     crateras,
+    lagos,
   };
 }

@@ -137,6 +137,24 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     tempestade: { cor: new Color('#a8683e'), neblina: { perto: 30, longe: 170 }, luz: 0.55 },
     vento: 0.3,
   },
+  // §14.7: céu laranja nebuloso, penumbra, gelo e sedimentos, névoa densa; o Sol só um brilho.
+  tita: {
+    ...LUA,
+    ceu: new Color('#5e3517'),
+    horizonte: new Color('#7e5028'),
+    estrelas: false,
+    terraNoCeu: false,
+    sol: direcao(42, -25),
+    intensidadeSol: 1.1,
+    ambiente: { cor: new Color('#e0a060'), intensidade: 0.5 },
+    secundaria: { cor: new Color('#b8743a'), intensidade: 0.3 },
+    tinta: [1.3, 1.15, 0.95],
+    neblina: { perto: 90, longe: 420 },
+    escuroBrilho: 0.1,
+    detalhe: 0.6,
+    solNoCeu: { cor: new Color('#e9b77a'), halo: new Color('#dfa05c') },
+    vento: 0.25,
+  },
 };
 
 export function ambientacaoDe(cenario: CenariosId): Ambientacao {

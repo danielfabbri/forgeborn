@@ -8,7 +8,7 @@
  * dele precisa ser invariante por τ: jazidas do mesmo recurso vão em pares (p, τ·p), e um
  * recurso com número ímpar de jazidas ganha mais uma, dividindo a quantidade (ECO-08).
  */
-import { type CenariosId, dados, type JazidasRow, type RecursosId } from '../data';
+import { type CenariosId, dados, type JazidasRow, param, type RecursosId } from '../data';
 import { componenteConectado, noComponente, temFolga } from './conectividade';
 import {
   aplicarRotacao,
@@ -24,6 +24,7 @@ import {
 } from './esfera';
 import { celulaDe, type GradesDoMapa } from './grids';
 import { GERADOR_LUA, type MapaLunar, type PontoMedio, rumoSemRampa } from './lunar';
+import { emLago } from './lagos';
 
 export type ZonaDeJazida = 'inicial' | 'expansao' | 'contestada' | 'central';
 
@@ -121,7 +122,9 @@ export function distribuirJazidas(
     temFolga(nav, p, D.folgaPenhasco_m) &&
     noComponente(nav, alcancavel, p) &&
     [...ocupadas, ...extras].every((q) => distancia(p, q) >= D.espacamento_m) &&
-    (noPlato || zonas.every((zona) => distancia(p, zona.d) >= foraDosPlatos));
+    (noPlato || zonas.every((zona) => distancia(p, zona.d) >= foraDosPlatos)) &&
+    // CEN-04: nenhuma jazida dentro (nem colada) de um lago de metano.
+    !emLago(mapa, p, param('distancia_min_jazida_m'));
 
   /** Coloca um grupo de jazidas em volta de c; devolve as posições ou null. */
   const agrupar = (

@@ -12,6 +12,11 @@ import { arco, centroDaCelula } from './esfera';
 import { celulaDe, derivarGrades, type GradeNavegacao, type GradesDoMapa } from './grids';
 import { type DistribuicaoDeJazidas, distribuirJazidas } from './jazidas';
 import { GERADOR_LUA, gerarMapaLunar, type MapaLunar, type Simetria } from './lunar';
+import { dados, param } from '../data';
+
+/** CEN-04: cenários com o evento `lagos_metano`. */
+const temLagos = (cenario: CenariosId): boolean =>
+  dados.cenarios.find((c) => c.id === cenario)?.evento === 'lagos_metano';
 
 export type MotivoInvalido =
   | 'zonas_desconectadas'
@@ -161,8 +166,9 @@ export function gerarMapaValido(
   const rejeitadas: MapaPronto['rejeitadas'] = [];
   for (let tentativa = 0; tentativa < VALIDACAO.maxTentativas; tentativa++) {
     const atual = seed + tentativa;
-    // §14.5: o Campo de testes da Terra é quase plano.
-    const mapa = gerarMapaLunar(atual, tamanho, zonas, cenario === 'terra_lab');
+    // §14.5: o Campo de testes da Terra é quase plano; CEN-04: Titã tem lagos de metano.
+    const lagos = temLagos(cenario) ? param(`lagos_por_setor_${tamanho}`) : 0;
+    const mapa = gerarMapaLunar(atual, tamanho, zonas, cenario === 'terra_lab', lagos);
     const grades = derivarGrades(mapa);
     let jazidas: DistribuicaoDeJazidas;
     try {

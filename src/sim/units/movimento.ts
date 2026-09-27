@@ -29,6 +29,7 @@ import { fluxoPara, navegavel, navegavelDe } from './navegacao';
 import { ALTURA_HOVER_M, altitudeDrone, statsMovel } from './stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from './superficie';
 import { multVisao } from '../cenario/tempestade';
+import { multEnDrone } from '../cenario/modificadores';
 
 type Locomocao = ComponentMap['locomotion'];
 
@@ -243,8 +244,10 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
   posicionar(ctx, pos, novo, 0);
   loc.rumo = tangente(novo, rumo) ?? rumo;
   // ENE-10: mover gasta `mov_en_s` por segundo em movimento; drone parado no ar paga o pairar.
-  if (avancou > 1e-9) gastar(ctx, id, s.mov_en_s * dt);
-  else if (aerea) gastar(ctx, id, s.pairar_en_s * dt);
+  // CEN-02: nos drones, o gasto é multiplicado por `mult_en_drone` do cenário.
+  const mult = multEnDrone(ctx.state, aerea);
+  if (avancou > 1e-9) gastar(ctx, id, s.mov_en_s * mult * dt);
+  else if (aerea) gastar(ctx, id, s.pairar_en_s * mult * dt);
 
   // Unidade presa (aglomeração, funil ou quina): se em TEMPO_TRAVADO_S não se afastou
   // DESLOCAMENTO_MINIMO_M da âncora, contando o efeito da separação, refaz a rota por A*.
@@ -367,10 +370,11 @@ function passoPilotado(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt
   loc.rumo = tangente(novo, rumo) ?? rumo;
   if (p.deslocamento) p.deslocamento = tangente(novo, p.deslocamento) ?? p.deslocamento;
   // ENE-10 e CTL-12: o Impulso multiplica o gasto de movimento.
+  const mult = multEnDrone(ctx.state, aerea);
   if (avancou > 1e-9) {
-    gastar(ctx, id, s.mov_en_s * (impulso ? param('impulso_mult_en') : 1) * dt);
+    gastar(ctx, id, s.mov_en_s * mult * (impulso ? param('impulso_mult_en') : 1) * dt);
   } else if (aerea) {
-    gastar(ctx, id, s.pairar_en_s * dt);
+    gastar(ctx, id, s.pairar_en_s * mult * dt);
   }
 }
 

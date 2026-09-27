@@ -5,7 +5,7 @@ import { ambientacaoDe } from '../render/ambientacao';
 import { criarLaboratorio } from '../render/laboratorio';
 import type { CenariosId } from '../sim/data';
 import { effect } from '@preact/signals';
-import { Vector3 } from 'three';
+import { Color, Vector3 } from 'three';
 import { cenaDaNacao, destinoDaPatrulha, patrulheiro } from './cenaDemo';
 import {
   comandosDeInicio,
@@ -32,6 +32,7 @@ import {
 import { somInterno, tocarSom } from '../audio/sfx';
 import { SomDaPartida } from '../audio/somDaPartida';
 import { Poeira } from '../render/poeira';
+import { criarLagos } from '../render/lagos';
 import { tempestadeAtiva } from '../sim/cenario/tempestade';
 import { trilhas } from '../audio/trilhas';
 import { falar } from '../audio/voz';
@@ -314,6 +315,15 @@ export function iniciarPartida(): void {
   terreno.aplicarLod(PRESETS_GRAFICOS[configuracoes.value.grafico].lod);
   const ceu = criarCeu(ambientacao);
   view.scene.add(terreno.objeto, ceu.objeto);
+  // CEN-04/§14.7: lagos de metano espelhados (Titã).
+  const lagos = criarLagos(
+    pronto.mapa.lagos ?? [],
+    R,
+    ambientacao.horizonte ?? new Color(0, 0, 0),
+    nevoa,
+    ambientacao.escuroBrilho,
+  );
+  if (lagos) view.scene.add(lagos);
   // CEN-03/§14.6: a tempestade de poeira (força 0 a 1, suavizada) no céu, na névoa, na luz e no ar.
   const poeira = ambientacao.tempestade ? new Poeira(ambientacao.tempestade.cor) : null;
   if (poeira) view.scene.add(poeira.objeto);

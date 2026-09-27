@@ -344,7 +344,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [ ] **T-152 — Ceres e Missão 5** · M · Spec: §15
 - [ ] **T-153 — Vênus e Missão 6** · M · Spec: §15
 - [ ] **T-154 — Europa e Missão 7** · M · Spec: CEN-05, §15
-- [ ] **T-155 — Titã e lagos de metano (Free Battle)** · G · Spec: CEN-02, CEN-04, PRD-10, §14.7, §18.2, AUD-02, D-78 · Dep: T-150
+- [x] **T-155 — Titã e lagos de metano (Free Battle)** · G · Spec: CEN-02, CEN-04, PRD-10, §14.7, §18.2, AUD-02, D-78 · Dep: T-150 · Feito: 2026-09-27
   - Aceite: lagos de metano gerados pela seed nas quantidades e raios de CEN-04, simétricos, longe das zonas e sem jazidas; posicionar estrutura, muro ou mina num lago é recusado (motivo `lago`); hovers atravessam; `mult_en_drone` aplicado aos drones; 3 presets de Titã válidos; ambientação de Titã (céu laranja nebuloso, penumbra, lagos espelhados) e vento.
 - [ ] **T-156 — Salvar e carregar partida** · M · Spec: TEC-08
 - [ ] **T-157 — Remapeamento de teclas** · P · Spec: §22

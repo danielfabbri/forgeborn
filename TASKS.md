@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v0.24.0 |
+| Derivado de | `SPEC.md` v0.25.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -338,7 +338,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M15 — Pós-v1 (v1.x)
 
-- [ ] **T-150 — Marte, tempestade de poeira e Missão 3** · G · Spec: CEN-03, §15
+- [ ] **T-150 — Marte, tempestade de poeira e Missão 3** · G · Spec: CEN-02, CEN-03, §14.6, §15, §18.2, AUD-02, D-77 · Dep: T-135
+  - Aceite: tempestade de poeira sorteada pela seed entre os intervalos, com duração, visão e geração solar reduzidas e o AL-15 antes; `mult_visao` do cenário aplicado; 3 presets de Marte válidos (Free Battle); Missão 3 jogável na campanha depois da 2, contra duas IAs Normais; ambientação de Marte (céu caramelo, halo azul no Sol, solo ferrugem) e da tempestade; vento em Marte.
 - [ ] **T-151 — Fobos e Missão 4 (ondas)** · M · Spec: §15
 - [ ] **T-152 — Ceres e Missão 5** · M · Spec: §15
 - [ ] **T-153 — Vênus e Missão 6** · M · Spec: §15

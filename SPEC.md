@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 0.24.0 — rascunho para aprovação |
+| Versão do SPEC | 0.25.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -113,8 +113,8 @@
 | Marco | Conteúdo |
 |---|---|
 | **MVP — "Free Battle Lua"** | Todas as mecânicas, as 10 unidades móveis e as 6 estruturas, cenário Lua (mapas P/M/G), 1–3 IAs, névoa, HUD completo. Arte placeholder é aceitável. |
-| **v1.0** | MVP + controle direto em 1ª/3ª pessoa + telas finais (abertura, universo) + campanha, missões 1–2 (Lua) + arte e áudio finais + metas de performance. |
-| **v1.x** | Missões 3–8 e cenários Marte, Fobos, Ceres, Vênus, Europa e Titã; salvar/carregar partida; remapeamento de teclas; inglês. |
+| **v1.0** | MVP + controle direto em 1ª/3ª pessoa + telas finais (abertura, universo) + campanha, missões 0–3 (Terra, Lua e Marte, D-77) + arte e áudio finais + metas de performance. |
+| **v1.x** | Missões 4–8 e cenários Fobos, Ceres, Vênus, Europa e Titã; salvar/carregar partida; remapeamento de teclas; inglês. |
 | **Futuro** | Ver §22. |
 
 ---
@@ -1146,14 +1146,14 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | lua | Lua | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 0,8 | 0,8 | 1,3 | 0,8 | — | mvp |
 | terra_lab | Terra — Campo de testes | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | — | v1.0 |
 | lua_shackleton | Lua — Cratera Shackleton | 0,7 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 0,8 | 0,8 | 1,0 | 1,2 | — | v1.0 |
-| marte | Marte | 0,6 | 1,0 | 1,0 | 1,0 | 1,0 | 1,4 | 1,0 | 1,0 | 0,9 | 0,8 | 1,0 | tempestade_poeira | v1.x |
+| marte | Marte | 0,6 | 1,0 | 1,0 | 1,0 | 1,0 | 1,4 | 1,0 | 1,0 | 0,9 | 0,8 | 1,0 | tempestade_poeira | v1.0 |
 | fobos | Fobos | 0,6 | 1,1 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 1,0 | 1,0 | 0,8 | — | v1.x |
 | ceres | Ceres | 0,35 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 0,8 | 1,0 | 1,3 | 1,5 | 1,5 | — | v1.x |
 | venus | Vênus | 0,25 | 1,0 | 1,0 | 1,5 | 0,9 | 1,2 | 1,2 | 1,0 | 0,8 | 1,0 | 1,2 | — | v1.x |
 | europa | Europa | 0,15 | 1,15 | 0,75 | 1,0 | 1,0 | 0,8 | 1,0 | 1,0 | 1,2 | 1,0 | 1,5 | — | v1.x |
 | tita | Titã | 0,1 | 1,0 | 1,0 | 0,75 | 0,85 | 1,0 | 1,0 | 1,2 | 1,0 | 1,2 | 1,2 | lagos_metano | v1.x |
 
-- **CEN-03** — Evento `tempestade_poeira` (Marte): ocorre em intervalos sorteados pela seed entre `tempestade_intervalo_min_s` e `tempestade_intervalo_max_s` e dura `tempestade_duracao_s`. Durante o evento a visão é multiplicada por `tempestade_mult_visao` e a geração solar por `tempestade_mult_solar`. O aviso AL-15 sai `tempestade_aviso_s` antes.
+- **CEN-03** — Evento `tempestade_poeira` (Marte): ocorre em intervalos sorteados pela seed entre `tempestade_intervalo_min_s` e `tempestade_intervalo_max_s` e dura `tempestade_duracao_s`. Durante o evento a visão de todos os corpos (névoa e detecção de alvos) é multiplicada por `tempestade_mult_visao` e a geração solar por `tempestade_mult_solar`. O aviso AL-15 sai `tempestade_aviso_s` antes.
 - **CEN-04** — Evento `lagos_metano` (Titã): regiões líquidas que hovers atravessam, mas onde não se pode construir.
 - **CEN-05** — Europa: `mult_vel_hover` e `mult_giro_hover` representam o gelo (mais rápido, gira pior).
 
@@ -1202,6 +1202,12 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **Presets:** *Mare Imbrium* (P, 2 jogadores), *Mare Tranquillitatis* (M, até 4), *Oceanus Procellarum* (G, 3–4).
 - **Eventos:** nenhum.
 
+### 14.6 Marte
+
+- **Ambientação:** um planeta pequeno, com a curvatura visível como na Lua; céu caramelo de dia, mais claro no horizonte, com poeira em suspensão e sem estrelas; um Sol menor, com halo azulado em volta (o "pôr do sol azul" de Marte); solo cor de ferrugem com crateras e colinas; luz quente e difusa, sombras suaves. Na tempestade de poeira (CEN-03) o ar fica denso e alaranjado, o céu escurece, a poeira varre a tela e o vento aumenta (AUD-02).
+- **Presets:** *Utopia Planitia* (P, 2 jogadores), *Valles Marineris* (M, até 4), *Hellas Planitia* (G, 3–4).
+- **Eventos:** `tempestade_poeira` (CEN-03).
+
 ---
 
 ## 15. Campanha
@@ -1222,7 +1228,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | 0 | m00 | terra_lab | Campo de Testes | p | alvos_treino | Tutorial; destruir os alvos de treino | hover_explorer+printer+hover_ex1+hover_scout+laser_tower+storage+solar_plant+wall+gate | 20 | v1.0 |
 | 1 | m01 | lua | Primeira Forja | p | posto_passivo | Destruir o posto avançado inimigo | — | 20 | v1.0 |
 | 2 | m02 | lua_shackleton | Sombra Eterna | m | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq+aa_battery+mag_tower | 30 | v1.0 |
-| 3 | m03 | marte | Poeira Vermelha | m | normal+normal | Eliminar as nações rivais | nuclear_plant+hover_minelayer | 40 | v1.x |
+| 3 | m03 | marte | Poeira Vermelha | m | normal+normal | Eliminar as nações rivais | nuclear_plant+hover_minelayer | 40 | v1.0 |
 | 4 | m04 | fobos | Cerco em Fobos | p | dificil | Sobreviver 12 min; depois destruir a Nave inimiga | drone_laser+drone_bomber | 30 | v1.x |
 | 5 | m05 | ceres | Veios de Ceres | g | normal+dificil | Eliminar as nações rivais | satellite_uplink+missile_silo | 45 | v1.x |
 | 6 | m06 | venus | Inferno Ácido | m | dificil+dificil | Eliminar as nações rivais | — | 45 | v1.x |
@@ -1232,6 +1238,8 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 **Missão 0 — Campo de Testes (tutorial, Terra).** Os 9 passos de CAM-07: coletar, imprimir o 2º Hover e a Impressora, energia com a Usina Solar, Armazém perto do Cobre, explorar com o Hover de Observação, Torre de Defesa, Muro e Portão e, por fim, EX1 contra os alvos de treino (`alvos_treino`), que nunca disparam.
 
 **Missão 1 — Primeira Forja (Lua).** A primeira missão de verdade: destruir o posto avançado inimigo (`posto_passivo`, CAM-06): 2 Torres, 1 Armazém, 1 Usina Solar e 3 EX1, que não produzem nem atacam; só se defendem.
+
+**Missão 3 — Poeira Vermelha (Marte).** Duas nações rivais completas (IA Normal, com Nave) no mapa *Valles Marineris*, com tempestades de poeira (CEN-03). Libera a Usina Nuclear e o Hover de Plantio de Minas.
 
 **Missão 4 — Cerco em Fobos.** A IA envia ondas a cada 90 s, crescentes em VR. Após 12 min assume o comportamento Difícil normal, e o objetivo muda para destruir a Nave inimiga. Perder a própria Nave é derrota.
 
@@ -1609,6 +1617,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-74 | As trilhas ficam em `src/audio/` com os nomes do produto (`entrance.mp3`, `map.mp3`, `soundtrack_N.mp3`) e a lista da partida é montada com o que houver na pasta na hora do build, sem limite nem sequência. Substitui os nomes e a pasta `public/audio/trilhas/` de AUD-01. | Pedido do produto: entregar as músicas e poder acrescentar trilhas só colocando o arquivo na pasta. | Aprovada |
 | D-75 | A `entrance.mp3` segue em todos os menus até a Visão do Universo e é cortada seco quando a `map.mp3` entra; todo botão habilitado toca um som curto quando o mouse passa sobre ele. | Pedido do produto. | Aprovada |
 | D-76 | Macetes digitados na partida para acelerar o teste das fases, começando pelos de recurso (TEC-27). | Pedido do produto. | Aprovada |
+| D-77 | Marte e a Missão 3 entram na v1.0 (antes em v1.x): cenário com ambientação própria, tempestade de poeira, 3 presets e a missão na campanha. | Pedido do produto: seguir a campanha para Marte depois das fases da Lua. | Aprovada |
 
 ---
 
@@ -1700,3 +1709,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.23.2 | 2026-09-27 | D-74: AUD-01 com as trilhas do produto em `src/audio/` (`entrance.mp3`, `map.mp3` e as `soundtrack_*.mp3` descobertas na pasta). |
 | 0.23.3 | 2026-09-27 | D-75: AUD-01 (`entrance.mp3` até a Visão do Universo, corte seco para a `map.mp3`) e AUD-04 (som ao passar o mouse sobre botões). |
 | 0.24.0 | 2026-09-27 | D-76: TEC-27 (macetes na partida: "mais" + recurso soma `macete_quantidade` ao estoque). |
+| 0.25.0 | 2026-09-27 | D-77: Marte (`marte`) e a Missão 3 (`m03`) passam a v1.0; §14.6 (ambientação, presets e eventos de Marte); CEN-03 detalha que a visão reduzida vale para névoa e detecção; §2.1. |

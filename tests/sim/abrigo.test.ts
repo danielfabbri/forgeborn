@@ -66,7 +66,10 @@ describe('T-069 — CMB-28: Recolher mineradores', () => {
     const eventos: SimEvent[] = [];
     rodar(sim, 1.05, eventos);
     const extras = eventos.filter(
-      (e) => e.tipo === 'disparo' && e.dados.arma === 'abrigo_laser' && e.dados.atirador === nave,
+      (e) =>
+        e.tipo === 'disparo' &&
+        (e.dados as { arma: unknown }).arma === 'abrigo_laser' &&
+        (e.dados as { atirador: unknown }).atirador === nave,
     );
     expect(extras).toHaveLength(3);
   });

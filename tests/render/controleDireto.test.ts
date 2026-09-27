@@ -17,7 +17,7 @@ describe('T-110 — CTL-15: câmeras do controle direto', () => {
   it('CTL-15: 3ª pessoa ~3 m acima e ~7 m atrás', () => {
     const pose = poseDireta(corpo, NORTE, 0, '3p');
     const foco = [100 + 2 * 0.6, 0, 0];
-    expect(pose.olho[0] - foco[0]).toBeCloseTo(3, 5);
+    expect(pose.olho[0] - foco[0]!).toBeCloseTo(3, 5);
     expect(pose.olho[1]).toBeCloseTo(-7, 5);
     expect(dist(pose.olho, foco)).toBeCloseTo(Math.hypot(3, 7), 5);
   });

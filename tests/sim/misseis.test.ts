@@ -135,7 +135,9 @@ describe('T-059 — UNI-12, D-64: Bateria Antiaérea', () => {
     const eventos: SimEvent[] = [];
     ordenar(sim, 'lancar_missil', { ids: [silo], ...alvo(0, 2) }, 'usa');
     rodar(sim, 4, eventos);
-    const tiros = eventos.filter((e) => e.tipo === 'disparo' && e.dados.arma === 'aa_missil');
+    const tiros = eventos.filter(
+      (e) => e.tipo === 'disparo' && (e.dados as { arma: string }).arma === 'aa_missil',
+    );
     expect(tiros.length).toBeGreaterThan(0);
     const t = tiros.map((e) => e.tick);
     for (let k = 1; k < t.length; k++) {
@@ -163,8 +165,8 @@ describe('T-059 — UNI-12, D-64: Bateria Antiaérea', () => {
     const eventos: SimEvent[] = [];
     rodar(sim, 20, eventos);
     const alvos = eventos
-      .filter((e) => e.tipo === 'disparo' && e.dados.arma === 'aa_missil')
-      .map((e) => e.dados.alvo);
+      .filter((e) => e.tipo === 'disparo' && (e.dados as { arma: string }).arma === 'aa_missil')
+      .map((e) => (e.dados as { alvo: number }).alvo);
     expect(alvos).not.toContain(ex1);
     expect(getComponent(sim.state, ex1!, 'vida')!.hp).toBe(
       getComponent(sim.state, ex1!, 'vida')!.max,

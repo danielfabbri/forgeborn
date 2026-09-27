@@ -51,6 +51,23 @@ test.describe('M10: telas', () => {
     expect(erros).toEqual([]);
   });
 
+  test('AUD-01/D-74: entrance na abertura e na Seleção de Modo; map nos outros menus', async ({
+    page,
+  }) => {
+    const trilha = () =>
+      page.evaluate(() =>
+        (window as unknown as { __audio: { trilha: () => string | null } }).__audio.trilha(),
+      );
+    await page.goto('/');
+    await page.getByTestId('abertura').waitFor({ timeout: 45_000 });
+    await page.keyboard.press('Space');
+    await page.getByTestId('selecao-de-modo').waitFor();
+    await expect.poll(trilha).toMatch(/entrance/);
+    await page.getByTestId('modo-campanha').click();
+    await page.getByTestId('campanha-slots').waitFor();
+    await expect.poll(trilha).toMatch(/map/);
+  });
+
   test('FLX-03/CAM-09: Seleção de Modo com Campanha habilitada e Créditos', async ({ page }) => {
     await page.goto('/?menu');
     await page.getByTestId('selecao-de-modo').waitFor();
@@ -205,6 +222,14 @@ test.describe('M10: partida', () => {
     // Espaço não abriu o menu de pausa.
     await expect(page.getByTestId('menu-de-pausa')).toHaveCount(0);
     await expect(page.getByTestId('relogio')).toHaveText('0:02', { timeout: 5_000 });
+    // AUD-01/D-74: na partida toca uma das soundtrack_* da pasta.
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          (window as unknown as { __audio: { trilha: () => string | null } }).__audio.trilha(),
+        ),
+      )
+      .toMatch(/soundtrack_\d+/);
   });
 
   test('REG-21/REG-20: pausa tática aceita ordens; velocidade 1,5× acelera o relógio', async ({

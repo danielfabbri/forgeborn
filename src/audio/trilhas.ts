@@ -1,8 +1,8 @@
 /**
- * AUD-01 (D-47): trilhas musicais em arquivos, por contexto. A abertura toca
- * `trilha_abertura.mp3` (e segue na Seleção de Modo, que tem o mesmo fundo, FLX-03); os outros
- * menus tocam `trilha_menu.mp3`; a partida toca `trilha1.mp3`, `trilha2.mp3`… em ordem
- * embaralhada sem repetir a última, com transição cruzada de 4 s. Arquivo que falta é pulado.
+ * AUD-01 (D-47, D-74): trilhas musicais em arquivos de `src/audio/`, por contexto. A abertura toca
+ * `entrance.mp3` (e segue na Seleção de Modo, que tem o mesmo fundo, FLX-03); os outros menus
+ * tocam `map.mp3`; a partida toca todas as `soundtrack_*.mp3` da pasta em ordem embaralhada sem
+ * repetir a última, com transição cruzada de 4 s. Uma trilha nova entra só por estar na pasta.
  */
 import { audio, quandoDesbloquear } from './contexto';
 
@@ -10,20 +10,33 @@ export type ContextoMusical = 'abertura' | 'menu' | 'partida';
 
 /** AUD-01: transição cruzada entre trilhas (s). */
 const TRANSICAO_S = 4;
-/** Quantas trilhas numeradas procurar na pasta. */
-const MAX_TRILHAS = 30;
 
-const pasta = () => `${import.meta.env.BASE_URL}audio/trilhas/`;
+/** Os .mp3 da pasta (caminho → URL), montados pelo Vite no build. */
+const ARQUIVOS = import.meta.glob<string>('./*.mp3', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+});
 
-/** O arquivo existe e é áudio? (O servidor de desenvolvimento devolve a página para 404.) */
-async function existe(url: string): Promise<boolean> {
-  try {
-    const r = await fetch(url, { method: 'HEAD' });
-    return r.ok && (r.headers.get('content-type') ?? '').startsWith('audio');
-  } catch {
-    return false;
-  }
+export interface TrilhasDaPasta {
+  abertura: string | null;
+  menu: string | null;
+  partida: string[];
 }
+
+/** D-74: separa os arquivos da pasta por contexto; as da partida em ordem de número. */
+export function trilhasDaPasta(arquivos: Record<string, string>): TrilhasDaPasta {
+  const nome = (caminho: string) => caminho.split('/').pop()!.toLowerCase();
+  const achar = (n: string) => Object.entries(arquivos).find(([c]) => nome(c) === n)?.[1] ?? null;
+  const numero = (c: string) => Number(/^soundtrack_(\d+)\.mp3$/.exec(nome(c))?.[1] ?? NaN);
+  const partida = Object.keys(arquivos)
+    .filter((c) => /^soundtrack_.+\.mp3$/.test(nome(c)))
+    .sort((x, y) => (numero(x) || Infinity) - (numero(y) || Infinity) || x.localeCompare(y))
+    .map((c) => arquivos[c]!);
+  return { abertura: achar('entrance.mp3'), menu: achar('map.mp3'), partida };
+}
+
+export const TRILHAS = trilhasDaPasta(ARQUIVOS);
 
 /** Sorteio da próxima trilha: embaralha sem repetir a última (apresentação, fora da sim). */
 export function proximaTrilha(
@@ -45,7 +58,6 @@ interface Tocando {
 export class TocadorDeTrilhas {
   private contexto: ContextoMusical | null = null;
   private atual: Tocando | null = null;
-  private partida: string[] | null = null;
   private ultima: string | null = null;
   private pedido = 0;
 
@@ -59,7 +71,7 @@ export class TocadorDeTrilhas {
     if (contexto === this.contexto) return;
     this.contexto = contexto;
     const pedido = ++this.pedido;
-    quandoDesbloquear(() => void this.iniciar(contexto, pedido));
+    quandoDesbloquear(() => this.iniciar(contexto, pedido));
   }
 
   parar(): void {
@@ -69,8 +81,8 @@ export class TocadorDeTrilhas {
     this.atual = null;
   }
 
-  private async iniciar(contexto: ContextoMusical, pedido: number): Promise<void> {
-    const url = await this.escolher(contexto);
+  private iniciar(contexto: ContextoMusical, pedido: number): void {
+    const url = this.escolher(contexto);
     if (pedido !== this.pedido) return;
     if (!url) {
       this.sumir(this.atual);
@@ -80,26 +92,12 @@ export class TocadorDeTrilhas {
     this.entrar(url, contexto !== 'partida');
   }
 
-  private async escolher(contexto: ContextoMusical): Promise<string | null> {
-    if (contexto !== 'partida') {
-      const url = `${pasta()}trilha_${contexto}.mp3`;
-      return (await existe(url)) ? url : null;
-    }
-    this.partida ??= await this.descobrir();
-    const url = proximaTrilha(this.partida, this.ultima);
+  private escolher(contexto: ContextoMusical): string | null {
+    if (contexto === 'abertura') return TRILHAS.abertura;
+    if (contexto === 'menu') return TRILHAS.menu;
+    const url = proximaTrilha(TRILHAS.partida, this.ultima);
     this.ultima = url;
     return url;
-  }
-
-  /** As trilhas numeradas que existem na pasta (para no primeiro buraco). */
-  private async descobrir(): Promise<string[]> {
-    const lista: string[] = [];
-    for (let k = 1; k <= MAX_TRILHAS; k++) {
-      const url = `${pasta()}trilha${k}.mp3`;
-      if (!(await existe(url))) break;
-      lista.push(url);
-    }
-    return lista;
   }
 
   private entrar(url: string, emLoop: boolean): void {
@@ -124,12 +122,12 @@ export class TocadorDeTrilhas {
         if (this.atual?.el !== el || this.contexto !== 'partida') return;
         if (Number.isFinite(el.duration) && el.duration - el.currentTime <= TRANSICAO_S) {
           const pedido = ++this.pedido;
-          void this.iniciar('partida', pedido);
+          this.iniciar('partida', pedido);
         }
       });
       el.addEventListener('ended', () => {
         if (this.atual?.el === el && this.contexto === 'partida') {
-          void this.iniciar('partida', ++this.pedido);
+          this.iniciar('partida', ++this.pedido);
         }
       });
     }

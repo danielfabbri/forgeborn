@@ -286,9 +286,11 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
     const arma = armaDe('sat_laser');
     const distancia = 200 - arma.alcance_m;
     rodar(sim, distancia / param('satelite_vel_m_s') + 2, eventos);
-    const disparos = eventos.filter((e) => e.tipo === 'disparo' && e.dados.arma === 'sat_laser');
+    const disparos = eventos.filter(
+      (e) => e.tipo === 'disparo' && (e.dados as { arma: string }).arma === 'sat_laser',
+    );
     expect(disparos.length).toBeGreaterThan(0);
-    for (const d of disparos) expect([nosso, deles]).toContain(d.dados.alvo);
+    for (const d of disparos) expect([nosso, deles]).toContain((d.dados as { alvo: number }).alvo);
     // Ninguém no solo foi tocado; ao fim cai o deles (AL-18 do usa), mas a base segue de pé.
     for (const id of doSolo) {
       expect(getComponent(sim.state, id, 'vida')!.hp).toBe(

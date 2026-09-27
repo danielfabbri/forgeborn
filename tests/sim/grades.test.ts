@@ -23,6 +23,7 @@ import {
   indiceDoVertice,
 } from '../../src/sim/map/heightmap';
 import { GERADOR_LUA, gerarMapaLunar, rumoSemRampa } from '../../src/sim/map/lunar';
+import { RAIOS_DE_TESTE } from './mundo-teste';
 
 const RAIO = 200;
 /**
@@ -119,7 +120,7 @@ describe('TEC-13: grades derivadas do heightmap', () => {
 });
 
 describe('TEC-13: grades de um mapa lunar gerado', () => {
-  const mapa = gerarMapaLunar(7, 'm', 4);
+  const mapa = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4);
   const { navegacao: nav, construcao: obra } = derivarGrades(mapa);
   const topo = GERADOR_LUA.raioPlato + GERADOR_LUA.folgaTopo;
   const em = (c: Vec3, rumo: Vec3, metros: number) => avancar(c, rumo, metros / mapa.raio_m).p;

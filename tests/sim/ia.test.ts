@@ -166,11 +166,17 @@ describe('T-092 — IA-03, §13.3: produção e composição', () => {
 
 describe('T-093 — IA-04, IA-05, §13.2: militar e dificuldades', () => {
   it('IA-04/IA-05: a primeira onda respeita primeiro_ataque_min e vr_exercito_ataque; as IAs se atacam', () => {
-    // Seed em que as duas IAs chegam a atacar em 30 min (muda com o balanceamento: com D-49 a
-    // seed 1 não servia; com o plano de estruturas da IA, D-66, a seed 3 deixou de servir).
-    const { sim, nacoes } = criarPartida({ seed: 1, ias: ['normal', 'normal'], maxMin: 30 });
+    // Seed em que as duas IAs atacam e se ferem (muda com o balanceamento: com D-49 a seed 1 não
+    // servia; com D-66, a 3; com D-79, a 1 de novo). A regra não depende do tamanho do corpo: no
+    // planeta pequeno (Campo de testes) o teste é mais rápido.
+    const { sim, nacoes } = criarPartida({
+      seed: 3,
+      ias: ['normal', 'normal'],
+      maxMin: 40,
+      cenario: 'terra_lab',
+    });
     const primeira: Record<string, { minuto: number; vr: number }> = {};
-    for (let t = 0; t < 30 * 60 * sim.tickHz && Object.keys(primeira).length < 2; t++) {
+    for (let t = 0; t < 40 * 60 * sim.tickHz && Object.keys(primeira).length < 2; t++) {
       sim.step();
       for (const n of nacoes) {
         const onda = sim.state.ias[n]!.onda;
@@ -186,7 +192,7 @@ describe('T-093 — IA-04, IA-05, §13.2: militar e dificuldades', () => {
     }
     // IA-05: cada uma destruiu algo da outra.
     for (const n of nacoes) expect(sim.state.placar[n]!.vrDestruido).toBeGreaterThan(0);
-  }, 180_000);
+  }, 400_000);
 
   /** IA no nível dado com unidades próprias e inimigas em contato perto da base (defesa). */
   function combate(
@@ -304,7 +310,13 @@ describe('T-096 — IA-06, IA-08 a IA-10, D-66: a IA evolui estruturas', () => {
   }, 180_000);
 
   it('IA-08/IA-10: no Normal, a partida headless constrói as estruturas do plano e fabrica mísseis', () => {
-    const { sim } = criarPartida({ seed: 3, ias: ['normal', 'normal'], maxMin: 26 });
+    // No planeta pequeno (Campo de testes): a regra não depende do corpo e o teste fica rápido.
+    const { sim } = criarPartida({
+      seed: 3,
+      ias: ['normal', 'normal'],
+      maxMin: 26,
+      cenario: 'terra_lab',
+    });
     for (let t = 0; t < 26 * 60 * sim.tickHz && !sim.state.resultado; t++) sim.step();
     const tipos = new Set(
       sim.state.entities.map((id) => getComponent(sim.state, id, 'structure')?.tipo),
@@ -322,7 +334,7 @@ describe('T-096 — IA-06, IA-08 a IA-10, D-66: a IA evolui estruturas', () => {
         0,
       );
     expect(misseis).toBeGreaterThan(0);
-  }, 180_000);
+  }, 400_000);
 
   it('IA-10: curto defende contra inimigo perto de uma estrutura própria', () => {
     const sim = comIa('facil');

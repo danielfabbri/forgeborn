@@ -101,6 +101,8 @@ export interface EstadoDaIa {
   } | null;
   /** Batedor: índices dos pontos de exploração já visitados. */
   visitados: number[];
+  /** Batedor: tick-limite de cada ida (por id); quem não chega a tempo parte para o próximo ponto. */
+  prazoDoBatedor?: Record<number, number>;
   /** IA-08: já viu míssil inimigo em voo (a meta de Antiaéreas sobe). */
   viuMisseis?: boolean;
   /** IA-10: último míssil longo lançado (s de jogo). */

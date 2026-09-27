@@ -17,7 +17,6 @@ import nacoes from './generated/nacoes.json';
 import parametros from './generated/parametros.json';
 import personalidades from './generated/personalidades.json';
 import recursos from './generated/recursos.json';
-import tamanhosMapa from './generated/tamanhos_mapa.json';
 import type { ParametrosChave, Tabelas } from './generated/types';
 
 export type * from './generated/types';
@@ -41,7 +40,6 @@ export const dados: Readonly<Tabelas> = {
   parametros: parametros as unknown as Tabelas['parametros'],
   personalidades: personalidades as unknown as Tabelas['personalidades'],
   recursos: recursos as unknown as Tabelas['recursos'],
-  tamanhos_mapa: tamanhosMapa as unknown as Tabelas['tamanhos_mapa'],
 };
 
 const valoresDosParametros = new Map<string, number>(

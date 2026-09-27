@@ -53,13 +53,19 @@ function pontosDoMapa(ctx: SystemContext): Ponto[] {
   ];
 }
 
+/** Folga (s) do prazo de cada ida do batedor. */
+const FOLGA_DO_PRAZO_S = 30;
+
 export function decidirBatedor(ctx: SystemContext, q: Quadro): void {
   const pontos = [...anelDeExpansao(ctx, q.base), ...pontosDoMapa(ctx)];
   if (pontos.length === 0) return;
   const batedores = dosTipos(ctx.state, q.nacao, 'hover_scout').slice(0, param('ia_batedores'));
+  const prazos = (q.ia.prazoDoBatedor ??= {});
   for (const id of batedores) {
     const ordem = getComponent(ctx.state, id, 'order')!.tipo;
-    if (ordem !== 'nenhuma') continue;
+    // Um ponto que o batedor não alcança (atrás de um paredão) não o prende: vencido o prazo, segue.
+    const vencido = ordem === 'mover' && prazos[id] !== undefined && ctx.tick > prazos[id]!;
+    if (ordem !== 'nenhuma' && !vencido) continue;
     // Marca como visitados os pontos já explorados.
     pontos.forEach((p, k) => {
       if (!q.ia.visitados.includes(k) && explorado(ctx, q.nacao, p)) q.ia.visitados.push(k);
@@ -76,6 +82,10 @@ export function decidirBatedor(ctx: SystemContext, q: Quadro): void {
     pendentes.sort((a, b) => distanciaM(ctx, aqui, a.p) - distanciaM(ctx, aqui, b.p) || a.k - b.k);
     const destino = pendentes[0]!;
     q.ia.visitados.push(destino.k);
+    // Prazo: o dobro do tempo de viagem em linha reta, mais uma folga fixa.
+    const vel = dados.moveis.find((m) => m.id === 'hover_scout')!.vel_m_s;
+    const viagem_s = (2 * distanciaM(ctx, aqui, destino.p)) / vel + FOLGA_DO_PRAZO_S;
+    prazos[id] = ctx.tick + Math.round(viagem_s / ctx.dt);
     comandar(ctx, q.nacao, 'mover', {
       ids: [id],
       x: destino.p[0],

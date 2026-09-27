@@ -53,7 +53,7 @@ describe('T-130/T-133 — CAM-01 a CAM-04, CAM-08, D-73: campanha', () => {
 
   it('D-77: a Missão 3 é em Valles Marineris (Marte), contra duas IAs Normais com Nave', () => {
     const pm = resolverMissao('m03', 'bra', 0)!;
-    expect(pm.resolvida.mapa).toMatchObject({ cenario: 'marte', tamanho: 'm', zonas: 4 });
+    expect(pm.resolvida.mapa).toMatchObject({ cenario: 'marte', zonas: 4 });
     expect(pm.semNave).toEqual([]);
     expect(Object.values(pm.resolvida.ias)).toEqual(['normal', 'normal']);
     expect(pm.resolvida.nacoes).toHaveLength(3);

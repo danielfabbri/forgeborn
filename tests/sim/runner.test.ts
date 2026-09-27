@@ -7,15 +7,20 @@ import { niveisDeIa, runMatch } from '../../tools/sim/match';
 const raiz = fileURLToPath(new URL('../../', import.meta.url));
 
 describe('TEC-25: runner headless', () => {
-  it('roda a duração pedida em ticks de tick_hz, de forma determinística', () => {
-    const a = runMatch({ seed: 3, ias: ['normal', 'facil'], maxMin: 1 });
-    const b = runMatch({ seed: 3, ias: ['normal', 'facil'], maxMin: 1 });
-    expect(a.ticks).toBe(60 * param('tick_hz'));
-    expect(a.minutos_simulados).toBe(1);
-    expect(a.nacoes).toEqual(['usa', 'chn']);
-    expect(a.hash).toBe(b.hash);
-    expect(a.tick_medio_ms).toBeGreaterThanOrEqual(0);
-  });
+  // O mapa da Lua tem o raio do cenário (CEN-16): gerar duas vezes leva alguns segundos.
+  it(
+    'roda a duração pedida em ticks de tick_hz, de forma determinística',
+    { timeout: 120_000 },
+    () => {
+      const a = runMatch({ seed: 3, ias: ['normal', 'facil'], maxMin: 1 });
+      const b = runMatch({ seed: 3, ias: ['normal', 'facil'], maxMin: 1 });
+      expect(a.ticks).toBe(60 * param('tick_hz'));
+      expect(a.minutos_simulados).toBe(1);
+      expect(a.nacoes).toEqual(['usa', 'chn']);
+      expect(a.hash).toBe(b.hash);
+      expect(a.tick_medio_ms).toBeGreaterThanOrEqual(0);
+    },
+  );
 
   it('aceita os níveis de IA de dados:dificuldade e recusa os demais', () => {
     expect(niveisDeIa()).toEqual(['facil', 'normal', 'dificil', 'brutal']);

@@ -4,6 +4,7 @@ import { derivarGrades } from '../../src/sim/map/grids';
 import { distribuirJazidas } from '../../src/sim/map/jazidas';
 import { gerarMapaLunar, type Simetria } from '../../src/sim/map/lunar';
 import { type MotivoInvalido, type ProblemaDeMapa, validarMapa } from '../../src/sim/map/validacao';
+import { RAIOS_DE_TESTE } from './mundo-teste';
 
 const MOTIVOS: MotivoInvalido[] = [
   'zonas_desconectadas',
@@ -17,7 +18,7 @@ export function testarSeeds(tamanho: 'p' | 'm' | 'g', n: Simetria, seeds: number
   it(`CEN-11: ${seeds.length} seeds ${tamanho.toUpperCase()}${n} são válidas ou recusadas com motivo`, () => {
     let validas = 0;
     for (const seed of seeds) {
-      const mapa = gerarMapaLunar(seed, tamanho, n);
+      const mapa = gerarMapaLunar(seed, RAIOS_DE_TESTE[tamanho], n);
       const grades = derivarGrades(mapa);
       let problemas: ProblemaDeMapa[];
       try {

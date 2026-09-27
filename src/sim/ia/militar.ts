@@ -16,11 +16,12 @@ import { raioDaPegada } from '../units/criar';
 import { statsMovel } from '../units/stats';
 import { limiarDeRecarga, papelDe } from '../energia/bateria';
 import { armaDe } from '../combate/armas';
-import { avancar, tangente } from '../map/esfera';
+import { avancar, produtoEscalar, tangente } from '../map/esfera';
 import { bordaDe } from '../producao/alcance';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 import { comandar, dificuldade, maisProximo, proprios, temTraco, vrDe } from './base';
 import type { Quadro } from './quadro';
+import { GERADOR_LUA } from '../map/lunar';
 
 const pos = (ctx: SystemContext, id: EntityId): Ponto =>
   direcaoDe(getComponent(ctx.state, id, 'position')!);
@@ -40,12 +41,38 @@ export function frente(ctx: SystemContext, q: Quadro): Ponto | null {
   return maisProximo(ctx, q.base, zonas, (z) => z);
 }
 
+/** Além do pé da rampa (m), para a reunião não ficar no corredor de subida. */
+const ALEM_DA_RAMPA_M = 12;
+
+/**
+ * Reunião do exército: no pé da rampa da própria zona mais voltada para a frente, fora da base
+ * (alcançável e longe de onde Impressoras e hovers trabalham; com a espera longa até o 1º ataque,
+ * D-79, o exército cresce ali). Sem rampas conhecidas, na borda do raio de defesa.
+ */
 function pontoDeReuniao(ctx: SystemContext, q: Quadro): Ponto {
   const alvo = frente(ctx, q);
-  const rumo = alvo ? tangente(q.base, alvo) : null;
-  // A reunião fica na metade do raio de defesa, do lado da frente.
-  const metros = param('ia_raio_defesa_m') / 2;
-  return rumo ? avancar(q.base, rumo, metros / raioDoMundo(ctx)).p : q.base;
+  if (!alvo) return q.base;
+  const R = raioDoMundo(ctx);
+  const mapa = ctx.mundo?.mapa as
+    { zonasDePouso?: Array<{ d: Ponto; rampas: Ponto[] }> } | undefined;
+  const zona = mapa?.zonasDePouso?.find((z) => distanciaM(ctx, z.d, q.base) < 30);
+  if (zona && zona.rampas.length > 0) {
+    // Com a frente no antípoda (mapa de 2 zonas) todo rumo serve: fica a 1ª rampa.
+    const paraAFrente = tangente(zona.d, alvo);
+    const rampa = paraAFrente
+      ? [...zona.rampas].sort(
+          (a, b) => produtoEscalar(b, paraAFrente) - produtoEscalar(a, paraAFrente),
+        )[0]!
+      : zona.rampas[0]!;
+    const metros =
+      GERADOR_LUA.raioPlato +
+      GERADOR_LUA.folgaTopo +
+      GERADOR_LUA.comprimentoRampa +
+      ALEM_DA_RAMPA_M;
+    return avancar(zona.d, rampa, metros / R).p;
+  }
+  const rumo = tangente(q.base, alvo);
+  return rumo ? avancar(q.base, rumo, param('ia_raio_defesa_m') / R).p : q.base;
 }
 
 /** Manda ids para o ponto, sem refazer a ordem de quem já vai para lá. */

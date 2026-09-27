@@ -169,7 +169,6 @@ export function resolverMissao(
       ias: ias as Record<NacaoId, string>,
       mapa: {
         seed: preset.seed,
-        tamanho: preset.tamanho,
         zonas: preset.zonas,
         cenario: preset.cenario,
       },

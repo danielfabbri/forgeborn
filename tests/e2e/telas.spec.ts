@@ -157,18 +157,23 @@ test.describe('M10: telas', () => {
     await expect(page.getByTestId('cenario-lua_shackleton')).toBeEnabled();
   });
 
-  test('FB-03/FB-02/FB-04: tamanho inválido desabilitado, zona escolhida, última configuração lembrada', async ({
+  test('FB-03/CEN-16/FB-02/FB-04: sem tamanho, preset inválido desabilitado, zona escolhida, última configuração lembrada', async ({
     page,
   }) => {
     await abrirFreeBattle(page);
-    // 1 oponente: o Grande (3–4 jogadores) fica desabilitado com explicação.
-    await expect(page.getByTestId('fb-tamanho-g')).toBeDisabled();
-    await expect(page.getByTestId('fb-explicacao-tamanho')).toBeVisible();
-    // 2 oponentes: o Pequeno (2 jogadores) desabilita e o Grande libera.
+    // CEN-16: o tamanho é o do corpo, sem escolha.
+    await expect(page.getByTestId('fb-raio')).toContainText('400');
+    const opcao = (id: string) => page.locator(`[data-testid="fb-mapa"] option[value="${id}"]`);
+    // 1 oponente: Oceanus Procellarum (3–4 jogadores) fica desabilitado com explicação.
+    await expect(opcao('oceanus_procellarum')).toBeDisabled();
+    await expect(opcao('oceanus_procellarum')).toHaveAttribute('title', /3/);
+    // 2 oponentes: Mare Imbrium (só 2 jogadores) desabilita e Oceanus libera.
     await page.getByTestId('fb-oponentes-2').click();
-    await expect(page.getByTestId('fb-tamanho-p')).toBeDisabled();
-    await expect(page.getByTestId('fb-tamanho-g')).toBeEnabled();
+    await expect(opcao('mare_imbrium')).toBeDisabled();
+    await expect(opcao('oceanus_procellarum')).toBeEnabled();
     await page.getByTestId('fb-oponentes-1').click();
+    // Um mapa de 4 zonas para escolher a 3ª.
+    await page.getByTestId('fb-mapa').selectOption('mare_tranquillitatis');
 
     await page.getByTestId('fb-zona-escolher').click();
     await expect(page.getByTestId('fb-iniciar')).toBeDisabled();
@@ -240,7 +245,6 @@ test.describe('M10: partida', () => {
       nacaoJogador: 'bra',
       oponentes: [{ nacao: 'usa', dificuldade: 'facil' }],
       cenario: 'lua',
-      tamanho: 'm',
       mapa: 'mare_tranquillitatis',
       zonaPouso: 0,
       recursos: 'padrao',
@@ -278,7 +282,6 @@ test.describe('M10: partida', () => {
       nacaoJogador: 'bra',
       oponentes: [{ nacao: 'usa', dificuldade: 'facil' }],
       cenario: 'lua',
-      tamanho: 'm',
       mapa: 'mare_tranquillitatis',
       zonaPouso: 0,
       recursos: 'padrao',

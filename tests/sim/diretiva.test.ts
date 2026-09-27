@@ -8,7 +8,7 @@ import { criar, mundoLiso, mundoLua, ordenar, partida, revelar, semear } from '.
 
 const RECURSOS = dados.recursos.map((r) => r.id);
 
-/** Partida no planeta M com a Nave na zona 0, todas as jazidas semeadas e N hovers ociosos. */
+/** Partida na Lua (preset de 4 zonas) com a Nave na zona 0, todas as jazidas semeadas e N hovers ociosos. */
 function partidaComHovers(n: number, antes?: (sim: Sim) => void) {
   const pronto = mundoLua();
   const sim = partida(pronto);
@@ -24,7 +24,7 @@ function partidaComHovers(n: number, antes?: (sim: Sim) => void) {
     })) as never,
   });
   // As jazidas da distribuição inteira contam como exploradas (VIS-01).
-  revelar(sim);
+  revelar(sim, 'bra', pronto);
   criar(sim, [{ estrutura: 'ship', d: zona.d }]);
   antes?.(sim);
   // Hovers em anel em volta da Nave, a 18 m do centro.

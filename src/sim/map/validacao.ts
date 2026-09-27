@@ -6,13 +6,34 @@
  * que ainda exista rota. Na prática, as duas rotas saem por rampas diferentes. No planeta todas
  * as zonas de pouso são vizinhas (CEN-07), então todos os pares são verificados.
  */
-import type { CenariosId, TamanhosMapaId } from '../data';
+import type { CenariosId } from '../data';
 import { celulasNoRaio, componenteConectado, noComponente, temFolga } from './conectividade';
 import { arco, centroDaCelula } from './esfera';
 import { celulaDe, derivarGrades, type GradeNavegacao, type GradesDoMapa } from './grids';
 import { type DistribuicaoDeJazidas, distribuirJazidas } from './jazidas';
 import { GERADOR_LUA, gerarMapaLunar, type MapaLunar, type Simetria } from './lunar';
 import { dados, param } from '../data';
+
+/** CEN-16 (D-79): o raio do planeta é o do cenário. */
+export function raioDoCenario(cenario: CenariosId): number {
+  const c = dados.cenarios.find((x) => x.id === cenario);
+  if (!c) throw new Error(`Cenário desconhecido: ${cenario}`);
+  return c.raio_m;
+}
+
+/**
+ * Prévia do Free Battle (FB-02): só o relevo e as zonas de um preset (seed já validada, CEN-12),
+ * com um vértice a cada `texel` metros; sem grades nem jazidas.
+ */
+export function gerarPrevia(
+  seed: number,
+  zonas: Simetria,
+  cenario: CenariosId,
+  texel = 4,
+): MapaLunar {
+  const lagos = temLagos(cenario) ? param('lagos_por_setor') : 0;
+  return gerarMapaLunar(seed, raioDoCenario(cenario), zonas, cenario === 'terra_lab', lagos, texel);
+}
 
 /** CEN-04: cenários com o evento `lagos_metano`. */
 const temLagos = (cenario: CenariosId): boolean =>
@@ -158,7 +179,6 @@ export interface MapaPronto {
  */
 export function gerarMapaValido(
   seed: number,
-  tamanho: TamanhosMapaId,
   zonas: Simetria,
   cenario: CenariosId,
   validar: typeof validarMapa = validarMapa,
@@ -167,8 +187,14 @@ export function gerarMapaValido(
   for (let tentativa = 0; tentativa < VALIDACAO.maxTentativas; tentativa++) {
     const atual = seed + tentativa;
     // §14.5: o Campo de testes da Terra é quase plano; CEN-04: Titã tem lagos de metano.
-    const lagos = temLagos(cenario) ? param(`lagos_por_setor_${tamanho}`) : 0;
-    const mapa = gerarMapaLunar(atual, tamanho, zonas, cenario === 'terra_lab', lagos);
+    const lagos = temLagos(cenario) ? param('lagos_por_setor') : 0;
+    const mapa = gerarMapaLunar(
+      atual,
+      raioDoCenario(cenario),
+      zonas,
+      cenario === 'terra_lab',
+      lagos,
+    );
     const grades = derivarGrades(mapa);
     let jazidas: DistribuicaoDeJazidas;
     try {

@@ -6,7 +6,6 @@
  * de E2 (norte), medidos pelo arco.
  */
 import { createSim, type EntityId, getComponent, type NacaoId, type Sim } from '../../src/sim';
-import { dados } from '../../src/sim/data';
 import { DEBUG_CRIAR_COMMAND, debugCriarHandlers } from '../../src/sim/debug/criar';
 import type { CenariosId, EstruturasId, MoveisId, RecursosId } from '../../src/sim/data';
 import { SEMEAR_JAZIDAS_COMMAND } from '../../src/sim/economia';
@@ -30,8 +29,14 @@ import type { Mundo } from '../../src/sim/map/mundo';
 import { PRESETS_DE_MAPA } from '../../src/sim/map/presets';
 import { gerarMapaValido } from '../../src/sim/map/validacao';
 import { comandosDoJogo, sistemasDoJogo } from '../../src/sim/units';
+import { gerarMapaLunar } from '../../src/sim/map/lunar';
 
-export const RAIO = dados.tamanhos_mapa.find((t) => t.id === 'm')!.raio_m;
+/**
+ * Planetas de teste para as regras e o gerador (o gerador aceita qualquer raio; os cenários têm o
+ * próprio, CEN-16): os raios dos antigos mapas P, M e G.
+ */
+export const RAIOS_DE_TESTE = { p: 108, m: 144, g: 180 } as const;
+export const RAIO = RAIOS_DE_TESTE.m;
 export const BASE: Vec3 = [1, 0, 0];
 const E1: Vec3 = [0, 0, 1];
 const E2: Vec3 = [0, 1, 0];
@@ -94,11 +99,20 @@ export function mundoLiso(parede?: (x: number, z: number) => boolean): Mundo {
 let liso: Mundo | null = null;
 
 let lua: ReturnType<typeof gerarMapaValido> | null = null;
-/** Preset Mare Tranquillitatis (M, 4 zonas). */
+/**
+ * Mapa lunar de 4 zonas no planeta de teste M (144 m), gerado e validado pela seed: para regras
+ * que não dependem do tamanho do corpo e ficariam lentas no raio da Lua (CEN-16).
+ */
+export function mundoDeTeste(seed: number): Mundo {
+  const mapa = gerarMapaLunar(seed, RAIOS_DE_TESTE.m, 4);
+  return { mapa, grades: derivarGrades(mapa) };
+}
+
+/** Preset Mare Tranquillitatis (Lua, 4 zonas). */
 export function mundoLua(seed?: number): ReturnType<typeof gerarMapaValido> {
   const preset = PRESETS_DE_MAPA.find((p) => p.id === 'mare_tranquillitatis')!;
-  if (seed !== undefined) return gerarMapaValido(seed, 'm', 4, 'lua');
-  lua ??= gerarMapaValido(preset.seed, preset.tamanho, preset.zonas, preset.cenario);
+  if (seed !== undefined) return gerarMapaValido(seed, 4, 'lua');
+  lua ??= gerarMapaValido(preset.seed, preset.zonas, preset.cenario);
   return lua;
 }
 
@@ -126,8 +140,8 @@ export function partida(
 }
 
 /** Marca todo o mapa como explorado pela nação (VIS-01), para testes de outras regras. */
-export function revelar(sim: Sim, nacao: NacaoId = 'bra'): void {
-  const celulas = mundoLiso().grades.nevoa.esfera.celulas;
+export function revelar(sim: Sim, nacao: NacaoId = 'bra', mundo: Mundo = mundoLiso()): void {
+  const celulas = mundo.grades.nevoa.esfera.celulas;
   sim.state.nevoa[nacao] = new Array<number>(celulas).fill(1);
 }
 

@@ -22,36 +22,31 @@ describe('T-104 — §16, FB-01 a FB-04: configuração de Free Battle', () => {
     expect(c.nacaoJogador).toBe(padrao('nacao_jogador'));
     expect(c.oponentes).toHaveLength(Number(padrao('num_oponentes')));
     expect(c.oponentes[0]!.dificuldade).toBe(padrao('dificuldade_oponente'));
-    expect(c.tamanho).toBe(padrao('tamanho_mapa'));
     expect(c.nevoa).toBe(padrao('nevoa'));
     expect(c.tempoLimiteMin).toBe(Number(padrao('tempo_limite_min')));
     expect(c.velocidade).toBe(1);
-    // "preset do tamanho"
-    expect(c.mapa).toBe('mare_tranquillitatis');
+    // "1º preset do cenário" que comporta os jogadores (1v1: Mare Imbrium).
+    expect(c.mapa).toBe('mare_imbrium');
     expect(validar(c)).toEqual([]);
   });
 
-  it('FB-03: o tamanho respeita min e max de jogadores de dados:tamanhos_mapa', () => {
+  it('FB-03/CEN-16: sem escolha de tamanho; o preset respeita os jogadores e as zonas', () => {
     const tres = [0, 1, 2].map(() => ({ nacao: 'aleatoria' as const, dificuldade: 'normal' }));
-    expect(
-      validar(com({ tamanho: 'p', mapa: 'mare_imbrium', oponentes: tres.slice(0, 1) })),
-    ).toEqual([]);
-    expect(
-      validar(com({ tamanho: 'p', mapa: 'mare_imbrium', oponentes: tres.slice(0, 2) }))[0],
-    ).toMatchObject({
-      campo: 'tamanho',
+    expect(validar(com({ mapa: 'mare_imbrium', oponentes: tres.slice(0, 1) }))).toEqual([]);
+    expect(validar(com({ mapa: 'mare_imbrium', oponentes: tres.slice(0, 2) }))[0]).toMatchObject({
+      campo: 'mapa',
       motivo: 'fb.invalido.muitos',
     });
     expect(
-      validar(com({ tamanho: 'g', mapa: 'oceanus_procellarum', oponentes: tres.slice(0, 1) }))[0],
-    ).toMatchObject({
-      campo: 'tamanho',
-      motivo: 'fb.invalido.poucos',
-    });
+      validar(com({ mapa: 'oceanus_procellarum', oponentes: tres.slice(0, 1) }))[0],
+    ).toMatchObject({ campo: 'mapa', motivo: 'fb.invalido.poucos' });
+    // Mapa aleatório: 2 zonas no 1v1, 4 com mais jogadores.
+    expect(resolver(com({ mapa: 'aleatoria', oponentes: tres.slice(0, 1) }), 3).mapa.zonas).toBe(2);
+    expect(resolver(com({ mapa: 'aleatoria', oponentes: tres }), 3).mapa.zonas).toBe(4);
   });
 
-  it('FB-03: preset de outro tamanho, zona fora do mapa e nação repetida são inválidos', () => {
-    expect(validar(com({ mapa: 'mare_imbrium' })).map((p) => p.campo)).toEqual(['mapa']);
+  it('FB-03: preset de outro cenário, zona fora do mapa e nação repetida são inválidos', () => {
+    expect(validar(com({ mapa: 'utopia_planitia' })).map((p) => p.campo)).toEqual(['mapa']);
     expect(validar(com({ zonaPouso: 4 })).map((p) => p.campo)).toEqual(['zonaPouso']);
     expect(
       validar(
@@ -63,7 +58,7 @@ describe('T-104 — §16, FB-01 a FB-04: configuração de Free Battle', () => {
   it('FB-04: cada oponente tem nação e dificuldade próprias; as aleatórias não repetem', () => {
     const c = com({
       nacaoJogador: 'aleatoria',
-      tamanho: 'm',
+      mapa: 'mare_tranquillitatis',
       oponentes: [
         { nacao: 'rus', dificuldade: 'facil' },
         { nacao: 'aleatoria', dificuldade: 'brutal' },
@@ -84,7 +79,7 @@ describe('T-104 — §16, FB-01 a FB-04: configuração de Free Battle', () => {
 
   it('FB-02: a zona escolhida é do jogador; as IAs sorteiam as restantes', () => {
     for (let seed = 1; seed <= 10; seed++) {
-      const p = resolver(com({ zonaPouso: 3 }), seed);
+      const p = resolver(com({ mapa: 'mare_tranquillitatis', zonaPouso: 3 }), seed);
       expect(p.zonas[0]).toBe(3);
       expect(p.zonas[1]).not.toBe(3);
     }
@@ -98,7 +93,7 @@ describe('T-104 — §16, FB-01 a FB-04: configuração de Free Battle', () => {
     const a = resolver(com({ mapa: 'aleatoria' }), 1).mapa.seed;
     const b = resolver(com({ mapa: 'aleatoria' }), 2).mapa.seed;
     expect(a).not.toBe(b);
-    expect(resolver(com({}), 1).mapa.seed).toBe(24);
+    expect(resolver(com({}), 1).mapa.seed).toBe(27);
   });
 
   it('REG-04/§16: os comandos de início montam a partida com estoque, névoa e IAs', () => {

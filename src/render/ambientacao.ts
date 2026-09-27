@@ -33,7 +33,7 @@ export interface Ambientacao {
   neblina: { perto: number; longe: number } | null;
   /** Altura máxima da câmera (m), ou null (a de CTL-16). */
   tetoCamera: number | null;
-  /** Brilho do escuro da névoa de guerra (0 = preto). */
+  /** Brilho do escuro da névoa de guerra: a silhueta do relevo nunca visto (VIS-01, D-80). */
   escuroBrilho: number;
   /**
    * §14.5: o chão longe do ponto focal se funde à cor dos campos ao fundo (esconde a borda do
@@ -75,7 +75,7 @@ const LUA: Ambientacao = {
   panorama: false,
   neblina: null,
   tetoCamera: null,
-  escuroBrilho: 0,
+  escuroBrilho: 0.2,
   desvanecer: null,
   detalhe: 1,
   solNoCeu: null,
@@ -131,7 +131,7 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     secundaria: { cor: new Color('#d69a6a'), intensidade: 0.3 },
     tinta: [1.9, 1.05, 0.66],
     neblina: { perto: 90, longe: 420 },
-    escuroBrilho: 0.12,
+    escuroBrilho: 0.2,
     detalhe: 0.8,
     solNoCeu: { cor: new Color('#fff4e0'), halo: new Color('#8fb4e8') },
     tempestade: { cor: new Color('#a8683e'), neblina: { perto: 30, longe: 170 }, luz: 0.55 },
@@ -150,7 +150,7 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     secundaria: { cor: new Color('#b8743a'), intensidade: 0.3 },
     tinta: [1.3, 1.15, 0.95],
     neblina: { perto: 90, longe: 420 },
-    escuroBrilho: 0.1,
+    escuroBrilho: 0.2,
     detalhe: 0.6,
     solNoCeu: { cor: new Color('#e9b77a'), halo: new Color('#dfa05c') },
     vento: 0.25,

@@ -12,7 +12,6 @@ const config = {
   nacaoJogador: 'bra',
   oponentes: [{ nacao: 'usa', dificuldade: 'facil' }],
   cenario: 'lua',
-  tamanho: 'm',
   mapa: 'mare_tranquillitatis',
   zonaPouso: 0,
   recursos: 'padrao',

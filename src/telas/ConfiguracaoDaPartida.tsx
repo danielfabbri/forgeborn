@@ -10,24 +10,25 @@ import {
   type ConfigFreeBattle,
   configPadrao,
   DIFICULDADES,
-  motivoDoTamanho,
+  motivoDoPreset,
   NACOES,
+  presetPadrao,
   presetsDe,
   validar,
   VELOCIDADES,
   valoresDe,
-  zonasDoTamanho,
+  zonasDaPartida,
 } from '../game/freeBattle';
 import { irParaPartida } from '../game/navegacao';
 import { t, type TextKey } from '../i18n';
 import { PreviaDoMapa } from '../render/previaMapa';
-import { dados } from '../sim';
-import type { CenariosId, TamanhosMapaId } from '../sim/data';
-import { gerarMapaValido, type MapaPronto } from '../sim/map/validacao';
+import type { CenariosId } from '../sim/data';
+import type { PresetDeMapa } from '../sim/map/presets';
+import type { MapaLunar } from '../sim/map/lunar';
+import { gerarPrevia, raioDoCenario } from '../sim/map/validacao';
 
 const CHAVE = 'free_battle';
-const TAMANHOS = dados.tamanhos_mapa.map((x) => x.id);
-const cache = new Map<string, MapaPronto>();
+const cache = new Map<string, MapaLunar>();
 
 /** Última configuração salva, ajustada ao cenário escolhido e validada (FB-04). */
 async function ultimaConfig(cenario: CenariosId): Promise<ConfigFreeBattle> {
@@ -50,7 +51,7 @@ export function ConfiguracaoDaPartida({
   const [c, setC] = useState<ConfigFreeBattle>({ ...configPadrao(), cenario });
   const [escolher, setEscolher] = useState(false);
   const [gerando, setGerando] = useState(false);
-  const [mapa, setMapa] = useState<MapaPronto | null>(null);
+  const [mapa, setMapa] = useState<MapaLunar | null>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const previa = useRef<PreviaDoMapa | null>(null);
 
@@ -64,13 +65,13 @@ export function ConfiguracaoDaPartida({
   const mudar = (m: Partial<ConfigFreeBattle>) => setC((antes) => ajustar({ ...antes, ...m }));
 
   // Pré-visualização: gera o mapa do preset (em cache); "aleatória" não tem prévia.
-  const preset = presetsDe(c.cenario, c.tamanho).find((p) => p.id === c.mapa);
+  const preset = presetsDe(c.cenario).find((p) => p.id === c.mapa);
   useEffect(() => {
     if (!preset) {
       setMapa(null);
       return;
     }
-    const chave = `${preset.seed}|${preset.tamanho}|${preset.zonas}|${preset.cenario}`;
+    const chave = `${preset.seed}|${preset.zonas}|${preset.cenario}`;
     const pronto = cache.get(chave);
     if (pronto) {
       setMapa(pronto);
@@ -79,7 +80,7 @@ export function ConfiguracaoDaPartida({
     setGerando(true);
     // Deixa a tela pintar o "gerando" antes do passo pesado.
     const espera = setTimeout(() => {
-      const novo = gerarMapaValido(preset.seed, preset.tamanho, preset.zonas, preset.cenario);
+      const novo = gerarPrevia(preset.seed, preset.zonas, preset.cenario);
       cache.set(chave, novo);
       setMapa(novo);
       setGerando(false);
@@ -102,8 +103,8 @@ export function ConfiguracaoDaPartida({
   useEffect(() => {
     if (!mapa || !previa.current) return;
     previa.current.mostrar({
-      mapa: mapa.mapa,
-      zonas: mapa.mapa.zonasDePouso.map((z) => z.d),
+      mapa,
+      zonas: mapa.zonasDePouso.map((z) => z.d),
       escolhida: escolher && c.zonaPouso !== 'aleatoria' ? c.zonaPouso : null,
       corDoJogador: corDe(nacaoDoJogador ?? 'bra'),
     });
@@ -217,30 +218,10 @@ export function ConfiguracaoDaPartida({
             </Linha>
           ))}
           <Linha rotulo="fb.tamanho">
-            <div class="opcoes">
-              {TAMANHOS.map((tam) => {
-                const motivo = motivoDoTamanho(tam, jogadores);
-                return (
-                  <button
-                    key={tam}
-                    data-testid={`fb-tamanho-${tam}`}
-                    class={c.tamanho === tam ? 'ativa' : ''}
-                    disabled={motivo !== null}
-                    title={motivo ? explicarTamanho(tam, motivo) : ''}
-                    onClick={() => mudar({ tamanho: tam })}
-                  >
-                    {t(`fb.tamanho.${tam}` as TextKey)}
-                  </button>
-                );
-              })}
-            </div>
-            {TAMANHOS.some((tam) => motivoDoTamanho(tam, jogadores)) && (
-              <small class="explicacao" data-testid="fb-explicacao-tamanho">
-                {TAMANHOS.filter((tam) => motivoDoTamanho(tam, jogadores))
-                  .map((tam) => explicarTamanho(tam, motivoDoTamanho(tam, jogadores)!))
-                  .join(' ')}
-              </small>
-            )}
+            {/* CEN-16 (D-79): o tamanho é o do corpo celeste, sem escolha. */}
+            <span data-testid="fb-raio">
+              {t('fb.raio_do_corpo', { raio: raioDoCenario(c.cenario) })}
+            </span>
           </Linha>
           <Linha rotulo="fb.mapa">
             <select
@@ -248,11 +229,20 @@ export function ConfiguracaoDaPartida({
               value={c.mapa}
               onChange={(e) => mudar({ mapa: e.currentTarget.value })}
             >
-              {presetsDe(c.cenario, c.tamanho).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {t(`mapa.${p.id}` as TextKey)}
-                </option>
-              ))}
+              {presetsDe(c.cenario).map((p) => {
+                const motivo = motivoDoPreset(p, jogadores);
+                return (
+                  <option
+                    key={p.id}
+                    value={p.id}
+                    disabled={motivo !== null}
+                    title={motivo ? explicarPreset(p, motivo) : ''}
+                  >
+                    {t(`mapa.${p.id}` as TextKey)}
+                    {motivo ? ` (${explicarPreset(p, motivo)})` : ''}
+                  </option>
+                );
+              })}
               <option value="aleatoria">{t('fb.aleatoria')}</option>
             </select>
           </Linha>
@@ -339,7 +329,7 @@ export function ConfiguracaoDaPartida({
                   ? c.zonaPouso === 'aleatoria'
                     ? t('fb.previa_clique_zona')
                     : t('fb.previa_zona', { n: c.zonaPouso + 1 })
-                  : t('fb.previa_zonas', { n: zonasDoTamanho(c.cenario, c.tamanho) })}
+                  : t('fb.previa_zonas', { n: zonasDaPartida(c) })}
           </p>
         </div>
       </div>
@@ -362,19 +352,15 @@ export function ConfiguracaoDaPartida({
   );
 }
 
-/** Mantém a configuração coerente: tamanho válido para os jogadores, mapa e zona do tamanho. */
+/** Mantém a configuração coerente: mapa que comporta os jogadores (FB-03) e zona do mapa. */
 function ajustar(c: ConfigFreeBattle): ConfigFreeBattle {
   const jogadores = c.oponentes.length + 1;
-  let tamanho: TamanhosMapaId = c.tamanho;
-  if (motivoDoTamanho(tamanho, jogadores)) {
-    tamanho = TAMANHOS.find((x) => motivoDoTamanho(x, jogadores) === null) ?? tamanho;
-  }
-  const presets = presetsDe(c.cenario, tamanho);
+  const atual = presetsDe(c.cenario).find((p) => p.id === c.mapa);
   const mapa =
-    c.mapa === 'aleatoria' || presets.some((p) => p.id === c.mapa)
+    c.mapa === 'aleatoria' || (atual && !motivoDoPreset(atual, jogadores))
       ? c.mapa
-      : (presets[0]?.id ?? 'aleatoria');
-  const zonas = zonasDoTamanho(c.cenario, tamanho);
+      : presetPadrao(c.cenario, jogadores);
+  const zonas = zonasDaPartida({ mapa, oponentes: c.oponentes });
   const zonaPouso =
     c.zonaPouso === 'aleatoria' || c.zonaPouso < zonas ? c.zonaPouso : ('aleatoria' as const);
   // Uma nação fixa não pode repetir: a repetida volta a "aleatória".
@@ -385,15 +371,14 @@ function ajustar(c: ConfigFreeBattle): ConfigFreeBattle {
     vistas.add(o.nacao);
     return o;
   });
-  return { ...c, tamanho, mapa, zonaPouso, oponentes };
+  return { ...c, mapa, zonaPouso, oponentes };
 }
 
-function explicarTamanho(tam: TamanhosMapaId, motivo: string): string {
-  const linha = dados.tamanhos_mapa.find((x) => x.id === tam)!;
+function explicarPreset(p: PresetDeMapa, motivo: string): string {
   return t(motivo as TextKey, {
-    tamanho: t(`fb.tamanho.${tam}` as TextKey),
-    min: linha.min_jogadores,
-    max: linha.max_jogadores,
+    tamanho: t(`mapa.${p.id}` as TextKey),
+    min: p.jogadores[0],
+    max: p.jogadores[1],
   });
 }
 

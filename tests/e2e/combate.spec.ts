@@ -74,16 +74,18 @@ test('CMB-14/§12.4: A + clique no terreno dá ataque-movimento', async ({ page 
 test('CMB-15/CMB-27: com o EX1 Passivo, o clique direito num inimigo manda atacar e o abate', async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   const erros: string[] = [];
   page.on('pageerror', (e) => erros.push(e.message));
   const ex1 = await idDe(page, 'hover_ex1');
   const p = await sonda(page, (s, a) => s.naTela(a as number), ex1);
-  // Um hover inimigo a uns 60 px do EX1.
+  // Uma Impressora inimiga ao lado do EX1 (o Hover de Exploração fugiria para a base, ECO-13, que
+  // na Lua de 400 m fica longe demais para o EX1 alcançar).
   const criado = await sonda(
     page,
     (s, a) => {
       const q = a as { x: number; y: number };
-      return s.criarNaTela('hover_explorer', 'usa', q.x + 150, q.y);
+      return s.criarNaTela('printer', 'usa', q.x + 150, q.y);
     },
     p,
   );
@@ -99,12 +101,12 @@ test('CMB-15/CMB-27: com o EX1 Passivo, o clique direito num inimigo manda ataca
   for (let k = 0; k < 2; k++) await page.keyboard.press('KeyX');
   await expect(page.getByTestId('selecao-postura')).toHaveText('Postura: Passiva');
   await page.waitForTimeout(500);
-  expect(await sonda(page, (s, a) => s.tipo(a as number), inimigo)).toBe('hover_explorer');
+  expect(await sonda(page, (s, a) => s.tipo(a as number), inimigo)).toBe('printer');
   const q = await sonda(page, (s, a) => s.naTela(a as number), inimigo);
   await page.mouse.click(q!.x, q!.y, { button: 'right' });
   await expect.poll(() => sonda(page, (s, a) => s.ordem(a as number), ex1)).toBe('atacar');
   await expect
-    .poll(() => sonda(page, (s, a) => s.tipo(a as number), inimigo), { timeout: 20_000 })
+    .poll(() => sonda(page, (s, a) => s.tipo(a as number), inimigo), { timeout: 60_000 })
     .toBeNull();
   expect(erros).toEqual([]);
 });

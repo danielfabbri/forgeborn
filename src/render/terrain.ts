@@ -24,6 +24,11 @@ import { criarTexturasRegolito } from './regolith';
 
 /** Tamanho aproximado de um tile (m). */
 export const TAMANHO_TILE_M = 52;
+/**
+ * TEC-16: no máximo tantos tiles por aresta de face; nos corpos grandes (D-79) o tile cresce em
+ * vez de multiplicar os draw calls.
+ */
+export const MAX_TILES_POR_ARESTA = 5;
 /** Metros cobertos por uma repetição da textura de detalhe; a 2ª leitura usa ~1/3 disso. */
 export const ESCALA_DETALHE_M = 32;
 
@@ -65,10 +70,15 @@ function normalDoTerreno(mapa: Heightmap, d: Vec3): Vec3 {
   ]);
 }
 
+/** Variação suave do tom do regolito (ondas de 14 m para cima). */
+function variacaoDoAlbedo(p: Vec3): number {
+  return (
+    0.03 * fbm3(p[0], p[1], p[2], 91, 3, 1 / 70) + 0.012 * fbm3(p[0], p[1], p[2], 92, 2, 1 / 14)
+  );
+}
+
 /** Albedo linear do regolito: cinza de mare com variação suave; paredões mais claros. */
-function albedo(p: Vec3, gradiente: number): number {
-  const variacao =
-    0.03 * fbm3(p[0], p[1], p[2], 91, 3, 1 / 70) + 0.012 * fbm3(p[0], p[1], p[2], 92, 2, 1 / 14);
+function albedo(variacao: number, gradiente: number): number {
   const fresco = Math.min(1, Math.max(0, (gradiente - 0.45) / 0.5));
   return (0.2 + variacao) * (1 + 0.45 * fresco);
 }
@@ -93,16 +103,41 @@ function atributosDosVertices(mapa: Heightmap): Atributos {
   const normais = new Float32Array(total * 3);
   const albedos = new Float32Array(total);
   const R = mapa.raio_m;
+  // A variação do tom tem ondas de 14 m ou mais: é calculada a cada 2 vértices e interpolada
+  // (desempenho nos corpos grandes, D-79).
+  const lado = res + 1;
+  const grossa = new Float32Array(lado * lado);
+  const variacaoEm = (face: number, i: number, j: number): number => {
+    const d = direcaoDoVertice(res, face, i, j);
+    return variacaoDoAlbedo([d[0] * R, d[1] * R, d[2] * R]);
+  };
   for (let face = 0; face < 6; face++) {
+    for (let j = 0; j <= res; j += 2) {
+      for (let i = 0; i <= res; i += 2) grossa[j * lado + i] = variacaoEm(face, i, j);
+      if (res % 2 === 1) grossa[j * lado + res] = variacaoEm(face, res, j);
+    }
+    if (res % 2 === 1) {
+      for (let i = 0; i <= res; i += 2) grossa[res * lado + i] = variacaoEm(face, i, res);
+      grossa[res * lado + res] = variacaoEm(face, res, res);
+    }
+    const par = (k: number) => (k % 2 === 0 || k === res ? [k, k] : [k - 1, k + 1]);
     for (let j = 0; j <= res; j++) {
+      const [j0, j1] = par(j);
       for (let i = 0; i <= res; i++) {
+        const [i0, i1] = par(i);
+        const variacao =
+          (grossa[j0! * lado + i0!]! +
+            grossa[j0! * lado + i1!]! +
+            grossa[j1! * lado + i0!]! +
+            grossa[j1! * lado + i1!]!) /
+          4;
         const v = indiceDoVertice(res, face, i, j);
         const d = direcaoDoVertice(res, face, i, j);
         const n = normalDoTerreno(mapa, d);
         normais.set(n, v * 3);
         const cos = n[0] * d[0] + n[1] * d[1] + n[2] * d[2];
         const gradiente = Math.sqrt(Math.max(0, 1 - cos * cos)) / Math.max(cos, 0.05);
-        albedos[v] = albedo([d[0] * R, d[1] * R, d[2] * R], gradiente) / 0.9;
+        albedos[v] = albedo(variacao, gradiente) / 0.9;
       }
     }
   }
@@ -437,8 +472,11 @@ export function criarTerreno(
   const geometrias: BufferGeometry[] = [];
   const atributos = atributosDosVertices(mapa);
   const res = mapa.resolucao;
-  const partes = Math.max(1, Math.round((res * 1) / TAMANHO_TILE_M));
+  const partes = Math.max(1, Math.min(MAX_TILES_POR_ARESTA, Math.round(res / TAMANHO_TILE_M)));
   let tiles = 0;
+  // As distâncias de LOD valem para o tile nominal; um tile maior troca de nível mais longe, para a
+  // borda perto da câmera não perder detalhe.
+  const escalaLod = Math.max(1, res / partes / TAMANHO_TILE_M);
   for (let face = 0; face < 6; face++) {
     for (const ti of trechos(res, partes)) {
       for (const tj of trechos(res, partes)) {
@@ -458,7 +496,7 @@ export function criarTerreno(
           const malha = new Mesh(geometria, material);
           malha.castShadow = true;
           malha.receiveShadow = true;
-          lod.addLevel(malha, nivel.distancia);
+          lod.addLevel(malha, nivel.distancia * escalaLod);
         }
         objeto.add(lod);
         tiles++;
@@ -473,7 +511,7 @@ export function criarTerreno(
       objeto.traverse((o) => {
         if (!(o instanceof LOD)) return;
         o.levels.forEach((nivel, k) => {
-          nivel.distance = (NIVEIS_LOD[k]?.distancia ?? nivel.distance) * fator;
+          nivel.distance = (NIVEIS_LOD[k]?.distancia ?? nivel.distance) * escalaLod * fator;
         });
       });
     },

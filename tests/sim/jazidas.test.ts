@@ -5,6 +5,7 @@ import { aplicarRotacao, arco, rotacoesDeSimetria } from '../../src/sim/map/esfe
 import { celulaDe, derivarGrades } from '../../src/sim/map/grids';
 import { distribuirJazidas, type DistribuicaoDeJazidas } from '../../src/sim/map/jazidas';
 import { gerarMapaLunar, type MapaLunar, type Simetria } from '../../src/sim/map/lunar';
+import { RAIOS_DE_TESTE } from './mundo-teste';
 
 interface Caso {
   nome: string;
@@ -13,7 +14,7 @@ interface Caso {
 }
 
 function caso(seed: number, tamanho: 'p' | 'm' | 'g', n: Simetria): Caso {
-  const mapa = gerarMapaLunar(seed, tamanho, n);
+  const mapa = gerarMapaLunar(seed, RAIOS_DE_TESTE[tamanho], n);
   return {
     nome: `${tamanho.toUpperCase()}${n} seed ${seed}`,
     mapa,

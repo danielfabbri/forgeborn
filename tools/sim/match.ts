@@ -64,7 +64,7 @@ export function criarPartida({
   if (!(maxMin > 0)) throw new Error(`Duração inválida: ${maxMin} min`);
 
   const nacoes = escolhidas ?? dados.nacoes.slice(0, ias.length).map((nacao) => nacao.id);
-  const pronto = gerarMapaValido(seed, 'm', ias.length > 2 ? 4 : 2, cenario);
+  const pronto = gerarMapaValido(seed, ias.length > 2 ? 4 : 2, cenario);
   const sim = createSim(seed, nacoes, {
     cenario,
     mundo: pronto,

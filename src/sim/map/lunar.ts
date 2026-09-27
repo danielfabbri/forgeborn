@@ -9,7 +9,7 @@
  * (CEN-14) e ângulo a partir de um rumo de referência que gira junto com a feição.
  */
 import { nextFloat, nextU32, type RngState, seedRng } from '../core/rng';
-import { dados, param, type TamanhosMapaId } from '../data';
+import { param } from '../data';
 import {
   aplicarRotacao,
   arco,
@@ -129,7 +129,8 @@ interface Sulco {
 
 export interface MapaLunar extends Heightmap {
   seed: number;
-  tamanho: TamanhosMapaId;
+  /** Raio do planeta (m): o `raio_m` do cenário (CEN-16). */
+  raio: number;
   simetria: Simetria;
   zonasDePouso: ZonaDePouso[];
   contestados: PontoMedio[];
@@ -300,14 +301,15 @@ const FATOR_RELEVO_PLANO = 0.3;
 
 export function gerarMapaLunar(
   seed: number,
-  tamanho: TamanhosMapaId,
+  raio: number,
   n: Simetria,
   plano = false,
   lagosPorSetor = 0,
+  /** Metros entre vértices: 1 no jogo (CEN-13); maior só para prévias. */
+  texel: number = G.texel_m,
 ): MapaLunar {
-  const definicao = dados.tamanhos_mapa.find((t) => t.id === tamanho);
-  if (!definicao) throw new Error(`Tamanho de mapa desconhecido: ${tamanho}`);
-  const R = definicao.raio_m;
+  if (!(raio > 0)) throw new Error(`Raio de mapa inválido: ${raio}`);
+  const R = raio;
   const grupo = rotacoesDeSimetria(n);
   const rng = seedRng(seed);
   const seedRuido = nextU32(rng) | 0;
@@ -450,20 +452,41 @@ export function gerarMapaLunar(
     }
   }
 
-  const alturaSemLagos = (p: Vec3): number => {
+  /** As feições que podem alcançar um trecho do mapa (todas, ou as de um bloco de vértices). */
+  interface Feicoes {
+    colinas: Colina[];
+    crateras: Cratera[];
+    sulcos: Sulco[];
+  }
+  const todas: Feicoes = { colinas, crateras, sulcos };
+  const alturaSemLagos = (p: Vec3, f: Feicoes = todas): number => {
     let ruido = 0;
     for (const sigma of grupo) {
       const q = aplicarRotacao(sigma, p);
       ruido += fbm3(q[0] * R, q[1] * R, q[2] * R, seedRuido, G.ruido.oitavas, G.ruido.frequencia);
     }
     let h = (ruido / Math.sqrt(n)) * G.ruido.amplitude * (plano ? FATOR_RELEVO_PLANO : 1);
-    for (const c of colinas) {
+    for (const c of f.colinas) {
       const d = R * arco(c.d, p);
       if (d < 3 * c.sigma) h += c.altura * Math.exp(-(d * d) / (c.sigma * c.sigma));
     }
-    for (const c of crateras) h += alturaCratera(c, p, R);
-    for (const s of sulcos) h += alturaSulco(s, p, R);
+    for (const c of f.crateras) h += alturaCratera(c, p, R);
+    for (const s of f.sulcos) h += alturaSulco(s, p, R);
     return h;
+  };
+  /**
+   * Feições que alcançam o círculo de centro `centro` e raio angular `raioAng`. O filtro só
+   * descarta quem soma exatamente 0 ali, então a altura sai idêntica à da lista completa.
+   */
+  const feicoesPerto = (centro: Vec3, raioAng: number): Feicoes => {
+    const perto = (d: Vec3, alcanceAng: number) => arco(d, centro) <= alcanceAng + raioAng + 1e-9;
+    return {
+      colinas: colinas.filter((c) => perto(c.d, (3 * c.sigma) / R)),
+      crateras: crateras.filter((c) => perto(c.d, Math.min(Math.PI, (c.raio * 1.6 + 8) / R))),
+      sulcos: sulcos.filter((s) =>
+        perto(s.centro, Math.acos(Math.max(-1, Math.min(1, s.cosAlcance)))),
+      ),
+    };
   };
 
   // CEN-04: lagos de metano (Titã), sorteados por último para não mudar os outros cenários.
@@ -490,8 +513,8 @@ export function gerarMapaLunar(
       break;
     }
   }
-  const alturaNatural = (p: Vec3): number => {
-    const h = alturaSemLagos(p);
+  const alturaNatural = (p: Vec3, f: Feicoes = todas): number => {
+    const h = alturaSemLagos(p, f);
     for (const l of lagos) {
       const d = R * arco(l.d, p);
       const fim = l.raio * (1 + G.lago.transicao);
@@ -531,24 +554,43 @@ export function gerarMapaLunar(
   };
 
   // Alturas: só um vértice de cada órbita do grupo é calculado; os outros são cópias exatas.
-  const resolucao = celulasPorAresta(R, G.texel_m);
+  const resolucao = celulasPorAresta(R, texel);
   const alturas = new Uint16Array(6 * (resolucao + 1) * (resolucao + 1));
+  // Em blocos de vértices: cada bloco só testa as feições que o alcançam (desempenho, D-79).
+  const BLOCO = 16;
   for (let face = 0; face < 6; face++) {
-    for (let j = 0; j <= resolucao; j++) {
-      for (let i = 0; i <= resolucao; i++) {
-        const v = indiceDoVertice(resolucao, face, i, j);
-        const orbita = grupo.map((sigma) => verticeRotacionado(resolucao, v, sigma));
-        if (orbita.some((w) => w < v)) continue;
-        const p = direcaoDoVertice(resolucao, face, i, j);
-        const valor = codificarAltura(aplicarPlatos(p, alturaNatural(p)));
-        for (const w of orbita) alturas[w] = valor;
+    for (let j0 = 0; j0 <= resolucao; j0 += BLOCO) {
+      for (let i0 = 0; i0 <= resolucao; i0 += BLOCO) {
+        const i1 = Math.min(resolucao, i0 + BLOCO - 1);
+        const j1 = Math.min(resolucao, j0 + BLOCO - 1);
+        const centro = direcaoDoVertice(resolucao, face, (i0 + i1) / 2, (j0 + j1) / 2);
+        const raioAng =
+          Math.max(
+            ...[
+              [i0, j0],
+              [i1, j0],
+              [i0, j1],
+              [i1, j1],
+            ].map(([i, j]) => arco(centro, direcaoDoVertice(resolucao, face, i!, j!))),
+          ) * 1.05;
+        const f = feicoesPerto(centro, raioAng);
+        for (let j = j0; j <= j1; j++) {
+          for (let i = i0; i <= i1; i++) {
+            const v = indiceDoVertice(resolucao, face, i, j);
+            const orbita = grupo.map((sigma) => verticeRotacionado(resolucao, v, sigma));
+            if (orbita.some((w) => w < v)) continue;
+            const p = direcaoDoVertice(resolucao, face, i, j);
+            const valor = codificarAltura(aplicarPlatos(p, alturaNatural(p, f)));
+            for (const w of orbita) alturas[w] = valor;
+          }
+        }
       }
     }
   }
 
   return {
     seed,
-    tamanho,
+    raio,
     simetria: n,
     raio_m: R,
     resolucao,

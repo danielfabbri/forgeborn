@@ -285,13 +285,8 @@ export function iniciarPartida(): void {
       : resolver(configDaPartida, seedDaPartida);
   const preset = PRESETS_DE_MAPA.find((p) => p.id === 'mare_tranquillitatis')!;
   const pronto = resolvida
-    ? gerarMapaValido(
-        resolvida.mapa.seed,
-        resolvida.mapa.tamanho,
-        resolvida.mapa.zonas,
-        resolvida.mapa.cenario,
-      )
-    : gerarMapaValido(preset.seed, preset.tamanho, preset.zonas, preset.cenario);
+    ? gerarMapaValido(resolvida.mapa.seed, resolvida.mapa.zonas, resolvida.mapa.cenario)
+    : gerarMapaValido(preset.seed, preset.zonas, preset.cenario);
   const R = pronto.mapa.raio_m;
   const nevoaNaTela = !cenaDeDemonstracao || parametros.get('nevoa') === '1';
   const nevoa = nevoaNaTela ? new NevoaRender(pronto.grades.nevoa.esfera.n) : null;

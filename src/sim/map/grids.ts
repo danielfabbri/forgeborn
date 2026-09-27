@@ -10,6 +10,8 @@ import {
   type CuboEsfera,
   cuboEsfera,
   direcaoDaFace,
+  fracaoDaFace,
+  indiceDaCelula,
   rotacoesDeSimetria,
   type Simetria,
   tanDaDivisao,
@@ -71,22 +73,35 @@ function inclinacaoPorCelula(
   const res = mapa.resolucao;
   const n = grade.esfera.n;
   const maior = new Float32Array(grade.esfera.celulas);
+  // Dentro da face, a coluna da célula só depende de uma coordenada e a linha só da outra: as
+  // posições a meio texel (2i ± 1 numa divisão de 2·res) viram índices por tabela, sem
+  // trigonometria por vértice (desempenho, D-79). Na borda da face (±1 exato) vale o cálculo
+  // completo, que decide a face vizinha.
+  const m = 2 * res;
+  const eixo = new Int32Array(m + 1).fill(-1);
+  for (let k = 1; k < m; k++) {
+    eixo[k] = Math.min(n - 1, Math.max(0, Math.floor(fracaoDaFace(tanDaDivisao(k, m)) * n)));
+  }
+  const diagonais = [
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+    [1, 1],
+  ] as const;
   for (let face = 0; face < 6; face++) {
     for (let j = 0; j <= res; j++) {
       for (let i = 0; i <= res; i++) {
         const valor = porVertice[indiceDoVertice(res, face, i, j)]!;
-        for (const [di, dj] of [
-          [-1, -1],
-          [1, -1],
-          [-1, 1],
-          [1, 1],
-        ] as const) {
-          const d = direcaoDaFace(
-            face,
-            tanDaDivisao(2 * i + di, 2 * res),
-            tanDaDivisao(2 * j + dj, 2 * res),
-          );
-          const c = celulaDaDirecao(n, d);
+        for (const [di, dj] of diagonais) {
+          const ci = eixo[2 * i + di] ?? -1;
+          const cj = eixo[2 * j + dj] ?? -1;
+          const c =
+            ci >= 0 && cj >= 0
+              ? indiceDaCelula(n, face, ci, cj)
+              : celulaDaDirecao(
+                  n,
+                  direcaoDaFace(face, tanDaDivisao(2 * i + di, m), tanDaDivisao(2 * j + dj, m)),
+                );
           if (valor > maior[c]!) maior[c] = valor;
         }
       }

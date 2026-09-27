@@ -25,34 +25,38 @@ const contexto = (sim: Sim, mundo: Mundo): SystemContext => ({
 });
 
 describe('T-155 — CEN-04, D-78: lagos de metano (Titã)', () => {
-  it('CEN-04: lagos por setor de simetria, raios na faixa, longe das zonas e sem jazidas', () => {
-    for (const [tamanho, zonas, seed] of [
-      ['p', 2, 3],
-      ['m', 4, 17],
-      ['g', 4, 9],
-    ] as const) {
-      const pronto = gerarMapaValido(seed, tamanho, zonas, 'tita');
-      const lagos = pronto.mapa.lagos ?? [];
-      const R = pronto.mapa.raio_m;
-      expect(lagos).toHaveLength(param(`lagos_por_setor_${tamanho}`) * zonas);
-      for (const l of lagos) {
-        expect(l.raio).toBeGreaterThanOrEqual(param('lago_raio_min_m'));
-        expect(l.raio).toBeLessThanOrEqual(param('lago_raio_max_m'));
-        for (const z of pronto.mapa.zonasDePouso) {
-          expect(R * arco(z.d, l.d) - l.raio).toBeGreaterThanOrEqual(param('lago_folga_zona_m'));
+  it(
+    'CEN-04: lagos por setor de simetria, raios na faixa, longe das zonas e sem jazidas',
+    { timeout: 120_000 },
+    () => {
+      for (const [zonas, seed] of [
+        [2, 3],
+        [4, 17],
+      ] as const) {
+        const pronto = gerarMapaValido(seed, zonas, 'tita');
+        const lagos = pronto.mapa.lagos ?? [];
+        const R = pronto.mapa.raio_m;
+        expect(lagos).toHaveLength(param('lagos_por_setor') * zonas);
+        for (const l of lagos) {
+          expect(l.raio).toBeGreaterThanOrEqual(param('lago_raio_min_m'));
+          expect(l.raio).toBeLessThanOrEqual(param('lago_raio_max_m'));
+          for (const z of pronto.mapa.zonasDePouso) {
+            expect(R * arco(z.d, l.d) - l.raio).toBeGreaterThanOrEqual(param('lago_folga_zona_m'));
+          }
+          for (const j of pronto.jazidas.jazidas)
+            expect(R * arco(j.d, l.d)).toBeGreaterThan(l.raio);
         }
-        for (const j of pronto.jazidas.jazidas) expect(R * arco(j.d, l.d)).toBeGreaterThan(l.raio);
+        // Simetria (CEN-06): cada raio aparece um número de vezes múltiplo das zonas.
+        const porRaio = new Map<string, number>();
+        for (const l of lagos)
+          porRaio.set(l.raio.toFixed(6), (porRaio.get(l.raio.toFixed(6)) ?? 0) + 1);
+        for (const n of porRaio.values()) expect(n % zonas).toBe(0);
       }
-      // Simetria (CEN-06): cada raio aparece um número de vezes múltiplo das zonas.
-      const porRaio = new Map<string, number>();
-      for (const l of lagos)
-        porRaio.set(l.raio.toFixed(6), (porRaio.get(l.raio.toFixed(6)) ?? 0) + 1);
-      for (const n of porRaio.values()) expect(n % zonas).toBe(0);
-    }
-  });
+    },
+  );
 
   it('CEN-04: cenários sem o evento não têm lagos', () => {
-    expect(gerarMapaValido(13, 'm', 4, 'marte').mapa.lagos).toEqual([]);
+    expect(gerarMapaValido(13, 4, 'marte').mapa.lagos).toEqual([]);
   });
 
   it('CEN-04/PRD-10: estrutura e muro não são posicionados sobre um lago (motivo lago)', () => {

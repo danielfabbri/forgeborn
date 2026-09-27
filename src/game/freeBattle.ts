@@ -5,11 +5,11 @@
  */
 import { dados, type NacaoId } from '../sim';
 import type { Command } from '../sim/core/types';
-import type { CenariosId, EstoqueInicialModo, NacoesId, TamanhosMapaId } from '../sim/data';
+import type { CenariosId, EstoqueInicialModo, NacoesId } from '../sim/data';
 import { SEMEAR_JAZIDAS_COMMAND } from '../sim/economia';
 import { ATIVAR_IA_COMMAND } from '../sim/ia';
 import type { Simetria, Vec3 } from '../sim/map/esfera';
-import { PRESETS_DE_MAPA } from '../sim/map/presets';
+import { type PresetDeMapa, PRESETS_DE_MAPA } from '../sim/map/presets';
 import type { MapaPronto } from '../sim/map/validacao';
 import { INICIAR_PARTIDA_COMMAND } from '../sim/producao';
 
@@ -26,8 +26,7 @@ export interface ConfigFreeBattle {
   nacaoJogador: NacoesId | Aleatoria;
   oponentes: Oponente[];
   cenario: CenariosId;
-  tamanho: TamanhosMapaId;
-  /** ID do preset (§14.4) ou "aleatoria". */
+  /** ID do preset (§14.4) ou "aleatoria"; o tamanho do planeta é o do cenário (CEN-16). */
   mapa: string;
   /** "aleatoria" ou o índice da zona escolhida (FB-02). */
   zonaPouso: Aleatoria | number;
@@ -54,19 +53,36 @@ export const CENARIOS_IMPLEMENTADOS: readonly CenariosId[] = [
   ...new Set(PRESETS_DE_MAPA.filter((p) => !p.soCampanha).map((p) => p.cenario)),
 ];
 
-export function presetsDe(cenario: CenariosId, tamanho: TamanhosMapaId) {
-  return PRESETS_DE_MAPA.filter((p) => p.cenario === cenario && p.tamanho === tamanho);
+/** Presets do cenário (os só de campanha ficam de fora). */
+export function presetsDe(cenario: CenariosId): PresetDeMapa[] {
+  return PRESETS_DE_MAPA.filter((p) => p.cenario === cenario && !p.soCampanha);
 }
 
-/** Simetria (número de zonas) do mapa de um tamanho: a do preset do tamanho. */
-export function zonasDoTamanho(cenario: CenariosId, tamanho: TamanhosMapaId): Simetria {
-  return presetsDe(cenario, tamanho)[0]?.zonas ?? (tamanho === 'p' ? 2 : 4);
+/** Simetria (zonas) da partida: a do preset; num mapa aleatório, 2 no 1v1 e 4 com mais jogadores. */
+export function zonasDaPartida(c: Pick<ConfigFreeBattle, 'mapa' | 'oponentes'>): Simetria {
+  const preset = PRESETS_DE_MAPA.find((p) => p.id === c.mapa);
+  if (preset) return preset.zonas;
+  return c.oponentes.length + 1 > 2 ? 4 : 2;
 }
 
-/** Padrões de `dados:free_battle`; "preset do tamanho" é o primeiro preset do tamanho. */
+/** FB-03: motivo (chave de i18n) de um preset não comportar o número de jogadores. */
+export function motivoDoPreset(
+  preset: PresetDeMapa,
+  jogadores: number,
+): 'fb.invalido.poucos' | 'fb.invalido.muitos' | null {
+  if (jogadores < preset.jogadores[0]) return 'fb.invalido.poucos';
+  if (jogadores > preset.jogadores[1]) return 'fb.invalido.muitos';
+  return null;
+}
+
+/** Primeiro preset do cenário que comporta os jogadores ("aleatoria" se nenhum). */
+export function presetPadrao(cenario: CenariosId, jogadores: number): string {
+  return presetsDe(cenario).find((p) => !motivoDoPreset(p, jogadores))?.id ?? 'aleatoria';
+}
+
+/** Padrões de `dados:free_battle`; "1º preset do cenário" é o primeiro que comporta os jogadores. */
 export function configPadrao(): ConfigFreeBattle {
   const cenario = padraoDe('cenario') === 'lua' ? 'lua' : CENARIOS_IMPLEMENTADOS[0]!;
-  const tamanho = padraoDe('tamanho_mapa') as TamanhosMapaId;
   const num = Number(padraoDe('num_oponentes'));
   return {
     nacaoJogador: padraoDe('nacao_jogador') as NacoesId,
@@ -75,8 +91,7 @@ export function configPadrao(): ConfigFreeBattle {
       dificuldade: String(padraoDe('dificuldade_oponente')),
     })),
     cenario,
-    tamanho,
-    mapa: presetsDe(cenario, tamanho)[0]?.id ?? 'aleatoria',
+    mapa: presetPadrao(cenario, num + 1),
     zonaPouso: padraoDe('zona_pouso') as Aleatoria,
     recursos: padraoDe('recursos_iniciais') as EstoqueInicialModo,
     nevoa: padraoDe('nevoa') as ModoNevoaFb,
@@ -88,17 +103,6 @@ export function configPadrao(): ConfigFreeBattle {
 
 export const VELOCIDADES = valoresDe('velocidade').map((v) => Number(String(v).replace(',', '.')));
 
-/** Motivo (chave de i18n) de um tamanho não servir para o número de jogadores (FB-03). */
-export function motivoDoTamanho(
-  tamanho: TamanhosMapaId,
-  jogadores: number,
-): 'fb.invalido.poucos' | 'fb.invalido.muitos' | null {
-  const t = dados.tamanhos_mapa.find((x) => x.id === tamanho)!;
-  if (jogadores < t.min_jogadores) return 'fb.invalido.poucos';
-  if (jogadores > t.max_jogadores) return 'fb.invalido.muitos';
-  return null;
-}
-
 export interface ProblemaDaConfig {
   campo: keyof ConfigFreeBattle;
   motivo: string;
@@ -108,19 +112,21 @@ export interface ProblemaDaConfig {
 export function validar(c: ConfigFreeBattle): ProblemaDaConfig[] {
   const problemas: ProblemaDaConfig[] = [];
   const jogadores = c.oponentes.length + 1;
-  const motivo = motivoDoTamanho(c.tamanho, jogadores);
-  if (motivo) problemas.push({ campo: 'tamanho', motivo });
+  if (jogadores < 2 || jogadores > 4)
+    problemas.push({ campo: 'oponentes', motivo: 'fb.invalido.muitos' });
   if (!CENARIOS_IMPLEMENTADOS.includes(c.cenario)) {
     problemas.push({ campo: 'cenario', motivo: 'fb.invalido.cenario' });
   }
   if (c.mapa !== 'aleatoria') {
-    const preset = PRESETS_DE_MAPA.find((p) => p.id === c.mapa);
-    if (!preset || preset.tamanho !== c.tamanho || preset.cenario !== c.cenario) {
-      problemas.push({ campo: 'mapa', motivo: 'fb.invalido.mapa' });
+    const preset = presetsDe(c.cenario).find((p) => p.id === c.mapa);
+    if (!preset) problemas.push({ campo: 'mapa', motivo: 'fb.invalido.mapa' });
+    else {
+      const motivo = motivoDoPreset(preset, jogadores);
+      if (motivo) problemas.push({ campo: 'mapa', motivo });
     }
   }
   if (c.zonaPouso !== 'aleatoria') {
-    const zonas = zonasDoTamanho(c.cenario, c.tamanho);
+    const zonas = zonasDaPartida(c);
     if (!Number.isInteger(c.zonaPouso) || c.zonaPouso < 0 || c.zonaPouso >= zonas) {
       problemas.push({ campo: 'zonaPouso', motivo: 'fb.invalido.zona' });
     }
@@ -147,7 +153,7 @@ export interface PartidaResolvida {
   nacoes: NacaoId[];
   /** Dificuldade de cada nação de IA. */
   ias: Record<NacaoId, string>;
-  mapa: { seed: number; tamanho: TamanhosMapaId; zonas: Simetria; cenario: CenariosId };
+  mapa: { seed: number; zonas: Simetria; cenario: CenariosId };
   /** Índice da zona de pouso de cada nação, na ordem de `nacoes`. */
   zonas: number[];
   recursos: EstoqueInicialModo;
@@ -193,7 +199,7 @@ export function resolver(c: ConfigFreeBattle, seed: number): PartidaResolvida {
     nacao: o.nacao === 'aleatoria' ? livres.shift()! : o.nacao,
     dificuldade: o.dificuldade,
   }));
-  const zonas = zonasDoTamanho(c.cenario, c.tamanho);
+  const zonas = zonasDaPartida(c);
   const preset = PRESETS_DE_MAPA.find((p) => p.id === c.mapa);
   const mapaSeed = preset ? preset.seed : Math.floor(sorte() * 2_147_483_647);
 
@@ -219,7 +225,7 @@ export function resolver(c: ConfigFreeBattle, seed: number): PartidaResolvida {
       NacaoId,
       string
     >,
-    mapa: { seed: mapaSeed, tamanho: c.tamanho, zonas, cenario: c.cenario },
+    mapa: { seed: mapaSeed, zonas, cenario: c.cenario },
     zonas: porNacao,
     recursos: c.recursos,
     nevoa: c.nevoa,

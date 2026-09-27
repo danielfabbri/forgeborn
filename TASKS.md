@@ -359,3 +359,5 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: o raio do mapa vem de `raio_m` do cenário; o Free Battle não oferece tamanho e desabilita presets que não comportam os jogadores; presets de todos os cenários válidos com os novos raios; missões sem a coluna `mapa`; Titã com `lagos_por_setor`; a partida no maior corpo implementado abre em tempo aceitável (P5).
 - [ ] **T-162 — Ritmo de exploração** · P · Spec: `primeiro_ataque_min`, EXP-03, EXP-04, INV-12, INV-14, D-79 · Dep: T-161
   - Aceite: `primeiro_ataque_min` novo aplicado pela IA; INV-12 e INV-14 verificados (headless) no mapa novo da Lua.
+- [ ] **T-163 — Abertura rápida nos corpos grandes** · M · Spec: P5, TEC-10, D-79 · Dep: T-161
+  - Contexto: com a Lua de 400 m, a partida leva ~19 s para abrir no servidor de desenvolvimento (geração e validação do mapa ~9 s; malha do terreno ~9 s). Caminhos: normais do terreno pela grade em vez de amostrar a altura, albedo em resolução menor, geração num Web Worker (T-159) e cache do mapa entre a configuração e a partida.

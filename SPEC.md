@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.0.1 — rascunho para aprovação |
+| Versão do SPEC | 1.1.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -269,6 +269,22 @@ flowchart LR
 | pontos_estruturas_vivas_pct | 50 | % | Fração do VR das estruturas vivas no fim |
 | bonus_nave_destruida | 3000 | pts | Por Nave inimiga destruída |
 | bonus_vitoria | 2000 | pts | Bônus de vitória |
+
+### 4.7 Temperamento e domínio (D-81)
+
+- **REG-24** — **Temperamento.** Cada par de nações tem um temperamento: *pacífico*, *alerta* ou *inimigo*. Toda partida começa com todos pacíficos. *Em guerra* quer dizer inimigo; a guerra vale para os dois lados do par.
+- **REG-25** — **Domínio.** O domínio de uma nação é a área a até `dominio_estrutura_m` de qualquer estrutura dela (pronta ou em obra) e a até `dominio_unidade_m` de qualquer unidade móvel dela. Minas e satélites não contam.
+- **REG-26** — **Aviso.** Quando um corpo (unidade ou estrutura) de B está no domínio de A e o par está pacífico, A avisa B na hora ("retire-se do meu domínio", AL-19 para o jogador avisado, AL-22 quando é o domínio do jogador) e o par fica em alerta. Se depois de `ultimato_s` ainda houver corpo de B no domínio de A, o par vira inimigo (AL-20). Se B sair antes, o par volta a pacífico. O aviso vale para todas as nações, inclusive o domínio do jogador.
+- **REG-27** — **Agressão.** Dano causado por B a A (arma, míssil, bomba ou mina) põe o par em guerra na hora, sem aviso (AL-20). A ordem direta de ataque (CMB-15) vale contra qualquer nação; o primeiro dano abre a guerra.
+- **REG-28** — **Trégua.** Um par em guerra volta a pacífico (AL-21) depois de `guerra_esfria_s` sem nenhum dano entre as duas nações e sem corpo de uma no domínio da outra.
+
+<!-- dados:parametros -->
+| chave | valor | unidade | descricao |
+|---|---|---|---|
+| dominio_estrutura_m | 60 | m | Raio do domínio em volta de cada estrutura (REG-25) |
+| dominio_unidade_m | 20 | m | Raio do domínio em volta de cada unidade móvel (REG-25) |
+| ultimato_s | 10 | s | Prazo para sair do domínio alheio depois do aviso (REG-26) |
+| guerra_esfria_s | 300 | s | Tempo sem dano e fora dos domínios para a guerra virar paz (REG-28) |
 
 ---
 
@@ -840,6 +856,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 - **CMB-27** — Com HP ≤ 0, a destruição é imediata: VFX de explosão, destroço (§5.7) e alerta ao dono.
 - **CMB-28** — **Recolher mineradores** (Nave): todos os Hovers de Exploração vão ao abrigo mais próximo (a Nave ou um Armazém próprio, até `abrigo_vagas` por estrutura). Abrigado, o hover sai do mapa e não pode ser atingido, e cada um soma à estrutura um disparo de `abrigo_laser`. O mesmo comando, de novo, libera todos para a coleta. Se a estrutura for destruída, os abrigados saem ao lado dela (D-52).
+- **CMB-29** — O disparo automático (posturas, Torres, Antiaérea, mísseis de defesa, dreno da Torre Magnética) e as minas só miram corpos de nações em guerra com o dono (REG-24). Contra nação pacífica ou em alerta, só a ordem direta de ataque (CMB-15) dispara (D-81).
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1052,13 +1069,14 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
   - **Batedor:** explora com Hovers de Observação e planta Sentinelas nas rotas.
 - **IA-02** — A IA **não trapaceia a visão** em nenhuma dificuldade: usa a própria névoa.
 - **IA-03** — Composição adaptativa (quando `adapta_composicao` = 1): muitos drones inimigos → mais EX1 e Torres; muitos EX1 → mais OPQ; muitos OPQ → mais Drone Laser e Bombardeiros; defesa pesada → mais OPQ e Bombardeiros; minas detectadas → mais Observação.
-- **IA-04** — Uma onda de ataque parte quando o VR do exército ≥ `vr_exercito_ataque` e o relógio passou de `primeiro_ataque_min`. O alvo é a nação inimiga conhecida mais próxima (na Brutal, a mais fraca). A onda recua se o VR do exército cair abaixo de `ia_recuo_vr_pct`% do inicial e o do defensor for maior.
-- **IA-05** — As IAs também atacam umas às outras (todos contra todos).
+- **IA-04** — Uma onda de ataque parte quando o VR do exército ≥ `vr_exercito_ataque` e o relógio passou de `primeiro_ataque_min`. O alvo é a nação conhecida mais próxima com quem a IA está em guerra (na Brutal, a mais fraca); sem nação em guerra, não há onda (D-81). A onda recua se o VR do exército cair abaixo de `ia_recuo_vr_pct`% do inicial e o do defensor for maior.
+- **IA-05** — As IAs também guerreiam entre si, pelas mesmas regras de temperamento (REG-24 a REG-28): só atacam nações com quem estão em guerra (D-81).
 - **IA-06** — A IA respeita `tiers_permitidos` (§8.1) nas estruturas e unidades de apoio e `tiers_militares` nas unidades de combate: 1 = só T1; 2 = T1 + T2; 3 = todos. Com `vr_exercito_max` > 0, a IA não imprime unidades de combate acima desse VR de exército (D-66).
 - **IA-07** — Ajustes da IA (D-34): mantém `ia_impressoras_alvo` Impressoras e `ia_batedores` Hovers de Observação batedores; enfileira até `ia_fila_por_produtor` itens por produtor; defende quando há inimigo visível a até `ia_raio_defesa_m` de uma estrutura própria; expande (Armazém junto a jazidas exploradas a mais de `ia_distancia_expansao_m` dos depósitos) a partir de `ia_expansao_hovers_pct`% da meta de hovers. Traços (§13.3): "meta de hovers" soma `ia_traco_meta_hovers_pct`%; "ondas grandes" multiplica `vr_exercito_ataque` por `ia_ondas_grandes_mult`; "expande cedo" usa `ia_expansao_cedo_pct`%.
 - **IA-08** — Plano de estruturas e apoio (`dados:ia_plano`): a partir do minuto `min_<nível>`, a IA mantém a quantidade da coluna do nível de cada item, na ordem da tabela, quando pode pagar (sem passar na frente da energia, IA-01). O Silo Móvel vai para a expansão mais distante do depósito; a Bateria Móvel acompanha a onda de ataque; o Hover de Plantio de Minas planta minas a `ia_minas_distancia_m` da base, na direção do inimigo conhecido mais próximo. Ao ver drones ou mísseis inimigos, a meta de Baterias Antiaéreas sobe 1 (D-66).
 - **IA-09** — Satélite: cada Base de Lançamento da IA imprime o satélite, que fica sobre o inimigo conhecido mais próximo (sem inimigo conhecido, sobre a própria base) (D-66).
 - **IA-10** — Mísseis: a IA mantém `ia_misseis_curtos` curtos prontos e, do Normal para cima, `ia_misseis_longos` longos. Curtos defendem: são lançados contra inimigos visíveis a até `ia_raio_defesa_m` de uma estrutura própria. Do Normal para cima, um longo é lançado contra uma estrutura inimiga conhecida (vista ou fantasma) no alcance, no máximo um a cada `ia_missil_longo_intervalo_s` (D-66).
+- **IA-11** — Temperamento da IA (D-81): avisada (REG-26), recolhe os corpos do domínio alheio antes do prazo, menos na Brutal, que fica. A IA escolhe expansões e rotas de batedor fora do domínio de nações pacíficas com ela, menos na Brutal.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1305,6 +1323,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **UI-14** — Cada ordem do clique direito mostra no ponto um sinalizador com forma e cor próprias e toca um som próprio: mover, atacar, coletar, descarregar (inclusive no Silo Móvel), recarregar, construir ou reparar, reciclar, patrulhar e reposicionar satélite.
 - **UI-15** — Dois botões fixos ao lado do minimapa: **mineradores parados** (Hovers de Exploração ociosos, ECO-19) e **impressoras paradas** (Impressoras sem item na fila, sem obra, reparo ou recarga e sem ordem de movimento). Cada botão mostra quantos há e fica em destaque quando há algum; o clique seleciona o próximo parado (em ciclo) e centraliza a câmera nele (D-58).
 - **UI-16** — Cartões de ação de unidades sem fila: o Hover de Plantio de Minas mostra a foto da mina; clicar nela (ou T) entra no modo de plantar e o clique no terreno escolhe o ponto (UNI-02). (D-62)
+- **UI-17** — Temperamento no HUD: cada nação adversária aparece com o seu estado em relação ao jogador (pacífica, em alerta com a contagem do prazo, ou inimiga), na cor dela. O minimapa mostra o domínio conhecido das outras nações (D-81).
 
 ### 17.2 Alertas
 
@@ -1329,6 +1348,10 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | AL-16 | Mina detonada. | Mina própria detona | baixa | 5 |
 | AL-17 | Satélite offline. | Sem uso desde a 0.17.0: o satélite não gasta energia (D-51) | alta | 20 |
 | AL-18 | Perdi um corpo: {unidade}. | Unidade própria destruída | media | 3 |
+| AL-19 | {nacao} pede que eu me retire do domínio dela. | Corpo próprio no domínio de uma nação pacífica (REG-26) | alta | 20 |
+| AL-20 | {nacao} agora é inimiga. | Par em guerra (REG-26, REG-27) | alta | 0 |
+| AL-21 | Paz com {nacao}. | Trégua (REG-28) | media | 0 |
+| AL-22 | {nacao} entrou no meu domínio. | Corpo alheio no domínio do jogador (REG-26) | media | 20 |
 
 ### 17.3 Acessibilidade
 
@@ -1412,7 +1435,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 ### 20.4 Mundo, grades e navegação
 
 - **TEC-13** — Terreno por heightmap nas 6 faces da cubo-esfera (CEN-14, ~1 m por texel), em chunks de até 64 m com LOD. Grades derivadas, nas mesmas 6 faces: navegação (`celula_navegacao_m`, passável conforme inclinação), construção (`celula_construcao_m`) e névoa (`celula_nevoa_m`). Pela projeção equiangular, a distância entre centros de células vizinhas vai de ~0,77 a ~1,09 do nominal.
-- **TEC-14** — Pathfinding: A* na grade de navegação (8 direções atravessando as arestas do cubo, sem cortar quinas, custo pelo arco entre centros de célula, rota suavizada por linha de visada) para unidades isoladas; flow field (Dijkstra na grade) para grupos; separação local tipo boids/RVO simplificado. Orçamento: < 5 ms por ordem no mapa M. Se o A* passar do orçamento no mapa G, ganha hierarquia (clusters de 32 m).
+- **TEC-14** — Pathfinding: A* na grade de navegação (8 direções atravessando as arestas do cubo, sem cortar quinas, custo pelo arco entre centros de célula, rota suavizada por linha de visada) para unidades isoladas; flow field (Dijkstra na grade) para grupos; separação local tipo boids/RVO simplificado. Orçamento: < 5 ms por ordem na Lua (CEN-16). Como o A* direto e o flow field passam do orçamento nos corpos de D-79, ganham hierarquia (clusters de 32 m).
 
 ### 20.5 Renderização e performance
 
@@ -1526,7 +1549,7 @@ Aberturas mais gananciosas (2 ou 3 hovers antes da Impressora) atrasam a Impress
 
 - Unidades exclusivas por nação (o briefing diz "depois pensamos").
 - Multiplayer online (a arquitetura de comandos determinísticos já prepara o lockstep).
-- Alianças, equipes (2v2) e diplomacia.
+- Alianças, equipes (2v2) e diplomacia além do temperamento de REG-24 a REG-28.
 - Linha de visão bloqueada por relevo e vantagem de terreno alto.
 - Controle direto de estruturas (Torre em modo manual).
 - Pesquisas e upgrades.
@@ -1625,6 +1648,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-78 | Titã entra na v1.0 só no Free Battle; a Missão 8 segue na v1.x, depois das Missões 4 a 7, para manter a ordem da campanha. Lagos de metano (CEN-04): 2/1/2 por setor de simetria nos mapas P/M/G (4, 4 e 8 lagos; a proposta de 3/5/7 não respeita a simetria de CEN-06), raio de 15 a 35 m, a 70 m das zonas de pouso, sem jazidas; hovers atravessam na velocidade normal; estruturas, muros e minas não. | Pedido do produto (criar Titã) e respostas às duas perguntas: "Titã só no Free Battle" e a proposta dos lagos. | Aprovada |
 | D-79 | Vastidão: cada corpo tem o próprio raio (`raio_m` em `dados:cenarios`, raiz cúbica do raio real, Lua 400 m; CEN-16), sem escolha de tamanho no Free Battle; 2 a 4 jogadores em qualquer corpo; `primeiro_ataque_min` ×2,5; novo pilar P6; EXP-03, EXP-04, INV-12 e os tempos-par das missões 1–8 (×2) ajustados ao ritmo novo; lagos de Titã passam a `lagos_por_setor`. Substitui dados:tamanhos_mapa e as chaves lagos_por_setor_p/m/g (IDs não reutilizados, GOV-03). | Pedido do produto: "Cada cenário deve ter o seu próprio tamanho… Quero mais vastidão… menos batalha rápida e mais colonização, exploração, com tempo pra admirar estar em outro planeta." Respostas: raiz cúbica; 2 a 4 em qualquer corpo; IA ataca bem mais tarde. | Aprovada |
 | D-80 | O escuro da névoa (VIS-01) deixa de ser preto absoluto: mostra a silhueta escura do relevo, em todos os cenários e também em 1ª e 3ª pessoa. A informação escondida continua a mesma (nada sobre o terreno). | Pedido do produto: "Na Lua, não quero ausência absoluta de cor no terreno… Quando ando com um personagem, não vejo como é o terreno." | Aprovada |
+| D-81 | Temperamento entre nações (REG-24 a REG-28): todas começam pacíficas; entrar no domínio de outra (60 m das estruturas, 20 m das unidades) gera aviso imediato, e ficar mais de 10 s vira guerra; dano abre a guerra na hora; a guerra esfria depois de 5 min sem combate e fora dos domínios. O disparo automático só mira inimigos (CMB-29); a IA obedece o aviso (menos a Brutal) e só ataca quem está em guerra com ela (IA-04, IA-05, IA-11). | Pedido do produto: "as civilizações poderiam pedir pra você se retirar antes de atacar… começa com todos pacíficos… se você não sair do território em 10 s, o status vira inimigo"; respostas: domínio 60/20 m, guerra esfria, disparo só em inimigos. | Aprovada |
 
 ---
 
@@ -1720,3 +1744,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.26.0 | 2026-09-27 | D-78: Titã (`tita`) na v1.0 (Free Battle); CEN-04 com lagos_por_setor_p, lagos_por_setor_m, lagos_por_setor_g (retiradas em 1.0.0), `lago_raio_min_m`, `lago_raio_max_m` e `lago_folga_zona_m`; PRD-10 recusa lagos; §14.7; §2.1. |
 | 1.0.0 | 2026-09-27 | D-79 (MAJOR: novo pilar P6 Vastidão): `raio_m` em `dados:cenarios` e CEN-16 no lugar de dados:tamanhos_mapa; FB-03 e `dados:free_battle` sem tamanho; `dados:missoes` sem a coluna `mapa` e com tempos-par ×2 (exceto m00); `primeiro_ataque_min` ×2,5; EXP-03, EXP-04, INV-12, INV-14; CEN-04 com `lagos_por_setor`. |
 | 1.0.1 | 2026-09-27 | D-80: VIS-01, o escuro mostra a silhueta do relevo. |
+| 1.1.0 | 2026-09-27 | D-81: §4.7 (REG-24 a REG-28, `dominio_estrutura_m`, `dominio_unidade_m`, `ultimato_s`, `guerra_esfria_s`), CMB-29, IA-04, IA-05, IA-11, UI-17, AL-19 a AL-22; §22. TEC-14: orçamento medido na Lua, com hierarquia (D-79). |

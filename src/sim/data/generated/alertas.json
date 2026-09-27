@@ -124,5 +124,33 @@
     "gatilho": "Unidade própria destruída",
     "prioridade": "media",
     "cooldown_s": 3
+  },
+  {
+    "id": "AL-19",
+    "texto": "{nacao} pede que eu me retire do domínio dela.",
+    "gatilho": "Corpo próprio no domínio de uma nação pacífica (REG-26)",
+    "prioridade": "alta",
+    "cooldown_s": 20
+  },
+  {
+    "id": "AL-20",
+    "texto": "{nacao} agora é inimiga.",
+    "gatilho": "Par em guerra (REG-26, REG-27)",
+    "prioridade": "alta",
+    "cooldown_s": 0
+  },
+  {
+    "id": "AL-21",
+    "texto": "Paz com {nacao}.",
+    "gatilho": "Trégua (REG-28)",
+    "prioridade": "media",
+    "cooldown_s": 0
+  },
+  {
+    "id": "AL-22",
+    "texto": "{nacao} entrou no meu domínio.",
+    "gatilho": "Corpo alheio no domínio do jogador (REG-26)",
+    "prioridade": "media",
+    "cooldown_s": 20
   }
 ]

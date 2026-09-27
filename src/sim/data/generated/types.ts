@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.0.1.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.1.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -19,7 +19,11 @@ export type AlertasId =
   | 'AL-15'
   | 'AL-16'
   | 'AL-17'
-  | 'AL-18';
+  | 'AL-18'
+  | 'AL-19'
+  | 'AL-20'
+  | 'AL-21'
+  | 'AL-22';
 
 export interface AlertasRow {
   id: AlertasId;
@@ -335,6 +339,10 @@ export type ParametrosChave =
   | 'pontos_estruturas_vivas_pct'
   | 'bonus_nave_destruida'
   | 'bonus_vitoria'
+  | 'dominio_estrutura_m'
+  | 'dominio_unidade_m'
+  | 'ultimato_s'
+  | 'guerra_esfria_s'
   | 'valor_x_vr'
   | 'carga_hover_u'
   | 'tempo_descarga_hover_s'

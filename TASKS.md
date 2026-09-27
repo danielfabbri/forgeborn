@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v1.0.1 |
+| Derivado de | `SPEC.md` v1.1.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -361,3 +361,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: `primeiro_ataque_min` novo aplicado pela IA; INV-12 e INV-14 verificados (headless) no mapa novo da Lua.
 - [ ] **T-163 — Abertura rápida nos corpos grandes** · M · Spec: P5, TEC-10, D-79 · Dep: T-161
   - Contexto: com a Lua de 400 m, a partida leva ~19 s para abrir no servidor de desenvolvimento (geração e validação do mapa ~9 s; malha do terreno ~9 s). Caminhos: normais do terreno pela grade em vez de amostrar a altura, albedo em resolução menor, geração num Web Worker (T-159) e cache do mapa entre a configuração e a partida.
+- [ ] **T-164 — Temperamento e domínio** · G · Spec: REG-24 – REG-28, CMB-29, IA-04, IA-05, IA-11, UI-17, AL-19 – AL-22, D-81 · Dep: T-161
+  - Aceite: todos começam pacíficos; corpo no domínio alheio gera aviso e alerta, e fica inimigo após `ultimato_s`; sair antes volta a pacífico; dano abre a guerra na hora; a guerra esfria após `guerra_esfria_s`; disparo automático e minas só contra inimigos; a IA obedece o aviso (menos a Brutal) e só ataca quem está em guerra; HUD e minimapa mostram o temperamento e os domínios.
+- [ ] **T-165 — Pathfinding hierárquico** · G · Spec: TEC-14, MOV-05, D-79 · Dep: T-161
+  - Contexto: na Lua de 400 m, o A* de uma zona a outra leva ~26 ms e o flow field ~65 ms (medidos em 2026-09-27). Aceite: < 5 ms por ordem na Lua (tests/perf/pathfinding.test.ts), com as mesmas garantias de MOV-05.

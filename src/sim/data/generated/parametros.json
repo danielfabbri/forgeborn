@@ -66,6 +66,30 @@
     "descricao": "Bônus de vitória"
   },
   {
+    "chave": "dominio_estrutura_m",
+    "valor": 60,
+    "unidade": "m",
+    "descricao": "Raio do domínio em volta de cada estrutura (REG-25)"
+  },
+  {
+    "chave": "dominio_unidade_m",
+    "valor": 20,
+    "unidade": "m",
+    "descricao": "Raio do domínio em volta de cada unidade móvel (REG-25)"
+  },
+  {
+    "chave": "ultimato_s",
+    "valor": 10,
+    "unidade": "s",
+    "descricao": "Prazo para sair do domínio alheio depois do aviso (REG-26)"
+  },
+  {
+    "chave": "guerra_esfria_s",
+    "valor": 300,
+    "unidade": "s",
+    "descricao": "Tempo sem dano e fora dos domínios para a guerra virar paz (REG-28)"
+  },
+  {
     "chave": "valor_x_vr",
     "valor": 10,
     "unidade": "VR",

@@ -60,6 +60,12 @@ export class TocadorDeTrilhas {
   private atual: Tocando | null = null;
   private ultima: string | null = null;
   private pedido = 0;
+  private readonly elementos = new Set<HTMLAudioElement>();
+
+  /** Quantas trilhas estão soando agora (a atual e as que ainda somem). */
+  get soando(): number {
+    return [...this.elementos].filter((el) => !el.paused).length;
+  }
 
   /** URL da trilha que está tocando, ou null. */
   get tocando(): string | null {
@@ -69,9 +75,11 @@ export class TocadorDeTrilhas {
   /** Troca o contexto musical (a mesma chamada repetida não reinicia a trilha). */
   tocar(contexto: ContextoMusical): void {
     if (contexto === this.contexto) return;
+    // D-75: da abertura para o mapa do Universo, corte seco (sem transição).
+    const corte = this.contexto === 'abertura' && contexto === 'menu';
     this.contexto = contexto;
     const pedido = ++this.pedido;
-    quandoDesbloquear(() => this.iniciar(contexto, pedido));
+    quandoDesbloquear(() => this.iniciar(contexto, pedido, corte));
   }
 
   parar(): void {
@@ -81,7 +89,7 @@ export class TocadorDeTrilhas {
     this.atual = null;
   }
 
-  private iniciar(contexto: ContextoMusical, pedido: number): void {
+  private iniciar(contexto: ContextoMusical, pedido: number, corte = false): void {
     const url = this.escolher(contexto);
     if (pedido !== this.pedido) return;
     if (!url) {
@@ -89,7 +97,7 @@ export class TocadorDeTrilhas {
       this.atual = null;
       return;
     }
-    this.entrar(url, contexto !== 'partida');
+    this.entrar(url, contexto !== 'partida', corte);
   }
 
   private escolher(contexto: ContextoMusical): string | null {
@@ -100,10 +108,12 @@ export class TocadorDeTrilhas {
     return url;
   }
 
-  private entrar(url: string, emLoop: boolean): void {
+  private entrar(url: string, emLoop: boolean, corte = false): void {
     const a = audio();
     if (!a) return;
     const el = new Audio(url);
+    this.elementos.add(el);
+    el.addEventListener('pause', () => this.elementos.delete(el));
     el.crossOrigin = 'anonymous';
     el.loop = emLoop;
     const ganho = a.ctx.createGain();
@@ -111,11 +121,12 @@ export class TocadorDeTrilhas {
     a.ctx.createMediaElementSource(el).connect(ganho);
     ganho.connect(a.canais.musica);
     const agora = a.ctx.currentTime;
-    ganho.gain.setValueAtTime(0, agora);
-    ganho.gain.linearRampToValueAtTime(1, agora + TRANSICAO_S);
+    ganho.gain.setValueAtTime(corte ? 1 : 0, agora);
+    if (!corte) ganho.gain.linearRampToValueAtTime(1, agora + TRANSICAO_S);
     const anterior = this.atual;
     this.atual = { el, ganho, url };
-    this.sumir(anterior);
+    if (corte) this.cortar(anterior);
+    else this.sumir(anterior);
     // Na partida, a próxima trilha entra 4 s antes do fim desta.
     if (!emLoop) {
       el.addEventListener('timeupdate', () => {
@@ -143,6 +154,13 @@ export class TocadorDeTrilhas {
     });
   }
 
+  /** Para na hora, sem transição (D-75). */
+  private cortar(t: Tocando | null): void {
+    if (!t) return;
+    t.el.pause();
+    t.ganho.disconnect();
+  }
+
   private sumir(t: Tocando | null): void {
     const a = audio();
     if (!t || !a) return;
@@ -165,4 +183,5 @@ export const trilhas = new TocadorDeTrilhas();
 // Sonda para testes: a trilha que está tocando.
 (globalThis as unknown as { __audio?: unknown }).__audio = {
   trilha: () => trilhas.tocando,
+  soando: () => trilhas.soando,
 };

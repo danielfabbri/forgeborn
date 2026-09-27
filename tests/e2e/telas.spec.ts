@@ -51,7 +51,7 @@ test.describe('M10: telas', () => {
     expect(erros).toEqual([]);
   });
 
-  test('AUD-01/D-74: entrance na abertura e na Seleção de Modo; map nos outros menus', async ({
+  test('AUD-01/D-74/D-75: entrance nos menus até o Universo; map no Universo, com corte seco', async ({
     page,
   }) => {
     const trilha = () =>
@@ -65,7 +65,40 @@ test.describe('M10: telas', () => {
     await expect.poll(trilha).toMatch(/entrance/);
     await page.getByTestId('modo-campanha').click();
     await page.getByTestId('campanha-slots').waitFor();
+    await page.waitForTimeout(300);
+    expect(await trilha()).toMatch(/entrance/);
+    await page.getByTestId('slot-0-novo').click();
+    await page.getByTestId('nacao-bra').click();
+    await page.getByTestId('universo-painel').waitFor();
     await expect.poll(trilha).toMatch(/map/);
+    // D-75: a entrance para na hora (sem os 4 s de transição, só a map soando).
+    const soando = await page.evaluate(() =>
+      (window as unknown as { __audio: { soando: () => number } }).__audio.soando(),
+    );
+    expect(soando).toBe(1);
+  });
+
+  test('AUD-04/D-75: passar o mouse sobre um botão toca um som, uma vez por entrada', async ({
+    page,
+  }) => {
+    const passadas = () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __sfx: { tocados: () => string[] } }).__sfx
+            .tocados()
+            .filter((x) => x === 'passar').length,
+      );
+    await page.goto('/?menu');
+    await page.getByTestId('selecao-de-modo').waitFor();
+    await page.mouse.click(5, 5); // libera o áudio
+    await page.getByTestId('modo-campanha').hover();
+    await expect.poll(passadas).toBe(1);
+    // Mexer dentro do mesmo botão não repete; outro botão toca de novo.
+    const caixa = (await page.getByTestId('modo-campanha').boundingBox())!;
+    await page.mouse.move(caixa.x + caixa.width - 4, caixa.y + caixa.height / 2);
+    expect(await passadas()).toBe(1);
+    await page.getByTestId('modo-creditos').hover();
+    await expect.poll(passadas).toBe(2);
   });
 
   test('FLX-03/CAM-09: Seleção de Modo com Campanha habilitada e Créditos', async ({ page }) => {

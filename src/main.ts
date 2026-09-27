@@ -37,6 +37,19 @@ async function iniciar(): Promise<void> {
     },
     true,
   );
+  // AUD-04/D-75: som curto ao passar o mouse sobre um botão habilitado (uma vez por entrada).
+  let botaoSobOMouse: Element | null = null;
+  document.addEventListener(
+    'pointerover',
+    (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const botao = (e.target as Element | null)?.closest?.('button') ?? null;
+      if (botao === botaoSobOMouse) return;
+      botaoSobOMouse = botao;
+      if (botao && !botao.disabled) tocarSom('passar');
+    },
+    true,
+  );
   progresso(0.3, 'carregando.modulos');
   await pintar();
   if (direto) {

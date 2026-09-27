@@ -17,6 +17,7 @@ export type Som =
   | 'concluido'
   | 'morte'
   | 'clique'
+  | 'passar'
   | 'erro'
   | 'confirmacao'
   | 'alerta_baixa'
@@ -122,14 +123,20 @@ export function somInterno(ligado: boolean): void {
   abafadoInterno = ligado;
 }
 
+/** Sonda para testes: os últimos efeitos que soaram. */
+const tocados: Som[] = [];
+(globalThis as unknown as { __sfx?: unknown }).__sfx = { tocados: () => [...tocados] };
+
 /** Toca um efeito; `volume` 0..1 já com a distância aplicada. */
 export function tocarSom(som: Som, volume = 1): void {
   const interface_ =
-    ['clique', 'erro', 'confirmacao'].includes(som) ||
+    ['clique', 'passar', 'erro', 'confirmacao'].includes(som) ||
     som.startsWith('alerta') ||
     som.startsWith('ordem_');
   const s = saida(volume, true, interface_);
   if (!s) return;
+  tocados.push(som);
+  if (tocados.length > 20) tocados.shift();
   switch (som) {
     case 'laser': {
       // Estalo seco, dois dentes-de-serra desafinados caindo e um soco grave: tenso, sem "pew".
@@ -186,6 +193,10 @@ export function tocarSom(som: Som, volume = 1): void {
       break;
     case 'clique':
       tom(s, 'square', 1600, 1500, 0.03, 0.08);
+      break;
+    case 'passar':
+      // D-75: toque curto e suave ao passar o mouse sobre um botão.
+      tom(s, 'sine', 2300, 2100, 0.03, 0.05);
       break;
     case 'erro':
       tom(s, 'square', 220, 200, 0.1, 0.15);

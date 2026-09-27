@@ -207,8 +207,8 @@ function Menus({ viewport }: { viewport: HTMLElement }) {
           ? 'universo_campanha'
           : 'universo',
     );
-    // AUD-01: a abertura (e a Seleção de Modo, no mesmo fundo) tem a sua trilha; o resto, a do menu.
-    trilhas.tocar(atual === 'abertura' || atual === 'modo' ? 'abertura' : 'menu');
+    // AUD-01/D-75: a trilha da abertura segue até a Visão do Universo; dali em diante, a do mapa.
+    trilhas.tocar(noUniverso ? 'menu' : 'abertura');
   }, [atual]);
   return (
     <div class="menus">

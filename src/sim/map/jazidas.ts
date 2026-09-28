@@ -26,7 +26,7 @@ import {
 } from './esfera';
 import { celulaDe, type GradesDoMapa } from './grids';
 import { GERADOR_LUA, type MapaLunar, type PontoMedio, rumoSemRampa } from './lunar';
-import { emLago } from './lagos';
+import { emLiquido } from './lagos';
 import { emPedra } from './pedras';
 
 export type ZonaDeJazida = 'inicial' | 'expansao' | 'contestada' | 'central' | 'espalhada';
@@ -119,7 +119,8 @@ export function distribuirJazidas(
   const nav = grades.navegacao;
   const zonas = mapa.zonasDePouso;
   const zona0 = zonas[0]!;
-  const alcancavel = componenteConectado(nav, celulaDe(nav, zona0.d));
+  // CEN-11 (D-90): alcançável por terra ou pelo mar (a ilha se alcança de barco).
+  const alcancavel = componenteConectado(nav, celulaDe(nav, zona0.d), true);
   const foraDosPlatos =
     GERADOR_LUA.raioPlato + GERADOR_LUA.folgaTopo + GERADOR_LUA.larguraPenhasco + D.folgaPenhasco_m;
   const distancia = (a: Vec3, b: Vec3) => R * arco(a, b);
@@ -140,7 +141,7 @@ export function distribuirJazidas(
     [...ocupadas, ...extras].every((q) => distancia(p, q) >= espacamento) &&
     (noPlato || zonas.every((zona) => distancia(p, zona.d) >= foraDosPlatos)) &&
     // CEN-04 e CEN-17: nenhuma jazida dentro (nem colada) de um lago de metano ou de uma pedra.
-    !emLago(mapa, p, param('distancia_min_jazida_m')) &&
+    !emLiquido(mapa, p, param('distancia_min_jazida_m')) &&
     !emPedra(mapa, p, param('distancia_min_jazida_m'));
 
   /** Coloca um grupo de jazidas em volta de c; devolve as posições ou null. */

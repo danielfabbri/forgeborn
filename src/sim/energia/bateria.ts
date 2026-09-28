@@ -20,6 +20,10 @@ const PAPEIS: Record<MoveisId, Papel> = {
   drone_bomber: 'drone',
   drone_laser: 'drone',
   mobile_battery: 'bateria_movel',
+  // D-90: embarcações (a Artilharia recarrega como militar).
+  boat_transport: 'trabalhador',
+  boat_artillery: 'militar',
+  boat_antenna: 'trabalhador',
 };
 
 export function papelDe(tipo: MoveisId): Papel {

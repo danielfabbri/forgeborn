@@ -7,7 +7,7 @@ import { irPara } from '../economia/coleta';
 import { daNacao, moverComo, moverPara } from '../units/ordens';
 import { direcaoDe, direcaoDoComando } from '../units/superficie';
 import { pontosDoCampo } from './minas';
-import { emLago } from '../map/lagos';
+import { emLiquido } from '../map/lagos';
 
 type Postura = 'agressiva' | 'defensiva' | 'manter' | 'passiva';
 const POSTURAS: Postura[] = ['agressiva', 'defensiva', 'manter', 'passiva'];
@@ -103,7 +103,7 @@ export const comandosDeCombate: Record<string, CommandHandler> = {
     const d = dados(comando);
     const ponto = direcaoDoComando(d);
     // CEN-04: mina não vai para um lago de metano.
-    if (!ponto || (ctx.mundo && emLago(ctx.mundo.mapa, ponto))) return;
+    if (!ponto || (ctx.mundo && emLiquido(ctx.mundo.mapa, ponto))) return;
     for (const id of daNacao(ctx, comando.nacao, d.ids, 'unit')) {
       const lanca = getComponent(ctx.state, id, 'lancaMinas');
       if (!lanca || lanca.carregador === 0) continue;
@@ -123,7 +123,7 @@ export const comandosDeCombate: Record<string, CommandHandler> = {
       const de = direcaoDe(getComponent(ctx.state, id, 'position')!);
       const n = Math.min(lanca.carregador, param('magazine_minas'));
       lanca.plantios = pontosDoCampo(ctx, de, ponto, n).filter(
-        (p) => !ctx.mundo || !emLago(ctx.mundo.mapa, p),
+        (p) => !ctx.mundo || !emLiquido(ctx.mundo.mapa, p),
       );
       if (lanca.plantios.length === 0) continue;
       lanca.plantio_s = 0;

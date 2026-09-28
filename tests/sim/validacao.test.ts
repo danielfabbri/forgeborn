@@ -115,9 +115,10 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     utopia_planitia: 'fecd98ec43753ca9',
     valles_marineris: 'acaf4af3417dcd81',
     hellas_planitia: 'e6f4074ac9a58787',
-    xanadu: 'b847ea603acdf94e',
-    ligeia_mare: '352654b6e4a01f78',
-    kraken_mare: 'c1c3e01a910bd2c4',
+    // D-90: os mares de Titã mudaram o relevo (e as seeds curadas).
+    xanadu: '81c48de8b2982d24',
+    ligeia_mare: '61f4c2e8ebe02ad5',
+    kraken_mare: '2ff1eb666568fdfd',
   };
   const porCenario = (cenario: string) =>
     PRESETS_DE_MAPA.filter((p) => p.cenario === cenario).map((p) => [p.id, p.zonas, p.jogadores]);

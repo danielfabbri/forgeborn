@@ -20,6 +20,7 @@ import {
 } from './esfera';
 import {
   direcaoDoVertice,
+  alturaEm,
   type Heightmap,
   inclinacaoEm,
   indiceDoVertice,
@@ -36,11 +37,15 @@ export interface Grade {
 export interface GradeNavegacao extends Grade {
   /** 1 = transponível por hovers (MOV-01). */
   passavel: Uint8Array;
+  /** CEN-04/MOV-08 (D-90): 1 = líquido (só embarcações). Ausente sem mar. */
+  liquido?: Uint8Array;
 }
 
 export interface GradeConstrucao extends Grade {
   /** 1 = inclinação permite construir (PRD-10). */
   construivel: Uint8Array;
+  /** CEN-04 (D-90): 1 = líquido (só o Porto). Ausente sem mar. */
+  liquido?: Uint8Array;
 }
 
 export interface GradesDoMapa {
@@ -156,11 +161,28 @@ export function derivarGrades(mapa: Heightmap & { simetria?: Simetria }): Grades
     for (const c of celulasDaPedra(obra, pedra.d, pedra.raio)) construivel[c] = 0;
   }
 
+  // CEN-04 (D-90): o líquido não é de solo nem de construção; as embarcações andam nele.
+  const liquidoNav = mapa.mar ? marcarLiquido(mapa, nav, passavel) : undefined;
+  const liquidoObra = mapa.mar ? marcarLiquido(mapa, obra, construivel) : undefined;
+
   return {
-    navegacao: { ...nav, passavel },
-    construcao: { ...obra, construivel },
+    navegacao: { ...nav, passavel, ...(liquidoNav ? { liquido: liquidoNav } : {}) },
+    construcao: { ...obra, construivel, ...(liquidoObra ? { liquido: liquidoObra } : {}) },
     nevoa: criarGrade(mapa.raio_m, param('celula_nevoa_m')),
   };
+}
+
+/** Marca as células com o centro abaixo do nível do líquido e as tira de `livre`. */
+function marcarLiquido(mapa: Heightmap, grade: Grade, livre: Uint8Array): Uint8Array {
+  const nivel = mapa.mar!.nivel;
+  const liquido = new Uint8Array(grade.esfera.celulas);
+  for (let c = 0; c < liquido.length; c++) {
+    if (alturaEm(mapa, centroNaEsfera(grade.esfera, c)) < nivel) {
+      liquido[c] = 1;
+      livre[c] = 0;
+    }
+  }
+  return liquido;
 }
 
 /** Células que a pedra toca: centro a até raio + meia célula (e sempre a do centro). */

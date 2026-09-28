@@ -32,7 +32,7 @@ import {
 import { somInterno, tocarSom } from '../audio/sfx';
 import { SomDaPartida } from '../audio/somDaPartida';
 import { Poeira } from '../render/poeira';
-import { criarLagos } from '../render/lagos';
+import { criarMar } from '../render/lagos';
 import { corDaRocha, criarPedras } from '../render/pedras';
 import { LuzesRender } from '../render/luzes';
 import { tempestadeAtiva } from '../sim/cenario/tempestade';
@@ -127,7 +127,7 @@ import { interpretarMacete } from './macetes';
 import { emTransito, estoque, SEMEAR_JAZIDAS_COMMAND } from '../sim/economia';
 import { DEBUG_ENCHER_BANCO_COMMAND, leituraDaRede } from '../sim/energia';
 import { avancar, normalizar, norteEm, tangente, type Vec3 } from '../sim/map/esfera';
-import { alturaEm } from '../sim/map/heightmap';
+import { alturaDaSuperficie, alturaEm } from '../sim/map/heightmap';
 import { PRESETS_DE_MAPA } from '../sim/map/presets';
 import { gerarMapaValido } from '../sim/map/validacao';
 import { validarPosicionamento } from '../sim/producao';
@@ -320,20 +320,23 @@ export function iniciarPartida(): void {
   terreno.aplicarLod(PRESETS_GRAFICOS[configuracoes.value.grafico].lod);
   const ceu = criarCeu(ambientacao);
   view.scene.add(terreno.objeto, ceu.objeto);
-  // CEN-04/§14.7: lagos de metano espelhados (Titã).
-  const lagos = criarLagos(
-    pronto.mapa.lagos ?? [],
-    R,
-    ambientacao.horizonte ?? new Color(0, 0, 0),
-    nevoa,
-    ambientacao.escuroBrilho,
-  );
-  if (lagos) view.scene.add(lagos);
+  // CEN-04/§14.7 (D-90): mares de metano espelhados (Titã).
+  if (pronto.mapa.mar) {
+    view.scene.add(
+      criarMar(
+        pronto.mapa.mar.nivel,
+        R,
+        ambientacao.horizonte ?? new Color(0, 0, 0),
+        nevoa,
+        ambientacao.escuroBrilho,
+      ),
+    );
+  }
   // CEN-17: pedras neutras.
   const pedras = criarPedras(
     pronto.mapa.pedras ?? [],
     R,
-    (d) => alturaEm(pronto.mapa, d),
+    (d) => alturaDaSuperficie(pronto.mapa, d),
     ambientacao.tinta,
     ambientacao.grama,
     nevoa,
@@ -362,7 +365,7 @@ export function iniciarPartida(): void {
       criarLaboratorio(
         pronto.mapa.zonasDePouso,
         pronto.mapa.raio_m,
-        (d) => alturaEm(pronto.mapa, d),
+        (d) => alturaDaSuperficie(pronto.mapa, d),
         { pontos: pontosMedios.map((m) => m.d), segmentos: pistas?.segmentos ?? [] },
       ),
     );
@@ -476,23 +479,25 @@ export function iniciarPartida(): void {
 
   const history = new PositionHistory();
   const unidades = new UnidadesRender(view.scene, jogador);
-  const combate = new CombateRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+  const combate = new CombateRender(view.scene, R, (d) => alturaDaSuperficie(pronto.mapa, d));
   // ART-07: partículas e efeitos, na quantidade do preset (TEC-19).
   const particulas = new Particulas(
     view.scene,
     () => PRESETS_GRAFICOS[configuracoes.value.grafico].particulas,
   );
-  const efeitos = new Efeitos(view.scene, R, (d) => alturaEm(pronto.mapa, d), particulas);
-  const marcas = new SinaisRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+  const efeitos = new Efeitos(view.scene, R, (d) => alturaDaSuperficie(pronto.mapa, d), particulas);
+  const marcas = new SinaisRender(view.scene, R, (d) => alturaDaSuperficie(pronto.mapa, d));
   // UI-14: sinalizadores e sons das ordens do clique direito.
-  const sinalizadores = new SinalizadoresRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+  const sinalizadores = new SinalizadoresRender(view.scene, R, (d) =>
+    alturaDaSuperficie(pronto.mapa, d),
+  );
   // ECO-04 (D-89): o corpo das jazidas é da mesma rocha das pedras do cenário.
   const jazidas = new JazidasRender(view.scene, corDaRocha(ambientacao.tinta, ambientacao.grama));
-  const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
-  const holograma = new HologramaRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+  const aneis = new AneisDeSelecao(view.scene, (d) => alturaDaSuperficie(pronto.mapa, d), R);
+  const holograma = new HologramaRender(view.scene, R, (d) => alturaDaSuperficie(pronto.mapa, d));
   const barras = new BarrasRender(view.scene);
   // ENE-27/ENE-29 (D-85): cabos no chão e marcadores de sem rede.
-  const cabosRender = new CabosRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+  const cabosRender = new CabosRender(view.scene, R, (d) => alturaDaSuperficie(pronto.mapa, d));
   let semRede: MarcadorSemRede[] = [];
   let comEnergia = new Set<EntityId>();
   const luzes = new LuzesRender(view.scene);

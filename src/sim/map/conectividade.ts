@@ -3,12 +3,20 @@ import { celulaDe, celulasNoRaioDa, type GradeNavegacao } from './grids';
 
 /**
  * Células transponíveis alcançáveis a partir de `inicio`, andando só entre vizinhas de lado
- * (critério conservador: se liga assim, liga para qualquer pathfinding).
+ * (critério conservador: se liga assim, liga para qualquer pathfinding). Com `comMar`, o líquido
+ * também liga (CEN-11).
  */
-export function componenteConectado(nav: GradeNavegacao, inicio: number): Uint8Array {
+export function componenteConectado(
+  nav: GradeNavegacao,
+  inicio: number,
+  /** CEN-11 (D-90): conta o líquido como caminho (travessia de barco). */
+  comMar = false,
+): Uint8Array {
   const total = nav.esfera.celulas;
   const marcado = new Uint8Array(total);
-  if (nav.passavel[inicio] !== 1) return marcado;
+  const liquido = comMar ? nav.liquido : undefined;
+  const anda = (c: number) => nav.passavel[c] === 1 || liquido?.[c] === 1;
+  if (!anda(inicio)) return marcado;
   const fila = new Int32Array(total);
   let cabeca = 0;
   let fim = 0;
@@ -19,7 +27,7 @@ export function componenteConectado(nav: GradeNavegacao, inicio: number): Uint8A
     const atual = fila[cabeca++]!;
     for (let d = 0; d < 4; d++) {
       const v = vizinhos[atual * 8 + d]!;
-      if (v < 0 || marcado[v] === 1 || nav.passavel[v] !== 1) continue;
+      if (v < 0 || marcado[v] === 1 || !anda(v)) continue;
       marcado[v] = 1;
       fila[fim++] = v;
     }

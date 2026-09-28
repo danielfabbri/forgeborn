@@ -51,7 +51,7 @@ export const PRESETS_DE_MAPA: readonly PresetDeMapa[] = [
   { id: 'valles_marineris', cenario: 'marte', zonas: 4, jogadores: [2, 4], seed: 13 },
   { id: 'hellas_planitia', cenario: 'marte', zonas: 4, jogadores: [3, 4], seed: 5 },
   // §14.7 (D-78): Titã, com lagos de metano (CEN-04).
-  { id: 'xanadu', cenario: 'tita', zonas: 2, jogadores: [2, 2], seed: 3 },
-  { id: 'ligeia_mare', cenario: 'tita', zonas: 4, jogadores: [2, 4], seed: 17 },
-  { id: 'kraken_mare', cenario: 'tita', zonas: 4, jogadores: [3, 4], seed: 9 },
+  { id: 'xanadu', cenario: 'tita', zonas: 2, jogadores: [2, 2], seed: 4 },
+  { id: 'ligeia_mare', cenario: 'tita', zonas: 4, jogadores: [2, 4], seed: 20 },
+  { id: 'kraken_mare', cenario: 'tita', zonas: 4, jogadores: [3, 4], seed: 13 },
 ];

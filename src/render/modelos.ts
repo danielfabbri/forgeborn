@@ -640,6 +640,76 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     }
     return m.pronta();
   },
+  // UNI-16 (D-90): Porto flutuante: plataforma sobre o líquido, cais com defensas, guindaste e
+  // o berço de impressão das embarcações.
+  port: () => {
+    const m = new Montagem();
+    m.caixa(9.6, 0.5, 9.6, GRAFITE, { y: -0.2 });
+    m.caixa(9.0, 0.25, 9.0, METAL, { y: 0.3 });
+    // Berço (doca aberta) numa das laterais.
+    m.caixa(5.2, 0.12, 3.2, 'nacao', { x: 1.2, y: 0.56, z: -2.4 });
+    for (const z of [-4.0, -0.8]) m.caixa(5.6, 0.7, 0.4, PAINEL, { x: 1.2, y: 0.55, z });
+    // Defensas ao longo da borda.
+    for (let k = -3; k <= 3; k++) m.tubo(0.22, 0.6, GRAFITE, { x: k * 1.3, y: 0.45, z: 4.75 }, 8);
+    // Guindaste: torre, braço e cabo.
+    m.caixa(0.9, 4.2, 0.9, METAL, { x: -3.2, y: 0.55, z: 2.6 });
+    m.caixa(5.2, 0.35, 0.4, PAINEL, { x: -1.2, y: 4.6, z: 2.6 });
+    m.cilindro(0.04, 2.4, METAL, { x: 1.1, y: 2.25, z: 2.6 }, 6);
+    // Casa de controle com a faixa da nação.
+    m.caixa(2.4, 1.6, 2.2, PAINEL, { x: -3.0, y: 0.55, z: -2.6 });
+    m.caixa(2.44, 0.18, 2.24, 'nacao', { x: -3.0, y: 1.8, z: -2.6 });
+    m.caixa(2.0, 0.4, 0.05, VIDRO, { x: -3.0, y: 1.35, z: -1.48 });
+    return m.pronta();
+  },
+  // UNI-17: barcaça larga de fundo chato, com rampa de desembarque na proa e porão aberto.
+  boat_transport: () => {
+    const m = new Montagem();
+    m.caixa(5.2, 0.8, 3.0, GRAFITE, { y: -0.4 });
+    m.caixa(4.8, 0.35, 2.7, PAINEL, { y: 0.4 });
+    // Proa inclinada (rampa).
+    m.caixa(0.9, 0.12, 2.6, METAL, { x: 2.85, y: 0.35, rz: 0.55 });
+    // Bordas do porão.
+    for (const z of [-1, 1]) m.caixa(4.0, 0.45, 0.14, METAL, { x: -0.2, y: 0.75, z: z * 1.28 });
+    // Casa de comando na popa.
+    m.caixa(1.1, 0.9, 1.6, PAINEL, { x: -2.1, y: 0.75 });
+    m.caixa(1.14, 0.12, 1.64, 'nacao', { x: -2.1, y: 1.65 });
+    m.caixa(0.05, 0.3, 1.2, VIDRO, { x: -1.53, y: 1.3 });
+    antena(m, -2.3, 1.77, 0.5, 0.6);
+    return m.pronta();
+  },
+  // UNI-18: casco fino e rápido; a torre do laser é peça à parte (TORRES, ART-12).
+  boat_artillery: () => {
+    const m = new Montagem();
+    m.caixa(4.0, 0.7, 1.8, GRAFITE, { y: -0.35 });
+    m.add(new ConeGeometry(0.9, 1.2, 4), GRAFITE, {
+      x: 2.55,
+      y: 0.0,
+      rz: -Math.PI / 2,
+      rx: Math.PI / 4,
+    });
+    m.caixa(3.4, 0.3, 1.6, PAINEL, { y: 0.35 });
+    m.caixa(1.0, 0.55, 1.1, PAINEL, { x: -1.1, y: 0.65 });
+    m.caixa(1.04, 0.1, 1.14, 'nacao', { x: -1.1, y: 1.2 });
+    m.cilindro(0.45, 0.2, METAL, { x: 0.6, y: 0.65 }, 12);
+    antena(m, -1.4, 1.25, 0.3, 0.5);
+    return olho(m, 1.9, 0.55).pronta();
+  },
+  // UNI-19: casco leve com mastro de radar e antena parabólica.
+  boat_antenna: () => {
+    const m = new Montagem();
+    m.caixa(3.4, 0.6, 1.5, GRAFITE, { y: -0.3 });
+    m.caixa(2.8, 0.28, 1.3, PAINEL, { y: 0.3 });
+    m.caixa(0.9, 0.5, 1.0, PAINEL, { x: -0.8, y: 0.58 });
+    m.cilindro(0.08, 2.4, METAL, { x: 0.2, y: 0.58 }, 8);
+    m.caixa(1.4, 0.08, 0.2, 'nacao', { x: 0.2, y: 2.6 });
+    m.add(new SphereGeometry(0.55, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), METAL, {
+      x: 0.9,
+      y: 1.6,
+      rz: -Math.PI / 2.4,
+    });
+    m.esfera(0.12, 'nacao', { x: 0.2, y: 3.05 });
+    return m.pronta();
+  },
   // UNI-11: mísseis (fotos do cartão e o voo), deitados em +x.
   missile_short: () => {
     const m = new Montagem();

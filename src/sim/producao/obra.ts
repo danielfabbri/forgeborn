@@ -56,7 +56,7 @@ import { cabeNaFila, enfileirar } from './fila';
 import { explorado } from '../visao/nevoa';
 import { bonusDaNacao } from '../ia/base';
 import { encerrarTrabalho } from './trabalho';
-import { emLago } from '../map/lagos';
+import { emLiquido } from '../map/lagos';
 import { emPedra } from '../map/pedras';
 
 /** PRD-10: por que o local não serve (UI-08), ou null se serve. */
@@ -133,8 +133,8 @@ export function validarPosicionamento(
         const p = normalizar(soma(d, soma(escalar(eixoA, e / R), escalar(eixoB, s / R))));
         // Terreno explorado pela nação (VIS-01).
         if (nacao && !explorado(ctx, nacao, p)) return 'inexplorado';
-        // CEN-04: nada sobre os lagos de metano.
-        if (emLago(ctx.mundo.mapa, p)) return 'lago';
+        // CEN-04: nada sobre o líquido.
+        if (emLiquido(ctx.mundo.mapa, p)) return 'lago';
         if (!ehConstruivel(grade, celulaDe(grade, p))) {
           // CEN-17: a célula bloqueada por uma pedra dá o motivo próprio.
           return emPedra(ctx.mundo.mapa, p, passo) ? 'pedra' : 'inclinacao';

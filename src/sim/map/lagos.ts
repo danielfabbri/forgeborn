@@ -1,22 +1,23 @@
 /**
- * CEN-04 (D-78): lagos de metano de Titã. Cada lago é um círculo na superfície (centro e raio)
- * com o nível da água (altura radial, m). Hovers atravessam; nada é posicionado sobre eles.
+ * CEN-04 (D-90): superfície líquida (mares e lagos). Um ponto está no líquido quando o terreno ali
+ * fica abaixo do nível do líquido do mapa; mapas sem líquido não têm `mar`.
  */
-import { arco, type Vec3 } from './esfera';
+import { avancar, girar, norteEm, type Vec3 } from './esfera';
+import { alturaEm, type Heightmap } from './heightmap';
 
-export interface Lago {
-  d: Vec3;
-  raio: number;
-  /** Altura (m, sobre `raio_m`) da superfície do lago. */
-  nivel: number;
-}
+/** Pontos em volta de p (a `folga` metros) conferidos junto com ele. */
+const RUMOS = 8;
 
-/** O ponto p (direção) está num lago, com `folga` (m) além da margem? */
-export function emLago(
-  mapa: { raio_m: number; lagos?: readonly Lago[] },
-  p: Vec3,
-  folga = 0,
-): boolean {
-  if (!mapa.lagos || mapa.lagos.length === 0) return false;
-  return mapa.lagos.some((l) => mapa.raio_m * arco(l.d, p) < l.raio + folga);
+/** O ponto p (direção) está no líquido, ou a até `folga` (m) dele? */
+export function emLiquido(mapa: Heightmap, p: Vec3, folga = 0): boolean {
+  const mar = mapa.mar;
+  if (!mar) return false;
+  if (alturaEm(mapa, p) < mar.nivel) return true;
+  if (folga <= 0) return false;
+  const norte = norteEm(p);
+  for (let k = 0; k < RUMOS; k++) {
+    const q = avancar(p, girar(norte, p, (k / RUMOS) * 2 * Math.PI), folga / mapa.raio_m).p;
+    if (alturaEm(mapa, q) < mar.nivel) return true;
+  }
+  return false;
 }

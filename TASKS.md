@@ -395,7 +395,7 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M18 — Mares (D-90)
 
-- [ ] **T-180 — Mares orgânicos com ilhas** · G · Spec: CEN-04, CEN-11, MOV-01, PRD-10, §14.7, D-90 · Dep: T-176
+- [x] **T-180 — Mares orgânicos com ilhas** · G · Spec: CEN-04, CEN-11, MOV-01, PRD-10, §14.7, D-90 · Dep: T-176 · Feito: 2026-09-28
   - Aceite: nos cenários com líquido, `mar_cobertura_pct`% da superfície abaixo do nível, com formas orgânicas e ilhas, simétrica, terra firme a `mar_folga_zona_m` das zonas; unidades de solo param na borda; nada fica no líquido (exceto o Porto); validação conta o mar; presets de Titã válidos; o mar desenhado com a névoa.
 - [ ] **T-181 — Porto e embarcações** · G · Spec: UNI-16 – UNI-19, MOV-08, CMB-04, PRD-10, `dados:custos`, `dados:moveis`, `dados:estruturas`, `boat_laser`, D-90 · Dep: T-180
   - Aceite: a Impressora imprime o Porto só sobre o líquido perto da terra; o Porto imprime as três embarcações, que só andam no líquido e recarregam nas portas dele; a Artilharia atira com `boat_laser`; a Antena enxerga `visao_m`.

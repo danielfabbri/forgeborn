@@ -10,8 +10,9 @@ import { raioDaPegada } from '../units/criar';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 import { alcancaAlguma, redePrincipal, tipoPrecisaDeEnergia } from '../energia/cabos';
 
-/** Corredor entre a estrutura nova e as vizinhas: o diâmetro do maior casco de unidade. */
-const CORREDOR_M = 2 * Math.max(...dados.moveis.map((m) => m.raio_m));
+/** Corredor entre a estrutura nova e as vizinhas: o diâmetro do maior casco de unidade de solo. */
+const CORREDOR_M =
+  2 * Math.max(...dados.moveis.filter((m) => m.camada === 'solo').map((m) => m.raio_m));
 
 /**
  * A IA não fecha a própria base: a pegada nova (pelo círculo que a cobre) fica a pelo menos um

@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.4.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.5.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -515,6 +515,9 @@ export type ParametrosChave =
   | 'lago_raio_min_m'
   | 'lago_raio_max_m'
   | 'lago_folga_zona_m'
+  | 'pedras_por_10k_m2'
+  | 'pedra_raio_min_m'
+  | 'pedra_raio_max_m'
   | 'barras_opacidade_nao_selecionados_pct'
   | 'atmosfera_opacidade_pct'
   | 'macete_quantidade';

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.4.0 — rascunho para aprovação |
+| Versão do SPEC | 1.5.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -438,9 +438,9 @@ flowchart LR
 
 - **ENE-25** — **Rede** = conjunto de estruturas prontas ligadas entre si por cabos (a Nave é uma estrutura como as outras). ENE-01 a ENE-05 valem para cada rede separadamente. Estrutura sem cabo é uma rede só dela: não recebe nem entrega energia a outras. Uma nação pode ter várias redes independentes (por exemplo, uma expansão distante com as próprias Usinas Solares). Os cabos não têm limite de carga.
 - **ENE-26** — **Plugar.** Com uma estrutura própria pronta selecionada, o clique direito em outra estrutura própria pronta puxa um cabo entre as duas (Comando "ligar_cabo"), se a distância entre as bordas das pegadas for no máximo `cabo_alcance_m`, ou `cabo_alcance_central_m` quando uma das pontas for a Nave ou uma Central de Distribuição. Uma estrutura pode ter vários cabos (malha). O botão **Desplugar** do cartão remove todos os cabos da estrutura selecionada.
-- **ENE-27** — Os cabos correm finos pelo chão, na cor da nação, e não são alvo. Um cabo some quando uma das pontas é destruída ou reciclada; o que dependia dele fica em outra rede (ou sem rede).
+- **ENE-27** — Os cabos correm finos e pretos pelo chão (não há fios aéreos) e não são alvo; um brilho verde claro corre por eles enquanto a rede tem energia (D-86). Um cabo some quando uma das pontas é destruída ou reciclada; o que dependia dele fica em outra rede (ou sem rede).
 - **ENE-28** — Portas de recarga, disparos pagos pela rede (Torre, Abrigo, Antiaérea, Varredura Orbital), manutenção e impressão da Nave e da Base de Lançamento usam a rede da própria estrutura.
-- **ENE-29** — Estrutura pronta que precisa de energia (gera, guarda, consome ou tem portas) e está sem cabo dispara AL-23 e mostra o ícone de sem rede. Armazém, Muro e Portão funcionam sem rede.
+- **ENE-29** — Estrutura pronta que precisa de energia (gera, guarda, consome ou tem portas) e está sem cabo dispara AL-23 e mostra o ícone de sem rede. O Armazém também precisa de rede (D-86): fora dela não recebe descargas nem dispara do abrigo, e não conta como depósito. Muro e Portão funcionam sem rede.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -544,7 +544,7 @@ flowchart LR
 
 ### 7.4 Construção de estruturas
 
-- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas e jazidas (com folga de `distancia_min_jazida_m`) e fora dos lagos de metano (CEN-04). A pegada é um quadrado no plano tangente, alinhado ao norte local (CEN-15). Unidades próprias dentro da pegada são empurradas para fora quando a obra começa. Entre posicionar e instalar o canteiro, a pegada fica reservada: nenhuma outra estrutura pode ser posicionada sobre ela, mas unidades passam (D-29).
+- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas, jazidas (com folga de `distancia_min_jazida_m`) e pedras (CEN-17), e fora dos lagos de metano (CEN-04). A pegada é um quadrado no plano tangente, alinhado ao norte local (CEN-15). Unidades próprias dentro da pegada são empurradas para fora quando a obra começa. Entre posicionar e instalar o canteiro, a pegada fica reservada: nenhuma outra estrutura pode ser posicionada sobre ela, mas unidades passam (D-29).
 - **PRD-11** — A Impressora vai até o local (casco a até `raio_deposito_m` da borda da pegada, D-29), instala o **canteiro** e imprime a estrutura em camadas. O canteiro nasce com `hp_inicial_canteiro_pct`% do HP e ganha HP proporcional ao progresso. Dano sofrido durante a obra é descontado do HP final.
 - **PRD-12** — Estrutura em construção não funciona (não gera energia, não dispara, não recebe descargas) até chegar a 100%.
 - **PRD-13** — Canteiro abandonado não se degrada e pode ser retomado por qualquer Impressora ou Hover de Exploração próprio.
@@ -794,7 +794,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 #### Torre Magnética — `mag_tower`
 - **UNI-13** — Campo eletromagnético de raio `mag_raio_m`. Unidades móveis inimigas no campo ficam mais lentas (até `mag_lentidao_max_pct` no centro) e perdem energia da bateria (até `mag_dreno_max_en_s` no centro); o efeito cai em linha até zero na borda e, em unidades blindadas, vale `mag_fator_blindada_pct`. Vários campos não se somam: vale o mais forte. A torre guarda o que drena até `mag_banco_max_en`; cheia, para de drenar até gastar parte. Ela repassa a até `mag_max_aliados` unidades próprias no campo, as de menor % primeiro, até `mag_repasse_en_s` cada (D-65), e repara até `mag_max_aliados` unidades móveis próprias no campo, as mais feridas primeiro, a `mag_reparo_hp_s` cada (D-72).
 - **UNI-14** — **Antena** (`antenna`, D-83): estrutura de observação de alta visibilidade: enxerga `visao_m` em volta (a maior visão fixa do jogo), não detecta furtivos, não tem arma e consome `manutencao_en_s` da rede; sem energia, não enxerga.
-- **UNI-15** — **Central de Distribuição** (`power_hub`, D-85): estrutura barata e frágil que só serve de ponto da rede: alcança `cabo_alcance_central_m` com seus cabos, para levar a rede a outras áreas. Não gera, não guarda nem gasta energia.
+- **UNI-15** — **Central de Distribuição** (`power_hub`, D-85): estrutura barata e frágil, uma caixa baixa de junção no chão (D-86), que só serve de ponto da rede: alcança `cabo_alcance_central_m` com seus cabos, para levar a rede a outras áreas. Não gera, não guarda nem gasta energia.
 - **Visual:** coluna de bobinas com anéis que brilham enquanto o campo age.
 
 ### 8.6 Autonomia padrão (resumo)
@@ -964,7 +964,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **MOV-01** — Camada de solo: hovers flutuam ~0,6 m acima do terreno e transpõem inclinações (em relação à vertical local, CEN-14) até `inclinacao_max_hover_graus`. Acima disso o terreno é intransponível (paredões, bordas de cratera).
 - **MOV-02** — Camada aérea: drones voam a `altitude_drone_m` acima da esfera de raio `raio_m` (altura radial) e ignoram relevo e obstáculos de solo. "Em linha reta" quer dizer pelo arco de grande círculo.
 - **MOV-03** — Aceleração até a velocidade máxima em `aceleracao_solo_s` (solo) ou `aceleracao_ar_s` (ar). Giro a `giro_graus_s`.
-- **MOV-04** — Colisão: unidades de solo são círculos (`raio_m`) com separação suave entre si; estruturas e jazidas são obstáculos rígidos. Drones só se separam de outros drones.
+- **MOV-04** — Colisão: unidades de solo são círculos (`raio_m`) com separação suave entre si; estruturas, jazidas e pedras (CEN-17) são obstáculos rígidos. Drones só se separam de outros drones.
 - **MOV-05** — Pathfinding em grade de `celula_navegacao_m`: A* para unidades isoladas e **flow field** para grupos com `flow_field_min_unidades` ou mais. Minas inimigas reveladas e zonas de radiação têm custo alto (são evitadas).
 - **MOV-06** — Movimento em grupo mantém a formação relativa e anda na velocidade da unidade mais lenta. Desligável ("mover livre").
 - **MOV-07** — **Pouso de drones:** drone ocioso por `pouso_automatico_s` pousa (consumo 0). Decola em `tempo_decolagem_s` ao receber ordem ou quando há inimigo ao alcance da visão. Pousado, é alvo de solo e não dispara. Também pode pousar pelo comando Pousar (leva `tempo_pouso_s`).
@@ -991,7 +991,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 - **CTL-01** — Visão de cima, estilo Age of Empires: câmera em perspectiva sobre um ponto focal na superfície, com "cima" na vertical local e inclinação padrão de 55°. O zoom (roda do mouse) vai de 15 m a 120 m de altura. Perto do solo a inclinação cai suavemente até ~35°, para uma vista cinematográfica. Acima de 120 m, vale CTL-16.
 - **CTL-02** — Pan pelas setas do teclado e pelas bordas da tela (desligável): o ponto focal anda pela superfície e a câmera vai junto, sem girar sozinha. Arrastar com o botão do meio gira em torno do ponto focal. Home volta ao norte (CEN-15).
-- **CTL-03** — O minimapa é um mapa-múndi do corpo (projeção equiretangular: longitude na horizontal, latitude na vertical), sempre com o norte para cima; ele só rola entre leste e oeste, acompanhando a longitude do ponto focal, e arrastar nele também rola leste–oeste. Clique no minimapa move a câmera; clique direito dá ordem de movimento (D-83).
+- **CTL-03** — O minimapa é um mapa-múndi fixo do corpo (projeção equiretangular: longitude na horizontal, latitude na vertical), com o norte para cima e a zona de pouso do jogador no meio; ele não gira nem rola durante a partida, só o contorno da câmera se move. O que nunca foi visto aparece escuro, mas não preto. Clique ou arraste no minimapa movem a câmera para o ponto; clique direito dá ordem de movimento (D-83, D-86).
 
 - **CTL-16** — **Visão planetária** (D-26): o zoom continua além de 120 m até mostrar o planeta inteiro, a 3,5 × `raio_m` do centro. Nessa faixa a inclinação vai a 90° (olhando para o centro do planeta) e o pan gira o globo. Seleção e ordens continuam valendo. Nos corpos com atmosfera, ao afastar, o céu e a névoa do chão dão lugar ao espaço preto estrelado, e a atmosfera aparece como uma esfera em volta do corpo, com `atmosfera_opacidade_pct`% de opacidade no fim do zoom (D-83).
 
@@ -1097,7 +1097,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 - **IA-10** — Mísseis: a IA mantém `ia_misseis_curtos` curtos prontos e, do Normal para cima, `ia_misseis_longos` longos. Curtos defendem: são lançados contra inimigos visíveis a até `ia_raio_defesa_m` de uma estrutura própria. Do Normal para cima, um longo é lançado contra uma estrutura inimiga conhecida (vista ou fantasma) no alcance, no máximo um a cada `ia_missil_longo_intervalo_s` (D-66).
 - **IA-11** — Temperamento da IA (D-81): avisada (REG-26), recolhe os corpos do domínio alheio antes do prazo, menos na Brutal e na onda de provocação (IA-12), que ficam. A IA escolhe expansões e rotas de batedor fora do domínio de nações pacíficas com ela, menos na Brutal.
 - **IA-12** — Provocação (D-82): sem nenhuma guerra, quando a onda estaria pronta (IA-04), a IA escolhe um alvo e manda a onda para o domínio dele, ignorando o aviso; a guerra começa pelo prazo de REG-26. Fácil nunca provoca. Normal só provoca a nação conhecida mais fraca (menos estruturas conhecidas) e só se ela tiver menos estruturas que a própria IA. Difícil provoca a mais próxima; Brutal, a mais fraca.
-- **IA-13** — Cabos da IA (D-85): a IA pluga cada estrutura pronta que precisa de energia na estrutura ligada mais próxima da rede da Nave ao alcance, e só posiciona essas estruturas onde algum ponto dessa rede alcança.
+- **IA-13** — Cabos da IA (D-85): a IA pluga cada estrutura pronta que precisa de energia (e as Centrais) na estrutura ligada mais próxima da rede da Nave ao alcance, e só posiciona essas estruturas onde algum ponto dessa rede alcança. Para uma expansão fora do alcance, ela primeiro planta uma Central de Distribuição no caminho (D-86).
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1214,6 +1214,14 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 ### 14.2 Tamanho dos corpos
 
 - **CEN-16** — O raio do planeta é o `raio_m` do cenário em `dados:cenarios`; não há escolha de tamanho (D-79). O raio segue a raiz cúbica do raio real do corpo, com a Lua em 400 m: a ordem de tamanho do Sistema Solar se mantém e a diferença cabe no navegador. Fobos fica no mínimo de 150 m. O Campo de testes da Terra (§14.5) é só a área do laboratório. Qualquer corpo recebe de 2 a 4 jogadores: com 2, o mapa usa N = 2 ou o preset de N = 4 escolhido; com 3 ou 4, N = 4.
+- **CEN-17** — **Pedras neutras** (D-86): o gerador espalha rochas indestrutíveis, `pedras_por_10k_m2` a cada 10.000 m² da superfície, com raio entre `pedra_raio_min_m` e `pedra_raio_max_m`, pela simetria de CEN-06; ficam fora dos platôs e rampas das zonas de pouso e longe das jazidas. São obstáculos rígidos para as unidades de solo (MOV-04) e para a construção (PRD-10); os drones passam por cima.
+
+<!-- dados:parametros -->
+| chave | valor | unidade | descricao |
+|---|---|---|---|
+| pedras_por_10k_m2 | 6 | pedras | Densidade das pedras neutras (CEN-17) |
+| pedra_raio_min_m | 1,5 | m | Raio mínimo de uma pedra |
+| pedra_raio_max_m | 4 | m | Raio máximo de uma pedra |
 
 ### 14.3 Gerador de mapas (por seed)
 
@@ -1404,6 +1412,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **ART-10** — Interface com estética de "HUD de máquina": linhas finas, números em fonte monoespaçada e cor de destaque igual à da nação do jogador.
 - **ART-11** — **Sem noite** (D-26): o sol acompanha o ponto focal da câmera e incide nele sempre com a mesma elevação rasante; a Terra no céu também se posiciona em relação ao ponto focal. O lado do planeta que o jogador olha está sempre iluminado, com sombras longas.
 - **ART-12** — Unidades e estruturas com arma giram só a torre ou os canos para o alvo atual (o corpo segue o próprio rumo); sem alvo, a torre volta para a frente (D-68).
+- **ART-13** — Luzes de sinalização piscam nas estruturas (a do topo na cor da nação, as de canto brancas), só enquanto a estrutura está numa rede com energia; sem rede ou em obra, apagadas (D-86).
 
 ### 18.2 Ambientação por cenário
 
@@ -1681,6 +1690,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-83 | Ritmo mais rápido e novos recursos: hovers ×1,5 de velocidade; estruturas ×0,7 de custo; `tempo_s` de tudo ×0,6; Usina Solar ×1,5 (`geracao_en_s` 4,5); `carga_hover_u` 20 e `taxa_mineracao_u_s` ×1,5; Antena (UNI-14, visão 100 m, 1 EN/s, liberada na Missão 1); satélites sem limite por base; macete "maistudo"; barras dos não selecionados a 30%; minimapa em mapa-múndi com o norte fixo; atmosfera como esfera a 90% na visão planetária. | Pedido do produto; respostas: hovers 1,5×, estruturas −30% e tempo −40%, solar 1,5×, antena com visão de 100 m. | Aprovada |
 | D-84 | Alertas de prioridade baixa (impressão concluída, jazida esgotada, hovers ociosos, mina detonada) ficam só na pilha, sem voz nem bipe. | Pedido do produto: "os áudios ainda estão disparando em momentos estranhos"; numa partida de 25 min, a impressão concluída sozinha falou 76 vezes. | Aprovada |
 | D-85 | Rede elétrica por cabos: estruturas ligadas por cabos formam redes independentes (ENE-25 a ENE-29), plugadas à mão com o clique direito, alcance de 30 m (80 m com a Nave ou a Central de Distribuição, UNI-15), cabos visíveis no chão e fora de alcance de ataque; a Central é barata e frágil, sem limite de carga. A Usina Nuclear fica sempre ligada. | Pedido do produto: "fazer uma unidade fixa de central de distribuição… plugar uma unidade fixa à rede de energia… com o tempo, todas as construções deverão compor uma malha… a usina nuclear sempre fique ligada"; respostas: fora da rede não recebe nem entrega; plugar manual; 30/80 m; cabos não são alvo, a Central sim; várias redes independentes; Central barata e frágil; HUD com a rede da Nave e a da seleção. | Aprovada |
+| D-86 | Minimapa mapa-múndi fixo centrado na zona de pouso do jogador, com o escuro não preto; pedras neutras (CEN-17: 6 a cada 10.000 m², raio de 1,5 a 4 m); luzes piscando nas estruturas ligadas (ART-13); o Armazém precisa de rede; cabos pretos com brilho verde claro quando a rede tem energia; Central como caixa baixa, sem fios aéreos. | Pedido do produto; respostas: "o silo" é o Armazém, pedras médias espalhadas, a zona de pouso no meio do minimapa. | Aprovada |
 
 ---
 
@@ -1782,3 +1792,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.3.1 | 2026-09-27 | D-84: AUD-03, alertas de prioridade baixa sem voz nem sinal sonoro. |
 | 1.3.2 | 2026-09-27 | INV-02: 30–45 s (era 45–60 s), consequência do ritmo mais rápido de D-83 (a Impressora sai aos 38 s). |
 | 1.4.0 | 2026-09-27 | D-85: §6.2.1 (ENE-25 a ENE-29, `cabo_alcance_m`, `cabo_alcance_central_m`), §6.1, ENE-01, ENE-02, ENE-06 (nuclear sempre ligada), ENE-22, UNI-15 e `power_hub`, IA-13, CAM-07 passo 4, AL-23, atalho D, Missão 0 libera a Central. |
+| 1.5.0 | 2026-09-28 | D-86: CTL-03 (mapa-múndi fixo), CEN-17 (`pedras_por_10k_m2`, `pedra_raio_min_m`, `pedra_raio_max_m`), MOV-04, PRD-10, ENE-27, ENE-29 (Armazém na rede), UNI-15, IA-13, ART-13. |

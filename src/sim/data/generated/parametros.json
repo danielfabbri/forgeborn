@@ -1092,6 +1092,24 @@
     "descricao": "Distância mínima do centro de uma zona de pouso à borda de um lago"
   },
   {
+    "chave": "pedras_por_10k_m2",
+    "valor": 6,
+    "unidade": "pedras",
+    "descricao": "Densidade das pedras neutras (CEN-17)"
+  },
+  {
+    "chave": "pedra_raio_min_m",
+    "valor": 1.5,
+    "unidade": "m",
+    "descricao": "Raio mínimo de uma pedra"
+  },
+  {
+    "chave": "pedra_raio_max_m",
+    "valor": 4,
+    "unidade": "m",
+    "descricao": "Raio máximo de uma pedra"
+  },
+  {
     "chave": "barras_opacidade_nao_selecionados_pct",
     "valor": 30,
     "unidade": "%",

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.3.0 — rascunho para aprovação |
+| Versão do SPEC | 1.3.1 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1407,7 +1407,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 - **AUD-01** — Música em arquivos na pasta `src/audio/` (D-47, D-74): `entrance.mp3` em todos os menus até o jogador chegar à Visão do Universo (Abertura, Seleção de Modo, slots, Escolha de Nação, Configurações e Créditos), `map.mp3` na Visão do Universo, com o sistema solar, e nas telas que partem dela (Briefing e Free Battle), ambas em loop; a troca da `entrance.mp3` para a `map.mp3` é um corte seco, sem transição (D-75), e todas as `soundtrack_*.mp3` que estiverem na pasta na partida, tocadas em ordem embaralhada sem repetir a última, com transição cruzada de 4 s, sem fim. Uma trilha nova entra só por estar na pasta (qualquer número, sem precisar de sequência contínua). Arquivo que falta é pulado; sem nenhum, o jogo segue sem música.
 - **AUD-02** — Conceito sonoro: sem atmosfera (Lua), os sons do mundo são "percebidos" pela mente, como impactos graves e abafados, vibração do solo. Em 1ª pessoa ficam ainda mais internos (filtro passa-baixa). Cenários com atmosfera (Marte, Vênus, Titã) têm vento e sons mais abertos.
-- **AUD-03** — A voz da IA do jogador (alertas e tutorial) é sintética, calma e em pt-BR, sempre com legenda: a síntese de voz do navegador (Web Speech API) com uma voz pt-BR do sistema; sem voz pt-BR disponível, fica só a legenda (D-46). Uma fala por vez; um alerta mais urgente interrompe um menos urgente, e o de urgência igual ou menor não é falado (D-48).
+- **AUD-03** — A voz da IA do jogador (alertas e tutorial) é sintética, calma e em pt-BR, sempre com legenda: a síntese de voz do navegador (Web Speech API) com uma voz pt-BR do sistema; sem voz pt-BR disponível, fica só a legenda (D-46). Uma fala por vez; um alerta mais urgente interrompe um menos urgente, e o de urgência igual ou menor não é falado (D-48). Alertas de prioridade `baixa` só entram na pilha (UI-06): sem voz e sem sinal sonoro (D-84).
 - **AUD-04** — SFX sintetizados em tempo real pela Web Audio API, sem arquivos (D-47), por unidade: movimento (zumbido do hover), mineração, impressão (servos e deposição), disparos por arma, explosões por porte, interface (clique, erro, confirmação e um som curto ao passar o mouse sobre um botão habilitado, D-75).
 - **AUD-05** — Canais de mixagem: geral, música, efeitos, voz e ambiente, com volume por canal nas Configurações. Alertas repetidos respeitam o `cooldown_s`.
 
@@ -1661,6 +1661,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-81 | Temperamento entre nações (REG-24 a REG-28): todas começam pacíficas; entrar no domínio de outra (60 m das estruturas, 20 m das unidades) gera aviso imediato, e ficar mais de 10 s vira guerra; dano abre a guerra na hora; a guerra esfria depois de 5 min sem combate e fora dos domínios. O disparo automático só mira inimigos (CMB-29); a IA obedece o aviso (menos a Brutal) e só ataca quem está em guerra com ela (IA-04, IA-05, IA-11). | Pedido do produto: "as civilizações poderiam pedir pra você se retirar antes de atacar… começa com todos pacíficos… se você não sair do território em 10 s, o status vira inimigo"; respostas: domínio 60/20 m, guerra esfria, disparo só em inimigos. | Aprovada |
 | D-82 | A IA pacífica provoca guerra conforme a dificuldade (IA-12): a onda entra no domínio do alvo e a guerra começa pelo aviso de 10 s; Fácil nunca, Normal só contra quem é mais fraco que ela, Difícil a mais próxima, Brutal a mais fraca. Mantém as guerras entre IAs e os invariantes de vitória (INV-12, INV-14). | Resposta do produto: "Sim, conforme a dificuldade". | Aprovada |
 | D-83 | Ritmo mais rápido e novos recursos: hovers ×1,5 de velocidade; estruturas ×0,7 de custo; `tempo_s` de tudo ×0,6; Usina Solar ×1,5 (`geracao_en_s` 4,5); `carga_hover_u` 20 e `taxa_mineracao_u_s` ×1,5; Antena (UNI-14, visão 100 m, 1 EN/s, liberada na Missão 1); satélites sem limite por base; macete "maistudo"; barras dos não selecionados a 30%; minimapa em mapa-múndi com o norte fixo; atmosfera como esfera a 90% na visão planetária. | Pedido do produto; respostas: hovers 1,5×, estruturas −30% e tempo −40%, solar 1,5×, antena com visão de 100 m. | Aprovada |
+| D-84 | Alertas de prioridade baixa (impressão concluída, jazida esgotada, hovers ociosos, mina detonada) ficam só na pilha, sem voz nem bipe. | Pedido do produto: "os áudios ainda estão disparando em momentos estranhos"; numa partida de 25 min, a impressão concluída sozinha falou 76 vezes. | Aprovada |
 
 ---
 
@@ -1759,3 +1760,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.1.0 | 2026-09-27 | D-81: §4.7 (REG-24 a REG-28, `dominio_estrutura_m`, `dominio_unidade_m`, `ultimato_s`, `guerra_esfria_s`), CMB-29, IA-04, IA-05, IA-11, UI-17, AL-19 a AL-22; §22. TEC-14: orçamento medido na Lua, com hierarquia (D-79). |
 | 1.2.0 | 2026-09-27 | D-82: IA-12 (provocação conforme a dificuldade); IA-04 e IA-11 remetem a ela. |
 | 1.3.0 | 2026-09-27 | D-83: `dados:custos` (estruturas ×0,7, `tempo_s` ×0,6, `antenna`), `dados:estruturas` (`geracao_en_s` da solar 4,5, `antenna`), `vel_m_s` dos hovers ×1,5, `taxa_mineracao_u_s` ×1,5, `carga_hover_u` 20, UNI-04, UNI-14, PRD-01, ENE-03, TEC-27, UI-07, CTL-03, CTL-16, atalho E Antena, Missão 1 libera a Antena; `barras_opacidade_nao_selecionados_pct`, `atmosfera_opacidade_pct`. |
+| 1.3.1 | 2026-09-27 | D-84: AUD-03, alertas de prioridade baixa sem voz nem sinal sonoro. |

@@ -25,7 +25,7 @@ import { celulaDe } from '../map/grids';
 import { aEstrela, linhaLivre, livre, type Navegavel, passoDoFluxo } from '../map/pathfinding';
 import { siloImovel } from '../economia/silo';
 import { emReserva, gastar } from '../energia/bateria';
-import { fluxoPara, navegavel, navegavelDe } from './navegacao';
+import { ehEmbarcacaoId, fluxoPara, navegavel, navegavelAgua, navegavelDe } from './navegacao';
 import { ALTURA_HOVER_M, altitudeDrone, statsMovel } from './stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from './superficie';
 import { multVisao } from '../cenario/tempestade';
@@ -166,8 +166,10 @@ function atualizarAr(ctx: SystemContext, id: EntityId, loc: Locomocao, dt: numbe
   }
 }
 
-function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number): void {
+function passo(ctx: SystemContext, gSolo: Navegavel | null, id: EntityId, dt: number): void {
   const { state } = ctx;
+  // MOV-08 (D-90): a embarcação só anda no líquido.
+  const g = ehEmbarcacaoId(ctx, id) ? navegavelAgua(ctx) : gSolo;
   const s = statsMovel(getComponent(state, id, 'unit')!.tipo);
   const aerea = s.camada === 'ar';
   const loc = getComponent(state, id, 'locomotion')!;
@@ -404,9 +406,13 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
   );
   const baldes = new Map<string, EntityId[]>();
   const celula = (d: Vec3) => d.map((v) => Math.floor((v * R) / BALDE_M)) as Vec3;
-  const chave = (solo: boolean, c: Vec3) => `${solo ? 's' : 'a'}:${c[0]}:${c[1]}:${c[2]}`;
+  // MOV-08: embarcações só se separam de embarcações (camada própria, 'w').
+  const camadaDe = (id: EntityId) => (ehEmbarcacaoId(ctx, id) ? 'w' : noSolo(ctx, id) ? 's' : 'a');
+  const chave = (camada: string, c: Vec3) => `${camada}:${c[0]}:${c[1]}:${c[2]}`;
+  const gAgua = navegavelAgua(ctx);
+  const gDe = (id: EntityId) => (ehEmbarcacaoId(ctx, id) ? gAgua : g);
   for (const id of ids) {
-    const k = chave(noSolo(ctx, id), celula(dirs.get(id)!));
+    const k = chave(camadaDe(id), celula(dirs.get(id)!));
     const lista = baldes.get(k);
     if (lista) lista.push(id);
     else baldes.set(k, [id]);
@@ -418,13 +424,14 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
       ? 0
       : 1;
   for (const id of ids) {
-    const solo = noSolo(ctx, id);
+    const camada = camadaDe(id);
+    const solo = camada !== 'a';
     const ra = statsMovel(getComponent(state, id, 'unit')!.tipo).raio_m;
     const c = celula(dirs.get(id)!);
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         for (let dz = -1; dz <= 1; dz++) {
-          for (const outro of baldes.get(chave(solo, [c[0] + dx, c[1] + dy, c[2] + dz])) ?? []) {
+          for (const outro of baldes.get(chave(camada, [c[0] + dx, c[1] + dy, c[2] + dz])) ?? []) {
             if (outro <= id) continue;
             const p = dirs.get(id)!;
             const q = dirs.get(outro)!;
@@ -449,8 +456,8 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
               [u[0] * sobreposicao * wb, u[1] * sobreposicao * wb, u[2] * sobreposicao * wb],
               R,
             );
-            if (!solo || livreEm(g, novoP)) dirs.set(id, novoP);
-            if (!solo || livreEm(g, novoQ)) dirs.set(outro, novoQ);
+            if (!solo || livreEm(gDe(id), novoP)) dirs.set(id, novoP);
+            if (!solo || livreEm(gDe(outro), novoQ)) dirs.set(outro, novoQ);
           }
         }
       }
@@ -472,7 +479,9 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
       const dist = R * arco(p, c);
       if (dist >= raio) continue;
       const fora = tangente(c, p) ?? norteEm(c);
-      dirs.set(id, avancar(c, fora, raio / R).p);
+      const empurrado = avancar(c, fora, raio / R).p;
+      // A embarcação só é empurrada para o líquido.
+      if (!ehEmbarcacaoId(ctx, id) || livreEm(gAgua, empurrado)) dirs.set(id, empurrado);
     }
   }
   for (const id of ids) posicionar(ctx, getComponent(state, id, 'position')!, dirs.get(id)!, 0);
@@ -483,7 +492,8 @@ function ajustarAltura(ctx: SystemContext, ids: EntityId[]): void {
   for (const id of ids) {
     const pos = getComponent(state, id, 'position')!;
     const d = direcaoDe(pos);
-    const chao = chaoEm(ctx, d) + ALTURA_HOVER_M;
+    // MOV-08: a embarcação flutua na superfície do líquido (o chão ali é o nível dele).
+    const chao = chaoEm(ctx, d) + (ehEmbarcacaoId(ctx, id) ? 0 : ALTURA_HOVER_M);
     const ar = getComponent(state, id, 'air');
     let altura = chao;
     if (ar && ar.estado !== 'pousado') {

@@ -13,11 +13,14 @@ import { designar } from '../economia/coleta';
 import { todasAsJazidas } from '../economia/jazidas';
 import { emReserva, gastar } from '../energia/bateria';
 import { bonusDaNacao } from '../ia/base';
-import { avancar, escalar, norteEm, tangente, type Vec3 } from '../map/esfera';
+import { avancar, escalar, girar, normalizar, norteEm, tangente, type Vec3 } from '../map/esfera';
+import { celulaDe } from '../map/grids';
+import { livre } from '../map/pathfinding';
+import { navegavelAgua } from '../units/navegacao';
 import { criarUnidade } from '../units/criar';
 import { lancarSatelite } from '../visao/satelite';
 import { moverPara } from '../units/ordens';
-import { statsMovel } from '../units/stats';
+import { ehEmbarcacao, statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 import { bordaDe } from './alcance';
 import { custoDe, ehItem, liberado, pagar, produz, reembolsar, tipoDoProdutor } from './custos';
@@ -132,7 +135,23 @@ export function nascer(
     : getComponent(state, produtor, 'locomotion')!.rumo;
   const rumo = (encontro && tangente(d0, encontro)) || frente;
   const distancia = bordaDe(ctx, produtor) + statsMovel(tipo).raio_m + FOLGA_NASCIMENTO_M;
-  const passo = avancar(d0, rumo, distancia / raioDoMundo(ctx));
+  let passo = avancar(d0, rumo, distancia / raioDoMundo(ctx));
+  // UNI-16 (D-90): a embarcação nasce no líquido em volta do Porto (o rumo mais perto do pedido).
+  if (ehEmbarcacao(tipo) && ctx.mundo) {
+    const agua = navegavelAgua(ctx);
+    for (let k = 0; k < 16 && agua; k++) {
+      const giro = ((k % 2 === 0 ? 1 : -1) * Math.ceil(k / 2) * Math.PI) / 8;
+      const tentativa = avancar(
+        d0,
+        normalizar(girar(rumo, d0, giro)),
+        distancia / raioDoMundo(ctx),
+      );
+      if (livre(agua, celulaDe(agua.nav, tentativa.p))) {
+        passo = tentativa;
+        break;
+      }
+    }
+  }
   const id = criarUnidade(ctx, nacao, tipo, passo.p);
   if (id === null) return null;
   getComponent(state, id, 'locomotion')!.rumo = passo.rumo;

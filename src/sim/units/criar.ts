@@ -253,8 +253,9 @@ export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
       fila: [],
     });
   }
-  // UNI-04 (D-55): a Base de Lançamento imprime o Satélite com a energia da rede (PRD-06).
-  if (tipo === 'satellite_uplink') {
+  // UNI-04 (D-55): a Base de Lançamento imprime o Satélite com a energia da rede (PRD-06);
+  // UNI-16 (D-90): o Porto imprime as embarcações do mesmo jeito.
+  if (tipo === 'satellite_uplink' || tipo === 'port') {
     setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });
     setComponent(state, id, 'consumidor', {
       prioridade: 3,

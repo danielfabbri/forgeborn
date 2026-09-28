@@ -99,6 +99,16 @@ export function mundoLiso(parede?: (x: number, z: number) => boolean): Mundo {
 }
 let liso: Mundo | null = null;
 
+/**
+ * CEN-04 (D-90): mundo liso com mar. A terra (20 m) fica em z < 20 e z > 60 no hemisfério da base;
+ * a faixa entre elas e o outro hemisfério (0 m) ficam abaixo do nível do líquido (10 m).
+ */
+export function mundoComMar(): Mundo {
+  const base = mundoLiso((_x, z) => z < 20 || z > 60);
+  const mapa = { ...base.mapa, mar: { nivel: 10 } };
+  return { mapa, grades: derivarGrades(mapa) };
+}
+
 let lua: ReturnType<typeof gerarMapaValido> | null = null;
 /**
  * Mapa lunar de 4 zonas no planeta de teste M (144 m), gerado e validado pela seed: para regras

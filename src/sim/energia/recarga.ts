@@ -16,7 +16,7 @@ import { distanciaPeloCaminho } from '../economia/estoque';
 import { siloImovel } from '../economia/silo';
 import { tracarRota } from '../units/movimento';
 import { navegavelDe } from '../units/navegacao';
-import { statsEstrutura, statsMovel } from '../units/stats';
+import { ehEmbarcacao, statsEstrutura, statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 import { emCombate } from '../combate/dano';
 import { limiarDeRecarga, papelDe, porcentagem } from './bateria';
@@ -49,8 +49,13 @@ function energiaPendente(ctx: SystemContext, estrutura: EntityId): number {
 function tempoEstimado(ctx: SystemContext, unidade: EntityId, estrutura: EntityId): number {
   const du = direcaoDe(getComponent(ctx.state, unidade, 'position')!);
   const de = direcaoDe(getComponent(ctx.state, estrutura, 'position')!);
-  const vel = statsMovel(getComponent(ctx.state, unidade, 'unit')!.tipo).vel_m_s;
-  const deslocamento = distanciaPeloCaminho(ctx, du, de) / vel;
+  const tipoUnidade = getComponent(ctx.state, unidade, 'unit')!.tipo;
+  const vel = statsMovel(tipoUnidade).vel_m_s;
+  // MOV-08: a embarcação vai pela água (o caminho de solo não a alcança); conta o arco.
+  const caminho = ehEmbarcacao(tipoUnidade)
+    ? distanciaM(ctx, du, de)
+    : distanciaPeloCaminho(ctx, du, de);
+  const deslocamento = caminho / vel;
   const portas = getComponent(ctx.state, estrutura, 'portas')!;
   const livre = portas.ocupantes.includes(null) && portas.fila.length === 0;
   const tipo = getComponent(ctx.state, estrutura, 'structure')!.tipo;
@@ -59,12 +64,20 @@ function tempoEstimado(ctx: SystemContext, unidade: EntityId, estrutura: EntityI
   return deslocamento + espera;
 }
 
+/** UNI-16 (D-90): embarcações recarregam só no Porto; as outras unidades, em tudo menos nele. */
+function serveA(ctx: SystemContext, unidade: EntityId, estrutura: EntityId): boolean {
+  const porto = getComponent(ctx.state, estrutura, 'structure')?.tipo === 'port';
+  const tipo = getComponent(ctx.state, unidade, 'unit')?.tipo;
+  return porto === (tipo !== undefined && ehEmbarcacao(tipo));
+}
+
 function estruturaDeRecarga(ctx: SystemContext, unidade: EntityId): EntityId | null {
   const nacao = getComponent(ctx.state, unidade, 'owner')!.nacao;
   let melhor: EntityId | null = null;
   let melhorTempo = Infinity;
   for (const id of entitiesWith(ctx.state, 'portas', 'owner')) {
     if (getComponent(ctx.state, id, 'owner')!.nacao !== nacao) continue;
+    if (!serveA(ctx, unidade, id)) continue;
     const tempo = tempoEstimado(ctx, unidade, id);
     if (tempo < melhorTempo) {
       melhorTempo = tempo;
@@ -281,7 +294,7 @@ export const comandosDeRecarga: Record<string, CommandHandler> = {
         ? d.estrutura
         : null;
     for (const id of daNacao(ctx, comando.nacao, d.ids, 'recarga')) {
-      iniciarRecarga(ctx, id, false, alvo);
+      iniciarRecarga(ctx, id, false, alvo !== null && serveA(ctx, id, alvo) ? alvo : null);
     }
   },
   /** ENE-15: liga ou desliga a auto-recarga por unidade. */

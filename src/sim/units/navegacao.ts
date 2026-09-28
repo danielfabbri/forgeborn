@@ -13,6 +13,7 @@ import type { NacaoId } from '../core/types';
 import { dados } from '../data';
 import { minasReveladas } from '../visao/nevoa';
 import { direcaoDe } from './superficie';
+import { ehEmbarcacao } from './stats';
 
 interface Cache {
   versao: number;
@@ -126,8 +127,37 @@ export function navegavelDa(ctx: SystemContext, nacao: NacaoId | undefined): Nav
   return navegavelNova;
 }
 
-/** Navegação da nação dona do corpo. */
+const agua = new WeakMap<SimState, { versao: number; navegavel: Navegavel }>();
+
+/**
+ * MOV-08 (D-90): navegação das embarcações: a mesma grade, com o líquido como a parte transitável
+ * e os obstáculos (o Porto) bloqueados. Sem mar, nada é transitável.
+ */
+export function navegavelAgua(ctx: SystemContext): Navegavel | null {
+  if (!ctx.mundo) return null;
+  const { state } = ctx;
+  const nav = ctx.mundo.grades.navegacao;
+  const atual = agua.get(state);
+  if (atual && atual.versao === state.versaoObstaculos && atual.navegavel.nav.esfera === nav.esfera)
+    return atual.navegavel;
+  const passavel = nav.liquido ?? new Uint8Array(nav.esfera.celulas);
+  const navegavelNova: Navegavel = {
+    nav: { ...nav, passavel },
+    bloqueado: montar(ctx, () => true),
+  };
+  agua.set(state, { versao: state.versaoObstaculos, navegavel: navegavelNova });
+  return navegavelNova;
+}
+
+/** A unidade é uma embarcação (MOV-08)? */
+export function ehEmbarcacaoId(ctx: SystemContext, id: number): boolean {
+  const tipo = getComponent(ctx.state, id, 'unit')?.tipo;
+  return tipo !== undefined && ehEmbarcacao(tipo);
+}
+
+/** Navegação da nação dona do corpo (a de água para as embarcações, MOV-08). */
 export function navegavelDe(ctx: SystemContext, id: number): Navegavel | null {
+  if (ehEmbarcacaoId(ctx, id)) return navegavelAgua(ctx);
   return navegavelDa(ctx, getComponent(ctx.state, id, 'owner')?.nacao);
 }
 

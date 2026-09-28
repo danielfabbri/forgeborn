@@ -50,17 +50,25 @@ import {
   posicionar,
   raioDoMundo,
 } from '../units/superficie';
-import { aproximar, bordaDe, noAlcance, pararNoLugar } from './alcance';
+import { aproximar, bordaDe, faixaAte, noAlcance, pararNoLugar } from './alcance';
 import { custoDe, pagar, produz, reembolsar } from './custos';
 import { cabeNaFila, enfileirar } from './fila';
 import { explorado } from '../visao/nevoa';
 import { bonusDaNacao } from '../ia/base';
 import { encerrarTrabalho } from './trabalho';
-import { emLiquido } from '../map/lagos';
+import { emLiquido, terraPerto } from '../map/lagos';
 import { emPedra } from '../map/pedras';
 
 /** PRD-10: por que o local não serve (UI-08), ou null se serve. */
-export type MotivoRecusa = 'inexplorado' | 'inclinacao' | 'ocupado' | 'jazida' | 'lago' | 'pedra';
+export type MotivoRecusa =
+  | 'inexplorado'
+  | 'inclinacao'
+  | 'ocupado'
+  | 'jazida'
+  | 'lago'
+  | 'pedra'
+  | 'terra'
+  | 'longe_da_borda';
 
 /** Base local (leste, norte) no plano tangente em d, alinhada ao norte local (CEN-15). */
 function baseLocal(d: Vec3): { leste: Vec3; norte: Vec3 } {
@@ -133,7 +141,11 @@ export function validarPosicionamento(
         const p = normalizar(soma(d, soma(escalar(eixoA, e / R), escalar(eixoB, s / R))));
         // Terreno explorado pela nação (VIS-01).
         if (nacao && !explorado(ctx, nacao, p)) return 'inexplorado';
-        // CEN-04: nada sobre o líquido.
+        // PRD-10 (D-90): o Porto é todo sobre o líquido; o resto, todo fora dele.
+        if (tipo === 'port') {
+          if (!emLiquido(ctx.mundo.mapa, p)) return 'terra';
+          continue;
+        }
         if (emLiquido(ctx.mundo.mapa, p)) return 'lago';
         if (!ehConstruivel(grade, celulaDe(grade, p))) {
           // CEN-17: a célula bloqueada por uma pedra dá o motivo próprio.
@@ -141,6 +153,10 @@ export function validarPosicionamento(
         }
       }
     }
+  }
+  // PRD-10 (D-90): o centro do Porto fica a até `porto_distancia_borda_m` da terra.
+  if (tipo === 'port' && ctx.mundo) {
+    if (!terraPerto(ctx.mundo.mapa, d, param('porto_distancia_borda_m'))) return 'longe_da_borda';
   }
   const nosso = direcao ? segmentoNoPlano(R, d, tipo, d, direcao) : null;
   // Pegadas (prontas, em obra ou reservadas) não se sobrepõem.
@@ -281,12 +297,12 @@ function passoImpressorasNaObra(ctx: SystemContext): void {
     }
     if (!impressoraDisponivel(ctx, id)) continue;
     const loc = getComponent(state, id, 'locomotion')!;
-    if (noAlcance(ctx, id, item.obra)) {
+    if (noAlcance(ctx, id, item.obra, faixaAte(ctx, item.obra))) {
       if (loc.destino) pararNoLugar(ctx, id);
       getComponent(state, id, 'order')!.tipo = 'tarefa';
       instalarCanteiro(ctx, item.obra);
     } else if (!loc.destino) {
-      aproximar(ctx, id, item.obra);
+      aproximar(ctx, id, item.obra, faixaAte(ctx, item.obra));
     }
   }
 }
@@ -314,7 +330,9 @@ function construtoresDe(ctx: SystemContext, obra: EntityId): EntityId[] {
       const recarga = getComponent(state, id, 'recarga');
       if (recarga && recarga.estado !== 'nenhuma') return false;
       if (getComponent(state, id, 'locomotion')!.destino) return false;
-      return trabalhando(id) && !emReserva(ctx, id) && noAlcance(ctx, id, obra);
+      return (
+        trabalhando(id) && !emReserva(ctx, id) && noAlcance(ctx, id, obra, faixaAte(ctx, obra))
+      );
     })
     .sort((a, b) => {
       const ia = getComponent(state, a, 'unit')!.tipo === 'printer' ? 0 : 1;

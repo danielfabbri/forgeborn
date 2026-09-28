@@ -2,24 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { dados, getComponent, param, type Sim } from '../../src/sim';
 import type { SystemContext } from '../../src/sim/core/pipeline';
 import { aplicarRotacao, arco, rotacoesDeSimetria } from '../../src/sim/map/esfera';
-import { derivarGrades } from '../../src/sim/map/grids';
 import { alturaEm } from '../../src/sim/map/heightmap';
 import { emLiquido } from '../../src/sim/map/lagos';
 import type { Mundo } from '../../src/sim/map/mundo';
 import { gerarMapaValido, validarMapa } from '../../src/sim/map/validacao';
 import { validarPosicionamento } from '../../src/sim/producao';
 import { direcaoDe } from '../../src/sim/units/superficie';
-import { alvo, criar, mundoLiso, ordenar, partida, ponto } from './mundo-teste';
+import { alvo, criar, mundoComMar, mundoLiso, ordenar, partida, ponto } from './mundo-teste';
 
-/**
- * Mundo liso com mar: a terra (20 m) fica em z < 20 e z > 60 no hemisfério da base; a faixa entre
- * elas e o outro hemisfério (0 m) ficam abaixo do nível do líquido (10 m).
- */
-function mundoComMar(): Mundo {
-  const base = mundoLiso((_x, z) => z < 20 || z > 60);
-  const mapa = { ...base.mapa, mar: { nivel: 10 } };
-  return { mapa, grades: derivarGrades(mapa) };
-}
 const contexto = (sim: Sim, mundo: Mundo): SystemContext => ({
   state: sim.state,
   tick: sim.state.tick,

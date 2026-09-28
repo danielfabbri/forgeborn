@@ -16,6 +16,8 @@ export function statsEstrutura(tipo: string): EstruturasRow {
 }
 
 export const ehAerea = (tipo: MoveisId): boolean => statsMovel(tipo).camada === 'ar';
+/** MOV-08 (D-90): embarcação (camada de água). */
+export const ehEmbarcacao = (tipo: MoveisId): boolean => statsMovel(tipo).camada === 'agua';
 
 /** MOV-01: altura em que os hovers flutuam acima do terreno (apresentação). */
 export const ALTURA_HOVER_M = 0.6;

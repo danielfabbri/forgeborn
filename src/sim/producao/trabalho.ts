@@ -16,7 +16,7 @@ import type { EntityId } from '../core/types';
 import { param, type RecursosId } from '../data';
 import { iniciarEntrega, liberar, retomarColeta } from '../economia/coleta';
 import { emReserva, gastar } from '../energia/bateria';
-import { aproximar, folgaAte, noAlcance, pararNoLugar } from './alcance';
+import { aproximar, faixaAte, folgaAte, noAlcance, pararNoLugar } from './alcance';
 import { instalarCanteiro } from './obra';
 
 /** Quem constrói e repara: Impressoras e Hovers de Exploração. */
@@ -93,12 +93,12 @@ function passoTrabalho(ctx: SystemContext): void {
     if (coleta && coleta.estado !== 'ocioso') continue;
     const loc = getComponent(state, id, 'locomotion')!;
     const faixa = faixaDe(trabalho.tipo);
-    if (noAlcance(ctx, id, trabalho.alvo, faixa)) {
+    if (noAlcance(ctx, id, trabalho.alvo, faixaAte(ctx, trabalho.alvo, faixa))) {
       if (loc.destino) pararNoLugar(ctx, id);
       const ehImpressora = getComponent(state, id, 'unit')!.tipo === 'printer';
       if (trabalho.tipo === 'construir' && ehImpressora) instalarCanteiro(ctx, trabalho.alvo);
     } else if (!loc.destino) {
-      aproximar(ctx, id, trabalho.alvo, faixa);
+      aproximar(ctx, id, trabalho.alvo, faixaAte(ctx, trabalho.alvo, faixa));
     }
   }
 }
@@ -180,7 +180,7 @@ function passoReparo(ctx: SystemContext): void {
     const recarga = getComponent(state, id, 'recarga');
     if (recarga && recarga.estado !== 'nenhuma') continue;
     if (getComponent(state, id, 'locomotion')!.destino || emReserva(ctx, id)) continue;
-    if (!noAlcance(ctx, id, trabalho.alvo)) continue;
+    if (!noAlcance(ctx, id, trabalho.alvo, faixaAte(ctx, trabalho.alvo))) continue;
     porAlvo.set(trabalho.alvo, [...(porAlvo.get(trabalho.alvo) ?? []), id]);
   }
   for (const alvo of [...porAlvo.keys()].sort((a, b) => a - b)) {

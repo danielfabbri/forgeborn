@@ -23,6 +23,20 @@ export function bordaDe(ctx: SystemContext, id: EntityId): number {
   return unidade ? statsMovel(unidade.tipo).raio_m : 0;
 }
 
+/**
+ * Faixa de trabalho até o alvo: `base`, ou, no Porto, `porto_distancia_borda_m` (UNI-16: a
+ * Impressora o imprime e repara da borda da terra).
+ */
+export function faixaAte(
+  ctx: SystemContext,
+  alvo: EntityId,
+  base = param('raio_deposito_m'),
+): number {
+  return getComponent(ctx.state, alvo, 'structure')?.tipo === 'port'
+    ? Math.max(base, param('porto_distancia_borda_m'))
+    : base;
+}
+
 /** Espaço entre o casco da unidade e a borda do alvo (m). */
 export function folgaAte(ctx: SystemContext, unidade: EntityId, alvo: EntityId): number {
   const du = direcaoDe(getComponent(ctx.state, unidade, 'position')!);

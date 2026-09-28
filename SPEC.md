@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.9.1 — rascunho para aprovação |
+| Versão do SPEC | 1.9.2 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1158,7 +1158,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ia_kite_pct | 60 | % | micro 3: OPQ e drones recuam com o inimigo a menos dessa fração do alcance |
 | ia_minas_distancia_m | 30 | m | Distância da base em que a IA planta minas |
 | ia_misseis_curtos | 2 | mísseis | Curtos que a IA mantém prontos |
-| ia_porto_distancia_m | 150 | m | Distância máxima do líquido à base para a IA construir um Porto (IA-14) |
+| ia_porto_distancia_m | 250 | m | Distância máxima do líquido à base para a IA construir um Porto (IA-14) |
 | ia_barcos_artilharia | 2 | embarcações | Embarcações de Artilharia que a IA mantém (IA-14) |
 | ia_barcos_antena | 1 | embarcações | Embarcações Antena que a IA mantém (IA-14) |
 | ia_misseis_longos | 1 | mísseis | Longos que a IA mantém prontos (Normal para cima) |
@@ -1844,3 +1844,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.8.0 | 2026-09-28 | D-89: cores de Fe e Cu em `dados:recursos`, ECO-04 (visual), ECO-07 (`jazida_espacamento_min_m`), `dados:jazidas` (quantidades ×2 e zona espalhada), ECO-30 (`jazidas_espalhadas_por_10k_m2`). |
 | 1.9.0 | 2026-09-28 | D-90: CEN-04 (mares; `mar_cobertura_pct`, `mar_folga_zona_m`; retira lagos_por_setor, lago_raio_min_m, lago_raio_max_m, lago_folga_zona_m), CEN-11, MOV-01, MOV-08, CMB-04, PRD-10, UNI-16 a UNI-20 (`port`, `boat_transport`, `boat_artillery`, `boat_antenna`, `boat_laser`, `porto_distancia_borda_m`, `transporte_capacidade`, `embarque_distancia_m`), IA-14 (`ia_porto_distancia_m`, `ia_barcos_artilharia`, `ia_barcos_antena`), atalhos, §14.7. |
 | 1.9.1 | 2026-09-28 | D-90: UNI-20 (o Transporte encosta na borda mais perto das unidades que embarcam). |
+| 1.9.2 | 2026-09-28 | D-90 (proposta): `ia_porto_distancia_m` 250 (com a terra firme de `mar_folga_zona_m` em volta das zonas, o mar mais perto fica além de 130 m). |

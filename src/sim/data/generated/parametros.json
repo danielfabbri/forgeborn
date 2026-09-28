@@ -1051,7 +1051,7 @@
   },
   {
     "chave": "ia_porto_distancia_m",
-    "valor": 150,
+    "valor": 250,
     "unidade": "m",
     "descricao": "Distância máxima do líquido à base para a IA construir um Porto (IA-14)"
   },

@@ -100,6 +100,8 @@ function marcos(state: SimState, R: number): Map<NacaoId, Array<Marco & { id: En
     if (!estrutura && !unidade) continue;
     // CMB-28: hover recolhido no abrigo não está no mapa.
     if (getComponent(state, id, 'abrigo')?.estado === 'dentro') continue;
+    // UNI-20: a embarcada conta pelo Transporte.
+    if (getComponent(state, id, 'embarcado')) continue;
     const nacao = getComponent(state, id, 'owner')!.nacao;
     const lista = porNacao.get(nacao) ?? [];
     lista.push({

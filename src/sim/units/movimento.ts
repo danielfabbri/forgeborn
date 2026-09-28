@@ -515,7 +515,8 @@ export function sistemaMovimento(ctx: SystemContext): void {
   const g = navegavel(ctx);
   // CMB-28: hovers recolhidos estão fora do mapa.
   const ids = entitiesWith(ctx.state, 'unit', 'locomotion', 'position').filter(
-    (id) => !abrigado(ctx.state, id),
+    // UNI-20: embarcadas também.
+    (id) => !abrigado(ctx.state, id) && !getComponent(ctx.state, id, 'embarcado'),
   );
   for (const id of ids) passo(ctx, g, id, ctx.dt);
   separar(ctx, g, ids);

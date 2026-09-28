@@ -157,6 +157,8 @@ export function visivelPara(ctx: SystemContext, nacao: NacaoId, id: EntityId): b
   if (getComponent(ctx.state, id, 'owner')?.nacao === nacao) return true;
   // CMB-28: hover recolhido não aparece para o inimigo.
   if (getComponent(ctx.state, id, 'abrigo')?.estado === 'dentro') return false;
+  // UNI-20: nem a unidade embarcada.
+  if (getComponent(ctx.state, id, 'embarcado')) return false;
   // D-51: o satélite inimigo aparece quando o ponto sob ele está visível.
   const satelite = getComponent(ctx.state, id, 'satelite');
   if (satelite)

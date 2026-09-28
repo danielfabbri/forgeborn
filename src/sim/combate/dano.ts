@@ -63,6 +63,8 @@ export function aplicarDano(
   if (!vida || vida.hp <= 0) return;
   // CMB-28: hover recolhido não pode ser atingido.
   if (getComponent(state, alvo, 'abrigo')?.estado === 'dentro') return;
+  // UNI-20: embarcada não é atingida (cai com o Transporte).
+  if (getComponent(state, alvo, 'embarcado')) return;
   // CTL-12: Sincronia, bônus de dano de quem está em controle direto.
   if (atacante !== null && getComponent(state, atacante, 'pilotado')) {
     dano *= 1 + param('controle_direto_bonus_dano_pct') / 100;

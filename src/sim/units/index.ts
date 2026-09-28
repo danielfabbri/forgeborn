@@ -6,6 +6,7 @@ import { sistemaVisao } from '../visao/nevoa';
 import { comandosDaEnergia, sistemaEnergia } from '../energia';
 import { comandosDaProducao, sistemaProducao } from '../producao';
 import { sistemaMovimento } from './movimento';
+import { afundarTransportes, comandosDeEmbarque, sistemaEmbarque } from './embarque';
 import { sistemaTempestade } from '../cenario/tempestade';
 import { comandosDeMovimento } from './ordens';
 import { comandosDoTemperamento, sistemaTemperamento } from '../relacoes/temperamento';
@@ -23,12 +24,18 @@ export const sistemasDoJogo: Partial<Record<GameSystemId, SystemFn>> = {
     sistemaTempestade(ctx);
     sistemaEnergia(ctx);
   },
-  movimento: sistemaMovimento,
+  // UNI-20: o embarque confere as posições depois do movimento do tick.
+  movimento: (ctx) => {
+    sistemaMovimento(ctx);
+    sistemaEmbarque(ctx);
+  },
   economia: sistemaEconomia,
   combate: sistemaCombate,
   projeteis: sistemaProjeteis,
   // REG-24 a REG-28: o temperamento é conferido depois do combate e das mortes do tick.
   morte: (ctx) => {
+    // UNI-20: o Transporte destruído leva as unidades embarcadas.
+    afundarTransportes(ctx);
     sistemaMorte(ctx);
     sistemaTemperamento(ctx);
   },
@@ -44,4 +51,5 @@ export const comandosDoJogo: Record<string, CommandHandler> = {
   ...comandosDoCombate,
   ...comandosDaIa,
   ...comandosDoTemperamento,
+  ...comandosDeEmbarque,
 };

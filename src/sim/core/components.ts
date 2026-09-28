@@ -229,6 +229,12 @@ export interface ComponentMap {
    * disparo de `abrigo_laser` à estrutura (recarga desse disparo em `recargas[0]`).
    */
   abrigo: { estrutura: EntityId; estado: 'indo' | 'dentro'; recargas: number[] };
+  /** UNI-20 (D-90): Transporte: unidades embarcadas e o ponto de desembarque pedido. */
+  transporte: { passageiros: EntityId[]; desembarque: Ponto | null };
+  /** UNI-20: a caminho de embarcar; `ponto` é a borda combinada (outra ordem cancela). */
+  embarque: { transporte: EntityId; ponto: Ponto | null; espera_s: number };
+  /** UNI-20: embarcada no Transporte (fora do mapa). */
+  embarcado: { transporte: EntityId };
   /** Portão (UNI-09, D-54): abertura 0..1, trancado pelo dono e segundos sem unidade própria. */
   portao: { abertura: number; trancado: boolean; semUnidade_s: number };
   /** Mina plantada (UNI-07): arma após `tempo_armar_mina_s`. */

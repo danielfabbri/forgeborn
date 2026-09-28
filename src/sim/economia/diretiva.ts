@@ -36,7 +36,11 @@ export function ociosos(ctx: SystemContext, nacao: NacaoId): EntityId[] {
     // Construindo ou reparando (PRD-13, PRD-18): não está ocioso.
     if (getComponent(ctx.state, id, 'trabalho')) return false;
     // CMB-28: recolhido não está ocioso; D-57: nem quem vai encher na Bateria Móvel.
-    if (getComponent(ctx.state, id, 'abrigo') || getComponent(ctx.state, id, 'seguirBateria'))
+    if (
+      getComponent(ctx.state, id, 'abrigo') ||
+      getComponent(ctx.state, id, 'seguirBateria') ||
+      getComponent(ctx.state, id, 'embarcado')
+    )
       return false;
     const recarga = getComponent(ctx.state, id, 'recarga');
     if (recarga && recarga.estado !== 'nenhuma') return false;

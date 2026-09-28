@@ -246,7 +246,11 @@ export function autoRecarga(ctx: SystemContext): void {
     const recarga = getComponent(state, unidade, 'recarga')!;
     if (!bateria.autoRecarga || recarga.estado !== 'nenhuma' || bateria.recebendo) continue;
     // CMB-28: hover recolhido não sai para recarregar; D-57: quem segue a Bateria Móvel, também não.
-    if (getComponent(state, unidade, 'abrigo') || getComponent(state, unidade, 'seguirBateria'))
+    if (
+      getComponent(state, unidade, 'abrigo') ||
+      getComponent(state, unidade, 'seguirBateria') ||
+      getComponent(state, unidade, 'embarcado')
+    )
       continue;
     // D-44: em controle direto, o jogador decide quando recarregar.
     if (getComponent(state, unidade, 'pilotado')) continue;

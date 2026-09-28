@@ -511,6 +511,8 @@ export function sistemaCombate(ctx: SystemContext): void {
   const pendente = danoPendente(state);
   for (const id of entitiesWith(state, 'arma', 'position')) {
     if (getComponent(state, id, 'autodestruicao')) continue;
+    // UNI-20: embarcada não atira.
+    if (getComponent(state, id, 'embarcado')) continue;
     if (getComponent(state, id, 'structure')) passoEstrutura(ctx, id, pendente);
     else passoUnidade(ctx, id, pendente);
   }

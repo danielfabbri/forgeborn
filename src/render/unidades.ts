@@ -362,6 +362,8 @@ export class UnidadesRender {
       if (!tipo) continue;
       // CMB-28: hover recolhido está dentro do abrigo.
       if (getComponent(state, id, 'abrigo')?.estado === 'dentro') continue;
+      // UNI-20: a unidade embarcada não aparece (vai no Transporte).
+      if (getComponent(state, id, 'embarcado')) continue;
       const p = history.interpolate(id, getComponent(state, id, 'position')!, alpha, this.scratch);
       const loc = getComponent(state, id, 'locomotion');
       // UNI-08: segmento de muro em linha guarda a própria frente.

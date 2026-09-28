@@ -142,6 +142,10 @@ export function criarUnidade(
   if (tipo === 'mobile_battery') setComponent(state, id, 'suporte', { ligado: true, alvos: [] });
   if (aerea) setComponent(state, id, 'air', { estado: 'voando', timer_s: 0 });
   if (tipo === 'printer') setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });
+  // UNI-20 (D-90): o Transporte leva unidades de solo.
+  if (tipo === 'boat_transport') {
+    setComponent(state, id, 'transporte', { passageiros: [], desembarque: null });
+  }
   if (tipo === 'hover_explorer') {
     // Recém-impresso: ocioso para a Diretiva de Coleta (ECO-19).
     setComponent(state, id, 'coleta', {

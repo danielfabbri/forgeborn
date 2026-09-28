@@ -146,3 +146,71 @@ describe('T-181 — UNI-16 a UNI-19, MOV-08, PRD-10, D-90: Porto e embarcações
     expect(estadoEm(ctx, 'bra', ponto(visao * mult - 5, 40))).toBe(VISIVEL);
   });
 });
+
+describe('T-182 — UNI-20, D-90: embarque e desembarque', () => {
+  it(
+    'UNI-20: unidades de solo embarcam pela borda, atravessam e desembarcam do outro lado',
+    { timeout: 90_000 },
+    () => {
+      const { mundo, sim } = comPorto(false);
+      const [transporte] = criar(sim, [{ unidade: 'boat_transport', x: 18, z: 25 }]);
+      const hovers = criar(sim, [
+        { unidade: 'hover_ex1', x: -3, z: 5 },
+        { unidade: 'hover_ex1', x: 3, z: 5 },
+      ]);
+      const [drone] = criar(sim, [{ unidade: 'drone_laser', x: 0, z: 5 }]);
+      ordenar(sim, 'embarcar', { ids: [...hovers, drone], transporte });
+      rodar(sim, 15);
+      const carga = getComponent(sim.state, transporte!, 'transporte')!;
+      // Drones não embarcam.
+      expect([...carga.passageiros].sort()).toEqual([...hovers].sort());
+      for (const h of hovers) expect(getComponent(sim.state, h!, 'embarcado')).toBeDefined();
+      // Embarcada não aparece para o inimigo nem é atingida.
+      // Desembarca na terra do norte (z > 60).
+      ordenar(sim, 'desembarcar', { id: transporte, ...alvo(0, 70) });
+      rodar(sim, 30);
+      expect(carga.passageiros).toEqual([]);
+      for (const h of hovers) {
+        expect(getComponent(sim.state, h!, 'embarcado')).toBeUndefined();
+        const d = onde(sim, h!);
+        expect(emLiquido(mundo.mapa, d)).toBe(false);
+        expect(mundo.mapa.raio_m * arco(d, ponto(0, 70))).toBeLessThan(12);
+      }
+    },
+  );
+
+  it(
+    'UNI-20: até transporte_capacidade unidades; o resto fica em terra',
+    { timeout: 60_000 },
+    () => {
+      const { sim } = comPorto(false);
+      const [transporte] = criar(sim, [{ unidade: 'boat_transport', x: 18, z: 25 }]);
+      const n = param('transporte_capacidade');
+      const hovers = criar(
+        sim,
+        Array.from({ length: n + 1 }, (_, k) => ({
+          unidade: 'hover_scout' as const,
+          x: -15 + (k % 6) * 6,
+          z: 2 + Math.floor(k / 6) * 5,
+        })),
+      );
+      ordenar(sim, 'embarcar', { ids: hovers, transporte });
+      // Onze numa borda estreita: a fila leva um tempo.
+    rodar(sim, 60);
+      expect(getComponent(sim.state, transporte!, 'transporte')!.passageiros).toHaveLength(n);
+      expect(hovers.filter((h) => !getComponent(sim.state, h!, 'embarcado'))).toHaveLength(1);
+    },
+  );
+
+  it('UNI-20: o Transporte destruído leva as unidades embarcadas', { timeout: 60_000 }, () => {
+    const { sim } = comPorto(false);
+    const [transporte] = criar(sim, [{ unidade: 'boat_transport', x: 18, z: 25 }]);
+    const [hover] = criar(sim, [{ unidade: 'hover_ex1', x: 0, z: 5 }]);
+    ordenar(sim, 'embarcar', { ids: [hover], transporte });
+    rodar(sim, 10);
+    expect(getComponent(sim.state, hover!, 'embarcado')).toBeDefined();
+    ordenar(sim, 'debug_destruir', { id: transporte });
+    rodar(sim, 1);
+    expect(sim.state.entities).not.toContain(hover);
+  });
+});

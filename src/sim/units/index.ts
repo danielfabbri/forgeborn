@@ -8,6 +8,7 @@ import { comandosDaProducao, sistemaProducao } from '../producao';
 import { sistemaMovimento } from './movimento';
 import { sistemaTempestade } from '../cenario/tempestade';
 import { comandosDeMovimento } from './ordens';
+import { sistemaTemperamento } from '../relacoes/temperamento';
 
 export { criarEstrutura, criarMina, criarUnidade, dentroDoLimite, type Limite } from './criar';
 export { sistemaMovimento, tracarRota } from './movimento';
@@ -26,7 +27,11 @@ export const sistemasDoJogo: Partial<Record<GameSystemId, SystemFn>> = {
   economia: sistemaEconomia,
   combate: sistemaCombate,
   projeteis: sistemaProjeteis,
-  morte: sistemaMorte,
+  // REG-24 a REG-28: o temperamento é conferido depois do combate e das mortes do tick.
+  morte: (ctx) => {
+    sistemaMorte(ctx);
+    sistemaTemperamento(ctx);
+  },
   visao: sistemaVisao,
 };
 

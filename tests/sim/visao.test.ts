@@ -307,7 +307,7 @@ describe('T-073 — UNI-04 a UNI-06, VIS-08: satélite', () => {
 });
 
 describe('T-076 — UNI-04, PRD-01, PRD-06, D-55: Satélite impresso pela Base', () => {
-  it('UNI-04: a Base pronta não lança sozinha; S imprime com a rede e lança; um por base', () => {
+  it('UNI-04: a Base pronta não lança sozinha; S imprime com a rede e lança; vários por base (D-83)', () => {
     const sim = partida(mundoLiso());
     const [, base] = criar(sim, [
       { estrutura: 'ship', x: -40, z: 0 },
@@ -321,20 +321,19 @@ describe('T-076 — UNI-04, PRD-01, PRD-06, D-55: Satélite impresso pela Base',
     const custo = dados.custos.find((c) => c.id === 'satellite')!;
     const fe = sim.state.estoques.bra!.fe;
     ordenar(sim, 'imprimir', { ids: [base], item: 'satellite' });
-    // O segundo pedido é recusado (um por base de cada vez).
+    // D-83: o segundo pedido entra na fila (quantos satélites a nação quiser).
     ordenar(sim, 'imprimir', { ids: [base], item: 'satellite' });
     sim.step();
-    expect(fe - sim.state.estoques.bra!.fe).toBe(custo.fe);
-    expect(getComponent(sim.state, base!, 'producer')!.fila).toHaveLength(1);
+    expect(fe - sim.state.estoques.bra!.fe).toBe(2 * custo.fe);
+    expect(getComponent(sim.state, base!, 'producer')!.fila).toHaveLength(2);
     rodar(sim, custo.tempo_s + 1);
     const [sat] = satelitesDe(sim, 'bra');
     expect(sat).toBeDefined();
     expect(getComponent(sim.state, sat!, 'satelite')!.estado).toBe('lancando');
     rodar(sim, param('tempo_lancamento_satelite_s') + 0.5);
     expect(getComponent(sim.state, sat!, 'satelite')!.estado).toBe('orbita');
-    // Com o satélite vivo, a base não imprime outro.
-    ordenar(sim, 'imprimir', { ids: [base], item: 'satellite' });
-    rodar(sim, 0.2);
-    expect(getComponent(sim.state, base!, 'producer')!.fila).toHaveLength(0);
+    // O segundo sai da mesma base, com o primeiro vivo.
+    rodar(sim, custo.tempo_s + param('tempo_lancamento_satelite_s') + 1);
+    expect(satelitesDe(sim, 'bra')).toHaveLength(2);
   });
 });

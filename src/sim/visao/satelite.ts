@@ -21,6 +21,7 @@ import { param } from '../data';
 import { avancar, tangente } from '../map/esfera';
 import { direcaoDoComando, distanciaM, raioDoMundo } from '../units/superficie';
 import { armaDe } from '../combate/armas';
+import { emGuerra } from '../relacoes/temperamento';
 
 /** UNI-04: a base pronta cria o satélite, que começa a subir sobre ela. */
 export function lancarSatelite(
@@ -146,7 +147,12 @@ export function passoSatelites(ctx: SystemContext): void {
     if (alvo === null) {
       let menor = Infinity;
       for (const outro of entitiesWith(state, 'satelite', 'owner')) {
-        if (!noAlcance(outro)) continue;
+        // CMB-29: sozinho, só mira satélites de nações em guerra (a ordem direta vale para todos).
+        if (
+          !noAlcance(outro) ||
+          !emGuerra(state, nacao, getComponent(state, outro, 'owner')!.nacao)
+        )
+          continue;
         const dist = distanciaM(ctx, s.ponto, getComponent(state, outro, 'satelite')!.ponto);
         if (dist < menor) {
           menor = dist;

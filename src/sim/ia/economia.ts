@@ -15,6 +15,7 @@ import { explorado } from '../visao/nevoa';
 import { comandar, dificuldade, podePagar, temTraco, tierPermitido } from './base';
 import { procurarLocal } from './local';
 import { metaDeHovers, type Quadro } from './quadro';
+import { donosDoDominio, emGuerra } from '../relacoes/temperamento';
 
 const RECURSOS: RecursosId[] = dados.recursos.map((r) => r.id);
 
@@ -137,6 +138,12 @@ function decidirExpansao(ctx: SystemContext, q: Quadro, extras: CustosId[]): voi
     .filter((d) => explorado(ctx, q.nacao, d))
     .filter((d) =>
       entregas.every((e) => distanciaM(ctx, d, e.d) > param('ia_distancia_expansao_m')),
+    )
+    // IA-11: fora do domínio de nações em paz com ela (a Brutal não liga).
+    .filter(
+      (d) =>
+        q.nivel === 'brutal' ||
+        donosDoDominio(ctx, d, q.nacao).every((n) => emGuerra(ctx.state, q.nacao, n)),
     )
     .sort((a, b) => distanciaM(ctx, a, q.base) - distanciaM(ctx, b, q.base));
   const alvo = candidatas[0];

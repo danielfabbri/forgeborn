@@ -22,6 +22,7 @@ import { ALTURA_HOVER_M, statsMovel } from '../units/stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from '../units/superficie';
 import { aplicarDano, camadaDe, danoContra, type TipoDeDano } from './dano';
 import { multVisao } from '../cenario/tempestade';
+import { emGuerra } from '../relacoes/temperamento';
 
 const armas = new Map(dados.armas.map((a) => [a.id, a]));
 
@@ -44,6 +45,8 @@ export function alvoValido(
   atirador: EntityId,
   alvo: EntityId,
   arma: ArmasRow,
+  /** CMB-15: ordem direta (ou mira manual) vale contra qualquer nação. */
+  direto = false,
 ): boolean {
   const { state } = ctx;
   if (!isAlive(state, alvo)) return false;
@@ -52,6 +55,8 @@ export function alvoValido(
   const dono = nacaoDe(state, alvo);
   const nacao = nacaoDe(state, atirador);
   if (!dono || !nacao || dono === nacao) return false;
+  // CMB-29: o disparo automático só mira nações em guerra.
+  if (!direto && !emGuerra(state, nacao, dono)) return false;
   if (!atingeCamada(arma, camadaDe(state, alvo))) return false;
   // Só o que a nação vê: furtivos só revelados (VIS-05, CMB-20, CMB-22).
   return visivelPara(ctx, nacao, alvo);
@@ -397,7 +402,7 @@ function passoUnidade(ctx: SystemContext, id: EntityId, pendente: Pendente): voi
   // CMB-15: ataque direto.
   if (ordem.tipo === 'atacar') {
     const alvo = componente.alvoDireto;
-    if (alvo === null || !alvoValido(ctx, id, alvo, arma)) {
+    if (alvo === null || !alvoValido(ctx, id, alvo, arma, true)) {
       ordem.tipo = 'nenhuma';
       componente.alvoDireto = null;
       componente.alvo = null;

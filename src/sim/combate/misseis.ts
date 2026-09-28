@@ -31,6 +31,7 @@ import { armaDe } from './armas';
 import { aplicarDano, camadaDe } from './dano';
 import { detonar } from './projeteis';
 import { visivelPara } from '../visao/nevoa';
+import { emGuerra } from '../relacoes/temperamento';
 
 export const LANCAR_MISSIL_COMMAND = 'lancar_missil';
 
@@ -158,13 +159,14 @@ function alvoDaAntiaerea(
   };
   const misseis = entitiesWith(state, 'projetil', 'position').filter((id) => {
     const p = getComponent(state, id, 'projetil')!;
-    return p.tipo === 'missil' && p.nacao !== nacao;
+    // CMB-29: só mísseis e drones de nações em guerra.
+    return p.tipo === 'missil' && p.nacao !== nacao && emGuerra(state, nacao, p.nacao);
   });
   const missil = maisPerto(misseis);
   if (missil) return missil;
   const drones = entitiesWith(state, 'unit', 'owner', 'position', 'vida').filter(
     (id) =>
-      getComponent(state, id, 'owner')!.nacao !== nacao &&
+      emGuerra(state, nacao, getComponent(state, id, 'owner')!.nacao) &&
       camadaDe(state, id) === 'ar' &&
       visivelPara(ctx, nacao, id),
   );

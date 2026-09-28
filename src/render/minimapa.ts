@@ -1,6 +1,7 @@
 /**
- * Minimapa (VIS-09, UI-05, CTL-03): um globo pequeno, com o norte para cima, que gira para
- * mostrar o lado do ponto focal. Pinta os três estados da névoa a partir da mesma grade da
+ * Minimapa (VIS-09, UI-05, CTL-03, D-83): um mapa-múndi do corpo (projeção equiretangular), com o
+ * norte sempre para cima, que só rola entre leste e oeste para acompanhar o ponto focal. (As
+ * funções do globo abaixo servem à prévia do Free Battle.) Pinta os três estados da névoa a partir da mesma grade da
  * textura do terreno (TEC-17) e, por cima, unidades visíveis, fantasmas, sinais de radar,
  * círculos de satélite e o campo da câmera. Clique move a câmera; clique direito dá ordem.
  */
@@ -91,6 +92,53 @@ export function pintarGlobo(
   }
 }
 
+/** Longitude (rad) da direção: 0 em +x, crescendo para o leste (−z), como `norteEm`. */
+export function longitudeDe(d: Vec3): number {
+  return Math.atan2(-d[2], d[0]);
+}
+
+/** CTL-03: direção → mapa-múndi em [−1, 1]² (x leste, y norte), com a longitude `lon0` no meio. */
+export function projetarMundi(lon0: number, d: Vec3): { x: number; y: number } {
+  const u = normalizar(d);
+  const lat = Math.asin(Math.max(-1, Math.min(1, u[1])));
+  let lon = longitudeDe(u) - lon0;
+  lon -= Math.round(lon / (2 * Math.PI)) * 2 * Math.PI;
+  return { x: lon / Math.PI, y: lat / (Math.PI / 2) };
+}
+
+/** CTL-03: ponto do mapa-múndi em [−1, 1]² → direção. */
+export function desprojetarMundi(lon0: number, x: number, y: number): Vec3 {
+  const lat = Math.max(-1, Math.min(1, y)) * (Math.PI / 2);
+  const lon = x * Math.PI + lon0;
+  return [Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon)];
+}
+
+/** Pinta o mapa-múndi (largura × altura) com os três estados da névoa (sem grade: visível). */
+export function pintarMundi(
+  pixels: Uint8ClampedArray,
+  largura: number,
+  altura: number,
+  lon0: number,
+  estados: readonly number[] | undefined,
+  n: number,
+): void {
+  for (let py = 0; py < altura; py++) {
+    const y = 1 - ((py + 0.5) / altura) * 2;
+    // Sombra suave perto dos polos, para ler a curvatura.
+    const luz = 0.7 + 0.3 * Math.cos((y * Math.PI) / 2);
+    for (let px = 0; px < largura; px++) {
+      const k = (py * largura + px) * 4;
+      const d = desprojetarMundi(lon0, ((px + 0.5) / largura) * 2 - 1, y);
+      const estado = estados ? (estados[celulaDaDirecao(n, d)] ?? 0) : 2;
+      const cor = CORES_DA_NEVOA[estado] ?? CORES_DA_NEVOA[0]!;
+      pixels[k] = cor[0] * luz;
+      pixels[k + 1] = cor[1] * luz;
+      pixels[k + 2] = cor[2] * luz;
+      pixels[k + 3] = 255;
+    }
+  }
+}
+
 const raio = new Raycaster();
 const ndc = new Vector2();
 
@@ -148,6 +196,8 @@ export interface ConteudoDoMinimapa {
   sinais: readonly Vec3[];
   /** Satélites: centro e raio angular (rad) da visão. */
   satelites: ReadonlyArray<{ ponto: Vec3; angulo: number }>;
+  /** UI-17 (D-81): domínio conhecido das outras nações: centro, cor e raio angular (rad). */
+  dominios?: ReadonlyArray<{ d: Vec3; cor: string; angulo: number }>;
   /** CAM-07: pontos marcados (o do passo 6 do tutorial), em amarelo pulsante. */
   marcadores?: readonly Vec3[];
   /** Pontos do chão nas bordas da tela, em ordem (o campo da câmera). */
@@ -160,18 +210,21 @@ export interface AcoesDoMinimapa {
   ordenar(d: Vec3): void;
 }
 
-const LADO_PX = 176;
-/** Raio do disco em px (o mesmo de `pintarGlobo`). */
-const RAIO_PX = LADO_PX / 2 - 1;
+/** CTL-03: tamanho do mapa-múndi (2:1). */
+const LARGURA_MUNDI_PX = 240;
+const ALTURA_MUNDI_PX = 120;
 const SEGMENTOS_DO_ANEL = 48;
 
 export class Minimapa {
   readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
   private readonly imagem: ImageData;
-  private base: BaseDoGlobo = baseDoGlobo([1, 0, 0]);
-  private arrastando = false;
-  private pintado: { foco: Vec3; norte: Vec3; versao: number } | null = null;
+  /** CTL-03: longitude no meio do mapa (a do ponto focal, arredondada ao pixel). */
+  private lon0 = 0;
+  private foco: Vec3 = [1, 0, 0];
+  /** Arrasto em curso: x inicial (px da página) e a longitude do foco no começo. */
+  private arrasto: { x0: number; lon: number; lat: number; moveu: boolean } | null = null;
+  private pintado: { lon0: number; versao: number } | null = null;
 
   constructor(
     camada: HTMLElement,
@@ -179,50 +232,68 @@ export class Minimapa {
     private readonly acoes: AcoesDoMinimapa,
   ) {
     this.canvas = document.createElement('canvas');
-    this.canvas.width = this.canvas.height = LADO_PX;
+    this.canvas.width = LARGURA_MUNDI_PX;
+    this.canvas.height = ALTURA_MUNDI_PX;
     this.canvas.className = 'minimapa';
     this.canvas.dataset.testid = 'minimapa';
     this.ctx = this.canvas.getContext('2d')!;
-    this.imagem = this.ctx.createImageData(LADO_PX, LADO_PX);
+    this.imagem = this.ctx.createImageData(LARGURA_MUNDI_PX, ALTURA_MUNDI_PX);
     camada.appendChild(this.canvas);
 
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     this.canvas.addEventListener('mousedown', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const d = this.direcaoDoEvento(e);
       if (e.button === 0) {
-        this.arrastando = true;
-        if (d) this.acoes.centrar(d);
-      } else if (e.button === 2 && d) {
-        this.acoes.ordenar(d);
+        const f = normalizar(this.foco);
+        this.arrasto = {
+          x0: e.clientX,
+          lon: longitudeDe(f),
+          lat: Math.asin(Math.max(-1, Math.min(1, f[1]))),
+          moveu: false,
+        };
+      } else if (e.button === 2) {
+        const d = this.direcaoDoEvento(e);
+        if (d) this.acoes.ordenar(d);
       }
     });
+    // CTL-03: arrastar rola o mapa (e a câmera) só entre leste e oeste.
     this.canvas.addEventListener('mousemove', (e) => {
-      if (!this.arrastando) return;
-      const d = this.direcaoDoEvento(e);
-      if (d) this.acoes.centrar(d);
+      const a = this.arrasto;
+      if (!a) return;
+      const dx = e.clientX - a.x0;
+      if (!a.moveu && Math.abs(dx) < 3) return;
+      a.moveu = true;
+      const largura = this.canvas.getBoundingClientRect().width || LARGURA_MUNDI_PX;
+      const lon = a.lon - (dx / largura) * 2 * Math.PI;
+      const cl = Math.cos(a.lat);
+      this.acoes.centrar([cl * Math.cos(lon), Math.sin(a.lat), -cl * Math.sin(lon)]);
     });
-    window.addEventListener('mouseup', () => (this.arrastando = false));
+    window.addEventListener('mouseup', (e) => {
+      const a = this.arrasto;
+      this.arrasto = null;
+      // Clique sem arrastar: a câmera vai ao ponto.
+      if (a && !a.moveu && e.button === 0) {
+        const d = this.direcaoDoEvento(e);
+        if (d) this.acoes.centrar(d);
+      }
+    });
   }
 
-  /** Direção do globo sob o ponto do evento (px da página), ou null fora do disco. */
+  /** Direção sob o ponto do evento (px da página), ou null fora do mapa. */
   direcaoEm(clientX: number, clientY: number): Vec3 | null {
     const r = this.canvas.getBoundingClientRect();
-    const x = (((clientX - r.left) / r.width) * LADO_PX - LADO_PX / 2) / RAIO_PX;
-    const y = (LADO_PX / 2 - ((clientY - r.top) / r.height) * LADO_PX) / RAIO_PX;
-    return desprojetar(this.base, x, y);
+    const x = ((clientX - r.left) / r.width) * 2 - 1;
+    const y = 1 - ((clientY - r.top) / r.height) * 2;
+    if (Math.abs(x) > 1 || Math.abs(y) > 1) return null;
+    return desprojetarMundi(this.lon0, x, y);
   }
 
-  /** Ponto de página de uma direção (para testes E2E), ou null do outro lado. */
+  /** Ponto de página de uma direção (para testes E2E). */
   pontoDe(d: Vec3): { x: number; y: number } | null {
-    const p = projetar(this.base, d);
-    if (!p) return null;
+    const p = projetarMundi(this.lon0, d);
     const r = this.canvas.getBoundingClientRect();
-    return {
-      x: r.left + ((LADO_PX / 2 + p.x * RAIO_PX) / LADO_PX) * r.width,
-      y: r.top + ((LADO_PX / 2 - p.y * RAIO_PX) / LADO_PX) * r.height,
-    };
+    return { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height };
   }
 
   private direcaoDoEvento(e: MouseEvent): Vec3 | null {
@@ -230,48 +301,69 @@ export class Minimapa {
   }
 
   desenhar(c: ConteudoDoMinimapa): void {
-    this.base = baseDoGlobo(c.foco, c.frente);
-    const igual = (a: Vec3, b: Vec3) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+    this.foco = c.foco;
+    // Repinta só quando a longitude anda um pixel ou a névoa muda.
+    const passo = (2 * Math.PI) / LARGURA_MUNDI_PX;
+    this.lon0 = Math.round(longitudeDe(normalizar(c.foco)) / passo) * passo;
     const p0 = this.pintado;
-    if (
-      !p0 ||
-      p0.versao !== c.versaoNevoa ||
-      !igual(p0.foco, this.base.foco) ||
-      !igual(p0.norte, this.base.norte)
-    ) {
-      pintarGlobo(this.imagem.data, LADO_PX, this.base, c.estados, this.n);
-      this.pintado = { foco: this.base.foco, norte: this.base.norte, versao: c.versaoNevoa };
+    if (!p0 || p0.versao !== c.versaoNevoa || p0.lon0 !== this.lon0) {
+      pintarMundi(
+        this.imagem.data,
+        LARGURA_MUNDI_PX,
+        ALTURA_MUNDI_PX,
+        this.lon0,
+        c.estados,
+        this.n,
+      );
+      this.pintado = { lon0: this.lon0, versao: c.versaoNevoa };
     }
     const g = this.ctx;
-    g.clearRect(0, 0, LADO_PX, LADO_PX);
+    g.clearRect(0, 0, LARGURA_MUNDI_PX, ALTURA_MUNDI_PX);
     g.putImageData(this.imagem, 0, 0);
 
-    const tela = (d: Vec3) => {
-      const p = projetar(this.base, d);
-      if (!p) return null;
-      return { x: LADO_PX / 2 + p.x * RAIO_PX, y: LADO_PX / 2 - p.y * RAIO_PX };
+    const tela = (d: Vec3): { x: number; y: number } | null => {
+      const p = projetarMundi(this.lon0, d);
+      return { x: ((p.x + 1) / 2) * LARGURA_MUNDI_PX, y: ((1 - p.y) / 2) * ALTURA_MUNDI_PX };
+    };
+    /** Linha por pontos, quebrada onde cruza a borda leste–oeste do mapa. */
+    const linha = (pontos: ReadonlyArray<{ x: number; y: number } | null>) => {
+      g.beginPath();
+      let ultimo: { x: number; y: number } | null = null;
+      for (const p of pontos) {
+        if (!p) {
+          ultimo = null;
+          continue;
+        }
+        if (ultimo && Math.abs(p.x - ultimo.x) < LARGURA_MUNDI_PX / 2) g.lineTo(p.x, p.y);
+        else g.moveTo(p.x, p.y);
+        ultimo = p;
+      }
+      g.stroke();
     };
 
     // Círculos de satélite.
     g.strokeStyle = 'rgba(127, 214, 255, 0.8)';
     g.lineWidth = 1;
-    for (const s of c.satelites) {
-      const norte = norteEm(s.ponto);
-      g.beginPath();
-      let aberto = false;
-      for (let k = 0; k <= SEGMENTOS_DO_ANEL; k++) {
-        const rumo = girar(norte, s.ponto, (k / SEGMENTOS_DO_ANEL) * Math.PI * 2);
-        const p = tela(avancar(s.ponto, rumo, s.angulo).p);
-        if (!p) {
-          aberto = false;
-          continue;
-        }
-        if (aberto) g.lineTo(p.x, p.y);
-        else g.moveTo(p.x, p.y);
-        aberto = true;
-      }
-      g.stroke();
+    const anel = (centro: Vec3, angulo: number) => {
+      const norte = norteEm(centro);
+      return Array.from({ length: SEGMENTOS_DO_ANEL + 1 }, (_, k) =>
+        tela(
+          avancar(centro, girar(norte, centro, (k / SEGMENTOS_DO_ANEL) * Math.PI * 2), angulo).p,
+        ),
+      );
+    };
+    for (const s of c.satelites) linha(anel(s.ponto, s.angulo));
+
+    // UI-17: domínios das outras nações, anéis tracejados na cor delas.
+    g.setLineDash([3, 3]);
+    g.lineWidth = 1;
+    for (const dom of c.dominios ?? []) {
+      g.strokeStyle = dom.cor;
+      g.globalAlpha = 0.7;
+      linha(anel(dom.d, dom.angulo));
     }
+    g.globalAlpha = 1;
+    g.setLineDash([]);
 
     // CAM-07: ponto marcado (estrela amarela pulsante).
     for (const m of c.marcadores ?? []) {
@@ -332,13 +424,10 @@ export class Minimapa {
     }
 
     // Campo da câmera.
-    const campo = c.campo.map(tela).filter((p) => p !== null);
+    const campo = c.campo.map(tela);
     if (campo.length >= 3) {
       g.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-      g.beginPath();
-      campo.forEach((p, i) => (i === 0 ? g.moveTo(p.x, p.y) : g.lineTo(p.x, p.y)));
-      g.closePath();
-      g.stroke();
+      linha([...campo, campo[0]!]);
     }
   }
 }

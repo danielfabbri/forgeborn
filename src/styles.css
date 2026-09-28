@@ -289,9 +289,9 @@ body {
   position: absolute;
   left: 8px;
   bottom: 8px;
-  width: 176px;
-  height: 176px;
-  border-radius: 50%;
+  width: 240px;
+  height: 120px;
+  border-radius: 6px;
   background: rgba(5, 10, 18, 0.6);
   box-shadow: 0 0 0 1px rgba(120, 160, 220, 0.35);
   pointer-events: auto;
@@ -746,8 +746,8 @@ body.em-controle-direto .caixa-selecao {
   display: none;
 }
 body.em-controle-direto .minimapa {
-  width: 120px;
-  height: 120px;
+  width: 160px;
+  height: 80px;
 }
 .hud-direto {
   position: absolute;
@@ -940,7 +940,7 @@ body.em-controle-direto .minimapa {
 /* UI-15: botões de parados ao lado do minimapa. */
 .parados {
   position: absolute;
-  left: 192px;
+  left: 256px;
   bottom: 8px;
   display: flex;
   flex-direction: column;
@@ -1205,6 +1205,30 @@ body.em-cinematica #ui {
   font-size: 34px;
   color: #ffd27a;
   letter-spacing: 6px;
+}
+
+/* UI-17: temperamento das outras nações na barra do topo. */
+.temperamento {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.temperamento .icone {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.temperamento.alerta {
+  color: #ffd27a;
+  animation: pulso-tutorial 0.6s ease-in-out infinite alternate;
+}
+.temperamento.inimigo {
+  color: #ff7a6a;
+  font-weight: bold;
 }
 
 /* TEC-27: campo de macetes no centro da tela. */

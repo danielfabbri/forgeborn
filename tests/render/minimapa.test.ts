@@ -4,8 +4,11 @@ import {
   baseDoGlobo,
   campoDaCamera,
   desprojetar,
+  desprojetarMundi,
+  longitudeDe,
   pintarGlobo,
   projetar,
+  projetarMundi,
 } from '../../src/render/minimapa';
 import { normalizar, type Vec3 } from '../../src/sim/map/esfera';
 
@@ -79,5 +82,34 @@ describe('T-074 — VIS-09, CTL-03: minimapa', () => {
       const p = projetar(base, d)!;
       expect(Math.hypot(p.x, p.y)).toBeGreaterThan(0.95);
     }
+  });
+});
+
+describe('T-168 — CTL-03, D-83: minimapa em mapa-múndi', () => {
+  it('CTL-03: o foco fica no meio, o norte para cima e o leste à direita; ida e volta exatas', () => {
+    const foco: Vec3 = normalizar([0.6, 0.3, -0.7]);
+    const lon0 = longitudeDe(foco);
+    const meio = projetarMundi(lon0, foco);
+    expect(meio.x).toBeCloseTo(0, 9);
+    expect(meio.y).toBeGreaterThan(0);
+    const norte = normalizar([foco[0], foco[1] + 0.3, foco[2]]);
+    expect(projetarMundi(lon0, norte).y).toBeGreaterThan(meio.y);
+    // Leste a partir do foco (−z é o leste no equador de +x).
+    const leste = desprojetarMundi(lon0, 0.1, meio.y);
+    expect(projetarMundi(lon0, leste).x).toBeCloseTo(0.1, 9);
+    for (const [x, y] of [
+      [-0.9, 0.5],
+      [0.3, -0.8],
+      [0.99, 0],
+    ]) {
+      const p = projetarMundi(lon0, desprojetarMundi(lon0, x!, y!));
+      expect(p.x).toBeCloseTo(x!, 9);
+      expect(p.y).toBeCloseTo(y!, 9);
+    }
+  });
+
+  it('CTL-03: o norte não depende do foco (o mapa só rola leste–oeste)', () => {
+    const polo: Vec3 = [0, 1, 0];
+    for (const lon0 of [0, 1, 2.5, -3]) expect(projetarMundi(lon0, polo).y).toBeCloseTo(1, 9);
   });
 });

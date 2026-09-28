@@ -5,7 +5,7 @@
 import { dados } from '../sim';
 import type { RecursosId } from '../sim/data';
 
-export type Macete = { tipo: 'recurso'; recurso: RecursosId };
+export type Macete = { tipo: 'recurso'; recurso: RecursosId } | { tipo: 'todos' };
 
 function normalizar(texto: string): string {
   return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, '');
@@ -13,6 +13,8 @@ function normalizar(texto: string): string {
 
 export function interpretarMacete(texto: string): Macete | null {
   const t = normalizar(texto);
+  // D-83: "maistudo" soma a todos os recursos.
+  if (t === 'maistudo') return { tipo: 'todos' };
   for (const r of dados.recursos) {
     if (t === `mais${normalizar(r.nome)}`) return { tipo: 'recurso', recurso: r.id };
   }

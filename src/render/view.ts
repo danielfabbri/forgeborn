@@ -31,6 +31,10 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { DIRECAO_SOL, DIRECAO_TERRA } from './sky';
 
 /** FOV vertical da câmera RTS (graus). */
+/** CTL-16: o fundo no fim do zoom e quanto a névoa se afasta (m, apresentação). */
+const PRETO_DO_ESPACO = new Color(0, 0, 0);
+const DISTANCIA_SEM_NEVOA_M = 5000;
+
 export const FOV_RTS = 50;
 
 /**
@@ -64,6 +68,11 @@ export interface View {
   ambientar(a: Ambientacao): void;
   /** CEN-03: força da tempestade de poeira (0 a 1): névoa densa, fundo de poeira, luz fraca. */
   clima(forca: number): void;
+  /**
+   * CTL-16 (D-83): 0 no chão, 1 no fim do zoom: o fundo vira o preto do espaço e a névoa do chão
+   * se afasta. Chamado a cada quadro, depois de `clima`.
+   */
+  espaco(t: number): void;
   /** TEC-19: escala de resolução, sombras e SSAO do preset gráfico; vale na hora. */
   aplicarGraficos(escala: number, sombra: number, ssao?: boolean): void;
   render(): void;
@@ -277,6 +286,23 @@ export function createView(
       // A luz que sobra fica difusa: o ambiente sobe um pouco e pega a cor da poeira.
       ambiente.color.copy(a.ambiente.cor).lerp(t.cor, forca * 0.5);
       ambiente.intensity = a.ambiente.intensidade * (1 + 0.4 * forca);
+    },
+    espaco: (t) => {
+      const a = ambientacaoAtual;
+      if (!a?.ceu) return;
+      // Sem tempestade, o `clima` não repõe a base a cada quadro: repõe aqui.
+      if (!a.tempestade) {
+        if (scene.background instanceof Color) scene.background.copy(a.ceu);
+        if (scene.fog instanceof Fog && a.neblina) {
+          scene.fog.near = a.neblina.perto;
+          scene.fog.far = a.neblina.longe;
+        }
+      }
+      if (scene.background instanceof Color) scene.background.lerp(PRETO_DO_ESPACO, t);
+      if (scene.fog instanceof Fog) {
+        scene.fog.near += t * DISTANCIA_SEM_NEVOA_M;
+        scene.fog.far += t * DISTANCIA_SEM_NEVOA_M * 2;
+      }
     },
     ambientar: (a) => {
       ambientacaoAtual = a;

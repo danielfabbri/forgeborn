@@ -30,6 +30,7 @@ import { PRESETS_DE_MAPA } from '../../src/sim/map/presets';
 import { gerarMapaValido } from '../../src/sim/map/validacao';
 import { comandosDoJogo, sistemasDoJogo } from '../../src/sim/units';
 import { gerarMapaLunar } from '../../src/sim/map/lunar';
+import { chaveDoPar } from '../../src/sim/relacoes/temperamento';
 
 /**
  * Planetas de teste para as regras e o gerador (o gerador aceita qualquer raio; os cenários têm o
@@ -126,17 +127,30 @@ export type Criacao = (
 } & ({ x: number; z: number } | { d: Vec3 });
 
 /** Partida com os sistemas do jogo e o comando de depuração que cria corpos. */
+/**
+ * Partida de teste. `guerra` (padrão): as nações começam em guerra entre si (REG-24), para as
+ * regras de combate valerem sem o aviso de domínio; os testes do temperamento passam `false`.
+ */
 export function partida(
   mundo: Mundo | undefined,
   nacoes: NacaoId[] = ['bra', 'usa'],
   cenario: CenariosId = 'lua',
+  guerra = true,
 ): Sim {
-  return createSim(1, nacoes, {
+  const sim = createSim(1, nacoes, {
     mundo,
     cenario,
     systems: sistemasDoJogo,
     commandHandlers: { ...comandosDoJogo, ...debugCriarHandlers },
   });
+  if (guerra) {
+    for (const a of nacoes) {
+      for (const b of nacoes) {
+        if (a < b) sim.state.relacoes[chaveDoPar(a, b)] = { guerra: true, calma_s: 0, avisos: {} };
+      }
+    }
+  }
+  return sim;
 }
 
 /** Marca todo o mapa como explorado pela nação (VIS-01), para testes de outras regras. */

@@ -248,8 +248,10 @@ describe('T-062 — CMB-07, CMB-08, CMB-10, CMB-11: torpedo, bomba e splash', ()
       const [bomber] = criar(sim, [{ unidade: 'drone_bomber', x: 0, z: 0 }]);
       // O mais rápido dos hovers: em bomba_tempo_queda_s ele sai do ponto previsto.
       // Dentro da visão do bombardeiro: só se ataca o que a nação vê (VIS-01).
-      const [alvoId] = criar(sim, [{ unidade: 'hover_scout', x: 0, z: 14 }], 'usa');
-      ordenar(sim, 'mover', { ids: [alvoId], ...alvo(0, 90) }, 'usa');
+      // Alvo desarmado e mais lento que o bombardeiro (o de Observação o deixaria para trás, D-83).
+      const [alvoId] = criar(sim, [{ unidade: 'hover_minelayer', x: 0, z: 14 }], 'usa');
+      // Longe o bastante para o alvo ainda estar andando quando a bomba cai.
+      ordenar(sim, 'mover', { ids: [alvoId], ...alvo(0, 200) }, 'usa');
       ordenar(sim, 'atacar', { ids: [bomber], alvo: alvoId });
       const inicio = hp(sim, alvoId!);
       rodarAte(
@@ -390,7 +392,8 @@ describe('T-063 — CMB-12 a CMB-18: alvos, posturas e mente única', () => {
       const sim = partida(mundoLiso());
       const [ex1] = criar(sim, [{ unidade: 'hover_ex1', x: 0, z: 0 }]);
       criar(sim, [{ estrutura: 'storage', x: 8, z: 20 }], 'usa');
-      ordenar(sim, tipo, { ids: [ex1], ...alvo(0, 40) });
+      // Longe o bastante para o EX1 ainda estar andando no fim (parado, ele engajaria).
+      ordenar(sim, tipo, { ids: [ex1], ...alvo(0, 70) });
       const eventos: SimEvent[] = [];
       rodar(sim, 6, eventos);
       expect(Math.abs(pos(sim, ex1!).x)).toBeLessThan(1);

@@ -16,6 +16,7 @@ import {
   temTraco,
   tipoDe,
 } from './base';
+import { emGuerra } from '../relacoes/temperamento';
 
 export interface Quadro {
   nacao: NacaoId;
@@ -59,7 +60,10 @@ export function montarQuadro(ctx: SystemContext, nacao: NacaoId): Quadro | null 
     exercito: proprios(state, nacao).filter(
       (id) => getComponent(state, id, 'unit') && getComponent(state, id, 'arma'),
     ),
-    inimigos: inimigosVisiveis(ctx, nacao),
+    // CMB-29/IA-05: no combate, só quem está em guerra com a IA.
+    inimigos: inimigosVisiveis(ctx, nacao).filter((id) =>
+      emGuerra(ctx.state, nacao, getComponent(ctx.state, id, 'owner')!.nacao),
+    ),
     naFila,
     liberados: state.liberados,
     minutos: (ctx.tick * ctx.dt) / 60,

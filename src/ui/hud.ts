@@ -10,6 +10,13 @@ export interface EstadoDaBarra {
   energia: LeituraDaRede | null;
   corpos: { n: number; limite: number };
   relogio: string;
+  /** UI-17 (D-81): temperamento de cada nação adversária em relação ao jogador. */
+  nacoes: Array<{
+    id: string;
+    cor: string;
+    estado: 'pacifico' | 'alerta' | 'inimigo';
+    prazo: number | null;
+  }>;
 }
 
 export const barraSuperior = signal<EstadoDaBarra>({
@@ -17,6 +24,7 @@ export const barraSuperior = signal<EstadoDaBarra>({
   energia: null,
   corpos: { n: 0, limite: 0 },
   relogio: '0:00',
+  nacoes: [],
 });
 
 /** UI-03 e UI-13: o que o painel de seleção mostra. */

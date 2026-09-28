@@ -62,6 +62,8 @@ export interface Barras {
   hp: number | null;
   /** Fração de EN (0..1), ou null (estruturas não têm bateria). */
   en: number | null;
+  /** UI-07 (D-83): opacidade (1 nos selecionados; menor nos demais). */
+  opacidade: number;
 }
 
 /**
@@ -78,11 +80,11 @@ export function barrasDe(
   const vida = getComponent(state, id, 'vida') ?? getComponent(state, id, 'satelite');
   if (!vida) return null;
   const bateria = getComponent(state, id, 'bateria');
-  // UI-07 (D-61): no modo automático, só as selecionadas.
-  if (!sempre && !selecionado) return null;
+  // UI-07 (D-83): no modo automático, as selecionadas cheias e as demais apagadas.
   return {
     hp: Math.max(0, Math.min(1, vida.hp / vida.max)),
     en: bateria ? Math.max(0, Math.min(1, bateria.en / bateria.max)) : null,
+    opacidade: sempre || selecionado ? 1 : param('barras_opacidade_nao_selecionados_pct') / 100,
   };
 }
 

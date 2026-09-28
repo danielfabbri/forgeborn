@@ -31,7 +31,7 @@ function podePagar(sim: Sim, item: 'printer'): boolean {
 }
 
 describe('§21.3 — invariantes de economia', () => {
-  it('INV-02: estoque padrão e diretiva automática, "1 Hover extra → Impressora", Impressora entre 45 s e 60 s', () => {
+  it('INV-02: estoque padrão e diretiva automática, "1 Hover extra → Impressora", Impressora entre 30 s e 45 s (D-83)', () => {
     const sim = partida(mundoLiso());
     jazidasIniciais(sim);
     ordenar(sim, INICIAR_PARTIDA_COMMAND, {
@@ -58,7 +58,7 @@ describe('§21.3 — invariantes de economia', () => {
       }
     }
     expect(entregue).not.toBeNull();
-    expect(entregue!).toBeGreaterThanOrEqual(45);
-    expect(entregue!).toBeLessThanOrEqual(60);
+    expect(entregue!).toBeGreaterThanOrEqual(30);
+    expect(entregue!).toBeLessThanOrEqual(45);
   });
 });

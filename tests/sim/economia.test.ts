@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getComponent, param, restoreSim, type Sim, type SimEvent } from '../../src/sim';
+import { dados, getComponent, param, restoreSim, type Sim, type SimEvent } from '../../src/sim';
 import { emTransito, estoque, raioDaJazida } from '../../src/sim/economia';
 import { arco, normalizar, type Vec3 } from '../../src/sim/map/esfera';
 import { comandosDoJogo, sistemasDoJogo } from '../../src/sim/units';
@@ -140,7 +140,7 @@ describe('T-031 — ECO-09 a ECO-12: ciclo de coleta', () => {
     const [h] = criar(sim, [{ unidade: 'hover_explorer', x: 18, z: 0 }]);
     ordenar(sim, 'coletar', { ids: [h], jazida: a });
     expect(rodarAte(sim, () => coleta(sim, h!).estado === 'minerando', 20)).toBe(true);
-    const taxa = 0.8; // Cu em dados:recursos
+    const taxa = dados.recursos.find((r) => r.id === 'cu')!.taxa_mineracao_u_s;
     let anterior = coleta(sim, h!).carga;
     for (let t = 0; t < 5 * sim.tickHz; t++) {
       sim.step();

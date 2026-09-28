@@ -263,6 +263,16 @@ export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
       offline: false,
     });
   }
+  // ENE-03/UNI-14 (D-83): manutenção das estruturas pela rede, com a prioridade das defesas.
+  const manutencao = statsEstrutura(tipo).manutencao_en_s;
+  if (manutencao > 0 && !getComponent(state, id, 'consumidor')) {
+    setComponent(state, id, 'consumidor', {
+      prioridade: 1,
+      demanda_en_s: manutencao,
+      atendido: 1,
+      offline: false,
+    });
+  }
   // UNI-10 (D-63): a Base de Lança-Mísseis fabrica mísseis com a energia da rede.
   if (tipo === 'missile_silo') {
     setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });

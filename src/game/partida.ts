@@ -81,6 +81,7 @@ import {
   alturaMaxima,
   centrarEm,
   criarEstadoCamera,
+  fatorPlanetario,
   poseDaCamera,
   rumoDaCamera,
 } from '../render/cameraRts';
@@ -161,6 +162,8 @@ import {
   maceteDesconhecido,
 } from '../ui/hud';
 import { acoesDoPainel, avisoProducao, fotosDoPainel, painelProducao } from '../ui/producao';
+import { emGuerra, prazoDoAviso } from '../sim/relacoes/temperamento';
+import { AtmosferaDeFora } from '../render/atmosfera';
 
 /** D-42: a habilidade do clique direito de cada unidade (chave de i18n). */
 const HABILIDADES: Record<string, string> = {
@@ -323,6 +326,11 @@ export function iniciarPartida(): void {
   const poeira = ambientacao.tempestade ? new Poeira(ambientacao.tempestade.cor) : null;
   if (poeira) view.scene.add(poeira.objeto);
   let forcaDaTempestade = 0;
+  const atmosferaDeFora =
+    ambientacao.ceu && ambientacao.horizonte && ambientacao.tetoCamera === null
+      ? new AtmosferaDeFora(R, ambientacao.horizonte, param('atmosfera_opacidade_pct') / 100)
+      : null;
+  if (atmosferaDeFora) view.scene.add(atmosferaDeFora.objeto);
   const atualizarClima = (dt: number): void => {
     if (!poeira) return;
     const alvo = tempestadeAtiva(sim.state) ? 1 : 0;
@@ -755,6 +763,18 @@ export function iniciarPartida(): void {
       energia: leituraDaRede(sim.state, jogador),
       corpos: corposDa(sim.state, jogador),
       relogio: relogio(sim.state.tick, sim.tickHz),
+      nacoes: sim.state.nacoes
+        .filter((n) => n !== jogador && !sim.state.placar[n]?.eliminada)
+        .map((n) => {
+          // UI-17: o prazo que ela me deu, ou o que eu dei a ela.
+          const prazo = prazoDoAviso(sim.state, n, jogador) ?? prazoDoAviso(sim.state, jogador, n);
+          const estado = emGuerra(sim.state, n, jogador)
+            ? ('inimigo' as const)
+            : prazo !== null
+              ? ('alerta' as const)
+              : ('pacifico' as const);
+          return { id: n, cor: corDaNacao(n), estado, prazo };
+        }),
     };
     painelSelecao.value = resumoDaSelecao(sim.state, comandos?.selecao ?? []);
     // FLX-12: ao fim (ou na eliminação do jogador), congela as estatísticas e para a simulação.
@@ -943,6 +963,20 @@ export function iniciarPartida(): void {
         .filter((s) => s.nacao === jogador)
         .map((s) => ({ ponto: s.ponto, angulo: param('satelite_visao_m') / R })),
       marcadores: pontoDoPasso6() ? [pontoDoPasso6()!] : [],
+      // UI-17: domínio (REG-25) das estruturas alheias vistas ou lembradas.
+      dominios: [
+        ...unidades.corpos
+          .filter((c) => !c.movel && c.nacao !== jogador)
+          .map((c) => ({ d: normalizar([c.x, c.y, c.z]), nacao: c.nacao })),
+        ...(nevoa ? fantasmas.visiveis(ctx, jogador) : []).map((f) => ({
+          d: normalizar([f.x, f.y, f.z]),
+          nacao: f.nacao,
+        })),
+      ].map((x) => ({
+        d: x.d,
+        cor: corDaNacao(x.nacao),
+        angulo: param('dominio_estrutura_m') / R,
+      })),
       campo: campoDaCamera(view.camera, R),
       agora: performance.now(),
     });
@@ -1109,6 +1143,8 @@ export function iniciarPartida(): void {
   });
   /** AUD-03/AUD-05: sinal sonoro pela prioridade e a voz da IA (a pilha é a legenda). */
   const aoAlertar = (alerta: Alerta): void => {
+    // AUD-03 (D-84): prioridade baixa fica só na pilha, sem voz nem bipe.
+    if (alerta.prioridade === 'baixa') return;
     tocarSom(
       alerta.prioridade === 'critica'
         ? 'alerta_critica'
@@ -1163,7 +1199,7 @@ export function iniciarPartida(): void {
       tick: sim.state.tick,
       nacao: jogador,
       tipo: MACETE_COMMAND,
-      dados: { recurso: macete.recurso },
+      dados: { recurso: macete.tipo === 'todos' ? 'todos' : macete.recurso },
     });
     return true;
   };
@@ -1222,6 +1258,11 @@ export function iniciarPartida(): void {
       posicionarCamera(dtDoQuadro);
       terreno.focar(camera.foco);
       atualizarClima(dtDoQuadro);
+      // CTL-16 (D-83): ao afastar, o céu dá lugar ao espaço e a atmosfera vira uma esfera.
+      const planetario = direto?.ativo != null ? 0 : fatorPlanetario(camera);
+      view.espaco(planetario);
+      ceu.espaco(planetario);
+      atmosferaDeFora?.atualizar(planetario, ceu.sol);
       jazidas.sync(sim.state, nevoa ? exploradoPeloJogador : null);
       // UI-11: emblemas das nações sobre os corpos no modo daltônico.
       emblemas.sync(unidades.corpos, modoDaltonico());
@@ -1353,7 +1394,8 @@ export function iniciarPartida(): void {
       const o = getComponent(sim.state, id, 'obra');
       return o ? { instalada: o.instalada, progresso: o.progresso } : null;
     };
-    sonda.barras = () => corposComBarras.length;
+    // UI-07 (D-83): as barras cheias (selecionadas ou no modo "sempre").
+    sonda.barras = () => corposComBarras.filter((c) => c.barras.opacidade >= 1).length;
     sonda.recarga = (id) => {
       const r = getComponent(sim.state, id, 'recarga');
       return r ? { estado: r.estado, estrutura: r.estrutura } : null;

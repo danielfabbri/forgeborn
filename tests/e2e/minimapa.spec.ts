@@ -48,12 +48,13 @@ test.describe('T-074: minimapa', () => {
     await page.mouse.click(cx + caixa.width * 0.3, cy - caixa.height * 0.2);
     await page.waitForTimeout(200);
     const depois = (await sonda(page, (s) => s.camera!.foco))!;
-    // O disco é o hemisfério: 0,36 do raio fica a ~0,37 rad do centro.
+    // Mapa-múndi: 0,3 da largura é ~0,6π de longitude (e 0,2 da altura, ~0,1π de latitude).
     expect(angulo(antes, depois)).toBeGreaterThan(0.3);
-    // O ponto clicado virou o centro do globo.
+    // CTL-03 (D-83): o ponto clicado vai para o meio na horizontal; na vertical fica a latitude
+    // dele, com o norte sempre para cima.
     const centro = (await sonda(page, (s, d) => s.noMinimapa(d as Vec3), depois))!;
     expect(Math.abs(centro.x - cx)).toBeLessThan(2);
-    expect(Math.abs(centro.y - cy)).toBeLessThan(2);
+    expect(Math.abs(centro.y - (cy - caixa.height * 0.2))).toBeLessThan(2);
   });
 
   test('CTL-03: clique direito no minimapa dá ordem de movimento', async ({ page }) => {

@@ -48,6 +48,23 @@ export function BarraSuperior() {
       <span data-testid="corpos">
         {t('hud.corpos')} {barra.corpos.n}/{barra.corpos.limite}
       </span>
+      {/* UI-17 (D-81): temperamento das outras nações em relação a mim. */}
+      {barra.nacoes.map((n) => (
+        <span
+          key={n.id}
+          class={`temperamento ${n.estado}`}
+          data-testid={`temperamento-${n.id}`}
+          data-estado={n.estado}
+          title={t(`temperamento.ajuda.${n.estado}` as TextKey)}
+          style={{ borderColor: n.cor }}
+        >
+          <span class="icone" style={{ background: n.cor }} />
+          {t(`nacao.${n.id}` as TextKey)}:{' '}
+          {n.estado === 'alerta' && n.prazo !== null
+            ? t('temperamento.alerta', { s: Math.ceil(n.prazo) })
+            : t(`temperamento.${n.estado}` as TextKey)}
+        </span>
+      ))}
       <span class="relogio" data-testid="relogio">
         {barra.relogio}
       </span>

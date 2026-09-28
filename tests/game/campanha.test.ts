@@ -15,8 +15,8 @@ describe('T-130/T-133 — CAM-01 a CAM-04, CAM-08, D-73: campanha', () => {
     const m00 = liberadosNa('m00');
     expect(m00).toEqual(expect.arrayContaining(['hover_explorer', 'printer', 'wall', 'gate']));
     expect(m00).not.toContain('hover_opq');
-    // A Missão 1 não libera nada novo: acumula a 0.
-    expect(new Set(liberadosNa('m01'))).toEqual(new Set(m00));
+    // A Missão 1 acumula a 0 e libera a Antena (D-83).
+    expect(new Set(liberadosNa('m01'))).toEqual(new Set([...m00, 'antenna']));
     const m02 = liberadosNa('m02');
     expect(m02).toEqual(expect.arrayContaining([...m00, 'hover_opq', 'aa_battery', 'mag_tower']));
     expect(liberadosNa('m05')).toEqual(

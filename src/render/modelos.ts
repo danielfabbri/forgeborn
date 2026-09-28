@@ -583,6 +583,40 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     m.cilindro(0.9, 0.1, 'nacao', { y: 7.2 }, 16);
     return olho(m, 0, 7.3, 0, 0.3).pronta();
   },
+  // UNI-14 (D-83): Antena — mastro treliçado alto, prato de sensor e luz de topo na cor da nação.
+  antenna: () => {
+    const m = new Montagem();
+    m.caixa(2.8, 0.35, 2.8, GRAFITE);
+    m.caixa(2.2, 0.15, 2.2, METAL, { y: 0.35 });
+    const altura = 9;
+    for (const [sx, sz] of [
+      [1, 1],
+      [1, -1],
+      [-1, 1],
+      [-1, -1],
+    ] as const) {
+      // Pernas que se inclinam para dentro até o topo.
+      m.caixa(0.12, altura, 0.12, METAL, {
+        x: sx * 0.55,
+        z: sz * 0.55,
+        y: 0.5,
+        rx: -sz * 0.06,
+        rz: sx * 0.06,
+      });
+    }
+    // Travessas da treliça.
+    for (let k = 1; k <= 4; k++) {
+      const y = 0.5 + k * 1.9;
+      const lado = 1.1 - k * 0.18;
+      for (const r of [0, Math.PI / 2]) m.caixa(lado, 0.06, 0.06, GRAFITE, { y, ry: r });
+    }
+    // Prato do sensor, inclinado para o céu, e a faixa da nação.
+    m.add(new ConeGeometry(1.1, 0.45, 20, 1, true), PAINEL, { y: 7.2, x: 0.5, rz: -2.4 });
+    m.cilindro(0.18, 0.5, METAL, { y: 6.9, x: 0.35, rz: -0.8 }, 8);
+    m.cilindro(0.5, 0.12, 'nacao', { y: 4.2 }, 12);
+    m.cilindro(0.06, 1.6, METAL, { y: altura + 0.5 }, 6);
+    return m.esfera(0.22, 'nacao', { y: altura + 2.1 }).pronta();
+  },
   // UNI-11: mísseis (fotos do cartão e o voo), deitados em +x.
   missile_short: () => {
     const m = new Montagem();

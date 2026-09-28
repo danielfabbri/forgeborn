@@ -18,6 +18,7 @@ import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from '../units
 import { armaDe } from './armas';
 import { aplicarDano, camadaDe, danoEmArea, type TipoDeDano } from './dano';
 import { passoAntiaereo, passoMissil } from './misseis';
+import { emGuerra } from '../relacoes/temperamento';
 
 /** Detonação de uma arma com splash no ponto (CMB-10, CMB-11). */
 export function detonar(
@@ -149,7 +150,8 @@ function passoMinas(ctx: SystemContext): void {
     const dm = direcaoDe(getComponent(state, id, 'position')!);
     // Só hovers inimigos (unidades de solo que não são drones) acionam (CMB-05).
     const acionou = entitiesWith(state, 'unit', 'owner', 'position').some((u) => {
-      if (getComponent(state, u, 'owner')!.nacao === dono) return false;
+      // CMB-29: a mina só aciona com nação em guerra com o dono.
+      if (!emGuerra(state, dono, getComponent(state, u, 'owner')!.nacao)) return false;
       if (getComponent(state, u, 'air')) return false;
       const du = direcaoDe(getComponent(state, u, 'position')!);
       const raio = statsMovel(getComponent(state, u, 'unit')!.tipo).raio_m;

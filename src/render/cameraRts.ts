@@ -72,6 +72,13 @@ function suave(a: number, b: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/** CTL-16: quanto a câmera já está na visão planetária (0 na visão RTS, 1 no fim do zoom). */
+export function fatorPlanetario(estado: { altura: number; raio: number; teto?: number }): number {
+  const max = alturaMaxima(estado);
+  if (max <= C.alturaMaxRts_m) return 0;
+  return suave(C.alturaMaxRts_m, max, estado.altura);
+}
+
 /** CTL-01/CTL-16: inclinação (rad) abaixo do horizonte para a altura dada. */
 export function inclinacao(altura: number, raio = Infinity): number {
   const [perto, longe] = C.transicaoInclinacao_m;

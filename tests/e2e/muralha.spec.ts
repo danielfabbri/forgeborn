@@ -57,7 +57,7 @@ test('T-058/D-56: apertar e arrastar gira o Muro; o segmento nasce com esse rumo
     .poll(() =>
       page.evaluate(() => {
         const s = (window as unknown as Janela).__forgeborn;
-        for (let id = 1; id < 400; id++)
+        for (let id = 1; id < 3000; id++)
           if (s.tipo(id) === 'wall' && s.nacao(id) === 'bra') return s.rumo(id) !== null;
         return false;
       }),

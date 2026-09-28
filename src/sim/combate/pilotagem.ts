@@ -235,7 +235,7 @@ export function passoPilotagem(ctx: SystemContext): void {
       if (arma.fonte_en === 'bateria') gastar(ctx, id, arma.en_disparo);
       componente.recarga_s = arma.recarga_s ?? 0;
     };
-    const alvoNaMira = p.alvo !== null && alvoValido(ctx, id, p.alvo, arma) ? p.alvo : null;
+    const alvoNaMira = p.alvo !== null && alvoValido(ctx, id, p.alvo, arma, true) ? p.alvo : null;
 
     if (arma.projetil === 'guiado') {
       if (p.gatilho) {
@@ -252,7 +252,7 @@ export function passoPilotagem(ctx: SystemContext): void {
       const travado =
         p.travando !== null &&
         p.trava_s >= param('trava_torpedo_s') - 1e-9 &&
-        alvoValido(ctx, id, p.travando, arma)
+        alvoValido(ctx, id, p.travando, arma, true)
           ? p.travando
           : null;
       p.segurando = false;

@@ -4,6 +4,7 @@ import type { ComponentMap, ComponentName } from './components';
 import { type RngState, seedRng } from './rng';
 import type { EntityId, NacaoId, QueuedCommand } from './types';
 import type { EstadoDaTempestade } from '../cenario/tempestade';
+import type { Relacao } from '../relacoes/temperamento';
 
 export type ComponentStores = { [K in ComponentName]?: Record<EntityId, ComponentMap[K]> };
 
@@ -56,6 +57,8 @@ export interface SimState {
   liberados: string[] | null;
   /** CAM-06 (D-73): nações sem Nave, eliminadas ao perder todas as estruturas e unidades. */
   semForja: NacaoId[];
+  /** REG-24 a REG-28: temperamento de cada par de nações (chave "a|b" em ordem). */
+  relacoes: Record<string, Relacao>;
   /** CEN-03: próxima (ou atual) tempestade de poeira; só em cenários com o evento. */
   tempestade?: EstadoDaTempestade;
   /** REG-11/REG-12: fim da partida, ou null. */
@@ -156,6 +159,7 @@ export function createInitialState(
     nextCommandSeq: 0,
     versaoObstaculos: 0,
     liberados: null,
+    relacoes: {},
     semForja: [],
     estoques: Object.fromEntries(
       nacoes.map((n) => [n, porRecurso(() => 0)]),

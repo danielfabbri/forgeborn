@@ -9,6 +9,7 @@ import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM } from '../units/superficie';
 import { visivelPara } from '../visao/nevoa';
 import { multVisao } from '../cenario/tempestade';
+import { emGuerra } from '../relacoes/temperamento';
 
 const BLOQUEIOS = new Set(['wall', 'gate']);
 
@@ -38,7 +39,8 @@ export function passoBrechas(ctx: SystemContext): void {
     let melhor: EntityId | null = null;
     let menor = Infinity;
     for (const b of bloqueios) {
-      if (getComponent(state, b, 'owner')!.nacao === nacao) continue;
+      // CMB-29: só abre brecha no muro de quem está em guerra.
+      if (!emGuerra(state, nacao, getComponent(state, b, 'owner')!.nacao)) continue;
       if (!visivelPara(ctx, nacao, b)) continue;
       const dist = distanciaM(ctx, d, direcaoDe(getComponent(state, b, 'position')!));
       if (dist <= stats.visao_m * multVisao(state) && dist < menor) {

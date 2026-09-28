@@ -37,6 +37,12 @@ export function textoDoAlerta(a: Alerta): string {
     case 'AL-13':
       vars.nacao = t(`nacao.${v.eliminada}` as TextKey);
       break;
+    case 'AL-19':
+    case 'AL-20':
+    case 'AL-21':
+    case 'AL-22':
+      vars.nacao = t(`nacao.${v.outra}` as TextKey);
+      break;
     case 'AL-18':
       vars.unidade = t(`item.${v.unidade}` as TextKey);
       break;

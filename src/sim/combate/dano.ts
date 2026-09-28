@@ -12,6 +12,7 @@ import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM } from '../units/superficie';
 import { bordaDe } from '../producao/alcance';
 import { visivelPara } from '../visao/nevoa';
+import { registrarDano } from '../relacoes/temperamento';
 
 export type TipoDeDano = 'laser' | 'explosivo' | 'ambiental';
 type Classe = 'leve' | 'blindada' | 'estrutura';
@@ -79,6 +80,9 @@ export function aplicarDano(
       combate.ultimoDanoNacao = nacao;
     }
   }
+  // REG-27: dano entre nações abre a guerra e zera a trégua (a radiação não é agressão).
+  const dono = getComponent(state, alvo, 'owner')?.nacao;
+  if (!continuo && nacao && dono && nacao !== dono) registrarDano(ctx, nacao, dono);
   if (atacante !== null) {
     const doAtacante = getComponent(state, atacante, 'combate');
     if (doAtacante) doAtacante.semCombate_s = 0;

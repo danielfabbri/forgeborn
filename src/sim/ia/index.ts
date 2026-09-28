@@ -13,6 +13,7 @@ import { decidirMilitar } from './militar';
 import { decidirPlanoDaIa, proximoDoPlano } from './plano';
 import { CATEGORIAS, decidirProducao, observar, prioridades } from './producao';
 import { metaDeHovers, montarQuadro, type Quadro } from './quadro';
+import { obedecerAvisos } from './temperamento';
 
 export { bonusDaNacao, dificuldade, niveis, type Nivel } from './base';
 export { pesos, prioridades } from './producao';
@@ -61,6 +62,8 @@ export function sistemaIa(ctx: SystemContext): void {
     if (!(esperando && exercitoPronto)) decidirProducao(ctx, q);
     decidirMilitar(ctx, q);
     decidirBatedor(ctx, q);
+    // IA-11: por último, para valer sobre as ordens acima.
+    obedecerAvisos(ctx, q);
   }
 }
 

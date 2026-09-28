@@ -12,6 +12,7 @@ import { param } from '../data';
 import { porcentagem } from '../energia/bateria';
 import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM } from '../units/superficie';
+import { emGuerra } from '../relacoes/temperamento';
 
 /** Intensidade (0..1) do campo sobre a unidade: linear até a borda, menor em blindadas. */
 function intensidade(distancia: number, blindada: boolean): number {
@@ -38,10 +39,13 @@ export function passoMagnetico(ctx: SystemContext): void {
     for (const u of unidades) {
       const distancia = distanciaM(ctx, dt0, direcaoDe(getComponent(state, u, 'position')!));
       if (distancia > raio) continue;
-      if (getComponent(state, u, 'owner')!.nacao === nacao) {
+      const dono = getComponent(state, u, 'owner')!.nacao;
+      if (dono === nacao) {
         aliados.push(u);
         continue;
       }
+      // CMB-29: o dreno só pega nações em guerra.
+      if (!emGuerra(state, nacao, dono)) continue;
       const tipo = getComponent(state, u, 'unit')!.tipo;
       const f = intensidade(distancia, statsMovel(tipo).blindagem === 'blindada');
       if (f <= 0) continue;

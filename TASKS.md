@@ -361,15 +361,15 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: `primeiro_ataque_min` novo aplicado pela IA; INV-12 e INV-14 verificados (headless) no mapa novo da Lua.
 - [ ] **T-163 — Abertura rápida nos corpos grandes** · M · Spec: P5, TEC-10, D-79 · Dep: T-161
   - Contexto: com a Lua de 400 m, a partida leva ~19 s para abrir no servidor de desenvolvimento (geração e validação do mapa ~9 s; malha do terreno ~9 s). Caminhos: normais do terreno pela grade em vez de amostrar a altura, albedo em resolução menor, geração num Web Worker (T-159) e cache do mapa entre a configuração e a partida.
-- [ ] **T-164 — Temperamento e domínio** · G · Spec: REG-24 – REG-28, CMB-29, IA-04, IA-05, IA-11, IA-12, UI-17, AL-19 – AL-22, D-81, D-82 · Dep: T-161
+- [x] **T-164 — Temperamento e domínio** · G · Spec: REG-24 – REG-28, CMB-29, IA-04, IA-05, IA-11, IA-12, UI-17, AL-19 – AL-22, D-81, D-82 · Dep: T-161 · Feito: 2026-09-27
   - Aceite: todos começam pacíficos; corpo no domínio alheio gera aviso e alerta, e fica inimigo após `ultimato_s`; sair antes volta a pacífico; dano abre a guerra na hora; a guerra esfria após `guerra_esfria_s`; disparo automático e minas só contra inimigos; a IA obedece o aviso (menos a Brutal) e só ataca quem está em guerra ou provoca conforme a dificuldade (IA-12); HUD e minimapa mostram o temperamento e os domínios.
 - [ ] **T-165 — Pathfinding hierárquico** · G · Spec: TEC-14, MOV-05, D-79 · Dep: T-161
   - Contexto: na Lua de 400 m, o A* de uma zona a outra leva ~26 ms e o flow field ~65 ms (medidos em 2026-09-27). Aceite: < 5 ms por ordem na Lua (tests/perf/pathfinding.test.ts), com as mesmas garantias de MOV-05.
-- [ ] **T-166 — Ritmo mais rápido, satélites, macete e barras (D-83)** · M · Spec: `dados:custos`, `dados:moveis`, `dados:recursos`, `carga_hover_u`, UNI-04, PRD-01, TEC-27, UI-07, D-83 · Dep: T-161
+- [x] **T-166 — Ritmo mais rápido, satélites, macete e barras (D-83)** · M · Spec: `dados:custos`, `dados:moveis`, `dados:recursos`, `carga_hover_u`, UNI-04, PRD-01, TEC-27, UI-07, D-83 · Dep: T-161 · Feito: 2026-09-27
   - Aceite: novos números vindos só do SPEC; a Base de Lançamento imprime vários satélites; "maistudo" soma a todos os recursos; barras dos não selecionados a 30%; INV reconferidos (os que quebrarem voltam ao SPEC).
-- [ ] **T-167 — Antena** · M · Spec: UNI-14, ENE-03, §8.3, §12.4, D-83 · Dep: T-166
+- [x] **T-167 — Antena** · M · Spec: UNI-14, ENE-03, §8.3, §12.4, D-83 · Dep: T-166 · Feito: 2026-09-27
   - Aceite: a Impressora constrói a Antena (B → E); ela enxerga `visao_m`, consome `manutencao_en_s` e sem energia não enxerga; modelo, foto do cartão e nome; liberada na Missão 1.
-- [ ] **T-168 — Minimapa em mapa-múndi** · M · Spec: CTL-03, VIS-09, D-83
+- [x] **T-168 — Minimapa em mapa-múndi** · M · Spec: CTL-03, VIS-09, D-83 · Feito: 2026-09-27
   - Aceite: projeção equiretangular com o norte fixo; rola só leste–oeste acompanhando o foco; arrastar rola; clique e clique direito continuam valendo.
-- [ ] **T-169 — Atmosfera como esfera na visão planetária** · P · Spec: CTL-16, `atmosfera_opacidade_pct`, D-83
+- [x] **T-169 — Atmosfera como esfera na visão planetária** · P · Spec: CTL-16, `atmosfera_opacidade_pct`, D-83 · Feito: 2026-09-27
   - Aceite: ao afastar, céu e névoa dão lugar ao espaço estrelado e a atmosfera é uma esfera em volta do corpo a 90% de opacidade.

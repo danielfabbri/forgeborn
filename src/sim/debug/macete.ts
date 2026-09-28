@@ -10,9 +10,11 @@ export const MACETE_COMMAND = 'macete';
 export const comandosDeMacete: Record<string, CommandHandler> = {
   [MACETE_COMMAND]: (ctx, comando) => {
     const recurso = (comando.dados as { recurso?: unknown } | null)?.recurso;
-    const r = dados.recursos.find((x) => x.id === recurso);
     const estoque = ctx.state.estoques[comando.nacao];
-    if (!r || !estoque) return;
-    estoque[r.id] += param('macete_quantidade');
+    if (!estoque) return;
+    // D-83: "todos" soma a cada recurso ("maistudo").
+    const alvos =
+      recurso === 'todos' ? dados.recursos : dados.recursos.filter((x) => x.id === recurso);
+    for (const r of alvos) estoque[r.id] += param('macete_quantidade');
   },
 };

@@ -30,6 +30,7 @@ import { ALTURA_HOVER_M, altitudeDrone, statsMovel } from './stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from './superficie';
 import { multVisao } from '../cenario/tempestade';
 import { multEnDrone } from '../cenario/modificadores';
+import { emGuerra } from '../relacoes/temperamento';
 
 type Locomocao = ComponentMap['locomotion'];
 
@@ -124,7 +125,8 @@ function inimigoVisivel(ctx: SystemContext, id: EntityId): boolean {
   const d = direcaoDe(getComponent(state, id, 'position')!);
   const visao = statsMovel(getComponent(state, id, 'unit')!.tipo).visao_m * multVisao(state);
   return entitiesWith(state, 'owner', 'position').some((outro) => {
-    if (getComponent(state, outro, 'owner')!.nacao === dono) return false;
+    // CMB-29: só nações em guerra fazem o drone decolar sozinho.
+    if (!emGuerra(state, dono, getComponent(state, outro, 'owner')!.nacao)) return false;
     return distanciaM(ctx, d, direcaoDe(getComponent(state, outro, 'position')!)) <= visao;
   });
 }

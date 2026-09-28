@@ -51,7 +51,7 @@ export function paraOMundo(local: Vector3, foco: Vec3, norte: Vec3): Vector3 {
 
 const DISTANCIA_CEU = 4000;
 
-export function estrelas(): Points {
+export function estrelas(): Points<BufferGeometry, PointsMaterial> {
   const quantidade = 5000;
   const posicoes = new Float32Array(quantidade * 3);
   const cores = new Float32Array(quantidade * 3);
@@ -128,6 +128,8 @@ export interface Ceu {
   objeto: Group;
   /** CEN-03: força da tempestade de poeira (0 a 1) no céu. */
   clima(forca: number): void;
+  /** CTL-16 (D-83): 0 no chão, 1 no fim do zoom: o céu dá lugar ao espaço estrelado. */
+  espaco(t: number): void;
   /** Direção (mundo) para o Sol no ponto focal atual. */
   sol: Vector3;
   /** Direção (mundo) para a Terra no ponto focal atual. */
@@ -162,6 +164,7 @@ function cupula(
         uHalo: { value: sol?.halo.clone() ?? new Color(1, 1, 1) },
         uPoeira: { value: poeira?.clone() ?? new Color(0, 0, 0) },
         uForca: { value: 0 },
+        uEspaco: { value: 0 },
       },
       vertexShader: `varying vec3 vDir;
         void main() {
@@ -170,7 +173,7 @@ function cupula(
         }`,
       fragmentShader: `uniform vec3 uCeu; uniform vec3 uHorizonte; uniform vec3 uCima;
         uniform vec3 uSol; uniform float uTemSol; uniform vec3 uCorSol; uniform vec3 uHalo;
-        uniform vec3 uPoeira; uniform float uForca; varying vec3 vDir;
+        uniform vec3 uPoeira; uniform float uForca; uniform float uEspaco; varying vec3 vDir;
         void main() {
           vec3 dir = normalize(vDir);
           float h = clamp(dot(dir, uCima), 0.0, 1.0);
@@ -182,10 +185,12 @@ function cupula(
             cor = mix(cor, uCorSol, smoothstep(0.9993, 0.9997, c) * (1.0 - 0.8 * uForca));
           }
           cor = mix(cor, uPoeira, uForca * 0.75);
-          gl_FragColor = vec4(cor, 1.0);
+          // CTL-16 (D-83): na visão planetária o céu some e fica o espaço.
+          gl_FragColor = vec4(cor, 1.0 - uEspaco);
         }`,
       side: BackSide,
       depthWrite: false,
+      transparent: true,
     }),
   );
 }
@@ -257,7 +262,16 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   const objeto = new Group();
   objeto.name = 'ceu';
   const astro = ambientacao.terraNoCeu ? terra() : null;
-  if (ambientacao.estrelas) objeto.add(estrelas());
+  // Com céu (atmosfera), as estrelas só aparecem ao afastar (CTL-16).
+  const pontos = ambientacao.estrelas || ambientacao.ceu ? estrelas() : null;
+  if (pontos) {
+    if (!ambientacao.estrelas) {
+      pontos.material.transparent = true;
+      pontos.material.opacity = 0;
+      pontos.visible = false;
+    }
+    objeto.add(pontos);
+  }
   if (astro) objeto.add(astro);
   const domo =
     ambientacao.ceu && ambientacao.horizonte
@@ -281,6 +295,14 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
     terra: DIRECAO_TERRA.clone(),
     clima(forca) {
       if (domo) domo.material.uniforms.uForca!.value = forca;
+    },
+    espaco(t) {
+      if (domo) domo.material.uniforms.uEspaco!.value = t;
+      if (fundo) fundo.visible = t < 0.99;
+      if (pontos && !ambientacao.estrelas) {
+        pontos.visible = t > 0.01;
+        pontos.material.opacity = t;
+      }
     },
     atualizar(foco, norte, pontoFocal, olho) {
       ceu.sol.copy(paraOMundo(ambientacao.sol, foco, norte));

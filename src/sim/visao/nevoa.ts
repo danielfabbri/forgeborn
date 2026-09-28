@@ -82,7 +82,13 @@ function visaoBase(state: SimState, id: EntityId): number {
     return statsMovel(unidade.tipo).visao_m;
   }
   const estrutura = getComponent(state, id, 'structure');
-  if (estrutura && !getComponent(state, id, 'obra')) return statsEstrutura(estrutura.tipo).visao_m;
+  if (estrutura && !getComponent(state, id, 'obra')) {
+    const stats = statsEstrutura(estrutura.tipo);
+    // UNI-14 (D-83): estrutura com manutenção, sem energia, não enxerga.
+    if (stats.manutencao_en_s > 0 && (getComponent(state, id, 'consumidor')?.atendido ?? 1) <= 0)
+      return 0;
+    return stats.visao_m;
+  }
   return 0;
 }
 

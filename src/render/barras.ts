@@ -39,8 +39,10 @@ export class BarrasRender {
 attribute float aFrac;
 attribute float aLinha;
 attribute vec3 aCor;
+attribute float aAlfa;
 uniform float uPixel;
 varying vec3 vCor;
+varying float vAlfa;
 void main() {
   vec4 centro = modelViewMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
   float px = -centro.z * uPixel;
@@ -48,11 +50,13 @@ void main() {
   float y = position.y * ${ALTURA_PX.toFixed(1)} - aLinha * ${(ALTURA_PX + ESPACO_PX).toFixed(1)};
   centro.xy += vec2(x, y) * px;
   vCor = aCor;
+  vAlfa = aAlfa;
   gl_Position = projectionMatrix * centro;
 }`,
     fragmentShader: `
 varying vec3 vCor;
-void main() { gl_FragColor = vec4(vCor, 0.92); }`,
+varying float vAlfa;
+void main() { gl_FragColor = vec4(vCor, 0.92 * vAlfa); }`,
     transparent: true,
     depthTest: false,
     depthWrite: false,
@@ -61,30 +65,39 @@ void main() { gl_FragColor = vec4(vCor, 0.92); }`,
   private frac: InstancedBufferAttribute;
   private linha: InstancedBufferAttribute;
   private cor: InstancedBufferAttribute;
+  private alfa!: InstancedBufferAttribute;
   private readonly matriz = new Matrix4();
 
   constructor(private readonly scene: Scene) {
-    [this.malha, this.frac, this.linha, this.cor] = this.criar(256);
+    [this.malha, this.frac, this.linha, this.cor, this.alfa] = this.criar(256);
   }
 
   private criar(
     capacidade: number,
-  ): [InstancedMesh, InstancedBufferAttribute, InstancedBufferAttribute, InstancedBufferAttribute] {
+  ): [
+    InstancedMesh,
+    InstancedBufferAttribute,
+    InstancedBufferAttribute,
+    InstancedBufferAttribute,
+    InstancedBufferAttribute,
+  ] {
     const geometria = new PlaneGeometry(1, 1);
     const frac = new InstancedBufferAttribute(new Float32Array(capacidade), 1);
     const linha = new InstancedBufferAttribute(new Float32Array(capacidade), 1);
     const cor = new InstancedBufferAttribute(new Float32Array(capacidade * 3), 3);
-    for (const a of [frac, linha, cor]) a.setUsage(DynamicDrawUsage);
+    const alfa = new InstancedBufferAttribute(new Float32Array(capacidade), 1);
+    for (const a of [frac, linha, cor, alfa]) a.setUsage(DynamicDrawUsage);
     geometria.setAttribute('aFrac', frac);
     geometria.setAttribute('aLinha', linha);
     geometria.setAttribute('aCor', cor);
+    geometria.setAttribute('aAlfa', alfa);
     const malha = new InstancedMesh(geometria, this.material, capacidade);
     malha.instanceMatrix.setUsage(DynamicDrawUsage);
     malha.frustumCulled = false;
     malha.renderOrder = 10;
     malha.count = 0;
     this.scene.add(malha);
-    return [malha, frac, linha, cor];
+    return [malha, frac, linha, cor, alfa];
   }
 
   /** `pixel`: metros por pixel a 1 m da câmera (2·tan(fov/2) ÷ altura do viewport). */
@@ -97,7 +110,7 @@ void main() { gl_FragColor = vec4(vCor, 0.92); }`,
       this.scene.remove(this.malha);
       this.malha.geometry.dispose();
       this.malha.dispose();
-      [this.malha, this.frac, this.linha, this.cor] = this.criar(capacidade);
+      [this.malha, this.frac, this.linha, this.cor, this.alfa] = this.criar(capacidade);
     }
     let k = 0;
     const barra = (c: CorpoComBarras, linha: number, fracao: number, cor: number[]) => {
@@ -107,6 +120,7 @@ void main() { gl_FragColor = vec4(vCor, 0.92); }`,
       this.frac.setX(k, fracao);
       this.linha.setX(k, linha);
       this.cor.setXYZ(k, cor[0]!, cor[1]!, cor[2]!);
+      this.alfa.setX(k, c.barras.opacidade);
       k++;
     };
     // Fundos antes dos preenchimentos: sem teste de profundidade, vale a ordem das instâncias.
@@ -123,5 +137,6 @@ void main() { gl_FragColor = vec4(vCor, 0.92); }`,
     this.frac.needsUpdate = true;
     this.linha.needsUpdate = true;
     this.cor.needsUpdate = true;
+    this.alfa.needsUpdate = true;
   }
 }

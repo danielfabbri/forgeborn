@@ -8,7 +8,7 @@
  * (`ia_ferido_pct`); 3 kite (`ia_kite_pct`).
  */
 import type { Ponto } from '../core/components';
-import { getComponent } from '../core/entities';
+import { entitiesWith, getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import type { EntityId, NacaoId } from '../core/types';
 import { dados, type EstruturasId, param } from '../data';
@@ -22,6 +22,7 @@ import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
 import { comandar, dificuldade, maisProximo, proprios, temTraco, vrDe } from './base';
 import type { Quadro } from './quadro';
 import { GERADOR_LUA } from '../map/lunar';
+import { emGuerra } from '../relacoes/temperamento';
 
 const pos = (ctx: SystemContext, id: EntityId): Ponto =>
   direcaoDe(getComponent(ctx.state, id, 'position')!);
@@ -95,25 +96,56 @@ function enviar(
   comandar(ctx, q.nacao, tipo, { ids: precisam, x: ponto[0], y: ponto[1], z: ponto[2] });
 }
 
-/** Nação-alvo (IA-04): a conhecida mais próxima; na Brutal, a mais fraca (menos VR conhecido). */
+/**
+ * Nação-alvo. IA-04: entre as nações em guerra com a IA, a conhecida mais próxima (na Brutal, a
+ * mais fraca, com menos estruturas conhecidas). IA-12 (D-82), sem guerra: provocação — Fácil
+ * nunca; Normal a mais fraca, só se ela tiver menos estruturas que a própria IA; Difícil a mais
+ * próxima; Brutal a mais fraca.
+ */
 function escolherAlvo(ctx: SystemContext, q: Quadro): { nacao: NacaoId; ponto: Ponto } | null {
+  const { state } = ctx;
   const porNacao = new Map<NacaoId, Array<{ d: Ponto; tipo: string }>>();
   for (const c of Object.values(q.ia.conhecidas)) {
-    if (ctx.state.placar[c.nacao]?.eliminada) continue;
+    if (state.placar[c.nacao]?.eliminada) continue;
     const lista = porNacao.get(c.nacao) ?? [];
     lista.push(c);
     porNacao.set(c.nacao, lista);
   }
   if (porNacao.size === 0) return null;
-  const nacoes = [...porNacao.keys()].sort();
   const distancia = (n: NacaoId) =>
     Math.min(...porNacao.get(n)!.map((c) => distanciaM(ctx, q.base, c.d)));
   const forca = (n: NacaoId) => porNacao.get(n)!.length;
-  const nacao =
-    q.nivel === 'brutal'
-      ? nacoes.sort((a, b) => forca(a) - forca(b) || distancia(a) - distancia(b))[0]!
-      : nacoes.sort((a, b) => distancia(a) - distancia(b))[0]!;
-  return { nacao, ponto: escolherAlvoDaNacao(ctx, q, nacao)! };
+  const maisProxima = (lista: NacaoId[]) =>
+    [...lista].sort((a, b) => distancia(a) - distancia(b) || (a < b ? -1 : 1))[0]!;
+  const maisFraca = (lista: NacaoId[]) =>
+    [...lista].sort(
+      (a, b) => forca(a) - forca(b) || distancia(a) - distancia(b) || (a < b ? -1 : 1),
+    )[0]!;
+  const nacoes = [...porNacao.keys()].sort();
+  const emGuerraCom = nacoes.filter((n) => emGuerra(state, q.nacao, n));
+  let nacao: NacaoId | null = null;
+  if (emGuerraCom.length > 0) {
+    nacao = q.nivel === 'brutal' ? maisFraca(emGuerraCom) : maisProxima(emGuerraCom);
+  } else if (q.nivel === 'normal') {
+    const alvo = maisFraca(nacoes);
+    const minhas = entitiesWith(state, 'structure', 'owner').filter(
+      (id) => getComponent(state, id, 'owner')!.nacao === q.nacao,
+    ).length;
+    if (forca(alvo) < minhas) nacao = alvo;
+  } else if (q.nivel === 'dificil') {
+    nacao = maisProxima(nacoes);
+  } else if (q.nivel === 'brutal') {
+    nacao = maisFraca(nacoes);
+  }
+  if (nacao === null) return null;
+  const ponto = escolherAlvoDaNacao(ctx, q, nacao);
+  return ponto ? { nacao, ponto } : null;
+}
+
+/** Sem alvo conhecido, a IA pode sair procurando (entrando em domínios alheios)? */
+function podeBuscar(ctx: SystemContext, q: Quadro): boolean {
+  if (q.nivel === 'dificil' || q.nivel === 'brutal') return true;
+  return ctx.state.nacoes.some((n) => emGuerra(ctx.state, q.nacao, n));
 }
 
 /** VR inimigo visível perto do exército (para decidir o recuo). */
@@ -291,8 +323,8 @@ export function decidirMilitar(ctx: SystemContext, q: Quadro): void {
       enviar(ctx, q, prontos, alvo.ponto, 'atacar_mover');
       return;
     }
-    // Ninguém conhecido: o exército vai procurar pela frente (zona de pouso alheia).
-    const busca = frente(ctx, q);
+    // Ninguém conhecido: o exército vai procurar pela frente (zona de pouso alheia), se pode.
+    const busca = podeBuscar(ctx, q) ? frente(ctx, q) : null;
     if (busca) {
       enviar(ctx, q, prontos, busca, 'atacar_mover');
       return;

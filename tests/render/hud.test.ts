@@ -87,7 +87,7 @@ describe('T-081 — UI-03: painel de seleção', () => {
 });
 
 describe('T-085 — UI-07: barras sobre as unidades', () => {
-  it('UI-07 (D-61): no automático, só as selecionadas (mesmo danificadas ou com bateria Baixa); "sempre" mostra todas', () => {
+  it('UI-07 (D-83): no automático, as selecionadas cheias e as demais apagadas; "sempre" mostra todas cheias', () => {
     const sim = partida(mundoLiso());
     const [a, b, c] = criar(sim, [
       { unidade: 'hover_ex1', x: 0, z: 0 },
@@ -97,22 +97,24 @@ describe('T-085 — UI-07: barras sobre as unidades', () => {
     getComponent(sim.state, b!, 'vida')!.hp -= 10;
     const bat = getComponent(sim.state, c!, 'bateria')!;
     bat.en = (bat.max * param('limiar_bateria_baixa_pct')) / 100;
-    expect(barrasDe(sim.state, a!, false, false)).toBeNull();
-    expect(barrasDe(sim.state, a!, true, false)).toEqual({ hp: 1, en: 1 });
-    expect(barrasDe(sim.state, b!, false, false)).toBeNull();
-    expect(barrasDe(sim.state, c!, false, false)).toBeNull();
+    // D-83: as não selecionadas aparecem apagadas; as selecionadas, cheias.
+    const apagada = param('barras_opacidade_nao_selecionados_pct') / 100;
+    expect(barrasDe(sim.state, a!, false, false)).toEqual({ hp: 1, en: 1, opacidade: apagada });
+    expect(barrasDe(sim.state, a!, true, false)).toEqual({ hp: 1, en: 1, opacidade: 1 });
+    expect(barrasDe(sim.state, b!, false, false)?.opacidade).toBe(apagada);
+    expect(barrasDe(sim.state, c!, false, false)?.opacidade).toBe(apagada);
     expect(barrasDe(sim.state, b!, true, false)?.hp).toBeLessThan(1);
     expect(barrasDe(sim.state, c!, true, false)?.en).toBeCloseTo(
       param('limiar_bateria_baixa_pct') / 100,
       9,
     );
-    expect(barrasDe(sim.state, a!, false, true)).toEqual({ hp: 1, en: 1 });
+    expect(barrasDe(sim.state, a!, false, true)).toEqual({ hp: 1, en: 1, opacidade: 1 });
   });
 
   it('UI-07: estruturas só têm a barra de HP', () => {
     const sim = partida(mundoLiso());
     const [nave] = criar(sim, [{ estrutura: 'ship', x: 0, z: 0 }]);
-    expect(barrasDe(sim.state, nave!, true, false)).toEqual({ hp: 1, en: null });
+    expect(barrasDe(sim.state, nave!, true, false)).toEqual({ hp: 1, en: null, opacidade: 1 });
   });
 
   it('UI-07: HP verde cheio, amarelo na metade, vermelho vazio', () => {

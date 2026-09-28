@@ -56,14 +56,7 @@ export function cabeNaFila(ctx: SystemContext, produtor: EntityId, item: CustosI
   // CAM-02: na campanha, item não liberado é recusado.
   if (!liberado(ctx.state, item)) return false;
   const fila = getComponent(ctx.state, produtor, 'producer')!.fila;
-  // UNI-04 (D-55): um satélite por base de cada vez (nem vivo nem outro na fila).
-  if (item === 'satellite') {
-    if (fila.some((i) => i.item === 'satellite')) return false;
-    const temSatelite = entitiesWith(ctx.state, 'satelite').some(
-      (id) => getComponent(ctx.state, id, 'satelite')!.base === produtor,
-    );
-    if (temSatelite) return false;
-  }
+  // UNI-04 (D-83): a base imprime quantos satélites a nação quiser, pela fila normal.
   // UNI-10 (D-63): a Base de Lança-Mísseis guarda até `misseis_max_base`, prontos e na fila.
   if (tipo === 'missile_silo') {
     const prontos = getComponent(ctx.state, produtor, 'lancador')?.prontos.length ?? 0;

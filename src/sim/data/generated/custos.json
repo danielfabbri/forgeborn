@@ -403,13 +403,13 @@
     "produzido_por": [
       "printer"
     ],
-    "fe": 15,
-    "si": 10,
-    "cu": 25,
+    "fe": 8,
+    "si": 5,
+    "cu": 12,
     "li": 0,
     "ti": 0,
     "u": 0,
-    "vr": 62.5,
+    "vr": 31,
     "ref_x": null,
     "en_impressao": 20,
     "tempo_s": 9

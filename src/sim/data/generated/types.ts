@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.5.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.6.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -381,6 +381,7 @@ export type ParametrosChave =
   | 'destroco_nave_ti'
   | 'cabo_alcance_m'
   | 'cabo_alcance_central_m'
+  | 'cabo_saidas_central'
   | 'limiar_bateria_baixa_pct'
   | 'modo_reserva_vel_pct'
   | 'auto_recarga_trabalhador_pct'

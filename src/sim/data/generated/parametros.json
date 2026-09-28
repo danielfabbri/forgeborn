@@ -288,6 +288,12 @@
     "descricao": "Idem, quando uma ponta é a Nave ou uma Central de Distribuição"
   },
   {
+    "chave": "cabo_saidas_central",
+    "valor": 4,
+    "unidade": "cabos",
+    "descricao": "Saídas de cabo da Nave e da Central de Distribuição; as outras estruturas têm 1 (ENE-26)"
+  },
+  {
     "chave": "limiar_bateria_baixa_pct",
     "valor": 20,
     "unidade": "%",

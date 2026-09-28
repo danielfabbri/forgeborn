@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.5.0 — rascunho para aprovação |
+| Versão do SPEC | 1.6.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -437,8 +437,8 @@ flowchart LR
 ### 6.2.1 Cabos e Central de Distribuição (D-85)
 
 - **ENE-25** — **Rede** = conjunto de estruturas prontas ligadas entre si por cabos (a Nave é uma estrutura como as outras). ENE-01 a ENE-05 valem para cada rede separadamente. Estrutura sem cabo é uma rede só dela: não recebe nem entrega energia a outras. Uma nação pode ter várias redes independentes (por exemplo, uma expansão distante com as próprias Usinas Solares). Os cabos não têm limite de carga.
-- **ENE-26** — **Plugar.** Com uma estrutura própria pronta selecionada, o clique direito em outra estrutura própria pronta puxa um cabo entre as duas (Comando "ligar_cabo"), se a distância entre as bordas das pegadas for no máximo `cabo_alcance_m`, ou `cabo_alcance_central_m` quando uma das pontas for a Nave ou uma Central de Distribuição. Uma estrutura pode ter vários cabos (malha). O botão **Desplugar** do cartão remove todos os cabos da estrutura selecionada.
-- **ENE-27** — Os cabos correm finos e pretos pelo chão (não há fios aéreos) e não são alvo; um brilho verde claro corre por eles enquanto a rede tem energia (D-86). Um cabo some quando uma das pontas é destruída ou reciclada; o que dependia dele fica em outra rede (ou sem rede).
+- **ENE-26** — **Plugar.** Com uma estrutura própria pronta selecionada, o clique direito em outra estrutura própria pronta puxa um cabo entre as duas (Comando "ligar_cabo"), se a distância entre as bordas das pegadas for no máximo `cabo_alcance_m`, ou `cabo_alcance_central_m` quando uma das pontas for a Nave ou uma Central de Distribuição. **Saídas** (D-87): cada estrutura tem uma única saída de cabo; só a Nave e a Central têm `cabo_saidas_central` saídas, e são elas que bifurcam a rede. Puxar um cabo de uma estrutura de saída única que já está plugada troca o cabo antigo pelo novo (com um aviso curto); se a Nave ou a Central da outra ponta estiver com todas as saídas ocupadas, o cabo é recusado com um aviso. O botão **Desplugar** do cartão remove todos os cabos da estrutura selecionada.
+- **ENE-27** — Os cabos correm finos e pretos pelo chão (não há fios aéreos), num traçado orgânico com pequenas curvas em S (D-87), sem brilho, e não são alvo. Um cabo some quando uma das pontas é destruída ou reciclada; o que dependia dele fica em outra rede (ou sem rede).
 - **ENE-28** — Portas de recarga, disparos pagos pela rede (Torre, Abrigo, Antiaérea, Varredura Orbital), manutenção e impressão da Nave e da Base de Lançamento usam a rede da própria estrutura.
 - **ENE-29** — Estrutura pronta que precisa de energia (gera, guarda, consome ou tem portas) e está sem cabo dispara AL-23 e mostra o ícone de sem rede. O Armazém também precisa de rede (D-86): fora dela não recebe descargas nem dispara do abrigo, e não conta como depósito. Muro e Portão funcionam sem rede.
 
@@ -447,6 +447,7 @@ flowchart LR
 |---|---|---|---|
 | cabo_alcance_m | 30 | m | Distância máxima entre as bordas das pontas de um cabo (ENE-26) |
 | cabo_alcance_central_m | 80 | m | Idem, quando uma ponta é a Nave ou uma Central de Distribuição |
+| cabo_saidas_central | 4 | cabos | Saídas de cabo da Nave e da Central de Distribuição; as outras estruturas têm 1 (ENE-26) |
 
 ### 6.3 Baterias das unidades
 
@@ -613,7 +614,7 @@ flowchart LR
 | aa_battery | Bateria Antiaérea | estrutura | printer | 35 | 14 | 18 | 7 | 7 | 0 | 111 | — | 80 | 18 |
 | mag_tower | Torre Magnética | estrutura | printer | 49 | 21 | 35 | 14 | 11 | 0 | 183,5 | — | 120 | 24 |
 | antenna | Antena | estrutura | printer | 30 | 50 | 30 | 0 | 0 | 0 | 125 | — | 50 | 12 |
-| power_hub | Central de Distribuição | estrutura | printer | 15 | 10 | 25 | 0 | 0 | 0 | 62,5 | — | 20 | 9 |
+| power_hub | Central de Distribuição | estrutura | printer | 8 | 5 | 12 | 0 | 0 | 0 | 31 | — | 20 | 9 |
 | missile_short | Míssil de Curto Alcance | municao | missile_silo | 20 | 0 | 10 | 5 | 0 | 0 | 45 | — | 40 | 12 |
 | missile_long | Míssil de Longo Alcance | municao | missile_silo | 60 | 0 | 30 | 20 | 20 | 5 | 230 | — | 150 | 27 |
 | mine | Mina | municao | hover_minelayer | 6 | 0 | 2 | 1 | 0 | 0 | 11 | — | 20 | 3,6 |
@@ -794,7 +795,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 #### Torre Magnética — `mag_tower`
 - **UNI-13** — Campo eletromagnético de raio `mag_raio_m`. Unidades móveis inimigas no campo ficam mais lentas (até `mag_lentidao_max_pct` no centro) e perdem energia da bateria (até `mag_dreno_max_en_s` no centro); o efeito cai em linha até zero na borda e, em unidades blindadas, vale `mag_fator_blindada_pct`. Vários campos não se somam: vale o mais forte. A torre guarda o que drena até `mag_banco_max_en`; cheia, para de drenar até gastar parte. Ela repassa a até `mag_max_aliados` unidades próprias no campo, as de menor % primeiro, até `mag_repasse_en_s` cada (D-65), e repara até `mag_max_aliados` unidades móveis próprias no campo, as mais feridas primeiro, a `mag_reparo_hp_s` cada (D-72).
 - **UNI-14** — **Antena** (`antenna`, D-83): estrutura de observação de alta visibilidade: enxerga `visao_m` em volta (a maior visão fixa do jogo), não detecta furtivos, não tem arma e consome `manutencao_en_s` da rede; sem energia, não enxerga.
-- **UNI-15** — **Central de Distribuição** (`power_hub`, D-85): estrutura barata e frágil, uma caixa baixa de junção no chão (D-86), que só serve de ponto da rede: alcança `cabo_alcance_central_m` com seus cabos, para levar a rede a outras áreas. Não gera, não guarda nem gasta energia.
+- **UNI-15** — **Central de Distribuição** (`power_hub`, D-85): estrutura barata e frágil, uma caixa baixa de junção no chão (D-86), que só serve de ponto da rede: tem `cabo_saidas_central` saídas para bifurcar a rede (D-87) e alcança `cabo_alcance_central_m` com seus cabos, para levar a rede a outras áreas. Não gera, não guarda nem gasta energia.
 - **Visual:** coluna de bobinas com anéis que brilham enquanto o campo age.
 
 ### 8.6 Autonomia padrão (resumo)
@@ -1097,7 +1098,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 - **IA-10** — Mísseis: a IA mantém `ia_misseis_curtos` curtos prontos e, do Normal para cima, `ia_misseis_longos` longos. Curtos defendem: são lançados contra inimigos visíveis a até `ia_raio_defesa_m` de uma estrutura própria. Do Normal para cima, um longo é lançado contra uma estrutura inimiga conhecida (vista ou fantasma) no alcance, no máximo um a cada `ia_missil_longo_intervalo_s` (D-66).
 - **IA-11** — Temperamento da IA (D-81): avisada (REG-26), recolhe os corpos do domínio alheio antes do prazo, menos na Brutal e na onda de provocação (IA-12), que ficam. A IA escolhe expansões e rotas de batedor fora do domínio de nações pacíficas com ela, menos na Brutal.
 - **IA-12** — Provocação (D-82): sem nenhuma guerra, quando a onda estaria pronta (IA-04), a IA escolhe um alvo e manda a onda para o domínio dele, ignorando o aviso; a guerra começa pelo prazo de REG-26. Fácil nunca provoca. Normal só provoca a nação conhecida mais fraca (menos estruturas conhecidas) e só se ela tiver menos estruturas que a própria IA. Difícil provoca a mais próxima; Brutal, a mais fraca.
-- **IA-13** — Cabos da IA (D-85): a IA pluga cada estrutura pronta que precisa de energia (e as Centrais) na estrutura ligada mais próxima da rede da Nave ao alcance, e só posiciona essas estruturas onde algum ponto dessa rede alcança. Para uma expansão fora do alcance, ela primeiro planta uma Central de Distribuição no caminho (D-86).
+- **IA-13** — Cabos da IA (D-85, D-87): a IA pluga cada estrutura pronta que precisa de energia (e as Centrais) na Nave ou Central mais próxima da rede da Nave ao alcance e com saída livre; se não há saída livre ao alcance, ela planta uma Central ao lado da estrutura. Ela só posiciona essas estruturas onde algum ponto dessa rede alcança. Para uma expansão fora do alcance, ela primeiro planta uma Central de Distribuição no caminho (D-86).
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1691,6 +1692,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-84 | Alertas de prioridade baixa (impressão concluída, jazida esgotada, hovers ociosos, mina detonada) ficam só na pilha, sem voz nem bipe. | Pedido do produto: "os áudios ainda estão disparando em momentos estranhos"; numa partida de 25 min, a impressão concluída sozinha falou 76 vezes. | Aprovada |
 | D-85 | Rede elétrica por cabos: estruturas ligadas por cabos formam redes independentes (ENE-25 a ENE-29), plugadas à mão com o clique direito, alcance de 30 m (80 m com a Nave ou a Central de Distribuição, UNI-15), cabos visíveis no chão e fora de alcance de ataque; a Central é barata e frágil, sem limite de carga. A Usina Nuclear fica sempre ligada. | Pedido do produto: "fazer uma unidade fixa de central de distribuição… plugar uma unidade fixa à rede de energia… com o tempo, todas as construções deverão compor uma malha… a usina nuclear sempre fique ligada"; respostas: fora da rede não recebe nem entrega; plugar manual; 30/80 m; cabos não são alvo, a Central sim; várias redes independentes; Central barata e frágil; HUD com a rede da Nave e a da seleção. | Aprovada |
 | D-86 | Minimapa mapa-múndi fixo centrado na zona de pouso do jogador, com o escuro não preto; pedras neutras (CEN-17: 6 a cada 10.000 m², raio de 1,5 a 4 m); luzes piscando nas estruturas ligadas (ART-13); o Armazém precisa de rede; cabos pretos com brilho verde claro quando a rede tem energia; Central como caixa baixa, sem fios aéreos. | Pedido do produto; respostas: "o silo" é o Armazém, pedras médias espalhadas, a zona de pouso no meio do minimapa. | Aprovada |
+| D-87 | Ligação 1:1 da rede: cada estrutura tem uma única saída de cabo; a Nave e a Central de Distribuição têm 4 e bifurcam a rede (ENE-26, UNI-15); puxar um cabo de uma estrutura já plugada troca o cabo, e Nave ou Central cheia recusa; a Central cai à metade do custo (8 Fe, 5 Si, 12 Cu). Cabos sem brilho, com traçado orgânico em S (ENE-27). | Pedido do produto: "fios sem o brilho verde… mais orgânicos… em s"; "se você constrói um painel solar, ele só pode ter uma saída… você precisa do hub no meio pra bifurcar"; respostas: 4 saídas na Central, a Nave como uma Central, metade do custo, trocar o cabo. | Aprovada |
 
 ---
 
@@ -1793,3 +1795,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.3.2 | 2026-09-27 | INV-02: 30–45 s (era 45–60 s), consequência do ritmo mais rápido de D-83 (a Impressora sai aos 38 s). |
 | 1.4.0 | 2026-09-27 | D-85: §6.2.1 (ENE-25 a ENE-29, `cabo_alcance_m`, `cabo_alcance_central_m`), §6.1, ENE-01, ENE-02, ENE-06 (nuclear sempre ligada), ENE-22, UNI-15 e `power_hub`, IA-13, CAM-07 passo 4, AL-23, atalho D, Missão 0 libera a Central. |
 | 1.5.0 | 2026-09-28 | D-86: CTL-03 (mapa-múndi fixo), CEN-17 (`pedras_por_10k_m2`, `pedra_raio_min_m`, `pedra_raio_max_m`), MOV-04, PRD-10, ENE-27, ENE-29 (Armazém na rede), UNI-15, IA-13, ART-13. |
+| 1.6.0 | 2026-09-28 | D-87: ENE-26 (saídas, `cabo_saidas_central`), ENE-27 (cabo orgânico sem brilho), UNI-15 e custo de `power_hub`, IA-13. |

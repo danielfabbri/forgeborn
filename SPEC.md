@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.7.1 — rascunho para aprovação |
+| Versão do SPEC | 1.8.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -300,38 +300,50 @@ flowchart LR
 <!-- dados:recursos -->
 | id | nome | vr | taxa_mineracao_u_s | raridade | cor | usos |
 |---|---|---|---|---|---|---|
-| fe | Ferro | 1 | 1,5 | comum | #B5562F | Chassis, blindagem, estruturas, esteiras |
+| fe | Ferro | 1 | 1,5 | comum | #E0661C | Chassis, blindagem, estruturas, esteiras |
 | si | Silício | 1 | 1,5 | comum | #9FB3C8 | Sensores, computadores, comunicação, painéis solares |
-| cu | Cobre | 1,5 | 1,2 | médio | #D9822B | Motores, cabos, lasers |
+| cu | Cobre | 1,5 | 1,2 | médio | #E8C02A | Motores, cabos, lasers |
 | li | Lítio | 2 | 1,05 | médio | #E07BB5 | Baterias, capacitores |
 | ti | Titânio | 3 | 0,75 | raro | #5FD0E0 | Blindagem leve, armas, peças de alta resistência |
 | u | Urânio | 5 | 0,525 | muito raro | #C6F432 | Combustível nuclear, gerador do satélite |
 
 ### 5.2 Jazidas
 
-- **ECO-04** — Recursos vêm de **jazidas**: afloramentos cristalinos na cor do recurso. Cada jazida tem tipo, quantidade restante e `slots_por_jazida` vagas de mineração simultânea.
+- **ECO-04** — Recursos vêm de **jazidas**: rochas como as pedras neutras (CEN-17), com veios e cristais na cor do recurso, para se reconhecer de longe que não são pedras (D-89). Cada jazida tem tipo, quantidade restante e `slots_por_jazida` vagas de mineração simultânea.
 - **ECO-05** — O tamanho visual e o raio de colisão (MOV-04) da jazida acompanham a quantidade restante: o raio vai linearmente de `raio_jazida_max_m` (cheia) a `raio_jazida_min_m` (quase vazia), pela fração restante da quantidade inicial. Em 0 ela desaparece e dispara AL-07 (D-27).
 - **ECO-06** — Hover sem vaga livre procura outra jazida do mesmo tipo a até `raio_busca_jazida_m`. Se não houver, espera na fila da jazida.
-- **ECO-07** — A distribuição de jazidas por zona segue `dados:jazidas`. As quantidades são valores-base, multiplicados pelo perfil do cenário (§14.1).
+- **ECO-07** — A distribuição de jazidas por zona segue `dados:jazidas`. As quantidades são valores-base, multiplicados pelo perfil do cenário (§14.1). Duas jazidas quaisquer ficam a pelo menos `jazida_espacamento_min_m` uma da outra, para caber uma base em volta de cada uma (D-89).
 - **ECO-08** — Zonas contestadas e centrais ficam nos pontos médios entre zonas de pouso (CEN-07). **N = 2:** no equador entre as duas zonas, as 2 zonas contestadas ficam nos flancos (a 90° de cada lado) e os 2 pontos centrais nos outros dois pontos do equador. **N = 4:** dos 6 pontos médios entre pares de zonas, 4 são contestados, de modo que cada zona tem 2 contestadas vizinhas, e os 2 restantes são centrais, cada um compartilhado por um par de zonas. As jazidas `por_mapa` da zona central se dividem igualmente entre os 2 pontos centrais. Num ponto médio que a simetria leva nele mesmo (trocando as duas zonas vizinhas), as jazidas vêm em pares espelhados: um recurso com número ímpar de jazidas ali ganha uma jazida a mais, e a quantidade do recurso se divide igualmente entre elas (ex.: 1 × 1200 u vira 2 × 600 u).
 
 <!-- dados:jazidas -->
 | zona | recurso | jazidas | quantidade_u | dist_min_m | dist_max_m | escopo |
 |---|---|---|---|---|---|---|
-| inicial | fe | 2 | 1500 | 20 | 45 | por_jogador |
-| inicial | si | 2 | 1200 | 20 | 45 | por_jogador |
-| inicial | cu | 1 | 2000 | 25 | 45 | por_jogador |
-| inicial | li | 1 | 600 | 30 | 45 | por_jogador |
-| expansao | fe | 1 | 1500 | 90 | 130 | por_jogador |
-| expansao | si | 1 | 1200 | 90 | 130 | por_jogador |
-| expansao | cu | 1 | 1500 | 90 | 130 | por_jogador |
-| expansao | li | 1 | 800 | 90 | 130 | por_jogador |
-| expansao | ti | 1 | 800 | 100 | 130 | por_jogador |
-| contestada | ti | 2 | 1000 | 120 | — | por_zona |
-| contestada | li | 1 | 1200 | 120 | — | por_zona |
-| contestada | u | 1 | 300 | 120 | — | por_zona |
-| central | ti | 2 | 1200 | — | — | por_mapa |
-| central | u | 2 | 500 | — | — | por_mapa |
+| inicial | fe | 2 | 3000 | 20 | 45 | por_jogador |
+| inicial | si | 2 | 2400 | 20 | 45 | por_jogador |
+| inicial | cu | 1 | 4000 | 25 | 45 | por_jogador |
+| inicial | li | 1 | 1200 | 30 | 45 | por_jogador |
+| expansao | fe | 1 | 3000 | 90 | 130 | por_jogador |
+| expansao | si | 1 | 2400 | 90 | 130 | por_jogador |
+| expansao | cu | 1 | 3000 | 90 | 130 | por_jogador |
+| expansao | li | 1 | 1600 | 90 | 130 | por_jogador |
+| expansao | ti | 1 | 1600 | 100 | 130 | por_jogador |
+| contestada | ti | 2 | 2000 | 120 | — | por_zona |
+| contestada | li | 1 | 2400 | 120 | — | por_zona |
+| contestada | u | 1 | 600 | 120 | — | por_zona |
+| central | ti | 2 | 2400 | — | — | por_mapa |
+| central | u | 2 | 1000 | — | — | por_mapa |
+| espalhada | fe | 1 | 3000 | 150 | — | por_area |
+| espalhada | si | 1 | 2400 | 150 | — | por_area |
+| espalhada | cu | 1 | 3000 | 150 | — | por_area |
+| espalhada | li | 1 | 1600 | 150 | — | por_area |
+
+- **ECO-30** — **Jazidas espalhadas** (D-89): além das zonas acima, `jazidas_espalhadas_por_10k_m2` jazidas a cada 10.000 m² da superfície, espalhadas pelo planeta pela simetria de CEN-06, a pelo menos `dist_min_m` de toda zona de pouso e fora dos pontos médios (ECO-08). Nas linhas `por_area`, a coluna `jazidas` é o peso do recurso: os recursos se alternam na ordem da tabela, cada um tantas vezes quanto o seu peso.
+
+<!-- dados:parametros -->
+| chave | valor | unidade | descricao |
+|---|---|---|---|
+| jazida_espacamento_min_m | 25 | m | Distância mínima entre duas jazidas (ECO-07) |
+| jazidas_espalhadas_por_10k_m2 | 0,5 | jazidas | Densidade das jazidas espalhadas (ECO-30) |
 
 ### 5.3 Ciclo de coleta
 
@@ -1695,6 +1707,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-86 | Minimapa mapa-múndi fixo centrado na zona de pouso do jogador, com o escuro não preto; pedras neutras (CEN-17: 6 a cada 10.000 m², raio de 1,5 a 4 m); luzes piscando nas estruturas ligadas (ART-13); o Armazém precisa de rede; cabos pretos com brilho verde claro quando a rede tem energia; Central como caixa baixa, sem fios aéreos. | Pedido do produto; respostas: "o silo" é o Armazém, pedras médias espalhadas, a zona de pouso no meio do minimapa. | Aprovada |
 | D-87 | Ligação 1:1 da rede: cada estrutura tem uma única saída de cabo; a Nave e a Central de Distribuição têm 4 e bifurcam a rede (ENE-26, UNI-15); puxar um cabo de uma estrutura já plugada troca o cabo, e Nave ou Central cheia recusa; a Central cai à metade do custo (8 Fe, 5 Si, 12 Cu). Cabos sem brilho, com traçado orgânico em S (ENE-27). | Pedido do produto: "fios sem o brilho verde… mais orgânicos… em s"; "se você constrói um painel solar, ele só pode ter uma saída… você precisa do hub no meio pra bifurcar"; respostas: 4 saídas na Central, a Nave como uma Central, metade do custo, trocar o cabo. | Aprovada |
 | D-88 | Só unidades móveis invadem domínio (estruturas não saem do lugar), e o domínio de uma unidade não vale dentro da base (domínio de estruturas) de outra nação. No domínio de uma IA, o aviso tem prazo de 30 s e vira guerra; no domínio do jogador, não há guerra automática: AL-22 avisa que uma unidade externa está na base, pede que ela saia e traz o botão Declarar guerra (também no temperamento da barra). A IA só declara guerra ao jogador na provocação (IA-12). | Pedido do produto: "quero aumentar pra 30s"; "o inimigo cria uma unidade de observação… acha a minha base… me pede pra me retirar (o que é impossível) e vira minha inimiga. Isso está errado"; "eu que tenho que chamá-lo de inimigo"; respostas: a onda provocadora declara guerra; botão no aviso e na barra. | Aprovada |
+| D-89 | Jazidas com cara de pedra (rocha com veios e cristais na cor do recurso, ECO-04); Ferro mais laranja (#E0661C) e Cobre mais amarelo (#E8C02A); jazidas a pelo menos 25 m umas das outras (ECO-07); o dobro de recurso em cada jazida (`dados:jazidas`); nova camada de jazidas espalhadas de Fe, Si, Cu e Li pelo planeta, 1 a cada 20.000 m² (ECO-30). | Pedido do produto: "jazidas mais parecidas com as pedras… reconhecer visualmente que não é uma pedra"; "ferro mais laranja e o cobre mais amarelo"; "mais espalhadas"; "2x mais recursos… passe mais tempo ali"; respostas: mínimo de 25 m, "quero mais jazidas pelo cenário", nova camada espalhada, cores recomendadas. | Aprovada |
 
 ---
 
@@ -1800,3 +1813,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.6.0 | 2026-09-28 | D-87: ENE-26 (saídas, `cabo_saidas_central`), ENE-27 (cabo orgânico sem brilho), UNI-15 e custo de `power_hub`, IA-13. |
 | 1.7.0 | 2026-09-28 | D-88: REG-26 (só unidades invadem; sem guerra automática no domínio do jogador), REG-29 (declarar guerra), `ultimato_s` 30, AL-22, IA-12, UI-17. |
 | 1.7.1 | 2026-09-28 | D-88: REG-25 (domínio de unidade não vale dentro da base alheia). |
+| 1.8.0 | 2026-09-28 | D-89: cores de Fe e Cu em `dados:recursos`, ECO-04 (visual), ECO-07 (`jazida_espacamento_min_m`), `dados:jazidas` (quantidades ×2 e zona espalhada), ECO-30 (`jazidas_espalhadas_por_10k_m2`). |

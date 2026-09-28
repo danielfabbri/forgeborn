@@ -90,6 +90,18 @@
     "descricao": "Tempo sem dano e fora dos domínios para a guerra virar paz (REG-28)"
   },
   {
+    "chave": "jazida_espacamento_min_m",
+    "valor": 25,
+    "unidade": "m",
+    "descricao": "Distância mínima entre duas jazidas (ECO-07)"
+  },
+  {
+    "chave": "jazidas_espalhadas_por_10k_m2",
+    "valor": 0.5,
+    "unidade": "jazidas",
+    "descricao": "Densidade das jazidas espalhadas (ECO-30)"
+  },
+  {
     "chave": "valor_x_vr",
     "valor": 10,
     "unidade": "VR",

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v1.7.1 |
+| Derivado de | `SPEC.md` v1.8.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -389,3 +389,5 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: estrutura comum aceita um só cabo (o novo troca o antigo); Nave e Central aceitam `cabo_saidas_central` e recusam além disso; Central com o custo novo; a IA pluga só em Nave ou Central com saída livre e planta Central quando falta; cabos pretos, sem brilho, em curvas suaves.
 - [x] **T-175 — Domínio do jogador sem guerra automática e Declarar guerra** · M · Spec: REG-26, REG-29, AL-22, IA-12, UI-17, D-88 · Dep: T-164 · Feito: 2026-09-28
   - Aceite: estrutura não conta como intrusa; domínio de unidade não vale dentro da base alheia; no domínio de uma IA o prazo é `ultimato_s` e vira guerra; no domínio do jogador não há guerra automática, a IA recolhe as unidades e o jogador recebe AL-22 com Declarar guerra; o Comando "declarar_guerra" abre a guerra; o temperamento da barra também declara; a onda provocadora declara guerra ao jogador no fim do prazo.
+- [ ] **T-176 — Jazidas espalhadas, maiores e com cara de pedra** · M · Spec: ECO-04, ECO-07, ECO-30, D-89 · Dep: T-171
+  - Aceite: quantidades de `dados:jazidas` × perfil; toda jazida a ≥ `jazida_espacamento_min_m` das outras; jazidas espalhadas na densidade de ECO-30, simétricas, longe das zonas de pouso; presets continuam válidos; jazidas desenhadas como rocha com veios e cristais na cor do recurso; Fe e Cu com as cores novas.

@@ -5,7 +5,7 @@
     "vr": 1,
     "taxa_mineracao_u_s": 1.5,
     "raridade": "comum",
-    "cor": "#B5562F",
+    "cor": "#E0661C",
     "usos": "Chassis, blindagem, estruturas, esteiras"
   },
   {
@@ -23,7 +23,7 @@
     "vr": 1.5,
     "taxa_mineracao_u_s": 1.2,
     "raridade": "médio",
-    "cor": "#D9822B",
+    "cor": "#E8C02A",
     "usos": "Motores, cabos, lasers"
   },
   {

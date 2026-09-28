@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v1.6.0 |
+| Derivado de | `SPEC.md` v1.7.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -387,3 +387,5 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: mapa-múndi parado com a zona de pouso no meio; o escuro não é preto; clique e arrasto movem a câmera.
 - [x] **T-174 — Ligação 1:1 e cabos orgânicos** · M · Spec: ENE-26, ENE-27, UNI-15, IA-13, D-87 · Dep: T-172 · Feito: 2026-09-28
   - Aceite: estrutura comum aceita um só cabo (o novo troca o antigo); Nave e Central aceitam `cabo_saidas_central` e recusam além disso; Central com o custo novo; a IA pluga só em Nave ou Central com saída livre e planta Central quando falta; cabos pretos, sem brilho, em curvas suaves.
+- [ ] **T-175 — Domínio do jogador sem guerra automática e Declarar guerra** · M · Spec: REG-26, REG-29, AL-22, IA-12, UI-17, D-88 · Dep: T-164
+  - Aceite: estrutura não conta como intrusa; no domínio de uma IA o prazo é `ultimato_s` e vira guerra; no domínio do jogador não há guerra automática, a IA recolhe as unidades e o jogador recebe AL-22 com Declarar guerra; o Comando "declarar_guerra" abre a guerra; o temperamento da barra também declara; a onda provocadora declara guerra ao jogador no fim do prazo.

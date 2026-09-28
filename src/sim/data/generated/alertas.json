@@ -148,8 +148,8 @@
   },
   {
     "id": "AL-22",
-    "texto": "{nacao} entrou no meu domínio.",
-    "gatilho": "Corpo alheio no domínio do jogador (REG-26)",
+    "texto": "Uma unidade de {nacao} está acessando a nossa base. Pedi que se retire.",
+    "gatilho": "Unidade alheia no domínio do jogador (REG-26); traz o botão Declarar guerra (REG-29)",
     "prioridade": "media",
     "cooldown_s": 20
   },

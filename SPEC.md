@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.6.0 — rascunho para aprovação |
+| Versão do SPEC | 1.7.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -274,16 +274,17 @@ flowchart LR
 
 - **REG-24** — **Temperamento.** Cada par de nações tem um temperamento: *pacífico*, *alerta* ou *inimigo*. Toda partida começa com todos pacíficos. *Em guerra* quer dizer inimigo; a guerra vale para os dois lados do par.
 - **REG-25** — **Domínio.** O domínio de uma nação é a área a até `dominio_estrutura_m` de qualquer estrutura dela (pronta ou em obra) e a até `dominio_unidade_m` de qualquer unidade móvel dela. Minas e satélites não contam.
-- **REG-26** — **Aviso.** Quando um corpo (unidade ou estrutura) de B está no domínio de A e o par está pacífico, A avisa B na hora ("retire-se do meu domínio", AL-19 para o jogador avisado, AL-22 quando é o domínio do jogador) e o par fica em alerta. Se depois de `ultimato_s` ainda houver corpo de B no domínio de A, o par vira inimigo (AL-20). Se B sair antes, o par volta a pacífico. O aviso vale para todas as nações, inclusive o domínio do jogador.
+- **REG-26** — **Aviso.** Só unidades móveis invadem: uma estrutura nunca conta como intrusa, porque não pode sair (D-88). Quando uma unidade de B está no domínio de A e o par está pacífico, A avisa B na hora ("retire-se do meu domínio") e o par fica em alerta; se B sair, o par volta a pacífico. **Domínio de uma IA:** o jogador avisado recebe AL-19; se depois de `ultimato_s` ainda houver unidade de B no domínio de A, o par vira inimigo (AL-20). O mesmo vale entre IAs. **Domínio do jogador:** o jogador recebe AL-22 com o botão **Declarar guerra**, e a nação intrusa recebe o aviso (a IA recolhe as unidades, IA-11); não há guerra automática: só o jogador decide (REG-29).
 - **REG-27** — **Agressão.** Dano causado por B a A (arma, míssil, bomba ou mina) põe o par em guerra na hora, sem aviso (AL-20). A ordem direta de ataque (CMB-15) vale contra qualquer nação; o primeiro dano abre a guerra.
 - **REG-28** — **Trégua.** Um par em guerra volta a pacífico (AL-21) depois de `guerra_esfria_s` sem nenhum dano entre as duas nações e sem corpo de uma no domínio da outra.
+- **REG-29** — **Declarar guerra** (D-88): o Comando "declarar_guerra" põe o par em guerra na hora (AL-20). O jogador declara pelo botão do AL-22 ou pelo temperamento da nação na barra superior (UI-17). A IA só declara guerra ao jogador na provocação (IA-12).
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
 |---|---|---|---|
 | dominio_estrutura_m | 60 | m | Raio do domínio em volta de cada estrutura (REG-25) |
 | dominio_unidade_m | 20 | m | Raio do domínio em volta de cada unidade móvel (REG-25) |
-| ultimato_s | 10 | s | Prazo para sair do domínio alheio depois do aviso (REG-26) |
+| ultimato_s | 30 | s | Prazo para sair do domínio alheio depois do aviso (REG-26) |
 | guerra_esfria_s | 300 | s | Tempo sem dano e fora dos domínios para a guerra virar paz (REG-28) |
 
 ---
@@ -1097,7 +1098,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 - **IA-09** — Satélite: cada Base de Lançamento da IA imprime o satélite, que fica sobre o inimigo conhecido mais próximo (sem inimigo conhecido, sobre a própria base) (D-66).
 - **IA-10** — Mísseis: a IA mantém `ia_misseis_curtos` curtos prontos e, do Normal para cima, `ia_misseis_longos` longos. Curtos defendem: são lançados contra inimigos visíveis a até `ia_raio_defesa_m` de uma estrutura própria. Do Normal para cima, um longo é lançado contra uma estrutura inimiga conhecida (vista ou fantasma) no alcance, no máximo um a cada `ia_missil_longo_intervalo_s` (D-66).
 - **IA-11** — Temperamento da IA (D-81): avisada (REG-26), recolhe os corpos do domínio alheio antes do prazo, menos na Brutal e na onda de provocação (IA-12), que ficam. A IA escolhe expansões e rotas de batedor fora do domínio de nações pacíficas com ela, menos na Brutal.
-- **IA-12** — Provocação (D-82): sem nenhuma guerra, quando a onda estaria pronta (IA-04), a IA escolhe um alvo e manda a onda para o domínio dele, ignorando o aviso; a guerra começa pelo prazo de REG-26. Fácil nunca provoca. Normal só provoca a nação conhecida mais fraca (menos estruturas conhecidas) e só se ela tiver menos estruturas que a própria IA. Difícil provoca a mais próxima; Brutal, a mais fraca.
+- **IA-12** — Provocação (D-82): sem nenhuma guerra, quando a onda estaria pronta (IA-04), a IA escolhe um alvo e manda a onda para o domínio dele, ignorando o aviso; contra outra IA, a guerra começa pelo prazo de REG-26; contra o jogador, quando o prazo do aviso acaba com a onda no domínio, a IA declara guerra (REG-29, D-88). Fácil nunca provoca. Normal só provoca a nação conhecida mais fraca (menos estruturas conhecidas) e só se ela tiver menos estruturas que a própria IA. Difícil provoca a mais próxima; Brutal, a mais fraca.
 - **IA-13** — Cabos da IA (D-85, D-87): a IA pluga cada estrutura pronta que precisa de energia (e as Centrais) na Nave ou Central mais próxima da rede da Nave ao alcance e com saída livre; se não há saída livre ao alcance, ela planta uma Central ao lado da estrutura. Ela só posiciona essas estruturas onde algum ponto dessa rede alcança. Para uma expansão fora do alcance, ela primeiro planta uma Central de Distribuição no caminho (D-86).
 
 <!-- dados:parametros -->
@@ -1353,7 +1354,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **UI-14** — Cada ordem do clique direito mostra no ponto um sinalizador com forma e cor próprias e toca um som próprio: mover, atacar, coletar, descarregar (inclusive no Silo Móvel), recarregar, construir ou reparar, reciclar, patrulhar e reposicionar satélite.
 - **UI-15** — Dois botões fixos ao lado do minimapa: **mineradores parados** (Hovers de Exploração ociosos, ECO-19) e **impressoras paradas** (Impressoras sem item na fila, sem obra, reparo ou recarga e sem ordem de movimento). Cada botão mostra quantos há e fica em destaque quando há algum; o clique seleciona o próximo parado (em ciclo) e centraliza a câmera nele (D-58).
 - **UI-16** — Cartões de ação de unidades sem fila: o Hover de Plantio de Minas mostra a foto da mina; clicar nela (ou T) entra no modo de plantar e o clique no terreno escolhe o ponto (UNI-02). (D-62)
-- **UI-17** — Temperamento no HUD: cada nação adversária aparece com o seu estado em relação ao jogador (pacífica, em alerta com a contagem do prazo, ou inimiga), na cor dela. O minimapa mostra o domínio conhecido das outras nações (D-81).
+- **UI-17** — Temperamento no HUD: cada nação adversária aparece com o seu estado em relação ao jogador (pacífica, em alerta com a contagem do prazo, com unidade no domínio do jogador, ou inimiga), na cor dela. Clicar no temperamento de uma nação que não está em guerra mostra o botão **Declarar guerra** (REG-29, D-88). O minimapa mostra o domínio conhecido das outras nações (D-81).
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1387,7 +1388,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | AL-19 | {nacao} pede que eu me retire do domínio dela. | Corpo próprio no domínio de uma nação pacífica (REG-26) | alta | 20 |
 | AL-20 | {nacao} agora é inimiga. | Par em guerra (REG-26, REG-27) | alta | 0 |
 | AL-21 | Paz com {nacao}. | Trégua (REG-28) | media | 0 |
-| AL-22 | {nacao} entrou no meu domínio. | Corpo alheio no domínio do jogador (REG-26) | media | 20 |
+| AL-22 | Uma unidade de {nacao} está acessando a nossa base. Pedi que se retire. | Unidade alheia no domínio do jogador (REG-26); traz o botão Declarar guerra (REG-29) | media | 20 |
 | AL-23 | {item} pronta, mas fora da rede. | Estrutura que precisa de energia fica pronta sem cabo (ENE-29) | media | 10 |
 
 ### 17.3 Acessibilidade
@@ -1693,6 +1694,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-85 | Rede elétrica por cabos: estruturas ligadas por cabos formam redes independentes (ENE-25 a ENE-29), plugadas à mão com o clique direito, alcance de 30 m (80 m com a Nave ou a Central de Distribuição, UNI-15), cabos visíveis no chão e fora de alcance de ataque; a Central é barata e frágil, sem limite de carga. A Usina Nuclear fica sempre ligada. | Pedido do produto: "fazer uma unidade fixa de central de distribuição… plugar uma unidade fixa à rede de energia… com o tempo, todas as construções deverão compor uma malha… a usina nuclear sempre fique ligada"; respostas: fora da rede não recebe nem entrega; plugar manual; 30/80 m; cabos não são alvo, a Central sim; várias redes independentes; Central barata e frágil; HUD com a rede da Nave e a da seleção. | Aprovada |
 | D-86 | Minimapa mapa-múndi fixo centrado na zona de pouso do jogador, com o escuro não preto; pedras neutras (CEN-17: 6 a cada 10.000 m², raio de 1,5 a 4 m); luzes piscando nas estruturas ligadas (ART-13); o Armazém precisa de rede; cabos pretos com brilho verde claro quando a rede tem energia; Central como caixa baixa, sem fios aéreos. | Pedido do produto; respostas: "o silo" é o Armazém, pedras médias espalhadas, a zona de pouso no meio do minimapa. | Aprovada |
 | D-87 | Ligação 1:1 da rede: cada estrutura tem uma única saída de cabo; a Nave e a Central de Distribuição têm 4 e bifurcam a rede (ENE-26, UNI-15); puxar um cabo de uma estrutura já plugada troca o cabo, e Nave ou Central cheia recusa; a Central cai à metade do custo (8 Fe, 5 Si, 12 Cu). Cabos sem brilho, com traçado orgânico em S (ENE-27). | Pedido do produto: "fios sem o brilho verde… mais orgânicos… em s"; "se você constrói um painel solar, ele só pode ter uma saída… você precisa do hub no meio pra bifurcar"; respostas: 4 saídas na Central, a Nave como uma Central, metade do custo, trocar o cabo. | Aprovada |
+| D-88 | Só unidades móveis invadem domínio (estruturas não saem do lugar). No domínio de uma IA, o aviso tem prazo de 30 s e vira guerra; no domínio do jogador, não há guerra automática: AL-22 avisa que uma unidade externa está na base, pede que ela saia e traz o botão Declarar guerra (também no temperamento da barra). A IA só declara guerra ao jogador na provocação (IA-12). | Pedido do produto: "quero aumentar pra 30s"; "o inimigo cria uma unidade de observação… acha a minha base… me pede pra me retirar (o que é impossível) e vira minha inimiga. Isso está errado"; "eu que tenho que chamá-lo de inimigo"; respostas: a onda provocadora declara guerra; botão no aviso e na barra. | Aprovada |
 
 ---
 
@@ -1796,3 +1798,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.4.0 | 2026-09-27 | D-85: §6.2.1 (ENE-25 a ENE-29, `cabo_alcance_m`, `cabo_alcance_central_m`), §6.1, ENE-01, ENE-02, ENE-06 (nuclear sempre ligada), ENE-22, UNI-15 e `power_hub`, IA-13, CAM-07 passo 4, AL-23, atalho D, Missão 0 libera a Central. |
 | 1.5.0 | 2026-09-28 | D-86: CTL-03 (mapa-múndi fixo), CEN-17 (`pedras_por_10k_m2`, `pedra_raio_min_m`, `pedra_raio_max_m`), MOV-04, PRD-10, ENE-27, ENE-29 (Armazém na rede), UNI-15, IA-13, ART-13. |
 | 1.6.0 | 2026-09-28 | D-87: ENE-26 (saídas, `cabo_saidas_central`), ENE-27 (cabo orgânico sem brilho), UNI-15 e custo de `power_hub`, IA-13. |
+| 1.7.0 | 2026-09-28 | D-88: REG-26 (só unidades invadem; sem guerra automática no domínio do jogador), REG-29 (declarar guerra), `ultimato_s` 30, AL-22, IA-12, UI-17. |

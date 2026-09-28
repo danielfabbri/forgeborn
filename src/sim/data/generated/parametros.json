@@ -79,7 +79,7 @@
   },
   {
     "chave": "ultimato_s",
-    "valor": 10,
+    "valor": 30,
     "unidade": "s",
     "descricao": "Prazo para sair do domínio alheio depois do aviso (REG-26)"
   },

@@ -21,8 +21,8 @@ function hash(k: number): number {
   return s - Math.floor(s);
 }
 
-/** Uma rocha de raio 1: icosaedro com os vértices deslocados, achatado em cima. */
-function geometriaDaRocha(): IcosahedronGeometry {
+/** Uma rocha de raio 1: icosaedro com os vértices deslocados (também o corpo das jazidas). */
+export function geometriaDaRocha(): IcosahedronGeometry {
   const geo = new IcosahedronGeometry(1, 1);
   const pos = geo.attributes.position!;
   const v = new Vector3();
@@ -37,6 +37,13 @@ function geometriaDaRocha(): IcosahedronGeometry {
   return geo;
 }
 
+/** Na Terra (grama) a rocha é cinza; nos outros corpos, puxa a cor do chão. */
+export function corDaRocha(tinta: readonly [number, number, number], grama: boolean): Color {
+  return grama
+    ? new Color(0.46, 0.45, 0.43)
+    : new Color(0.5 * tinta[0], 0.48 * tinta[1], 0.46 * tinta[2]);
+}
+
 export function criarPedras(
   pedras: readonly Pedra[],
   raio: number,
@@ -47,10 +54,7 @@ export function criarPedras(
   escuroBrilho: number,
 ): InstancedMesh | null {
   if (pedras.length === 0) return null;
-  // Na Terra (grama) a rocha é cinza; nos outros corpos, puxa a cor do chão.
-  const cor = grama
-    ? new Color(0.46, 0.45, 0.43)
-    : new Color(0.5 * tinta[0], 0.48 * tinta[1], 0.46 * tinta[2]);
+  const cor = corDaRocha(tinta, grama);
   const material = new MeshStandardMaterial({ color: cor, roughness: 0.95, flatShading: true });
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uNevoa = { value: nevoa?.textura ?? null };

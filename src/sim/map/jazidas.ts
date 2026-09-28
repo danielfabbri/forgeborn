@@ -8,6 +8,7 @@
  * dele precisa ser invariante por τ: jazidas do mesmo recurso vão em pares (p, τ·p), e um
  * recurso com número ímpar de jazidas ganha mais uma, dividindo a quantidade (ECO-08).
  */
+import { nextFloat, seedRng } from '../core/rng';
 import { type CenariosId, dados, type JazidasRow, param, type RecursosId } from '../data';
 import { componenteConectado, noComponente, temFolga } from './conectividade';
 import {
@@ -17,6 +18,7 @@ import {
   diferenca,
   girar,
   normalizar,
+  produtoEscalar,
   produtoVetorial,
   rotacoesDeSimetria,
   tangente,
@@ -27,14 +29,15 @@ import { GERADOR_LUA, type MapaLunar, type PontoMedio, rumoSemRampa } from './lu
 import { emLago } from './lagos';
 import { emPedra } from './pedras';
 
-export type ZonaDeJazida = 'inicial' | 'expansao' | 'contestada' | 'central';
+export type ZonaDeJazida = 'inicial' | 'expansao' | 'contestada' | 'central' | 'espalhada';
 
 export interface Jazida {
   recurso: RecursosId;
   quantidade: number;
   d: Vec3;
   zona: ZonaDeJazida;
-  /** Zona de pouso dona (inicial, expansão) ou as duas vizinhas (contestada, central). */
+  /** Zona de pouso dona (inicial, expansão), as duas vizinhas (contestada, central) ou nenhuma
+   * (espalhada, ECO-30). */
   zonasDePouso: number[];
 }
 
@@ -52,13 +55,23 @@ export interface DistribuicaoDeJazidas {
 
 /** Números da distribuição (GOV-04: parâmetros do gerador). */
 export const DISTRIBUICAO = {
-  espacamento_m: 8,
   folgaPenhasco_m: 6, // CEN-11
-  arcoInicial_graus: 70,
+  /** Aberturas (±graus em volta do fundo) tentadas para as vagas das iniciais. */
+  arcosIniciais_graus: [70, 90, 110, 50],
+  /** Desvios angulares (graus) tentados em volta da vaga de cada jazida inicial. */
+  ajustesIniciais_graus: [
+    0,
+    ...Array.from({ length: 30 }, (_, k) => (k % 2 ? -1 : 1) * 6 * Math.ceil((k + 1) / 2)),
+  ],
+  /** Folga lateral (m) entre uma jazida inicial e o eixo de uma rampa (não fica no caminho). */
+  folgaRampa_m: 6,
+  /** ECO-30: tentativas de sorteio por jazida espalhada e folga (m) dos pontos médios. */
+  tentativasEspalhada: 80,
+  folgaPontoMedio_m: 60,
   distanciasExpansao_m: [112, 106, 118],
   passoAngularExpansao_graus: 7.5,
   distanciaEntreExpansoes_m: 80,
-  raiosDoGrupo_m: [8, 11, 14, 17],
+  raiosDoGrupo_m: [14, 18, 22, 26, 30, 34, 38, 42],
   deslocamentosMedio_m: [0, 10, -10, 20, -20, 30, -30, 40, -40],
   desviosLateraisMedio_m: [0, 12, -12, 24, -24],
   passoAngularGrupo_graus: 15,
@@ -100,6 +113,8 @@ export function distribuirJazidas(
     );
 
   const R = mapa.raio_m;
+  // ECO-07 (D-89): distância mínima entre duas jazidas quaisquer.
+  const espacamento = param('jazida_espacamento_min_m');
   const grupo = rotacoesDeSimetria(mapa.simetria);
   const nav = grades.navegacao;
   const zonas = mapa.zonasDePouso;
@@ -122,7 +137,7 @@ export function distribuirJazidas(
   const valida = (p: Vec3, extras: Vec3[] = [], noPlato = false) =>
     temFolga(nav, p, D.folgaPenhasco_m) &&
     noComponente(nav, alcancavel, p) &&
-    [...ocupadas, ...extras].every((q) => distancia(p, q) >= D.espacamento_m) &&
+    [...ocupadas, ...extras].every((q) => distancia(p, q) >= espacamento) &&
     (noPlato || zonas.every((zona) => distancia(p, zona.d) >= foraDosPlatos)) &&
     // CEN-04 e CEN-17: nenhuma jazida dentro (nem colada) de um lago de metano ou de uma pedra.
     !emLago(mapa, p, param('distancia_min_jazida_m')) &&
@@ -185,38 +200,68 @@ export function distribuirJazidas(
   // Inicial: arco no fundo do platô, no maior vão entre as rampas.
   const fundo = rumoSemRampa(zona0);
   const iniciais = expandir(linhasDaZona('inicial'));
-  const vagas = iniciais.map((_, k) =>
-    iniciais.length === 1
-      ? 0
-      : -D.arcoInicial_graus + (2 * D.arcoInicial_graus * k) / (iniciais.length - 1),
-  );
-  // Distribui de fora para dentro: 1ª vaga, última, 2ª, penúltima...
-  const ordemDasVagas = vagas.map((_, k) => (k % 2 === 0 ? k / 2 : vagas.length - 1 - (k - 1) / 2));
-  const zona0Iniciais: Colocada[] = [];
-  for (const [k, linha] of iniciais.entries()) {
-    const angulo = vagas[ordemDasVagas[k]!]!;
-    const meioDaFaixa = ((linha.dist_min_m ?? 0) + (linha.dist_max_m ?? 0)) / 2;
-    let colocada = false;
-    for (const ajuste of [0, 3, -3, 6, -6]) {
-      const d = meioDaFaixa + (k % 2 === 0 ? 3 : -3) + ajuste;
-      const p = em(zona0.d, fundo, angulo, d);
-      const naFaixa = d >= (linha.dist_min_m ?? 0) && d <= (linha.dist_max_m ?? Infinity);
-      if (
-        naFaixa &&
-        valida(
-          p,
-          zona0Iniciais.map((c) => c.d),
-          true,
-        )
-      ) {
-        zona0Iniciais.push({ linha, d: p });
-        colocada = true;
-        break;
+  /** A jazida inicial em p não fica no eixo de uma rampa da zona 0. */
+  const foraDasRampas = (p: Vec3) => {
+    const rumo = tangente(zona0.d, p);
+    if (!rumo) return false;
+    const d = distancia(zona0.d, p);
+    return zona0.rampas.every((u) => {
+      const cos = produtoEscalar(rumo, u);
+      const lateral = d * Math.sqrt(Math.max(0, 1 - cos * cos));
+      return cos <= 0 || lateral >= D.folgaRampa_m;
+    });
+  };
+  /**
+   * Uma tentativa de colocar as iniciais: vagas num arco de ±`arco` graus em volta do fundo,
+   * cada jazida na primeira posição válida (ângulo perto da vaga, distância na ordem dada).
+   */
+  const tentarIniciais = (arcoGraus: number, deFora: boolean): Colocada[] | null => {
+    const vagas = iniciais.map((_, k) =>
+      iniciais.length === 1 ? 0 : -arcoGraus + (2 * arcoGraus * k) / (iniciais.length - 1),
+    );
+    // Distribui de fora para dentro: 1ª vaga, última, 2ª, penúltima...
+    const ordemDasVagas = vagas.map((_, k) =>
+      k % 2 === 0 ? k / 2 : vagas.length - 1 - (k - 1) / 2,
+    );
+    const colocadas: Colocada[] = [];
+    for (const [k, linha] of iniciais.entries()) {
+      const angulo = vagas[ordemDasVagas[k]!]!;
+      const min = linha.dist_min_m ?? 0;
+      const max = linha.dist_max_m ?? min;
+      const passos = Array.from({ length: Math.floor((max - min) / 1.25) + 1 }, (_, j) => j * 1.25);
+      // Um fio para dentro das bordas: o arco medido de volta não passa da faixa.
+      const distancias = passos
+        .map((j) => (deFora ? max - j : (min + max) / 2 + ((j % 2.5 ? -1 : 1) * j) / 2))
+        .filter((d) => d >= min + 0.01 && d <= max - 0.01);
+      let achou: Vec3 | null = null;
+      busca: for (const ajuste of D.ajustesIniciais_graus) {
+        for (const d of distancias) {
+          const p = em(zona0.d, fundo, angulo + ajuste, d);
+          if (
+            foraDasRampas(p) &&
+            valida(
+              p,
+              colocadas.map((c) => c.d),
+              true,
+            )
+          ) {
+            achou = p;
+            break busca;
+          }
+        }
       }
+      if (!achou) return null;
+      colocadas.push({ linha, d: achou });
     }
-    if (!colocada)
-      throw new Error(`Seed ${mapa.seed}: jazida inicial de ${linha.recurso} sem lugar`);
+    return colocadas;
+  };
+  let zona0Iniciais: Colocada[] | null = null;
+  for (const arcoGraus of D.arcosIniciais_graus) {
+    for (const deFora of [false, true]) {
+      zona0Iniciais ??= tentarIniciais(arcoGraus, deFora);
+    }
   }
+  if (!zona0Iniciais) throw new Error(`Seed ${mapa.seed}: jazidas iniciais sem lugar`);
   registrar(zona0Iniciais, 'inicial', (sigma) => [zonaRotacionada(sigma, 0)], grupo);
 
   /** Resolve os pontos médios de uma lista (contestados ou centrais), órbita por órbita. */
@@ -274,10 +319,13 @@ export function distribuirJazidas(
         let ok = true;
         // Pares: em volta do ponto, com a imagem por τ também válida.
         const passos = Math.round(360 / D.passoAngularGrupo_graus);
+        // Cada par fica a 2·raio de si mesmo; com os pares em hexágono, o lado é o raio: começa
+        // no espaçamento para caberem todos.
+        const raiosDosPares = D.raiosDoGrupo_m.filter((r) => r >= espacamento);
         for (const [indice, { linha, fracao }] of pares.entries()) {
           if (!ok) break;
           let achou = false;
-          busca: for (const raio of D.raiosDoGrupo_m) {
+          busca: for (const raio of raiosDosPares) {
             for (let s = 0; s < passos; s++) {
               const p = em(
                 m.d,
@@ -286,7 +334,7 @@ export function distribuirJazidas(
                 raio,
               );
               const q = aplicarRotacao(tau, p);
-              if (distancia(p, q) < D.espacamento_m) continue;
+              if (distancia(p, q) < espacamento) continue;
               if (!longeDasVizinhas(p, linha) || !valida(p, extras())) continue;
               if (!valida(q, [...extras(), p])) continue;
               tentativa.push({ linha, d: p, fracao }, { linha, d: q, fracao });
@@ -363,7 +411,7 @@ export function distribuirJazidas(
         .flatMap((sigma) => posicoes.map((p) => aplicarRotacao(sigma, p)));
       if (
         !replicas.every((q) =>
-          [...ocupadas, ...posicoes].every((o) => distancia(q, o) >= D.espacamento_m),
+          [...ocupadas, ...posicoes].every((o) => distancia(q, o) >= espacamento),
         )
       )
         continue;
@@ -382,6 +430,35 @@ export function distribuirJazidas(
     d: aplicarRotacao(sigma, expansao.c),
     zonasDePouso: [zonaRotacionada(sigma, 0)],
   }));
+
+  // ECO-30 (D-89): jazidas espalhadas pelo planeta, sorteadas pela seed e replicadas pela simetria.
+  const espalhadas = expandir(linhasDaZona('espalhada'));
+  if (espalhadas.length > 0) {
+    const rng = seedRng((mapa.seed ^ 0x6a2d) >>> 0);
+    const sortear = (): Vec3 => {
+      const z = 2 * nextFloat(rng) - 1;
+      const fi = 2 * Math.PI * nextFloat(rng);
+      const r = Math.sqrt(Math.max(0, 1 - z * z));
+      return [r * Math.cos(fi), r * Math.sin(fi), z];
+    };
+    const area = 4 * Math.PI * R * R;
+    const porSetor = Math.round(
+      (param('jazidas_espalhadas_por_10k_m2') * area) / 10000 / mapa.simetria,
+    );
+    for (let c = 0; c < porSetor; c++) {
+      const linha = espalhadas[c % espalhadas.length]!;
+      for (let t = 0; t < D.tentativasEspalhada; t++) {
+        const p = sortear();
+        if (zonas.some((z) => distancia(p, z.d) < (linha.dist_min_m ?? 0))) continue;
+        if (pontosMedios.some((m) => distancia(p, m) < D.folgaPontoMedio_m)) continue;
+        if (!valida(p)) continue;
+        const replicas = grupo.slice(1).map((sigma) => aplicarRotacao(sigma, p));
+        if (!replicas.every((q, k) => valida(q, [p, ...replicas.slice(0, k)]))) continue;
+        registrar([{ linha, d: p }], 'espalhada', () => [], grupo);
+        break;
+      }
+    }
+  }
 
   return { jazidas, expansoes, contestadas, centrais };
 }

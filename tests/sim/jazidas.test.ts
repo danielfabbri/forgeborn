@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dados } from '../../src/sim';
+import { dados, param } from '../../src/sim';
 import { componenteConectado, noComponente, temFolga } from '../../src/sim/map/conectividade';
 import { aplicarRotacao, arco, rotacoesDeSimetria } from '../../src/sim/map/esfera';
 import { celulaDe, derivarGrades } from '../../src/sim/map/grids';
@@ -22,7 +22,8 @@ function caso(seed: number, tamanho: 'p' | 'm' | 'g', n: Simetria): Caso {
   };
 }
 
-const CASOS = [caso(7, 'p', 2), caso(7, 'm', 2), caso(7, 'm', 4), caso(3, 'g', 4)];
+// 4 zonas só no planeta de teste grande: no médio não cabem 25 m entre as jazidas contestadas (ECO-07).
+const CASOS = [caso(7, 'p', 2), caso(7, 'm', 2), caso(7, 'g', 4), caso(3, 'g', 4)];
 const PERFIL_LUA = dados.cenarios.find((c) => c.id === 'lua')!;
 const perfil = (recurso: string) =>
   PERFIL_LUA[`perfil_${recurso}` as keyof typeof PERFIL_LUA] as number;
@@ -46,6 +47,8 @@ describe.each(CASOS)('distribuição de jazidas — $nome', ({ mapa, dist }) => 
 
   it('ECO-07/ECO-08: contagens e quantidades = dados:jazidas × perfil do cenário', () => {
     for (const linha of dados.jazidas) {
+      // ECO-30: as espalhadas têm teste próprio (a contagem vem da área).
+      if (linha.escopo === 'por_area') continue;
       const achadas = dist.jazidas.filter(
         (j) => j.zona === linha.zona && j.recurso === linha.recurso,
       );
@@ -139,8 +142,53 @@ describe.each(CASOS)('distribuição de jazidas — $nome', ({ mapa, dist }) => 
 
 describe('distribuição de jazidas: determinismo', () => {
   it('a mesma seed dá a mesma distribuição', () => {
-    const a = caso(11, 'm', 4).dist;
-    const b = caso(11, 'm', 4).dist;
+    const a = caso(11, 'g', 4).dist;
+    const b = caso(11, 'g', 4).dist;
     expect(a).toEqual(b);
   });
+});
+
+describe('T-176 — ECO-07, ECO-30, D-89: jazidas espalhadas', () => {
+  it.each(CASOS)(
+    'ECO-07: toda jazida a ≥ jazida_espacamento_min_m das outras — $nome',
+    ({ mapa, dist }) => {
+      const R = mapa.raio_m;
+      const minimo = param('jazida_espacamento_min_m');
+      for (let i = 0; i < dist.jazidas.length; i++) {
+        for (let j = i + 1; j < dist.jazidas.length; j++) {
+          const d = R * arco(dist.jazidas[i]!.d, dist.jazidas[j]!.d);
+          expect(d).toBeGreaterThanOrEqual(minimo - 1e-6);
+        }
+      }
+    },
+  );
+
+  it(
+    'ECO-30: densidade, rodízio dos recursos, quantidades e distância das zonas (Lua real)',
+    { timeout: 120_000 },
+    () => {
+      const mapa = gerarMapaLunar(27, dados.cenarios.find((c) => c.id === 'lua')!.raio_m, 2);
+      const dist = distribuirJazidas(mapa, derivarGrades(mapa), 'lua');
+      const R = mapa.raio_m;
+      const linhas = dados.jazidas.filter((l) => l.escopo === 'por_area');
+      const espalhadas = dist.jazidas.filter((j) => j.zona === 'espalhada');
+      const porSetor = Math.round(
+        (param('jazidas_espalhadas_por_10k_m2') * 4 * Math.PI * R * R) / 10000 / mapa.simetria,
+      );
+      expect(espalhadas).toHaveLength(porSetor * mapa.simetria);
+      const pesos = linhas.reduce((s, l) => s + l.jazidas, 0);
+      for (const linha of linhas) {
+        const doRecurso = espalhadas.filter((j) => j.recurso === linha.recurso);
+        // Rodízio pela ordem da tabela: a fatia de cada recurso segue o peso (± uma volta).
+        const esperado = (porSetor * linha.jazidas) / pesos;
+        expect(Math.abs(doRecurso.length / mapa.simetria - esperado)).toBeLessThanOrEqual(1);
+        for (const j of doRecurso) {
+          expect(j.quantidade).toBe(Math.round(linha.quantidade_u * perfil(linha.recurso)));
+          for (const z of mapa.zonasDePouso) {
+            expect(R * arco(j.d, z.d)).toBeGreaterThanOrEqual(linha.dist_min_m ?? 0);
+          }
+        }
+      }
+    },
+  );
 });

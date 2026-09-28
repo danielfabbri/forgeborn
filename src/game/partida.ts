@@ -33,7 +33,7 @@ import { somInterno, tocarSom } from '../audio/sfx';
 import { SomDaPartida } from '../audio/somDaPartida';
 import { Poeira } from '../render/poeira';
 import { criarLagos } from '../render/lagos';
-import { criarPedras } from '../render/pedras';
+import { corDaRocha, criarPedras } from '../render/pedras';
 import { LuzesRender } from '../render/luzes';
 import { tempestadeAtiva } from '../sim/cenario/tempestade';
 import { trilhas } from '../audio/trilhas';
@@ -486,7 +486,8 @@ export function iniciarPartida(): void {
   const marcas = new SinaisRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
   // UI-14: sinalizadores e sons das ordens do clique direito.
   const sinalizadores = new SinalizadoresRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
-  const jazidas = new JazidasRender(view.scene);
+  // ECO-04 (D-89): o corpo das jazidas é da mesma rocha das pedras do cenário.
+  const jazidas = new JazidasRender(view.scene, corDaRocha(ambientacao.tinta, ambientacao.grama));
   const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
   const holograma = new HologramaRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
   const barras = new BarrasRender(view.scene);

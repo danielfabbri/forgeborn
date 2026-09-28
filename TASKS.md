@@ -385,5 +385,5 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: Armazém fora da rede não recebe descargas; cabos pretos com brilho verde só com energia; modelo baixo da Central; luzes piscando só nas ligadas; a IA planta Central para expandir.
 - [x] **T-173 — Minimapa fixo** · P · Spec: CTL-03, D-86 · Dep: T-168 · Feito: 2026-09-28
   - Aceite: mapa-múndi parado com a zona de pouso no meio; o escuro não é preto; clique e arrasto movem a câmera.
-- [ ] **T-174 — Ligação 1:1 e cabos orgânicos** · M · Spec: ENE-26, ENE-27, UNI-15, IA-13, D-87 · Dep: T-172
+- [x] **T-174 — Ligação 1:1 e cabos orgânicos** · M · Spec: ENE-26, ENE-27, UNI-15, IA-13, D-87 · Dep: T-172 · Feito: 2026-09-28
   - Aceite: estrutura comum aceita um só cabo (o novo troca o antigo); Nave e Central aceitam `cabo_saidas_central` e recusam além disso; Central com o custo novo; a IA pluga só em Nave ou Central com saída livre e planta Central quando falta; cabos pretos, sem brilho, em curvas suaves.

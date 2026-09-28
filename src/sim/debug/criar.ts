@@ -14,7 +14,7 @@ import type { EntityId } from '../core/types';
 import type { SystemContext } from '../core/pipeline';
 import { arco } from '../map/esfera';
 import { direcaoDe } from '../units/superficie';
-import { ligarCabo } from '../energia/cabos';
+import { ligarCabo, saidasDe, temSaidaLivre } from '../energia/cabos';
 
 export const DEBUG_CRIAR_COMMAND = 'debug_criar';
 /** Aplica à nação que envia o estoque inicial de um modo (REG-05), para a cena de demonstração. */
@@ -47,15 +47,23 @@ export type Criacao =
     }
   | { mina: true; nacao?: NacaoId; d: Vec3 };
 
-/** D-85 (depuração): liga a estrutura à estrutura mais próxima da nação, sem conferir alcance. */
+/**
+ * D-85/D-87 (depuração): liga a estrutura à Nave ou Central mais próxima da nação com saída
+ * livre (sem conferir alcance); sem nenhuma, à estrutura mais próxima com saída livre.
+ */
 function plugarNaMaisProxima(ctx: SystemContext, id: EntityId, nacao: NacaoId): void {
   const { state } = ctx;
   const d = direcaoDe(getComponent(state, id, 'position')!);
+  if (!temSaidaLivre(state, id)) return;
   let melhor: EntityId | null = null;
   let menor = Infinity;
   for (const outra of entitiesWith(state, 'structure', 'owner', 'position')) {
     if (outra === id || getComponent(state, outra, 'owner')!.nacao !== nacao) continue;
-    const dist = arco(d, direcaoDe(getComponent(state, outra, 'position')!));
+    if (!temSaidaLivre(state, outra)) continue;
+    // Nave e Central na frente: somam uma volta inteira à distância das outras.
+    const dist =
+      arco(d, direcaoDe(getComponent(state, outra, 'position')!)) +
+      (saidasDe(state, outra) > 1 ? 0 : 2 * Math.PI);
     if (dist < menor) {
       menor = dist;
       melhor = outra;

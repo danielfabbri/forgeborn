@@ -508,7 +508,6 @@ export function iniciarPartida(): void {
       .map(([a, b]) => ({
         a: direcao(a),
         b: direcao(b),
-        ligado: comEnergia.has(a),
       }));
     const agora = performance.now();
     if (agora - ultimoSemRede > 250) {
@@ -909,6 +908,16 @@ export function iniciarPartida(): void {
         texto = t('alerta.AL-11', { limite: t(`limite.${limite}` as TextKey) });
       }
       if (texto) avisoProducao.value = { texto, ate: performance.now() + DURACAO_AVISO_MS };
+    }
+    // ENE-26 (D-87): cabo trocado (saída única já usada) ou recusado (Nave ou Central cheia).
+    for (const e of eventos) {
+      if (e.tipo !== 'cabo_trocado' && e.tipo !== 'cabo_recusado') continue;
+      if ((e.dados as { nacao: string }).nacao !== jogador) continue;
+      avisoProducao.value = {
+        texto: t(e.tipo === 'cabo_trocado' ? 'cabo.trocado' : 'cabo.recusado.saidas'),
+        ate: performance.now() + DURACAO_AVISO_MS,
+      };
+      if (e.tipo === 'cabo_recusado') tocarSom('erro');
     }
     // UNI-10: lançamento recusado (fora do alcance, sem míssil ou recarregando).
     for (const e of eventos) {

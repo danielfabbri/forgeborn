@@ -11,7 +11,13 @@ import { pontosDeEntrega } from '../economia/estoque';
 import { leituraDaRede } from '../energia/rede';
 import { custoDe } from '../producao/custos';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
-import { alcancaAlguma, redePrincipal } from '../energia/cabos';
+import {
+  alcancaAlguma,
+  caboAlcanca,
+  pontosDeBifurcacao,
+  redePrincipal,
+  tipoPrecisaDeEnergia,
+} from '../energia/cabos';
 import { avancar, tangente, type Vec3 } from '../map/esfera';
 import { explorado } from '../visao/nevoa';
 import { comandar, dificuldade, podePagar, temTraco, tierPermitido } from './base';
@@ -50,6 +56,8 @@ export function construir(
   tipo: EstruturasId,
   centro = q.base,
   aneis?: readonly number[],
+  /** IA-13: pontos da rede que o cabo da estrutura nova precisa alcançar (padrão: a rede da Nave). */
+  alcance?: readonly EntityId[],
 ): boolean {
   if (
     !tierPermitido(q.nivel, tipo as CustosId) ||
@@ -59,8 +67,17 @@ export function construir(
   }
   const impressora = impressoraComVaga(ctx, q);
   if (impressora === null) return false;
-  const d = procurarLocal(ctx, q.nacao, tipo, centro, q.ia.onda?.ponto ?? null, aneis);
-  if (!d) return false;
+  // IA-13 (D-87): quem precisa de energia vai onde uma Nave ou Central com saída livre alcança.
+  const precisa = tipoPrecisaDeEnergia(tipo);
+  const pontos =
+    alcance ?? (precisa ? pontosDeBifurcacao(ctx.state, q.nacao, tipo === 'power_hub') : undefined);
+  const d = procurarLocal(ctx, q.nacao, tipo, centro, q.ia.onda?.ponto ?? null, aneis, pontos);
+  if (!d) {
+    // Sem saída livre para estruturas comuns: abre uma Central antes.
+    if (precisa && tipo !== 'power_hub' && pontos!.length === 0)
+      plantarCentral(ctx, q, centro, true);
+    return false;
+  }
   comandar(ctx, q.nacao, 'posicionar_estrutura', {
     id: impressora,
     tipo,
@@ -158,34 +175,57 @@ function decidirExpansao(ctx: SystemContext, q: Quadro, extras: CustosId[]): voi
 const ANEIS_DA_EXPANSAO = [10, 13, 16, 20];
 
 /**
- * IA-13 (D-86): uma Central de Distribuição a partir do ponto da rede da Nave mais perto do alvo,
- * rumo a ele, dentro do alcance do cabo. Uma de cada vez: espera a anterior ficar pronta e plugada.
+ * IA-13 (D-86, D-87): uma Central de Distribuição a partir da Nave ou Central da rede com saída
+ * livre mais perto do alvo, rumo a ele, dentro do alcance do cabo. Até CENTRAIS_EM_PARALELO
+ * pendentes (em obra ou por plugar). `paraPlugar`: o alvo é uma estrutura a ligar (a Central fica
+ * entre ela e a rede, mesmo que a rede já a alcance).
  */
-export function plantarCentral(ctx: SystemContext, q: Quadro, alvo: Vec3): void {
+/** IA-13: quantas Centrais a IA encomenda ao mesmo tempo (só o ritmo da decisão). */
+const CENTRAIS_EM_PARALELO = 2;
+
+export function plantarCentral(
+  ctx: SystemContext,
+  q: Quadro,
+  alvo: Vec3,
+  paraPlugar = false,
+): void {
   const { state } = ctx;
-  if ((q.naFila['power_hub'] ?? 0) > 0) return;
+  const naFila = q.naFila['power_hub'] ?? 0;
+  if (naFila >= CENTRAIS_EM_PARALELO) return;
   const rede = redePrincipal(state, q.nacao);
   const naRede = new Set(rede);
-  const pendente = entitiesWith(state, 'structure', 'owner').some(
+  const livres = pontosDeBifurcacao(state, q.nacao, true);
+  // Espera a Central em obra, ou pronta e ainda por plugar (a encalhada, sem saída ao alcance,
+  // não segura as próximas).
+  const pendentes = entitiesWith(state, 'structure', 'owner').filter(
     (id) =>
       getComponent(state, id, 'owner')!.nacao === q.nacao &&
       getComponent(state, id, 'structure')!.tipo === 'power_hub' &&
-      !naRede.has(id),
+      !naRede.has(id) &&
+      (getComponent(state, id, 'obra') !== undefined ||
+        livres.some((m) => caboAlcanca(ctx, id, m))),
   );
-  if (pendente || rede.length === 0) return;
-  // Se a rede já alcança o alvo, o Armazém falhou por outro motivo: Central não resolve.
-  if (alcancaAlguma(ctx, 'storage', alvo, rede)) return;
-  const pontos = rede
+  if (pendentes.length + naFila >= CENTRAIS_EM_PARALELO || rede.length === 0) return;
+  // Se um ponto da rede já alcança o alvo, o Armazém falhou por outro motivo: Central não resolve.
+  if (!paraPlugar && alcancaAlguma(ctx, 'storage', alvo, pontosDeBifurcacao(state, q.nacao, false)))
+    return;
+  const bifurcacoes = pontosDeBifurcacao(state, q.nacao, true);
+  const pontos = bifurcacoes
     .map((id) => direcaoDe(getComponent(state, id, 'position')!))
     .sort((a, b) => distanciaM(ctx, a, alvo) - distanciaM(ctx, b, alvo));
-  const origem = pontos[0]!;
+  const origem = pontos[0];
+  if (!origem) return;
   const rumo = tangente(origem, alvo);
   if (!rumo) return;
   const falta = distanciaM(ctx, origem, alvo);
-  // Um pouco antes do limite do cabo, para sobrar espaço à procura de local.
-  const passo = Math.min(falta, 0.8 * param('cabo_alcance_central_m'));
+  // Um pouco antes do limite do cabo, para sobrar espaço à procura de local; para plugar, a
+  // Central fica perto da estrutura, sem encostar nela.
+  const limite = 0.8 * param('cabo_alcance_central_m');
+  const passo = paraPlugar
+    ? Math.min(Math.max(falta - 8, falta / 2), limite)
+    : Math.min(falta, limite);
   const centro = avancar(origem, rumo, passo / raioDoMundo(ctx)).p;
-  construir(ctx, q, 'power_hub', centro, [0, 5, 10, 15]);
+  construir(ctx, q, 'power_hub', centro, [0, 5, 10, 15], bifurcacoes);
 }
 
 /** O que a IA quer comprar em seguida (para saber que recurso falta). */

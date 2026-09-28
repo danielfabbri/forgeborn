@@ -1,7 +1,7 @@
 /** Onde a IA posiciona estruturas: o primeiro local válido (PRD-10) numa espiral em volta de um ponto. */
 import type { Ponto } from '../core/components';
 import type { SystemContext } from '../core/pipeline';
-import type { NacaoId } from '../core/types';
+import type { EntityId, NacaoId } from '../core/types';
 import { dados, type EstruturasId } from '../data';
 import { entitiesWith, getComponent } from '../core/entities';
 import { avancar, girar, norteEm, tangente, type Vec3 } from '../map/esfera';
@@ -49,11 +49,12 @@ export function procurarLocal(
   centro: Ponto,
   preferir: Ponto | null = null,
   aneis: readonly number[] = ANEIS_M,
+  alcance?: readonly EntityId[],
 ): Vec3 | null {
   const R = raioDoMundo(ctx);
   const inicio = (preferir && tangente(centro, preferir)) || norteEm(centro);
   // IA-13 (D-85): quem precisa de energia só vai onde a rede da Nave alcança por cabo.
-  const rede = tipoPrecisaDeEnergia(tipo) ? redePrincipal(ctx.state, nacao) : null;
+  const rede = alcance ?? (tipoPrecisaDeEnergia(tipo) ? redePrincipal(ctx.state, nacao) : null);
   for (const anel of aneis) {
     for (let k = 0; k < PONTOS_POR_ANEL; k++) {
       // Alterna os lados: 0, +1, −1, +2, −2… a partir do rumo preferido.

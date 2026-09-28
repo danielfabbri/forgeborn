@@ -30,6 +30,35 @@ function alcanceDe(state: SimState, id: EntityId): number {
     : param('cabo_alcance_m');
 }
 
+/** ENE-26 (D-87): saídas de cabo da estrutura (a Nave e a Central bifurcam; as outras têm 1). */
+export function saidasDe(state: SimState, id: EntityId): number {
+  const tipo = getComponent(state, id, 'structure')?.tipo;
+  return tipo === 'ship' || tipo === 'power_hub' ? param('cabo_saidas_central') : 1;
+}
+
+/** A estrutura ainda tem saída livre? */
+export function temSaidaLivre(state: SimState, id: EntityId): boolean {
+  return cabosDe(state, id).length < saidasDe(state, id);
+}
+
+/**
+ * IA-13 (D-87): Naves e Centrais da rede da Nave onde a IA pode plugar. Uma estrutura comum só
+ * usa as que têm duas saídas livres: a última fica reservada para a próxima Central, para a rede
+ * sempre poder crescer.
+ */
+export function pontosDeBifurcacao(
+  state: SimState,
+  nacao: NacaoId,
+  paraCentral: boolean,
+): EntityId[] {
+  return redePrincipal(state, nacao).filter((id) => {
+    const saidas = saidasDe(state, id);
+    if (saidas <= 1) return false;
+    const livres = saidas - cabosDe(state, id).length;
+    return livres >= (paraCentral ? 1 : 2);
+  });
+}
+
 /** Distância (m) entre as bordas das pegadas de duas estruturas. */
 export function distanciaEntreBordas(ctx: SystemContext, a: EntityId, b: EntityId): number {
   const { state } = ctx;
@@ -258,6 +287,19 @@ export const comandosDeCabos: Record<string, CommandHandler> = {
       return;
     }
     if (!caboAlcanca(ctx, d.de, d.para)) return;
+    if (temCabo(ctx.state, d.de, d.para)) return;
+    // ENE-26 (D-87): Nave ou Central sem saída livre recusa; a de saída única troca o cabo.
+    const pontas = [d.de, d.para];
+    if (pontas.some((id) => saidasDe(ctx.state, id) > 1 && !temSaidaLivre(ctx.state, id))) {
+      ctx.emit('cabo_recusado', { nacao: comando.nacao, motivo: 'saidas' });
+      return;
+    }
+    const trocar = pontas.filter((id) => !temSaidaLivre(ctx.state, id));
+    if (trocar.length > 0) {
+      const sair = new Set(trocar);
+      ctx.state.cabos = ctx.state.cabos.filter(([a, b]) => !sair.has(a) && !sair.has(b));
+      ctx.emit('cabo_trocado', { nacao: comando.nacao, ids: trocar });
+    }
     if (ligarCabo(ctx.state, d.de, d.para)) ctx.emit('cabo', { de: d.de, para: d.para });
   },
   /** ENE-26: Desplugar — remove todos os cabos das estruturas. */

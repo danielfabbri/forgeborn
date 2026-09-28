@@ -359,6 +359,8 @@
   "producao.misseis_nenhum": "nenhum",
   "producao.misseis_recarga": "próximo lançamento em {s} s",
   "producao.misseis_disparar": "Clique direito no mapa para lançar o da frente.",
+  "cabo.trocado": "Cabo trocado: esta estrutura só tem uma saída.",
+  "cabo.recusado.saidas": "Todas as saídas ocupadas: use outra Central de Distribuição.",
   "missil.recusado.alcance": "Fora do alcance do míssil da frente.",
   "missil.recusado.vazio": "Nenhum míssil pronto.",
   "missil.recusado.recarga": "A base ainda está recarregando o lançador.",

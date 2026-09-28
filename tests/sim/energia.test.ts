@@ -78,11 +78,12 @@ describe('T-040 — ENE-01 a ENE-05: rede de energia', () => {
   /** Nave sozinha (5 EN/s), banco vazio, com consumidores pendurados nela. */
   function racionando(demandas: Array<[1 | 2 | 3, number]>) {
     const sim = partida(mundoLiso());
+    // A Nave antes: as torres (saída única, D-87) se plugam nela.
+    criar(sim, [{ estrutura: 'ship', x: 0, z: 0 }]);
     const ids = criar(
       sim,
       demandas.map((_, k) => ({ estrutura: 'laser_tower' as const, x: 20 + k * 8, z: 20 })),
     );
-    criar(sim, [{ estrutura: 'ship', x: 0, z: 0 }]);
     rede(sim).banco = 0;
     demandas.forEach(([prioridade, demanda], k) =>
       setComponent(sim.state, ids[k]!, 'consumidor', {

@@ -3,11 +3,14 @@ import { dados, param, type Sim } from '../../src/sim';
 import type { SystemContext } from '../../src/sim/core/pipeline';
 import {
   alcancaAlguma,
+  cabosDe,
   distanciaEntreBordas,
   ligadasComEnergia,
   naRedeComEnergia,
+  pontosDeBifurcacao,
   redeDe,
   redePrincipal,
+  saidasDe,
   tipoPrecisaDeEnergia,
 } from '../../src/sim/energia/cabos';
 import { ehDeposito, pontosDeEntrega } from '../../src/sim/economia/estoque';
@@ -177,5 +180,61 @@ describe('T-172 — ENE-29, IA-13, D-86: Armazém na rede e Central da IA', () =
     const depois = sim.state.commandQueue.length;
     plantarCentral(c, montarQuadro(c, 'bra')!, ponto(0, 30));
     expect(sim.state.commandQueue.length).toBe(depois);
+  });
+});
+
+describe('T-174 — ENE-26, UNI-15, IA-13, D-87: ligação 1:1 pelas Centrais', () => {
+  it('ENE-26: estrutura comum tem uma saída; o cabo novo troca o antigo', () => {
+    const sim = partida(mundoLiso());
+    const [nave] = criar(sim, [{ estrutura: 'ship', x: 0, z: 0 }]);
+    const [solar] = criar(sim, [{ estrutura: 'solar_plant', x: 18, z: 0 }]);
+    const [hub] = criar(sim, [{ estrutura: 'power_hub', x: 30, z: 0, semCabo: true }]);
+    expect(saidasDe(sim.state, solar!)).toBe(1);
+    expect(cabosDe(sim.state, solar!)).toEqual([nave]);
+    ordenar(sim, 'ligar_cabo', { de: solar, para: hub });
+    const eventos = sim.step().map((e) => e.tipo);
+    expect(cabosDe(sim.state, solar!)).toEqual([hub]);
+    expect(eventos).toContain('cabo_trocado');
+  });
+
+  it('ENE-26/UNI-15: Nave e Central têm cabo_saidas_central saídas; cheias, recusam', () => {
+    const sim = partida(mundoLiso());
+    criar(sim, [{ estrutura: 'ship', x: -60, z: 0 }]);
+    const [hub] = criar(sim, [{ estrutura: 'power_hub', x: 0, z: 0, semCabo: true }]);
+    const n = param('cabo_saidas_central');
+    expect(n).toBeGreaterThan(1);
+    const solares = criar(
+      sim,
+      Array.from({ length: n + 1 }, (_, k) => ({
+        estrutura: 'solar_plant' as const,
+        x: 15 * Math.cos((k / (n + 1)) * 2 * Math.PI),
+        z: 15 * Math.sin((k / (n + 1)) * 2 * Math.PI),
+        semCabo: true,
+      })),
+    );
+    for (const s of solares.slice(0, n)) plugar(sim, s!, hub!);
+    expect(cabosDe(sim.state, hub!)).toHaveLength(n);
+    ordenar(sim, 'ligar_cabo', { de: solares[n], para: hub });
+    const eventos = sim.step().map((e) => e.tipo);
+    expect(eventos).toContain('cabo_recusado');
+    expect(cabosDe(sim.state, hub!)).toHaveLength(n);
+    expect(cabosDe(sim.state, solares[n]!)).toEqual([]);
+  });
+
+  it('IA-13: a estrutura comum não pega a última saída livre (fica para a próxima Central)', () => {
+    const sim = partida(mundoLiso());
+    const [nave] = criar(sim, [{ estrutura: 'ship', x: 0, z: 0 }]);
+    const n = param('cabo_saidas_central');
+    criar(
+      sim,
+      Array.from({ length: n - 1 }, (_, k) => ({
+        estrutura: 'solar_plant' as const,
+        x: 18 * Math.cos((k / n) * 2 * Math.PI),
+        z: 18 * Math.sin((k / n) * 2 * Math.PI),
+      })),
+    );
+    expect(cabosDe(sim.state, nave!)).toHaveLength(n - 1);
+    expect(pontosDeBifurcacao(sim.state, 'bra', false)).toEqual([]);
+    expect(pontosDeBifurcacao(sim.state, 'bra', true)).toEqual([nave]);
   });
 });

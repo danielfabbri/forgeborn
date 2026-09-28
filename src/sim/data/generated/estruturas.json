@@ -178,5 +178,20 @@
     "manutencao_en_s": 1,
     "deposito": false,
     "arma": null
+  },
+  {
+    "id": "power_hub",
+    "nome": "Central de Distribuição",
+    "hp": 250,
+    "pegada_m": 3,
+    "visao_m": 8,
+    "deteccao_m": 0,
+    "geracao_en_s": 0,
+    "banco_en": 0,
+    "portas": 0,
+    "taxa_porta_en_s": 0,
+    "manutencao_en_s": 0,
+    "deposito": false,
+    "arma": null
   }
 ]

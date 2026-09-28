@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.3.2.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.4.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -23,7 +23,8 @@ export type AlertasId =
   | 'AL-19'
   | 'AL-20'
   | 'AL-21'
-  | 'AL-22';
+  | 'AL-22'
+  | 'AL-23';
 
 export interface AlertasRow {
   id: AlertasId;
@@ -122,6 +123,7 @@ export type CustosId =
   | 'aa_battery'
   | 'mag_tower'
   | 'antenna'
+  | 'power_hub'
   | 'missile_short'
   | 'missile_long'
   | 'mine';
@@ -191,7 +193,8 @@ export type EstruturasId =
   | 'missile_silo'
   | 'aa_battery'
   | 'mag_tower'
-  | 'antenna';
+  | 'antenna'
+  | 'power_hub';
 
 export interface EstruturasRow {
   id: EstruturasId;
@@ -376,6 +379,8 @@ export type ParametrosChave =
   | 'destroco_nave_cu'
   | 'destroco_nave_li'
   | 'destroco_nave_ti'
+  | 'cabo_alcance_m'
+  | 'cabo_alcance_central_m'
   | 'limiar_bateria_baixa_pct'
   | 'modo_reserva_vel_pct'
   | 'auto_recarga_trabalhador_pct'

@@ -397,6 +397,24 @@
     "tempo_s": 12
   },
   {
+    "id": "power_hub",
+    "nome": "Central de Distribuição",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 15,
+    "si": 10,
+    "cu": 25,
+    "li": 0,
+    "ti": 0,
+    "u": 0,
+    "vr": 62.5,
+    "ref_x": null,
+    "en_impressao": 20,
+    "tempo_s": 9
+  },
+  {
     "id": "missile_short",
     "nome": "Míssil de Curto Alcance",
     "categoria": "municao",

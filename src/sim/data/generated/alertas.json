@@ -152,5 +152,12 @@
     "gatilho": "Corpo alheio no domínio do jogador (REG-26)",
     "prioridade": "media",
     "cooldown_s": 20
+  },
+  {
+    "id": "AL-23",
+    "texto": "{item} pronta, mas fora da rede.",
+    "gatilho": "Estrutura que precisa de energia fica pronta sem cabo (ENE-29)",
+    "prioridade": "media",
+    "cooldown_s": 10
   }
 ]

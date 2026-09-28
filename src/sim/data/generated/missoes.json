@@ -17,7 +17,8 @@
       "storage",
       "solar_plant",
       "wall",
-      "gate"
+      "gate",
+      "power_hub"
     ],
     "tempo_par_min": 20,
     "versao": "v1.0"

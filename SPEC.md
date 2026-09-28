@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.3.2 — rascunho para aprovação |
+| Versão do SPEC | 1.4.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -409,7 +409,7 @@ flowchart LR
 
 ### 6.1 Modelo em duas camadas
 
-1. **Rede** (uma por nação): usinas e Nave geram EN/s para um **banco** global. Estruturas consomem direto da rede, sem cabos (transmissão por feixe).
+1. **Redes** (por cabos, D-85): estruturas ligadas por cabos formam uma rede; usinas e Nave geram EN/s para o **banco** da rede em que estão, e as estruturas da rede consomem dele. Uma nação pode ter várias redes independentes (ENE-25).
 2. **Baterias** (uma por unidade móvel): cada corpo móvel tem bateria própria, que se gasta ao **realizar tarefas** e só é recarregada fisicamente: acoplado a uma **porta de recarga** (Nave e usinas) ou por uma **Bateria Móvel**.
 
 ```mermaid
@@ -426,13 +426,27 @@ flowchart LR
 
 ### 6.2 Rede
 
-- **ENE-01** — Geração da rede = reator da Nave + Σ usinas solares × `fator_solar` do cenário (× eventos) + Σ usinas nucleares ligadas e abastecidas. Valores em `dados:estruturas`.
-- **ENE-02** — Capacidade do banco = Σ `banco_en` das estruturas vivas. Geração excedente com o banco cheio é perdida.
+- **ENE-01** — Geração de uma rede (ENE-25) = reator da Nave (se ela estiver na rede) + Σ usinas solares × `fator_solar` do cenário (× eventos) + Σ usinas nucleares abastecidas, todas da rede. Valores em `dados:estruturas`.
+- **ENE-02** — Capacidade do banco de uma rede = Σ `banco_en` das estruturas vivas da rede; o banco fica guardado nessas estruturas e se divide entre as redes quando elas se separam. Geração excedente com o banco cheio é perdida.
 - **ENE-03** — A rede alimenta: disparos de Torres e da defesa da Nave (`en_disparo`), a manutenção das estruturas (`manutencao_en_s`, com a prioridade das defesas em ENE-04; sem energia, a estrutura não funciona), impressão feita pela Nave e portas de recarga.
 - **ENE-04** — **Racionamento.** Se o banco chega a 0 e a demanda do tick excede a geração, a energia disponível é distribuída nesta ordem de prioridade: (1) defesas; (2) impressão na Nave e na Base de Lançamento; (3) portas de recarga, divididas igualmente entre as unidades acopladas. Consumidor atendido em parte funciona proporcionalmente mais devagar (a torre dispara mais devagar, a porta carrega mais devagar). O satélite não consome da rede (UNI-05, D-51).
 - **ENE-05** — Destruir estruturas reduz geração e capacidade na hora. Se o banco passar da nova capacidade, o excedente se perde.
-- **ENE-06** — A **Usina Nuclear** consome `nuclear_consumo_u` de Urânio do estoque a cada `nuclear_intervalo_s` enquanto está ligada, mesmo com o banco cheio. Sem Urânio gera 0 e dispara AL-10. O jogador PODE desligá-la e religá-la (religar leva `nuclear_religar_s`).
+- **ENE-06** — A **Usina Nuclear** fica sempre ligada (não há como desligá-la, D-85): consome `nuclear_consumo_u` de Urânio do estoque a cada `nuclear_intervalo_s`, mesmo com o banco cheio. Sem Urânio gera 0 e dispara AL-10.
 - **ENE-07** — A **Usina Solar** gera `geracao_en_s` × `fator_solar` do cenário. Eventos de cenário (ex.: tempestade em Marte) aplicam multiplicadores temporários.
+
+### 6.2.1 Cabos e Central de Distribuição (D-85)
+
+- **ENE-25** — **Rede** = conjunto de estruturas prontas ligadas entre si por cabos (a Nave é uma estrutura como as outras). ENE-01 a ENE-05 valem para cada rede separadamente. Estrutura sem cabo é uma rede só dela: não recebe nem entrega energia a outras. Uma nação pode ter várias redes independentes (por exemplo, uma expansão distante com as próprias Usinas Solares). Os cabos não têm limite de carga.
+- **ENE-26** — **Plugar.** Com uma estrutura própria pronta selecionada, o clique direito em outra estrutura própria pronta puxa um cabo entre as duas (Comando "ligar_cabo"), se a distância entre as bordas das pegadas for no máximo `cabo_alcance_m`, ou `cabo_alcance_central_m` quando uma das pontas for a Nave ou uma Central de Distribuição. Uma estrutura pode ter vários cabos (malha). O botão **Desplugar** do cartão remove todos os cabos da estrutura selecionada.
+- **ENE-27** — Os cabos correm finos pelo chão, na cor da nação, e não são alvo. Um cabo some quando uma das pontas é destruída ou reciclada; o que dependia dele fica em outra rede (ou sem rede).
+- **ENE-28** — Portas de recarga, disparos pagos pela rede (Torre, Abrigo, Antiaérea, Varredura Orbital), manutenção e impressão da Nave e da Base de Lançamento usam a rede da própria estrutura.
+- **ENE-29** — Estrutura pronta que precisa de energia (gera, guarda, consome ou tem portas) e está sem cabo dispara AL-23 e mostra o ícone de sem rede. Armazém, Muro e Portão funcionam sem rede.
+
+<!-- dados:parametros -->
+| chave | valor | unidade | descricao |
+|---|---|---|---|
+| cabo_alcance_m | 30 | m | Distância máxima entre as bordas das pontas de um cabo (ENE-26) |
+| cabo_alcance_central_m | 80 | m | Idem, quando uma ponta é a Nave ou uma Central de Distribuição |
 
 ### 6.3 Baterias das unidades
 
@@ -474,7 +488,7 @@ flowchart LR
 
 ### 6.6 Leitura no HUD
 
-- **ENE-22** — O HUD mostra a geração (+EN/s), o consumo médio dos últimos 10 s (−EN/s), o banco (atual/capacidade) e um indicador: **verde** (saldo ≥ 0), **amarelo** (saldo < 0 com banco acima de 25%) ou **vermelho** (banco em 25% ou menos com saldo < 0, ou racionamento ativo).
+- **ENE-22** — A barra do topo mostra a rede da Nave e quantas redes isoladas a nação tem; o painel de uma estrutura selecionada mostra a rede dela, ou "sem rede" (D-85). A leitura mostra a geração (+EN/s), o consumo médio dos últimos 10 s (−EN/s), o banco (atual/capacidade) e um indicador: **verde** (saldo ≥ 0), **amarelo** (saldo < 0 com banco acima de 25%) ou **vermelho** (banco em 25% ou menos com saldo < 0, ou racionamento ativo).
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -599,11 +613,12 @@ flowchart LR
 | aa_battery | Bateria Antiaérea | estrutura | printer | 35 | 14 | 18 | 7 | 7 | 0 | 111 | — | 80 | 18 |
 | mag_tower | Torre Magnética | estrutura | printer | 49 | 21 | 35 | 14 | 11 | 0 | 183,5 | — | 120 | 24 |
 | antenna | Antena | estrutura | printer | 30 | 50 | 30 | 0 | 0 | 0 | 125 | — | 50 | 12 |
+| power_hub | Central de Distribuição | estrutura | printer | 15 | 10 | 25 | 0 | 0 | 0 | 62,5 | — | 20 | 9 |
 | missile_short | Míssil de Curto Alcance | municao | missile_silo | 20 | 0 | 10 | 5 | 0 | 0 | 45 | — | 40 | 12 |
 | missile_long | Míssil de Longo Alcance | municao | missile_silo | 60 | 0 | 30 | 20 | 20 | 5 | 230 | — | 150 | 27 |
 | mine | Mina | municao | hover_minelayer | 6 | 0 | 2 | 1 | 0 | 0 | 11 | — | 20 | 3,6 |
 
-Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação, Silo, Bateria Móvel, Torre, Armazém, Solar, Muro, Portão, Antena. **T2** (exige Ti) = OPQ, Plantio de Minas, Drones. **T3** (exige U) = Usina Nuclear, Base de Lançamento.
+Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação, Silo, Bateria Móvel, Torre, Armazém, Solar, Muro, Portão, Antena, Central de Distribuição. **T2** (exige Ti) = OPQ, Plantio de Minas, Drones. **T3** (exige U) = Usina Nuclear, Base de Lançamento.
 
 ### 8.2 Unidades móveis
 
@@ -642,6 +657,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | aa_battery | Bateria Antiaérea | 500 | 4 | 24 | 0 | 0 | 0 | 0 | 0 | 0 | nao | aa_missil |
 | mag_tower | Torre Magnética | 600 | 5 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | antenna | Antena | 250 | 3 | 100 | 0 | 0 | 0 | 0 | 0 | 1 | nao | — |
+| power_hub | Central de Distribuição | 250 | 3 | 8 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 
 ### 8.4 Armas
 
@@ -778,6 +794,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 #### Torre Magnética — `mag_tower`
 - **UNI-13** — Campo eletromagnético de raio `mag_raio_m`. Unidades móveis inimigas no campo ficam mais lentas (até `mag_lentidao_max_pct` no centro) e perdem energia da bateria (até `mag_dreno_max_en_s` no centro); o efeito cai em linha até zero na borda e, em unidades blindadas, vale `mag_fator_blindada_pct`. Vários campos não se somam: vale o mais forte. A torre guarda o que drena até `mag_banco_max_en`; cheia, para de drenar até gastar parte. Ela repassa a até `mag_max_aliados` unidades próprias no campo, as de menor % primeiro, até `mag_repasse_en_s` cada (D-65), e repara até `mag_max_aliados` unidades móveis próprias no campo, as mais feridas primeiro, a `mag_reparo_hp_s` cada (D-72).
 - **UNI-14** — **Antena** (`antenna`, D-83): estrutura de observação de alta visibilidade: enxerga `visao_m` em volta (a maior visão fixa do jogo), não detecta furtivos, não tem arma e consome `manutencao_en_s` da rede; sem energia, não enxerga.
+- **UNI-15** — **Central de Distribuição** (`power_hub`, D-85): estrutura barata e frágil que só serve de ponto da rede: alcança `cabo_alcance_central_m` com seus cabos, para levar a rede a outras áreas. Não gera, não guarda nem gasta energia.
 - **Visual:** coluna de bobinas com anéis que brilham enquanto o campo age.
 
 ### 8.6 Autonomia padrão (resumo)
@@ -1015,7 +1032,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ship | E | Imprimir Hover de Exploração |
 | ship | I | Imprimir Impressora 3D |
 | ship | Q | Recolher ou liberar os mineradores (CMB-28) |
-| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena |
+| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição |
 | missile_silo | C / L | Fabricar míssil curto / longo |
 | printer | U | Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, B Bombardeiro, L Drone Laser, V Silo, C Bateria |
 | hover_explorer | C | Coletar |
@@ -1030,7 +1047,6 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | satellite_uplink | T | Reposicionar satélite |
 | satellite_uplink | G | Varredura Orbital |
 | gate | T | Trancar ou destrancar o portão |
-| nuclear_plant | T | Ligar ou desligar |
 | controle_direto | W A S D | Mover e deslocar lateralmente |
 | controle_direto | Mouse | Mirar e orientar |
 | controle_direto | Clique esquerdo | Arma principal (ou minerar) |
@@ -1081,6 +1097,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 - **IA-10** — Mísseis: a IA mantém `ia_misseis_curtos` curtos prontos e, do Normal para cima, `ia_misseis_longos` longos. Curtos defendem: são lançados contra inimigos visíveis a até `ia_raio_defesa_m` de uma estrutura própria. Do Normal para cima, um longo é lançado contra uma estrutura inimiga conhecida (vista ou fantasma) no alcance, no máximo um a cada `ia_missil_longo_intervalo_s` (D-66).
 - **IA-11** — Temperamento da IA (D-81): avisada (REG-26), recolhe os corpos do domínio alheio antes do prazo, menos na Brutal e na onda de provocação (IA-12), que ficam. A IA escolhe expansões e rotas de batedor fora do domínio de nações pacíficas com ela, menos na Brutal.
 - **IA-12** — Provocação (D-82): sem nenhuma guerra, quando a onda estaria pronta (IA-04), a IA escolhe um alvo e manda a onda para o domínio dele, ignorando o aviso; a guerra começa pelo prazo de REG-26. Fácil nunca provoca. Normal só provoca a nação conhecida mais fraca (menos estruturas conhecidas) e só se ela tiver menos estruturas que a própria IA. Difícil provoca a mais próxima; Brutal, a mais fraca.
+- **IA-13** — Cabos da IA (D-85): a IA pluga cada estrutura pronta que precisa de energia na estrutura ligada mais próxima da rede da Nave ao alcance, e só posiciona essas estruturas onde algum ponto dessa rede alcança.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1245,14 +1262,14 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **CAM-04** — O progresso é salvo automaticamente ao fim de cada missão (TEC-21). Há até 3 slots de campanha.
 - **CAM-05** — A Missão 0 é um tutorial guiado no Campo de Testes de um laboratório na Terra (§14.5): passos com destaque na interface e narração da IA, usando as unidades móveis e fixas liberadas contra alvos de treino. Pode ser pulado. A campanha na Lua começa na Missão 1 (D-73).
 - **CAM-06** — **Oponentes sem Nave.** *Posto avançado* (`posto_passivo`, Missão 1): 2 Torres, 1 Armazém, 1 Usina Solar e 3 EX1 Defensivos em volta da zona de pouso oposta à do jogador; as armas só respondem no alcance. *Alvos de treino* (`alvos_treino`, Missão 0): 1 Armazém, 1 Usina Solar e 3 EX1 Passivos em volta do ponto marcado do passo 6; nunca disparam. Nenhum dos dois coleta, produz ou ataca. A nação é eliminada quando perde todas as estruturas e unidades (no lugar de REG-09), e a missão é vencida (D-73).
-- **CAM-07** — Passos do tutorial (Missão 0) e quando cada um se completa (na ordem; um passo só conta depois do anterior): (1) o Hover inicial entrega Ferro; (2) um 2º Hover de Exploração é impresso; (3) uma Impressora é impressa; (4) uma Usina Solar fica pronta; (5) um Armazém fica pronto a até `tutorial_raio_armazem_m` de uma jazida de Cobre; (6) um Hover de Observação é impresso e o ponto marcado (a zona central de ECO-08 mais próxima da Nave, mostrado por um farol no mundo e no minimapa) fica visível; (7) uma Torre de Defesa fica pronta; (8) um Muro e um Portão ficam prontos; (9) 2 EX1 impressos e os alvos de treino destruídos. Cada passo mostra o texto, fala pela voz da IA (AUD-03) e destaca o elemento da interface que resolve o passo. **Pular tutorial** esconde os passos; o objetivo segue o mesmo (D-73).
+- **CAM-07** — Passos do tutorial (Missão 0) e quando cada um se completa (na ordem; um passo só conta depois do anterior): (1) o Hover inicial entrega Ferro; (2) um 2º Hover de Exploração é impresso; (3) uma Impressora é impressa; (4) uma Usina Solar fica pronta e ligada por cabo à rede da Nave (ENE-26); (5) um Armazém fica pronto a até `tutorial_raio_armazem_m` de uma jazida de Cobre; (6) um Hover de Observação é impresso e o ponto marcado (a zona central de ECO-08 mais próxima da Nave, mostrado por um farol no mundo e no minimapa) fica visível; (7) uma Torre de Defesa fica pronta; (8) um Muro e um Portão ficam prontos; (9) 2 EX1 impressos e os alvos de treino destruídos. Cada passo mostra o texto, fala pela voz da IA (AUD-03) e destaca o elemento da interface que resolve o passo. **Pular tutorial** esconde os passos; o objetivo segue o mesmo (D-73).
 - **CAM-08** — Fim da missão: na vitória, as estrelas (CAM-03) e o melhor tempo entram no slot e a próxima missão é desbloqueada; a tela de fim mostra as estrelas e **Voltar ao Universo**. Na derrota, **Tentar de novo** ou **Voltar ao Universo**. O HP mínimo da Nave para a ★★★ é medido durante toda a missão (D-73).
 - **CAM-09** — **Slots.** Ao entrar na Campanha, o jogador escolhe um dos 3 slots: vazio (novo: Escolha de Nação, FLX-05) ou em uso (nação, missões concluídas e estrelas; **Continuar** ou **Apagar**, com confirmação). A Missão 2 usa o cenário Lua — Shackleton (§18.2) com a seed curada da missão (D-73).
 
 <!-- dados:missoes -->
 | ordem | id | cenario | nome | oponentes | objetivo | libera | tempo_par_min | versao |
 |---|---|---|---|---|---|---|---|---|
-| 0 | m00 | terra_lab | Campo de Testes | alvos_treino | Tutorial; destruir os alvos de treino | hover_explorer+printer+hover_ex1+hover_scout+laser_tower+storage+solar_plant+wall+gate | 20 | v1.0 |
+| 0 | m00 | terra_lab | Campo de Testes | alvos_treino | Tutorial; destruir os alvos de treino | hover_explorer+printer+hover_ex1+hover_scout+laser_tower+storage+solar_plant+wall+gate+power_hub  | 20 | v1.0 |
 | 1 | m01 | lua | Primeira Forja | posto_passivo | Destruir o posto avançado inimigo | antenna | 40 | v1.0 |
 | 2 | m02 | lua_shackleton | Sombra Eterna | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq+aa_battery+mag_tower | 60 | v1.0 |
 | 3 | m03 | marte | Poeira Vermelha | normal+normal | Eliminar as nações rivais | nuclear_plant+hover_minelayer | 80 | v1.0 |
@@ -1362,6 +1379,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | AL-20 | {nacao} agora é inimiga. | Par em guerra (REG-26, REG-27) | alta | 0 |
 | AL-21 | Paz com {nacao}. | Trégua (REG-28) | media | 0 |
 | AL-22 | {nacao} entrou no meu domínio. | Corpo alheio no domínio do jogador (REG-26) | media | 20 |
+| AL-23 | {item} pronta, mas fora da rede. | Estrutura que precisa de energia fica pronta sem cabo (ENE-29) | media | 10 |
 
 ### 17.3 Acessibilidade
 
@@ -1662,6 +1680,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-82 | A IA pacífica provoca guerra conforme a dificuldade (IA-12): a onda entra no domínio do alvo e a guerra começa pelo aviso de 10 s; Fácil nunca, Normal só contra quem é mais fraco que ela, Difícil a mais próxima, Brutal a mais fraca. Mantém as guerras entre IAs e os invariantes de vitória (INV-12, INV-14). | Resposta do produto: "Sim, conforme a dificuldade". | Aprovada |
 | D-83 | Ritmo mais rápido e novos recursos: hovers ×1,5 de velocidade; estruturas ×0,7 de custo; `tempo_s` de tudo ×0,6; Usina Solar ×1,5 (`geracao_en_s` 4,5); `carga_hover_u` 20 e `taxa_mineracao_u_s` ×1,5; Antena (UNI-14, visão 100 m, 1 EN/s, liberada na Missão 1); satélites sem limite por base; macete "maistudo"; barras dos não selecionados a 30%; minimapa em mapa-múndi com o norte fixo; atmosfera como esfera a 90% na visão planetária. | Pedido do produto; respostas: hovers 1,5×, estruturas −30% e tempo −40%, solar 1,5×, antena com visão de 100 m. | Aprovada |
 | D-84 | Alertas de prioridade baixa (impressão concluída, jazida esgotada, hovers ociosos, mina detonada) ficam só na pilha, sem voz nem bipe. | Pedido do produto: "os áudios ainda estão disparando em momentos estranhos"; numa partida de 25 min, a impressão concluída sozinha falou 76 vezes. | Aprovada |
+| D-85 | Rede elétrica por cabos: estruturas ligadas por cabos formam redes independentes (ENE-25 a ENE-29), plugadas à mão com o clique direito, alcance de 30 m (80 m com a Nave ou a Central de Distribuição, UNI-15), cabos visíveis no chão e fora de alcance de ataque; a Central é barata e frágil, sem limite de carga. A Usina Nuclear fica sempre ligada. | Pedido do produto: "fazer uma unidade fixa de central de distribuição… plugar uma unidade fixa à rede de energia… com o tempo, todas as construções deverão compor uma malha… a usina nuclear sempre fique ligada"; respostas: fora da rede não recebe nem entrega; plugar manual; 30/80 m; cabos não são alvo, a Central sim; várias redes independentes; Central barata e frágil; HUD com a rede da Nave e a da seleção. | Aprovada |
 
 ---
 
@@ -1762,3 +1781,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.3.0 | 2026-09-27 | D-83: `dados:custos` (estruturas ×0,7, `tempo_s` ×0,6, `antenna`), `dados:estruturas` (`geracao_en_s` da solar 4,5, `antenna`), `vel_m_s` dos hovers ×1,5, `taxa_mineracao_u_s` ×1,5, `carga_hover_u` 20, UNI-04, UNI-14, PRD-01, ENE-03, TEC-27, UI-07, CTL-03, CTL-16, atalho E Antena, Missão 1 libera a Antena; `barras_opacidade_nao_selecionados_pct`, `atmosfera_opacidade_pct`. |
 | 1.3.1 | 2026-09-27 | D-84: AUD-03, alertas de prioridade baixa sem voz nem sinal sonoro. |
 | 1.3.2 | 2026-09-27 | INV-02: 30–45 s (era 45–60 s), consequência do ritmo mais rápido de D-83 (a Impressora sai aos 38 s). |
+| 1.4.0 | 2026-09-27 | D-85: §6.2.1 (ENE-25 a ENE-29, `cabo_alcance_m`, `cabo_alcance_central_m`), §6.1, ENE-01, ENE-02, ENE-06 (nuclear sempre ligada), ENE-22, UNI-15 e `power_hub`, IA-13, CAM-07 passo 4, AL-23, atalho D, Missão 0 libera a Central. |

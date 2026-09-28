@@ -276,6 +276,18 @@
     "descricao": "Destroço da Nave: Titânio"
   },
   {
+    "chave": "cabo_alcance_m",
+    "valor": 30,
+    "unidade": "m",
+    "descricao": "Distância máxima entre as bordas das pontas de um cabo (ENE-26)"
+  },
+  {
+    "chave": "cabo_alcance_central_m",
+    "valor": 80,
+    "unidade": "m",
+    "descricao": "Idem, quando uma ponta é a Nave ou uma Central de Distribuição"
+  },
+  {
     "chave": "limiar_bateria_baixa_pct",
     "valor": 20,
     "unidade": "%",

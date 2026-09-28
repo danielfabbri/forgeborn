@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v1.3.2 |
+| Derivado de | `SPEC.md` v1.4.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -43,6 +43,7 @@
 | M14 Release web | T-140 – T-143 | Performance, compatibilidade e deploy |
 | M15 Pós-v1 | T-150 – T-160 | Cenários e missões 3–8, salvar partida, inglês |
 | M16 Vastidão | T-161 – T-169 | Corpos do tamanho proporcional, ritmo de exploração (D-79) |
+| M17 Rede e cidades | T-170 – T-179 | Rede elétrica por cabos (D-85) |
 
 ## Caminho crítico até o MVP
 
@@ -373,3 +374,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: projeção equiretangular com o norte fixo; rola só leste–oeste acompanhando o foco; arrastar rola; clique e clique direito continuam valendo.
 - [x] **T-169 — Atmosfera como esfera na visão planetária** · P · Spec: CTL-16, `atmosfera_opacidade_pct`, D-83 · Feito: 2026-09-27
   - Aceite: ao afastar, céu e névoa dão lugar ao espaço estrelado e a atmosfera é uma esfera em volta do corpo a 90% de opacidade.
+
+## M17 — Rede e cidades (D-85)
+
+- [ ] **T-170 — Rede elétrica por cabos e Central de Distribuição** · G · Spec: ENE-01, ENE-02, ENE-06, ENE-22, ENE-25 – ENE-29, UNI-15, IA-13, CAM-07, AL-23, D-85 · Dep: T-167
+  - Aceite: redes por componente de cabos, com banco por estrutura; plugar com o clique direito dentro do alcance (30/80 m) e desplugar pelo cartão; cabos no chão; estrutura sem rede não recebe nem entrega (ícone e AL-23); a IA pluga e posiciona ao alcance; Central de Distribuição (modelo, B → D); nuclear sempre ligada; HUD com a rede da Nave e a da seleção; tutorial ensina a plugar.

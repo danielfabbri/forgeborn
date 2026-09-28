@@ -23,7 +23,8 @@ export type SinalDeOrdem =
   | 'construir'
   | 'reciclar'
   | 'patrulhar'
-  | 'satelite';
+  | 'satelite'
+  | 'cabo';
 
 const DURACAO_MS = 900;
 const ELEVACAO_M = 0.4;
@@ -148,6 +149,25 @@ const FORMAS: Record<SinalDeOrdem, { cor: string; tracos: Traco[] }> = {
         [1.25, -0.1],
         [0.95, -0.2],
         [0.8, 0.1],
+      ],
+    ],
+  },
+  // D-85: cabo — tomada (círculo com dois pinos), em âmbar.
+  cabo: {
+    cor: '#ffd27a',
+    tracos: [
+      ...poligono(20, 0, 1.0),
+      [
+        [-0.3, 0.2],
+        [-0.3, -0.35],
+      ],
+      [
+        [0.3, 0.2],
+        [0.3, -0.35],
+      ],
+      [
+        [0, 1.0],
+        [0, 1.6],
       ],
     ],
   },

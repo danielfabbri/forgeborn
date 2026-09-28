@@ -22,6 +22,7 @@ import { avancar, tangente } from '../map/esfera';
 import { direcaoDoComando, distanciaM, raioDoMundo } from '../units/superficie';
 import { armaDe } from '../combate/armas';
 import { emGuerra } from '../relacoes/temperamento';
+import { gastarDaRede } from '../energia/cabos';
 
 /** UNI-04: a base pronta cria o satélite, que começa a subir sobre ela. */
 export function lancarSatelite(
@@ -209,11 +210,11 @@ export const comandosDeSatelite: Record<string, CommandHandler> = {
     const d = (comando.dados ?? {}) as { ids?: unknown; x?: unknown; y?: unknown; z?: unknown };
     const alvo = direcaoDoComando(d);
     if (!alvo) return;
-    const rede = ctx.state.energia[comando.nacao];
     for (const id of satelitesDa(ctx, comando.nacao, d.ids)) {
       const s = getComponent(ctx.state, id, 'satelite')!;
-      if (s.recarga_s > 1e-9 || !rede || rede.banco < param('varredura_custo_en')) continue;
-      rede.banco -= param('varredura_custo_en');
+      if (s.recarga_s > 1e-9) continue;
+      // ENE-28: a Varredura sai do banco da rede da Base de Lançamento do satélite.
+      if (!gastarDaRede(ctx.state, s.base, param('varredura_custo_en'))) continue;
       s.varredura = { ponto: alvo, restante_s: param('varredura_duracao_s') };
       s.recarga_s = param('varredura_recarga_s');
     }

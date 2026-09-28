@@ -9,7 +9,6 @@ import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { ModoNevoa } from '../core/state';
 import type { NacaoId } from '../core/types';
 import { dados, type EstoqueInicialModo } from '../data';
-import { capacidadeDaRede } from '../energia/rede';
 import { avancar, girar, normalizar, norteEm, type Vec3 } from '../map/esfera';
 import { criarEstrutura, criarUnidade } from '../units/criar';
 import { raioDoMundo } from '../units/superficie';
@@ -18,6 +17,7 @@ import { getComponent } from '../core/entities';
 import type { EstruturasId, MoveisId } from '../data';
 import { explorar, raioExploradoInicial } from '../visao/nevoa';
 import { nascer } from './fila';
+import { encherBancos } from '../energia/cabos';
 
 export const INICIAR_PARTIDA_COMMAND = 'iniciar_partida';
 /** CAM-06: monta um oponente sem Nave (posto avançado ou alvos de treino) em volta de um ponto. */
@@ -106,7 +106,7 @@ export function iniciarPartida(
     const nave = criarEstrutura(ctx, nacao, 'ship', normalizar(zona));
     if (nave === null) continue;
     for (const r of dados.recursos) ctx.state.estoques[nacao]![r.id] = estoque[r.id];
-    ctx.state.energia[nacao]!.banco = capacidadeDaRede(ctx.state, nacao);
+    encherBancos(ctx.state, nacao);
     explorar(ctx, nacao, normalizar(zona), raioExploradoInicial());
     nascer(ctx, nave, 'hover_explorer', false);
   }

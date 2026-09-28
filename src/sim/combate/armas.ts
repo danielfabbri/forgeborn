@@ -348,7 +348,8 @@ function passoEstrutura(ctx: SystemContext, id: EntityId, pendente: Pendente): v
   // A rede atende no próximo tick a demanda deste (a torre em racionamento dispara mais devagar).
   componente.demanda_en_s = alvo !== null && arma.recarga_s ? arma.en_disparo / arma.recarga_s : 0;
   if (alvo !== null) {
-    const pronta = componente.recarga_s <= 1e-9;
+    // ENE-25/ENE-28: sem energia da rede (fora dela ou rede vazia), nem o primeiro tiro sai.
+    const pronta = componente.recarga_s <= 1e-9 && componente.atendido > 1e-9;
     if (pronta && noAlcanceDeTiro(ctx, id, arma, alvo)) {
       disparar(ctx, id, arma, alvo, pendente);
       componente.recarga_s = arma.recarga_s ?? 0;

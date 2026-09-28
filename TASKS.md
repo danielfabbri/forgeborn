@@ -377,5 +377,5 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M17 — Rede e cidades (D-85)
 
-- [ ] **T-170 — Rede elétrica por cabos e Central de Distribuição** · G · Spec: ENE-01, ENE-02, ENE-06, ENE-22, ENE-25 – ENE-29, UNI-15, IA-13, CAM-07, AL-23, D-85 · Dep: T-167
+- [x] **T-170 — Rede elétrica por cabos e Central de Distribuição** · G · Spec: ENE-01, ENE-02, ENE-06, ENE-22, ENE-25 – ENE-29, UNI-15, IA-13, CAM-07, AL-23, D-85 · Dep: T-167 · Feito: 2026-09-27
   - Aceite: redes por componente de cabos, com banco por estrutura; plugar com o clique direito dentro do alcance (30/80 m) e desplugar pelo cartão; cabos no chão; estrutura sem rede não recebe nem entrega (ícone e AL-23); a IA pluga e posiciona ao alcance; Central de Distribuição (modelo, B → D); nuclear sempre ligada; HUD com a rede da Nave e a da seleção; tutorial ensina a plugar.

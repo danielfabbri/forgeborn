@@ -1,5 +1,6 @@
 import { t, type TextKey } from '../i18n';
 import { acoesDaSelecao, canvasDoRetrato, painelSelecao, tooltip } from './hud';
+import { param } from '../sim';
 
 const nome = (modelo: string) => t(`item.${modelo}` as TextKey);
 
@@ -58,6 +59,30 @@ export function PainelSelecao() {
                 {t('selecao.arma')}:{' '}
                 {t('selecao.arma_valor', { dano: sel.arma.dano, alcance: sel.arma.alcance })}
               </div>
+            )}
+            {sel.rede === 'sem_rede' && (
+              <div class="sem-rede" data-testid="selecao-sem-rede" title={dicaDaRede()}>
+                {t('rede.sem_rede')}
+              </div>
+            )}
+            {sel.rede && sel.rede !== 'sem_rede' && (
+              <div data-testid="selecao-rede" title={dicaDaRede()}>
+                {t('rede.leitura', {
+                  geracao: sel.rede.geracao.toFixed(1),
+                  banco: Math.floor(sel.rede.banco),
+                  capacidade: sel.rede.capacidade,
+                  n: sel.rede.membros,
+                })}
+              </div>
+            )}
+            {(sel.cabos ?? 0) > 0 && (
+              <button
+                type="button"
+                data-testid="desplugar"
+                onClick={() => acoesDaSelecao.desplugar?.(sel.id)}
+              >
+                {t('rede.desplugar')}
+              </button>
             )}
             {sel.modelo === 'gate' && sel.estado !== 'estado.em_obra' && (
               <button
@@ -123,4 +148,12 @@ export function Tooltip() {
       {dica.texto}
     </div>
   );
+}
+
+/** ENE-26: a dica de como plugar, com os alcances do SPEC. */
+function dicaDaRede(): string {
+  return t('rede.dica', {
+    alcance: param('cabo_alcance_m'),
+    central: param('cabo_alcance_central_m'),
+  });
 }

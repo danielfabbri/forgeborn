@@ -21,6 +21,7 @@ import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM } from '../units/superficie';
 import { alvoValido, armaDe } from './armas';
 import { aplicarDano, type TipoDeDano } from './dano';
+import { gastarDaRede } from '../energia/cabos';
 
 export const RECOLHER_MINERADORES_COMMAND = 'recolher_mineradores';
 
@@ -157,8 +158,9 @@ export function passoAbrigo(ctx: SystemContext): void {
       const abrigo = getComponent(state, hover, 'abrigo')!;
       const recarga = Math.max(0, (abrigo.recargas[0] ?? 0) - dt);
       abrigo.recargas = [recarga];
-      if (alvo === null || recarga > 1e-9 || !rede || rede.banco < arma.en_disparo) continue;
-      rede.banco -= arma.en_disparo;
+      // ENE-28: o disparo sai do banco da rede da estrutura.
+      if (alvo === null || recarga > 1e-9 || !rede) continue;
+      if (!gastarDaRede(state, estrutura, arma.en_disparo)) continue;
       abrigo.recargas = [arma.recarga_s ?? 0];
       ctx.emit('disparo', { atirador: estrutura, alvo, arma: arma.id });
       aplicarDano(ctx, alvo, arma.dano, arma.tipo_dano as TipoDeDano, estrutura, nacao);

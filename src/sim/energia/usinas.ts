@@ -1,9 +1,9 @@
 /**
- * Usina Nuclear (ENE-06): consome `nuclear_consumo_u` de Urânio do estoque a cada
- * `nuclear_intervalo_s` enquanto ligada, mesmo com o banco cheio. Sem Urânio gera 0 e dispara
- * AL-10. Desligar é imediato; religar leva `nuclear_religar_s`. (A solar, ENE-07, é só geração.)
+ * Usina Nuclear (ENE-06, D-85): sempre ligada, consome `nuclear_consumo_u` de Urânio do estoque
+ * a cada `nuclear_intervalo_s`, mesmo com o banco cheio. Sem Urânio gera 0 e dispara AL-10.
+ * (A solar, ENE-07, é só geração.)
  */
-import { entitiesWith, getComponent, isAlive } from '../core/entities';
+import { entitiesWith, getComponent } from '../core/entities';
 import { direcaoDe } from '../units/superficie';
 import type { CommandHandler, SystemContext } from '../core/pipeline';
 import { param } from '../data';
@@ -13,11 +13,7 @@ export function passoUsinas(ctx: SystemContext): void {
   for (const id of entitiesWith(state, 'reator', 'owner')) {
     const reator = getComponent(state, id, 'reator')!;
     // PRD-12: em obra a usina não funciona (nem queima Urânio, nem avisa que falta).
-    if (!reator.ligado || getComponent(state, id, 'obra')) continue;
-    if (reator.religando_s > 0) {
-      reator.religando_s = Math.max(0, reator.religando_s - dt);
-      continue;
-    }
+    if (getComponent(state, id, 'obra')) continue;
     const nacao = getComponent(state, id, 'owner')!.nacao;
     // Queima o ciclo corrente; se acabou, abastece com o próximo (geração contínua).
     reator.ciclo_s = Math.max(0, reator.ciclo_s - dt);
@@ -40,24 +36,5 @@ export function passoUsinas(ctx: SystemContext): void {
   }
 }
 
-export const comandosDasUsinas: Record<string, CommandHandler> = {
-  /** §12.4 (Usina Nuclear) T: ligar ou desligar. */
-  ligar_usina: (ctx, comando) => {
-    const d = (comando.dados ?? {}) as { ids?: unknown };
-    if (!Array.isArray(d.ids)) return;
-    const ids = [...new Set(d.ids)]
-      .filter((id): id is number => typeof id === 'number' && isAlive(ctx.state, id))
-      .filter((id) => getComponent(ctx.state, id, 'owner')?.nacao === comando.nacao)
-      .sort((a, b) => a - b);
-    for (const id of ids) {
-      const reator = getComponent(ctx.state, id, 'reator');
-      if (!reator) continue;
-      if (reator.ligado) {
-        reator.ligado = false;
-      } else {
-        reator.ligado = true;
-        reator.religando_s = param('nuclear_religar_s');
-      }
-    }
-  },
-};
+/** ENE-06 (D-85): a Usina Nuclear fica sempre ligada; não há comando de ligar ou desligar. */
+export const comandosDasUsinas: Record<string, CommandHandler> = {};

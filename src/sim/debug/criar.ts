@@ -9,6 +9,12 @@ import { dados, type EstruturasId, type MoveisId } from '../data';
 import { escalar, normalizar, soma, tangente, type Vec3 } from '../map/esfera';
 import { criarEstrutura, criarMina, criarUnidade } from '../units/criar';
 import { lancarSatelite } from '../visao/satelite';
+import { entitiesWith } from '../core/entities';
+import type { EntityId } from '../core/types';
+import type { SystemContext } from '../core/pipeline';
+import { arco } from '../map/esfera';
+import { direcaoDe } from '../units/superficie';
+import { ligarCabo } from '../energia/cabos';
 
 export const DEBUG_CRIAR_COMMAND = 'debug_criar';
 /** Aplica à nação que envia o estoque inicial de um modo (REG-05), para a cena de demonstração. */
@@ -33,8 +39,30 @@ export type Criacao =
       comSatelite?: boolean;
       /** D-56: rumo (tangente) de Muro e Portão. */
       rumo?: Vec3;
+      /**
+       * D-85: por padrão a estrutura de depuração já nasce ligada por cabo à estrutura mais
+       * próxima da nação (uma rede só, como antes dos cabos); `semCabo` a deixa fora.
+       */
+      semCabo?: boolean;
     }
   | { mina: true; nacao?: NacaoId; d: Vec3 };
+
+/** D-85 (depuração): liga a estrutura à estrutura mais próxima da nação, sem conferir alcance. */
+function plugarNaMaisProxima(ctx: SystemContext, id: EntityId, nacao: NacaoId): void {
+  const { state } = ctx;
+  const d = direcaoDe(getComponent(state, id, 'position')!);
+  let melhor: EntityId | null = null;
+  let menor = Infinity;
+  for (const outra of entitiesWith(state, 'structure', 'owner', 'position')) {
+    if (outra === id || getComponent(state, outra, 'owner')!.nacao !== nacao) continue;
+    const dist = arco(d, direcaoDe(getComponent(state, outra, 'position')!));
+    if (dist < menor) {
+      menor = dist;
+      melhor = outra;
+    }
+  }
+  if (melhor !== null) ligarCabo(state, id, melhor);
+}
 
 export const debugCriarHandlers: Record<string, CommandHandler> = {
   [DEBUG_DESTRUIR_COMMAND]: (ctx, comando) => {
@@ -57,6 +85,7 @@ export const debugCriarHandlers: Record<string, CommandHandler> = {
         if (dados.estruturas.some((e) => e.id === c.estrutura)) {
           const rumo = c.rumo ? (tangente(d, soma(d, escalar(c.rumo, 1e-3))) ?? null) : null;
           const id = criarEstrutura(ctx, nacao, c.estrutura, d, rumo);
+          if (id !== null && !c.semCabo) plugarNaMaisProxima(ctx, id, nacao);
           if (id !== null && c.comSatelite && c.estrutura === 'satellite_uplink') {
             lancarSatelite(ctx, id, nacao, d);
           }

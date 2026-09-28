@@ -57,6 +57,10 @@ export interface SimState {
   liberados: string[] | null;
   /** CAM-06 (D-73): nações sem Nave, eliminadas ao perder todas as estruturas e unidades. */
   semForja: NacaoId[];
+  /** ENE-25 (D-85): cabos entre estruturas, pares [a, b] com a < b, em ordem. */
+  cabos: Array<[EntityId, EntityId]>;
+  /** ENE-02 (D-85): banco (EN) guardado em cada estrutura, por id. */
+  bancos: Record<number, number>;
   /** REG-24 a REG-28: temperamento de cada par de nações (chave "a|b" em ordem). */
   relacoes: Record<string, Relacao>;
   /** CEN-03: próxima (ou atual) tempestade de poeira; só em cenários com o evento. */
@@ -131,6 +135,11 @@ export interface EstadoDaRede {
   geracao: number;
   /** ENE-04: racionamento ativo no último tick. */
   racionamento: boolean;
+  /**
+   * D-85: o último banco que a simulação escreveu (rede da Nave); se `banco` mudou por fora
+   * (depuração, testes), o valor novo é repartido entre as estruturas dessa rede.
+   */
+  bancoEscrito?: number;
 }
 
 function porRecurso(valor: (recurso: RecursosId) => number): Record<RecursosId, number> {
@@ -160,6 +169,8 @@ export function createInitialState(
     versaoObstaculos: 0,
     liberados: null,
     relacoes: {},
+    cabos: [],
+    bancos: {},
     semForja: [],
     estoques: Object.fromEntries(
       nacoes.map((n) => [n, porRecurso(() => 0)]),

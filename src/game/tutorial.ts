@@ -8,6 +8,7 @@ import type { SystemContext } from '../sim/core/pipeline';
 import type { Vec3 } from '../sim/map/esfera';
 import { direcaoDe, distanciaM } from '../sim/units/superficie';
 import { estadoEm, VISIVEL } from '../sim/visao/nevoa';
+import { redePrincipal } from '../sim/energia';
 
 export const TOTAL_DE_PASSOS = 9;
 
@@ -79,7 +80,10 @@ export class Tutorial {
       case 3:
         return contar(ctx, n, 'printer') >= 1;
       case 4:
-        return contar(ctx, n, 'solar_plant') >= 1;
+        // D-85: pronta e ligada por cabo à rede da Nave.
+        return redePrincipal(ctx.state, n).some(
+          (id) => getComponent(ctx.state, id, 'structure')!.tipo === 'solar_plant',
+        );
       case 5:
         return this.armazemPertoDoCobre(ctx);
       case 6:

@@ -8,6 +8,7 @@ import { avancar, girar, norteEm, tangente, type Vec3 } from '../map/esfera';
 import { validarPosicionamento } from '../producao/obra';
 import { raioDaPegada } from '../units/criar';
 import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
+import { alcancaAlguma, redePrincipal, tipoPrecisaDeEnergia } from '../energia/cabos';
 
 /** Corredor entre a estrutura nova e as vizinhas: o diâmetro do maior casco de unidade. */
 const CORREDOR_M = 2 * Math.max(...dados.moveis.map((m) => m.raio_m));
@@ -51,12 +52,15 @@ export function procurarLocal(
 ): Vec3 | null {
   const R = raioDoMundo(ctx);
   const inicio = (preferir && tangente(centro, preferir)) || norteEm(centro);
+  // IA-13 (D-85): quem precisa de energia só vai onde a rede da Nave alcança por cabo.
+  const rede = tipoPrecisaDeEnergia(tipo) ? redePrincipal(ctx.state, nacao) : null;
   for (const anel of aneis) {
     for (let k = 0; k < PONTOS_POR_ANEL; k++) {
       // Alterna os lados: 0, +1, −1, +2, −2… a partir do rumo preferido.
       const passo = k % 2 === 0 ? k / 2 : -(k + 1) / 2;
       const rumo = girar(inicio, centro, (passo * 2 * Math.PI) / PONTOS_POR_ANEL);
       const d = avancar(centro, rumo, anel / R).p;
+      if (rede && !alcancaAlguma(ctx, tipo, d, rede)) continue;
       if (validarPosicionamento(ctx, tipo, d, nacao) === null && deixaPassagem(ctx, tipo, d))
         return d;
     }

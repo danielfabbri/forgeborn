@@ -164,6 +164,10 @@ import {
 import { acoesDoPainel, avisoProducao, fotosDoPainel, painelProducao } from '../ui/producao';
 import { emGuerra, prazoDoAviso } from '../sim/relacoes/temperamento';
 import { AtmosferaDeFora } from '../render/atmosfera';
+import { caboAlcanca } from '../sim/energia/cabos';
+import { redesIsoladas } from '../sim/energia';
+import { precisaDeEnergia, redesDa } from '../sim/energia/cabos';
+import { CabosRender, type MarcadorSemRede } from '../render/cabos';
 
 /** D-42: a habilidade do clique direito de cada unidade (chave de i18n). */
 const HABILIDADES: Record<string, string> = {
@@ -472,6 +476,46 @@ export function iniciarPartida(): void {
   const aneis = new AneisDeSelecao(view.scene, (d) => alturaEm(pronto.mapa, d), R);
   const holograma = new HologramaRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
   const barras = new BarrasRender(view.scene);
+  // ENE-27/ENE-29 (D-85): cabos no chão e marcadores de sem rede.
+  const cabosRender = new CabosRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
+  let semRede: MarcadorSemRede[] = [];
+  let ultimoSemRede = 0;
+  const sincronizarCabos = (): void => {
+    const st = sim.state;
+    const direcao = (id: EntityId) => direcaoDe(getComponent(st, id, 'position')!);
+    const cabos = st.cabos
+      .filter(([a, b]) => {
+        const dono = getComponent(st, a, 'owner')?.nacao;
+        if (!dono) return false;
+        // Os alheios só com as duas pontas à vista (VIS-01).
+        return dono === jogador || (visivelAoJogador(a) && visivelAoJogador(b));
+      })
+      .map(([a, b]) => ({
+        a: direcao(a),
+        b: direcao(b),
+        cor: corDaNacao(getComponent(st, a, 'owner')!.nacao),
+      }));
+    const agora = performance.now();
+    if (agora - ultimoSemRede > 250) {
+      ultimoSemRede = agora;
+      const ligadas = new Set(
+        redesDa(st, jogador)
+          .filter((g) => g.length > 1)
+          .flat(),
+      );
+      semRede = unidades.corpos
+        .filter(
+          (c) =>
+            !c.movel &&
+            c.nacao === jogador &&
+            !ligadas.has(c.id) &&
+            !getComponent(st, c.id, 'obra') &&
+            precisaDeEnergia(st, c.id),
+        )
+        .map((c) => ({ x: c.x, y: c.y, z: c.z, cima: c.cima, altura: c.altura }));
+    }
+    cabosRender.sync(cabos, semRede, agora);
+  };
   const emblemas = new EmblemasRender(view.scene);
   const retrato = new RetratoRender();
   // UI-04: fotos dos itens do cartão de produção, na cor da nação do jogador.
@@ -514,6 +558,7 @@ export function iniciarPartida(): void {
           jazidas: () => jazidas.desenhadas,
           destrocos: () => combate.destrocosDesenhados,
           validarLocal: (tipo, d, rumo) => validarPosicionamento(leitura(), tipo, d, jogador, rumo),
+          caboAlcanca: (de, para) => caboAlcanca(leitura(), de, para),
           holograma,
           sinalizar: (tipo, d) => {
             sinalizadores.mostrar(tipo, d, performance.now());
@@ -573,6 +618,13 @@ export function iniciarPartida(): void {
       recolherMineradores: () => comandos.recolherMineradores(),
     };
     acoesDaSelecao.filtrar = (ids) => comandos.selecionar(ids);
+    acoesDaSelecao.desplugar = (id) =>
+      sim.enqueue({
+        tick: sim.state.tick,
+        nacao: jogador,
+        tipo: 'desligar_cabos',
+        dados: { ids: [id] } as never,
+      });
     acoesDaSelecao.trancar = (id) =>
       sim.enqueue({
         tick: sim.state.tick,
@@ -761,6 +813,7 @@ export function iniciarPartida(): void {
         transito: transito[r.id] ?? 0,
       })),
       energia: leituraDaRede(sim.state, jogador),
+      redesIsoladas: redesIsoladas(sim.state, jogador),
       corpos: corposDa(sim.state, jogador),
       relogio: relogio(sim.state.tick, sim.tickHz),
       nacoes: sim.state.nacoes
@@ -1272,6 +1325,7 @@ export function iniciarPartida(): void {
         jogador,
       );
       sincronizarBarras();
+      sincronizarCabos();
       atualizarParados(performance.now());
       destacarPasso(performance.now());
       if (farol) {

@@ -418,7 +418,7 @@ describe('T-044 — ENE-06, ENE-07: usinas', () => {
     expect(inicio - sim.state.estoques.bra.u).toBe(2 * param('nuclear_consumo_u'));
   });
 
-  it('ENE-06: sem Urânio gera 0 e dispara AL-10; desligar e religar leva nuclear_religar_s', () => {
+  it('ENE-06: sem Urânio gera 0 e dispara AL-10; sempre ligada, não há como desligar (D-85)', () => {
     const sim = partida(mundoLiso());
     sim.state.estoques.bra.u = 1;
     const [usina] = criar(sim, [{ estrutura: 'nuclear_plant', x: 0, z: 0 }]);
@@ -432,13 +432,9 @@ describe('T-044 — ENE-06, ENE-07: usinas', () => {
     sim.state.estoques.bra.u = 5;
     sim.step();
     expect(rede(sim).geracao).toBe(statsEstrutura('nuclear_plant').geracao_en_s);
+    // O antigo comando de ligar/desligar não existe mais: ela segue gerando.
     ordenar(sim, 'ligar_usina', { ids: [usina] });
     sim.step();
-    expect(rede(sim).geracao).toBe(0);
-    ordenar(sim, 'ligar_usina', { ids: [usina] });
-    sim.run(Math.round(param('nuclear_religar_s') * sim.tickHz));
-    expect(rede(sim).geracao).toBe(0);
-    sim.run(2);
     expect(rede(sim).geracao).toBe(statsEstrutura('nuclear_plant').geracao_en_s);
   });
 

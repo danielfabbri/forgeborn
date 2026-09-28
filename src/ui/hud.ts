@@ -8,6 +8,8 @@ import type { LeituraDaRede } from '../sim/energia';
 export interface EstadoDaBarra {
   recursos: Array<{ id: string; cor: string; quantidade: number; transito: number }>;
   energia: LeituraDaRede | null;
+  /** ENE-22 (D-85): redes com geração fora da rede da Nave. */
+  redesIsoladas?: number;
   corpos: { n: number; limite: number };
   relogio: string;
   /** UI-17 (D-81): temperamento de cada nação adversária em relação ao jogador. */
@@ -43,6 +45,14 @@ export type EstadoDaSelecao =
       arma: { dano: number; alcance: number } | null;
       /** CMB-13 (null: desarmada ou estrutura). */
       postura: string | null;
+      /**
+       * ENE-22/ENE-25 (D-85): a rede da estrutura própria que usa energia; 'sem_rede' fora de
+       * qualquer rede com outras estruturas; null para quem não usa energia.
+       */
+      rede?:
+        { geracao: number; banco: number; capacidade: number; membros: number } | 'sem_rede' | null;
+      /** ENE-26: a estrutura tem cabos (o botão Desplugar aparece). */
+      cabos?: number;
     }
   | { tipo: 'grupo'; grupos: Array<{ modelo: string; ids: EntityId[]; hp: number[] }> }
   | { tipo: 'jazida'; recurso: string; quantidade: number; inicial: number; hovers: number };
@@ -132,4 +142,6 @@ export const acoesDaSelecao: {
   filtrar: ((ids: EntityId[]) => void) | null;
   /** UNI-09: T do Portão (tranca ou destranca). */
   trancar: ((id: EntityId) => void) | null;
-} = { filtrar: null, trancar: null };
+  /** ENE-26: Desplugar (tira os cabos da estrutura). */
+  desplugar: ((id: EntityId) => void) | null;
+} = { filtrar: null, trancar: null, desplugar: null };

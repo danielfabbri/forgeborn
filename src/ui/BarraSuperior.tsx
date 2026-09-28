@@ -43,6 +43,12 @@ export function BarraSuperior() {
           <span class="icone" style={{ background: COR_DO_INDICADOR[energia.indicador] }} />
           {t('hud.energia')} +{energia.geracao.toFixed(1)}/s −{energia.consumo.toFixed(1)}/s ·{' '}
           {t('hud.banco')} {Math.floor(energia.banco)}/{energia.capacidade}
+          {(barra.redesIsoladas ?? 0) > 0 && (
+            <small data-testid="redes-isoladas">
+              {' · '}
+              {t('rede.isoladas', { n: barra.redesIsoladas ?? 0 })}
+            </small>
+          )}
         </span>
       )}
       <span data-testid="corpos">

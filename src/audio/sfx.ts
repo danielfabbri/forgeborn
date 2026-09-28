@@ -250,6 +250,11 @@ export function tocarSom(som: Som, volume = 1): void {
       tom(s, 'sine', 840, 840, 0.06, 0.14, 0.07);
       tom(s, 'sine', 560, 560, 0.06, 0.14, 0.14);
       break;
+    case 'ordem_cabo':
+      // D-85: estalo elétrico do cabo encaixando.
+      tom(s, 'square', 180, 180, 0.03, 0.12);
+      tom(s, 'sine', 600, 1500, 0.12, 0.1, 0.03);
+      break;
     case 'ordem_satelite':
       tom(s, 'sine', 1400, 1800, 0.2, 0.1);
       tom(s, 'sine', 2100, 2100, 0.15, 0.06, 0.08);

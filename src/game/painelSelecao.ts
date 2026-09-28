@@ -7,6 +7,7 @@ import { dados, type EntityId, getComponent, param, type SimState } from '../sim
 import { cargaDoSilo } from '../sim/economia/estoque';
 import type { EstadoDaSelecao } from '../ui/hud';
 import { estadoDaUnidade, resumoDaJazida } from './hud';
+import { cabosDe, leituraDaRedeDe, precisaDeEnergia } from '../sim/energia';
 
 function modeloDe(state: SimState, id: EntityId): string | null {
   if (getComponent(state, id, 'satelite')) return 'satellite';
@@ -66,6 +67,7 @@ export function resumoDaSelecao(state: SimState, selecao: readonly EntityId[]): 
       carga: cargaDe(state, id),
       arma: armaDe(modelo),
       postura: getComponent(state, id, 'arma')?.postura ?? null,
+      ...redeDoPainel(state, id),
     };
   }
   const grupos = new Map<string, { modelo: string; ids: EntityId[]; hp: number[] }>();
@@ -78,4 +80,16 @@ export function resumoDaSelecao(state: SimState, selecao: readonly EntityId[]): 
     grupo.hp.push(vida.hp / vida.max);
   }
   return { tipo: 'grupo', grupos: [...grupos.values()] };
+}
+
+/** ENE-22/ENE-25 (D-85): a rede da estrutura no painel (só as que usam energia) e os cabos. */
+function redeDoPainel(
+  state: SimState,
+  id: EntityId,
+): Pick<Extract<EstadoDaSelecao, { tipo: 'corpo' }>, 'rede' | 'cabos'> {
+  if (!getComponent(state, id, 'structure') || getComponent(state, id, 'obra')) return {};
+  const cabos = cabosDe(state, id).length;
+  if (!precisaDeEnergia(state, id)) return { rede: null, cabos };
+  const leitura = leituraDaRedeDe(state, id);
+  return { rede: leitura && leitura.membros > 1 ? leitura : 'sem_rede', cabos };
 }

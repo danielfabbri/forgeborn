@@ -98,6 +98,8 @@ describe('T-164 — REG-24 a REG-28, CMB-29, IA-11, D-81: temperamento e domíni
 
   it('CMB-29: em paz (e no alerta) a Torre não dispara sozinha; em guerra, dispara', () => {
     const sim = emPaz();
+    // A Torre precisa da rede (ENE-28): a Nave ao lado, ligada por cabo.
+    criar(sim, [{ estrutura: 'ship', x: -20, z: 0 }]);
     criar(sim, [{ estrutura: 'laser_tower', x: 0, z: 0 }]);
     criar(sim, [{ unidade: 'hover_explorer', x: 12, z: 0 }], 'usa');
     const eventos: SimEvent[] = [];

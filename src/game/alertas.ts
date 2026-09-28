@@ -7,6 +7,7 @@ import { type EntityId, getComponent, type NacaoId, type SimEvent, type SimState
 import { dados } from '../sim/data';
 import type { Vec3 } from '../sim/map/esfera';
 import { direcaoDe } from '../sim/units/superficie';
+import { precisaDeEnergia, redeDe } from '../sim/energia';
 
 export type Prioridade = 'baixa' | 'media' | 'alta' | 'critica';
 
@@ -112,6 +113,11 @@ export class CentralDeAlertas {
         add(this.publicar('AL-05', t_s, { item: d.tipo as string }, lugar(d.id as EntityId)));
       } else if (e.tipo === 'estrutura_concluida' && dono(d.id as EntityId) === jogador) {
         add(this.publicar('AL-05', t_s, { item: d.tipo as string }, lugar(d.id as EntityId)));
+        // ENE-29 (D-85): pronta sem cabo, e ela precisa de energia.
+        const id = d.id as EntityId;
+        if (precisaDeEnergia(state, id) && redeDe(state, id).length <= 1) {
+          add(this.publicar('AL-23', t_s, { item: d.tipo as string }, lugar(id)));
+        }
       }
     }
 

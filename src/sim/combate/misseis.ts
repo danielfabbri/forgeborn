@@ -32,6 +32,7 @@ import { aplicarDano, camadaDe } from './dano';
 import { detonar } from './projeteis';
 import { visivelPara } from '../visao/nevoa';
 import { emGuerra } from '../relacoes/temperamento';
+import { gastarDaRede } from '../energia/cabos';
 
 export const LANCAR_MISSIL_COMMAND = 'lancar_missil';
 
@@ -185,9 +186,8 @@ export function passoAntiaereas(ctx: SystemContext): void {
     const nacao = getComponent(state, id, 'owner')!.nacao;
     const alvo = alvoDaAntiaerea(ctx, id, nacao, arma.alcance_m);
     if (!alvo) continue;
-    const rede = state.energia[nacao];
-    if (!rede || rede.banco < arma.en_disparo - 1e-9) continue;
-    rede.banco -= arma.en_disparo;
+    // ENE-28: o disparo sai do banco da rede da própria Antiaérea.
+    if (!gastarDaRede(state, id, arma.en_disparo)) continue;
     aa.recarga_s = arma.recarga_s ?? 0;
     aa.alvo = alvo.id;
     const sorteio = nextU32(state.rng) / 2 ** 32;

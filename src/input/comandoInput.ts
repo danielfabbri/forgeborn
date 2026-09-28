@@ -40,6 +40,7 @@ import {
 } from '../game/encaixeDeMuro';
 import { ehSegmento } from '../sim/units/segmentos';
 import type { Heightmap } from '../sim/map/heightmap';
+import { tocarSom } from '../audio/sfx';
 
 /** Corpo ou jazida que pode ser apontado na tela. */
 interface Projetavel {
@@ -144,6 +145,8 @@ export interface OpcoesEntradaComandos {
   aoEsc?: () => void;
   /** Menu aberto por cima do jogo: as teclas de comando não valem. */
   bloqueado?: () => boolean;
+  /** ENE-26 (D-85): o cabo entre as duas estruturas cabe no alcance? */
+  caboAlcanca?: (de: EntityId, para: EntityId) => boolean;
 }
 
 export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos {
@@ -548,7 +551,30 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     return true;
   };
 
+  /**
+   * ENE-26 (D-85): estruturas próprias selecionadas (sem unidades) + clique direito noutra
+   * estrutura própria pronta → puxa o cabo; fora do alcance, som de erro.
+   */
+  const caboNoPonto = (px: number, py: number): boolean => {
+    if (minhas('unit').length > 0) return false;
+    const origens = minhas('structure').filter((id) => !getComponent(sim.state, id, 'obra'));
+    if (origens.length === 0) return false;
+    const alvo = corpoNoPonto(naTela(), px, py);
+    if (!alvo || alvo.nacao !== jogador || origens.includes(alvo.id)) return false;
+    if (!getComponent(sim.state, alvo.id, 'structure') || getComponent(sim.state, alvo.id, 'obra'))
+      return false;
+    const alcancam = origens.filter((id) => o.caboAlcanca?.(id, alvo.id) ?? true);
+    if (alcancam.length === 0) {
+      tocarSom('erro');
+      return true;
+    }
+    for (const id of alcancam) enviar('ligar_cabo', { de: id, para: alvo.id });
+    sinal('cabo', px, py, alvo.id);
+    return true;
+  };
+
   const ordemNoPonto = (px: number, py: number, tipo: OrdemNoTerreno) => {
+    if (tipo === 'mover' && caboNoPonto(px, py)) return;
     if (tipo === 'mover') ordemDosSatelites(px, py);
     if (tipo === 'mover' && misseisNoPonto(px, py)) return;
     if (minhas('unit').length + minhas('producer').length === 0) return;
@@ -809,10 +835,9 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         if (minhas('unit').length === 0) return;
         enviar('recarregar', { ids: minhas('unit') });
         break;
-      // §12.4 T: Bateria Móvel liga o suporte; Usina Nuclear liga (o silo não ancora, D-60).
+      // §12.4 T: Bateria Móvel liga o suporte (o silo não ancora, D-60; a nuclear não desliga, D-85).
       case 'KeyT': {
         const baterias = minhas('unit').filter((id) => getComponent(sim.state, id, 'suporte'));
-        const usinas = minhas('structure').filter((id) => getComponent(sim.state, id, 'reator'));
         const plantadores = doTipo('hover_minelayer');
         const observadores = doTipo('hover_scout');
         const bases = doTipo('satellite_uplink');
@@ -822,7 +847,6 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         if (
           portoes.length +
             baterias.length +
-            usinas.length +
             plantadores.length +
             observadores.length +
             bases.length ===
@@ -834,7 +858,6 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         if (bases.length > 0) definirModo('satelite');
         // §12.4 (Plantio de Minas) T: plantar mina no ponto.
         if (plantadores.length > 0) definirModo('plantar');
-        if (usinas.length > 0) enviar('ligar_usina', { ids: usinas });
         break;
       }
       // §12.4 G: Silo Móvel descarrega agora; Hover de Exploração repara (PRD-18).

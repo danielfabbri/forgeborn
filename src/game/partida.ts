@@ -67,6 +67,7 @@ import {
   MENU_ESTRUTURAS,
   MENU_MINAS,
   MENU_MISSEIS,
+  MENU_PORTO,
   MENU_NAVE,
   MENU_UNIDADES,
 } from './atalhosProducao';
@@ -128,6 +129,7 @@ import { emTransito, estoque, SEMEAR_JAZIDAS_COMMAND } from '../sim/economia';
 import { DEBUG_ENCHER_BANCO_COMMAND, leituraDaRede } from '../sim/energia';
 import { avancar, normalizar, norteEm, tangente, type Vec3 } from '../sim/map/esfera';
 import { alturaDaSuperficie, alturaEm } from '../sim/map/heightmap';
+import { emLiquido } from '../sim/map/lagos';
 import { PRESETS_DE_MAPA } from '../sim/map/presets';
 import { gerarMapaValido } from '../sim/map/validacao';
 import { validarPosicionamento } from '../sim/producao';
@@ -970,11 +972,13 @@ export function iniciarPartida(): void {
             ? MENU_MINAS
             : tipoProdutor === 'missile_silo'
               ? MENU_MISSEIS
-              : entrada.menu === 'unidades'
-                ? MENU_UNIDADES
-                : entrada.menu === 'estruturas'
-                  ? MENU_ESTRUTURAS
-                  : [];
+              : tipoProdutor === 'port'
+                ? MENU_PORTO
+                : entrada.menu === 'unidades'
+                  ? MENU_UNIDADES
+                  : entrada.menu === 'estruturas'
+                    ? MENU_ESTRUTURAS
+                    : [];
     // CAM-02: na campanha, os cartões só mostram o que está liberado na missão.
     const opcoes = todasAsOpcoes.filter((o) => liberado(sim.state, o.item));
     const obra = obraId !== undefined ? getComponent(sim.state, obraId, 'obra')! : null;
@@ -1047,6 +1051,7 @@ export function iniciarPartida(): void {
         },
         // CTL-03 (D-86): o mapa-múndi fica parado, com a zona de pouso do jogador no meio.
         zonaInicial.d,
+        pronto.mapa.mar ? (d) => emLiquido(pronto.mapa, d) : null,
       )
     : null;
   const desenharMinimapa = (): void => {

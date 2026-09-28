@@ -824,6 +824,18 @@ const TORRES: Partial<
       return m;
     },
   },
+  // UNI-18: torre do laser da Embarcação de Artilharia, sobre o anel do convés.
+  boat_artillery: {
+    pivo: [0.6, 0.85, 0],
+    montar: () => {
+      const m = new Montagem();
+      m.caixa(0.9, 0.35, 0.8, GRAFITE);
+      m.tubo(0.1, 1.3, METAL, { x: 0.8, y: 0.2 });
+      m.tubo(0.15, 0.35, GRAFITE, { x: 0.4, y: 0.2 });
+      m.esfera(0.06, { brilho: BRASA }, { x: 1.46, y: 0.2 });
+      return m;
+    },
+  },
   laser_tower: {
     pivo: [0, 6.4, 0],
     montar: () => {

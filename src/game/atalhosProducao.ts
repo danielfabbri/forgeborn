@@ -53,6 +53,14 @@ export const MENU_ESTRUTURAS: OpcaoDeMenu[] = [
   opcao('G', 'mag_tower'),
   opcao('E', 'antenna'),
   opcao('D', 'power_hub'),
+  opcao('O', 'port'),
+];
+
+/** §12.4 (Porto) T Transporte, A Artilharia, N Antena (UNI-16, D-90). */
+export const MENU_PORTO: OpcaoDeMenu[] = [
+  opcao('T', 'boat_transport'),
+  opcao('A', 'boat_artillery'),
+  opcao('N', 'boat_antenna'),
 ];
 
 /** §12.4 (Base de Lança-Mísseis) C curto, L longo (UNI-10, D-63). */

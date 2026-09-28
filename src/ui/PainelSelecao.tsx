@@ -43,6 +43,11 @@ export function PainelSelecao() {
             <div data-testid="selecao-estado">
               {t('selecao.estado')}: {t(sel.estado as TextKey)}
             </div>
+            {sel.passageiros && (
+              <div data-testid="selecao-passageiros">
+                {t('selecao.embarcados')}: {sel.passageiros.n}/{sel.passageiros.max}
+              </div>
+            )}
             {sel.carga && (
               <div data-testid="selecao-carga">
                 {t('selecao.carga')}: {Math.floor(sel.carga.atual)}/{sel.carga.max}

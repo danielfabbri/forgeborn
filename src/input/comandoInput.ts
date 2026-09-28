@@ -18,6 +18,7 @@ import {
   MENU_BASE,
   MENU_ESTRUTURAS,
   MENU_MISSEIS,
+  MENU_PORTO,
   MENU_NAVE,
   MENU_UNIDADES,
   type OpcaoDeMenu,
@@ -40,6 +41,8 @@ import {
 } from '../game/encaixeDeMuro';
 import { ehSegmento } from '../sim/units/segmentos';
 import type { Heightmap } from '../sim/map/heightmap';
+import { emLiquido } from '../sim/map/lagos';
+import { ehAerea, ehEmbarcacao } from '../sim/units/stats';
 import { tocarSom } from '../audio/sfx';
 
 /** Corpo ou jazida que pode ser apontado na tela. */
@@ -60,6 +63,7 @@ interface Projetavel {
 const MENUS_DE_ESTRUTURA: ReadonlyArray<[string, OpcaoDeMenu[]]> = [
   ['satellite_uplink', MENU_BASE],
   ['missile_silo', MENU_MISSEIS],
+  ['port', MENU_PORTO],
 ];
 
 /** Distância (px) a partir da qual o arrasto vira caixa de seleção. */
@@ -77,7 +81,8 @@ type Modo =
   | 'campo'
   | 'reciclar'
   | 'satelite'
-  | 'varredura';
+  | 'varredura'
+  | 'desembarcar';
 
 /** Ordens de deslocamento que um clique no terreno pode dar. */
 type OrdemNoTerreno = 'mover' | 'mover_ignorando' | 'patrulhar' | 'atacar_mover';
@@ -573,7 +578,41 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     return true;
   };
 
+  /** UNI-20: os Transportes selecionados vão desembarcar no ponto. */
+  const desembarcarEm = (ponto: Vec3, px: number, py: number) => {
+    for (const id of doTipo('boat_transport')) {
+      enviar('desembarcar', { id, x: ponto[0], y: ponto[1], z: ponto[2] });
+    }
+    sinal('mover', px, py);
+  };
+
+  /**
+   * UNI-20 (D-90): unidades de solo selecionadas + clique direito num Transporte próprio →
+   * embarcam; só Transportes selecionados + clique direito em terra → desembarcam ali.
+   */
+  const embarqueNoPonto = (px: number, py: number): boolean => {
+    const transportes = doTipo('boat_transport');
+    const unidades = minhas('unit');
+    const alvo = corpoNoPonto(naTela(), px, py);
+    if (alvo && alvo.nacao === jogador && tipoDe(alvo.id) === 'boat_transport') {
+      const passageiros = unidades.filter((id) => {
+        const tipo = getComponent(sim.state, id, 'unit')!.tipo;
+        return !ehAerea(tipo) && !ehEmbarcacao(tipo);
+      });
+      if (passageiros.length === 0) return false;
+      enviar('embarcar', { ids: passageiros, transporte: alvo.id });
+      sinal('mover', px, py, alvo.id);
+      return true;
+    }
+    if (transportes.length === 0 || transportes.length !== unidades.length) return false;
+    const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
+    if (!ponto || emLiquido(o.mapa, normalizar(ponto))) return false;
+    desembarcarEm(ponto, px, py);
+    return true;
+  };
+
   const ordemNoPonto = (px: number, py: number, tipo: OrdemNoTerreno) => {
+    if (tipo === 'mover' && embarqueNoPonto(px, py)) return;
     if (tipo === 'mover' && caboNoPonto(px, py)) return;
     if (tipo === 'mover') ordemDosSatelites(px, py);
     if (tipo === 'mover' && misseisNoPonto(px, py)) return;
@@ -679,6 +718,14 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         });
         o.sinalizar?.('satelite', normalizar(ponto));
       }
+      definirModo('normal');
+      return;
+    }
+    // UNI-20 (D-90): D do Transporte: o clique escolhe onde desembarcar.
+    if (modo === 'desembarcar') {
+      arrastando = false;
+      const ponto = pontoNoTerreno(o.camera, viewport, e.clientX, e.clientY, o.mapa);
+      if (ponto) desembarcarEm(ponto, e.clientX, e.clientY);
       definirModo('normal');
       return;
     }
@@ -861,6 +908,11 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
         break;
       }
       // §12.4 G: Silo Móvel descarrega agora; Hover de Exploração repara (PRD-18).
+      // §12.4 (Transporte) D: desembarcar no ponto clicado (UNI-20).
+      case 'KeyD':
+        if (doTipo('boat_transport').length === 0) return;
+        definirModo('desembarcar');
+        break;
       case 'KeyG': {
         const silos = minhas('unit').filter((id) => getComponent(sim.state, id, 'silo'));
         const hovers = doTipo('hover_explorer');

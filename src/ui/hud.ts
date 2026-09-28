@@ -54,6 +54,8 @@ export type EstadoDaSelecao =
         { geracao: number; banco: number; capacidade: number; membros: number } | 'sem_rede' | null;
       /** ENE-26: a estrutura tem cabos (o botão Desplugar aparece). */
       cabos?: number;
+      /** UNI-20 (D-90): unidades embarcadas no Transporte e a capacidade. */
+      passageiros?: { n: number; max: number } | null;
     }
   | { tipo: 'grupo'; grupos: Array<{ modelo: string; ids: EntityId[]; hp: number[] }> }
   | { tipo: 'jazida'; recurso: string; quantidade: number; inicial: number; hovers: number };

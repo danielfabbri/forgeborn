@@ -42,6 +42,12 @@ function cargaDe(state: SimState, id: EntityId) {
   return null;
 }
 
+/** UNI-20 (D-90): embarcadas no Transporte, ou null. */
+function passageirosDe(state: SimState, id: EntityId): { n: number; max: number } | null {
+  const carga = getComponent(state, id, 'transporte');
+  return carga ? { n: carga.passageiros.length, max: param('transporte_capacidade') } : null;
+}
+
 export function resumoDaSelecao(state: SimState, selecao: readonly EntityId[]): EstadoDaSelecao {
   if (selecao.length === 1) {
     const jazida = resumoDaJazida(state, selecao[0]!);
@@ -68,6 +74,7 @@ export function resumoDaSelecao(state: SimState, selecao: readonly EntityId[]): 
       arma: armaDe(modelo),
       postura: getComponent(state, id, 'arma')?.postura ?? null,
       ...redeDoPainel(state, id),
+      passageiros: passageirosDe(state, id),
     };
   }
   const grupos = new Map<string, { modelo: string; ids: EntityId[]; hp: number[] }>();

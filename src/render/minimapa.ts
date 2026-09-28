@@ -50,6 +50,13 @@ export function desprojetar(base: BaseDoGlobo, x: number, y: number): Vec3 | nul
   ]);
 }
 
+/** CEN-04 (D-90): o mar explorado (na névoa e visível); o nunca visto fica como o resto. */
+const COR_DO_MAR: ReadonlyArray<readonly [number, number, number]> = [
+  [44, 47, 58],
+  [48, 58, 78],
+  [58, 78, 108],
+];
+
 /** Cores dos três estados (VIS-01): escuro, névoa, visível. */
 const CORES_DA_NEVOA: ReadonlyArray<readonly [number, number, number]> = [
   // D-86: o nunca visto é escuro, mas não preto.
@@ -122,6 +129,8 @@ export function pintarMundi(
   lon0: number,
   estados: readonly number[] | undefined,
   n: number,
+  /** CEN-04 (D-90): o ponto é líquido? Já explorado, aparece como mar (mais escuro e frio). */
+  liquido: ((d: Vec3) => boolean) | null = null,
 ): void {
   for (let py = 0; py < altura; py++) {
     const y = 1 - ((py + 0.5) / altura) * 2;
@@ -131,7 +140,8 @@ export function pintarMundi(
       const k = (py * largura + px) * 4;
       const d = desprojetarMundi(lon0, ((px + 0.5) / largura) * 2 - 1, y);
       const estado = estados ? (estados[celulaDaDirecao(n, d)] ?? 0) : 2;
-      const cor = CORES_DA_NEVOA[estado] ?? CORES_DA_NEVOA[0]!;
+      let cor = CORES_DA_NEVOA[estado] ?? CORES_DA_NEVOA[0]!;
+      if (estado > 0 && liquido?.(d)) cor = COR_DO_MAR[estado]!;
       pixels[k] = cor[0] * luz;
       pixels[k + 1] = cor[1] * luz;
       pixels[k + 2] = cor[2] * luz;
@@ -231,6 +241,8 @@ export class Minimapa {
     private readonly n: number,
     private readonly acoes: AcoesDoMinimapa,
     centro: Vec3,
+    /** CEN-04 (D-90): o ponto é líquido (o mar aparece no mapa-múndi). */
+    private readonly liquido: ((d: Vec3) => boolean) | null = null,
   ) {
     this.lon0 = longitudeDe(normalizar(centro));
     this.canvas = document.createElement('canvas');
@@ -297,6 +309,7 @@ export class Minimapa {
         this.lon0,
         c.estados,
         this.n,
+        this.liquido,
       );
       this.pintado = c.versaoNevoa;
     }

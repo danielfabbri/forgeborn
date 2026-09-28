@@ -1230,6 +1230,51 @@ body.em-cinematica #ui {
   color: #ff7a6a;
   font-weight: bold;
 }
+.temperamento {
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+.temperamento.invadida {
+  color: #ffd27a;
+}
+/* REG-29 (D-88): Declarar guerra, na barra e no AL-22. */
+.temperamento-caixa {
+  position: relative;
+  display: inline-flex;
+  pointer-events: auto;
+}
+.temperamento-caixa .declarar-guerra {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  white-space: nowrap;
+  z-index: 5;
+}
+.declarar-guerra {
+  font:
+    bold 12px/1.4 ui-monospace,
+    Consolas,
+    monospace;
+  color: #ffd8d4;
+  background: rgba(90, 14, 10, 0.92);
+  border: 1px solid #ff6a5a;
+  border-radius: 3px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.declarar-guerra:hover {
+  background: rgba(140, 22, 16, 0.95);
+}
+.alerta-com-acao {
+  display: flex;
+  gap: 4px;
+  align-items: stretch;
+}
+.alerta-com-acao .alerta {
+  flex: 1;
+}
 
 /* TEC-27: campo de macetes no centro da tela. */
 .campo-macetes {

@@ -1,12 +1,13 @@
 /**
- * Temperamento e domínio entre nações (REG-24 a REG-28, D-81). Todo par começa pacífico. Corpo de
- * B no domínio de A (a até `dominio_estrutura_m` de uma estrutura ou `dominio_unidade_m` de uma
- * unidade de A) gera um aviso e o par fica em alerta; se B continuar lá por `ultimato_s`, o par
- * entra em guerra. Dano entre as duas abre a guerra na hora. A guerra esfria depois de
- * `guerra_esfria_s` sem dano e sem invasão.
+ * Temperamento e domínio entre nações (REG-24 a REG-29, D-81, D-88). Todo par começa pacífico.
+ * Unidade móvel de B no domínio de A (a até `dominio_estrutura_m` de uma estrutura ou
+ * `dominio_unidade_m` de uma unidade de A) gera um aviso e o par fica em alerta; estrutura nunca
+ * invade. No domínio de uma IA, se B continuar lá por `ultimato_s`, o par entra em guerra; no
+ * domínio do jogador não há guerra automática: ele declara (Comando "declarar_guerra"). Dano entre
+ * as duas abre a guerra na hora. A guerra esfria depois de `guerra_esfria_s` sem dano e sem invasão.
  */
 import { entitiesWith, getComponent } from '../core/entities';
-import type { SystemContext } from '../core/pipeline';
+import type { CommandHandler, SystemContext } from '../core/pipeline';
 import type { SimState } from '../core/state';
 import type { EntityId, NacaoId } from '../core/types';
 import { param } from '../data';
@@ -76,6 +77,15 @@ interface Marco {
   d: Vec3;
   /** cos do raio angular do domínio (comparado ao produto escalar, sem acos). */
   cosRaio: number;
+  /** REG-26 (D-88): unidade móvel (só ela invade). */
+  movel: boolean;
+  /** REG-25 (D-88): marca domínio (falso para a unidade dentro da base alheia). */
+  marca: boolean;
+}
+
+/** REG-26 (D-88): a nação é do jogador (não está sob controle da IA)? */
+export function ehDoJogador(state: SimState, nacao: NacaoId): boolean {
+  return state.ias[nacao] === undefined;
 }
 
 /** Corpos de cada nação que marcam domínio (minas e satélites não contam). */
@@ -96,20 +106,37 @@ function marcos(state: SimState, R: number): Map<NacaoId, Array<Marco & { id: En
       id,
       d: direcaoDe(getComponent(state, id, 'position')!),
       cosRaio: estrutura ? cosEstrutura : cosUnidade,
+      movel: !estrutura,
+      marca: true,
     });
     porNacao.set(nacao, lista);
+  }
+  // REG-25 (D-88): o domínio de uma unidade não vale dentro da base (domínio de estruturas) de
+  // outra nação. A unidade continua lá como corpo (pode invadir); só não marca domínio.
+  const bases = [...porNacao].map(
+    ([nacao, lista]) => [nacao, lista.filter((m) => !m.movel)] as const,
+  );
+  for (const [nacao, lista] of porNacao) {
+    for (const m of lista) {
+      if (!m.movel) continue;
+      m.marca = !bases.some(
+        ([outra, estruturas]) =>
+          outra !== nacao && estruturas.some((e) => produtoEscalar(e.d, m.d) > e.cosRaio),
+      );
+    }
   }
   return porNacao;
 }
 
-/** O primeiro corpo de B dentro do domínio de A (REG-25), ou null. */
+/** A primeira unidade móvel de B dentro do domínio de A (REG-25, REG-26), ou null. */
 function invasor(
   dominio: readonly Marco[],
   corpos: ReadonlyArray<Marco & { id: EntityId }>,
 ): (Marco & { id: EntityId }) | null {
   for (const c of corpos) {
+    if (!c.movel) continue;
     for (const m of dominio) {
-      if (produtoEscalar(m.d, c.d) > m.cosRaio) return c;
+      if (m.marca && produtoEscalar(m.d, c.d) > m.cosRaio) return c;
     }
   }
   return null;
@@ -125,7 +152,7 @@ export function consultaDeDominio(ctx: SystemContext): (d: Vec3, exceto?: NacaoI
     const donos: NacaoId[] = [];
     for (const [nacao, lista] of porNacao) {
       if (nacao === exceto) continue;
-      if (lista.some((m) => produtoEscalar(m.d, d) > m.cosRaio)) donos.push(nacao);
+      if (lista.some((m) => m.marca && produtoEscalar(m.d, d) > m.cosRaio)) donos.push(nacao);
     }
     return donos.sort();
   };
@@ -173,14 +200,18 @@ export function sistemaTemperamento(ctx: SystemContext): void {
           continue;
         }
         const prazo = r.avisos[dono];
+        const doJogador = ehDoJogador(state, dono);
         if (prazo === undefined) {
           r.avisos[dono] = param('ultimato_s');
-          ctx.emit('alerta', { id: 'AL-19', nacao: intruso, outra: dono, d: corpo.d });
-          ctx.emit('alerta', { id: 'AL-22', nacao: dono, outra: intruso, d: corpo.d });
+          // D-88: o jogador avisado ouve AL-19; o dono jogador recebe AL-22 (com Declarar guerra).
+          if (doJogador)
+            ctx.emit('alerta', { id: 'AL-22', nacao: dono, outra: intruso, d: corpo.d });
+          else ctx.emit('alerta', { id: 'AL-19', nacao: intruso, outra: dono, d: corpo.d });
           continue;
         }
-        r.avisos[dono] = prazo - passo;
-        if (r.avisos[dono]! <= 1e-9) {
+        r.avisos[dono] = Math.max(0, prazo - passo);
+        // No domínio do jogador o prazo só orienta a IA intrusa: a guerra é decisão dele (REG-29).
+        if (!doJogador && r.avisos[dono]! <= 1e-9) {
           abrirGuerra(ctx, dono, intruso);
           break;
         }
@@ -188,3 +219,17 @@ export function sistemaTemperamento(ctx: SystemContext): void {
     }
   }
 }
+
+export const DECLARAR_GUERRA_COMMAND = 'declarar_guerra';
+
+export const comandosDoTemperamento: Record<string, CommandHandler> = {
+  /** REG-29 (D-88): a nação que envia declara guerra a `nacao`. */
+  [DECLARAR_GUERRA_COMMAND]: (ctx, comando) => {
+    const outra = (comando.dados as { nacao?: unknown } | null)?.nacao;
+    const { state } = ctx;
+    if (typeof outra !== 'string' || outra === comando.nacao) return;
+    if (!state.nacoes.includes(outra as NacaoId) || state.placar[outra as NacaoId]?.eliminada)
+      return;
+    abrirGuerra(ctx, comando.nacao, outra as NacaoId);
+  },
+};

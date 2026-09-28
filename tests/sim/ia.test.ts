@@ -328,23 +328,29 @@ describe('T-096 — IA-06, IA-08 a IA-10, D-66: a IA evolui estruturas', () => {
       maxMin: 26,
       cenario: 'terra_lab',
     });
-    for (let t = 0; t < 26 * 60 * sim.tickHz && !sim.state.resultado; t++) sim.step();
-    const tipos = new Set(
-      sim.state.entities.map((id) => getComponent(sim.state, id, 'structure')?.tipo),
-    );
-    for (const t of ['aa_battery', 'satellite_uplink', 'mag_tower', 'missile_silo'] as const) {
-      expect(tipos).toContain(t);
+    // Confere durante a partida: a guerra (IA-12) pode eliminar uma nação antes do fim.
+    const tiposVivos = () =>
+      new Set(sim.state.entities.map((id) => getComponent(sim.state, id, 'structure')?.tipo));
+    const misseis = () =>
+      sim.state.entities
+        .filter((id) => getComponent(sim.state, id, 'lancador'))
+        .reduce(
+          (n, id) =>
+            n +
+            getComponent(sim.state, id, 'lancador')!.prontos.length +
+            getComponent(sim.state, id, 'producer')!.fila.length,
+          0,
+        );
+    const plano = ['aa_battery', 'satellite_uplink', 'mag_tower', 'missile_silo'] as const;
+    let cumpriu = false;
+    for (let t = 0; t < 26 * 60 * sim.tickHz && !sim.state.resultado && !cumpriu; t++) {
+      sim.step();
+      if (t % sim.tickHz === 0) {
+        const tipos = tiposVivos();
+        cumpriu = plano.every((x) => tipos.has(x)) && misseis() > 0;
+      }
     }
-    const misseis = sim.state.entities
-      .filter((id) => getComponent(sim.state, id, 'lancador'))
-      .reduce(
-        (n, id) =>
-          n +
-          getComponent(sim.state, id, 'lancador')!.prontos.length +
-          getComponent(sim.state, id, 'producer')!.fila.length,
-        0,
-      );
-    expect(misseis).toBeGreaterThan(0);
+    expect(cumpriu).toBe(true);
   }, 400_000);
 
   it('IA-10: curto defende contra inimigo perto de uma estrutura própria', () => {

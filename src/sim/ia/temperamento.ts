@@ -6,7 +6,13 @@
 import { entitiesWith, getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
 import type { EntityId } from '../core/types';
-import { consultaDeDominio, emGuerra, prazoDoAviso } from '../relacoes/temperamento';
+import {
+  consultaDeDominio,
+  DECLARAR_GUERRA_COMMAND,
+  ehDoJogador,
+  emGuerra,
+  prazoDoAviso,
+} from '../relacoes/temperamento';
 import { direcaoDe } from '../units/superficie';
 import { comandar } from './base';
 import type { Quadro } from './quadro';
@@ -16,14 +22,20 @@ import { param } from '../data';
 const FRACAO_PARA_RECUAR = 0.7;
 
 export function obedecerAvisos(ctx: SystemContext, q: Quadro): void {
-  if (q.nivel === 'brutal') return;
   const { state } = ctx;
+  const onda = q.ia.onda;
+  // IA-12 (D-88): contra o jogador, a onda provocadora declara guerra quando o prazo acaba.
+  if (onda && !emGuerra(state, q.nacao, onda.alvo) && ehDoJogador(state, onda.alvo)) {
+    const prazo = prazoDoAviso(state, onda.alvo, q.nacao);
+    if (prazo !== null && prazo <= 1e-9)
+      comandar(ctx, q.nacao, DECLARAR_GUERRA_COMMAND, { nacao: onda.alvo });
+  }
+  if (q.nivel === 'brutal') return;
   const avisantes = state.nacoes.filter((n) => {
     const prazo = n !== q.nacao ? prazoDoAviso(state, n, q.nacao) : null;
     return prazo !== null && prazo <= param('ultimato_s') * FRACAO_PARA_RECUAR;
   });
   if (avisantes.length === 0) return;
-  const onda = q.ia.onda;
   // IA-12: a onda que provoca o alvo não recua do domínio dele.
   const provoca = onda && !emGuerra(state, q.nacao, onda.alvo) ? onda : null;
   const donos = consultaDeDominio(ctx);

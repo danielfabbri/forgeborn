@@ -16,7 +16,8 @@ export interface EstadoDaBarra {
   nacoes: Array<{
     id: string;
     cor: string;
-    estado: 'pacifico' | 'alerta' | 'inimigo';
+    /** `invadida`: unidade dela no meu domínio (D-88: o aviso foi meu, sem prazo de guerra). */
+    estado: 'pacifico' | 'alerta' | 'invadida' | 'inimigo';
     prazo: number | null;
   }>;
 }
@@ -128,6 +129,14 @@ export const sinalPerdido = signal(false);
 /** UI-06: os alertas visíveis (mais recente primeiro) e o clique que leva ao local. */
 export const alertasVisiveis = signal<Alerta[]>([]);
 export const acoesDosAlertas: { irPara: (a: Alerta) => void } = { irPara: () => {} };
+
+/** REG-29 (D-88): declarar guerra a uma nação (botão do AL-22 e temperamento da barra). */
+export const acoesDaDiplomacia: { declararGuerra: (nacao: string) => void } = {
+  declararGuerra: () => {},
+};
+
+/** UI-17: nação cujo temperamento está aberto na barra (mostra Declarar guerra), ou null. */
+export const temperamentoAberto = signal<string | null>(null);
 
 /** Canvas do retrato 3D (UI-03), montado pelo painel e desenhado pelo render. */
 export const canvasDoRetrato = signal<HTMLCanvasElement | null>(null);

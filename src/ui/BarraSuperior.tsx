@@ -1,7 +1,7 @@
 import { configuracoes } from '../game/configuracoes';
 import { clipPathDe, FORMA_DO_RECURSO } from '../game/paleta';
 import { t, type TextKey } from '../i18n';
-import { acoesDaPartida, barraSuperior } from './hud';
+import { acoesDaDiplomacia, acoesDaPartida, barraSuperior, temperamentoAberto } from './hud';
 
 const COR_DO_INDICADOR = { verde: '#46e08a', amarelo: '#f7c948', vermelho: '#ff4d4d' } as const;
 
@@ -56,19 +56,36 @@ export function BarraSuperior() {
       </span>
       {/* UI-17 (D-81): temperamento das outras nações em relação a mim. */}
       {barra.nacoes.map((n) => (
-        <span
-          key={n.id}
-          class={`temperamento ${n.estado}`}
-          data-testid={`temperamento-${n.id}`}
-          data-estado={n.estado}
-          title={t(`temperamento.ajuda.${n.estado}` as TextKey)}
-          style={{ borderColor: n.cor }}
-        >
-          <span class="icone" style={{ background: n.cor }} />
-          {t(`nacao.${n.id}` as TextKey)}:{' '}
-          {n.estado === 'alerta' && n.prazo !== null
-            ? t('temperamento.alerta', { s: Math.ceil(n.prazo) })
-            : t(`temperamento.${n.estado}` as TextKey)}
+        <span key={n.id} class="temperamento-caixa">
+          <button
+            class={`temperamento ${n.estado}`}
+            data-testid={`temperamento-${n.id}`}
+            data-estado={n.estado}
+            title={t(`temperamento.ajuda.${n.estado}` as TextKey)}
+            style={{ borderColor: n.cor }}
+            onClick={() =>
+              (temperamentoAberto.value = temperamentoAberto.value === n.id ? null : n.id)
+            }
+          >
+            <span class="icone" style={{ background: n.cor }} />
+            {t(`nacao.${n.id}` as TextKey)}:{' '}
+            {n.estado === 'alerta' && n.prazo !== null
+              ? t('temperamento.alerta', { s: Math.ceil(n.prazo) })
+              : t(`temperamento.${n.estado}` as TextKey)}
+          </button>
+          {/* REG-29 (D-88): quem decide a guerra é o jogador. */}
+          {temperamentoAberto.value === n.id && n.estado !== 'inimigo' && (
+            <button
+              class="declarar-guerra"
+              data-testid={`declarar-guerra-${n.id}`}
+              onClick={() => {
+                acoesDaDiplomacia.declararGuerra(n.id);
+                temperamentoAberto.value = null;
+              }}
+            >
+              {t('temperamento.declarar_guerra')}
+            </button>
+          )}
         </span>
       ))}
       <span class="relogio" data-testid="relogio">

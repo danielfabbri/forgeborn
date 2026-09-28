@@ -8,7 +8,7 @@ import { comandosDaProducao, sistemaProducao } from '../producao';
 import { sistemaMovimento } from './movimento';
 import { sistemaTempestade } from '../cenario/tempestade';
 import { comandosDeMovimento } from './ordens';
-import { sistemaTemperamento } from '../relacoes/temperamento';
+import { comandosDoTemperamento, sistemaTemperamento } from '../relacoes/temperamento';
 
 export { criarEstrutura, criarMina, criarUnidade, dentroDoLimite, type Limite } from './criar';
 export { sistemaMovimento, tracarRota } from './movimento';
@@ -43,4 +43,5 @@ export const comandosDoJogo: Record<string, CommandHandler> = {
   ...comandosDaProducao,
   ...comandosDoCombate,
   ...comandosDaIa,
+  ...comandosDoTemperamento,
 };

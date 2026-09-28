@@ -142,6 +142,7 @@ import { mountUi } from '../ui/mount';
 import {
   acoesDaPartida,
   acoesDaSelecao,
+  acoesDaDiplomacia,
   acoesDosAlertas,
   alertasVisiveis,
   controleDireto,
@@ -164,7 +165,7 @@ import {
   maceteDesconhecido,
 } from '../ui/hud';
 import { acoesDoPainel, avisoProducao, fotosDoPainel, painelProducao } from '../ui/producao';
-import { emGuerra, prazoDoAviso } from '../sim/relacoes/temperamento';
+import { DECLARAR_GUERRA_COMMAND, emGuerra, prazoDoAviso } from '../sim/relacoes/temperamento';
 import { AtmosferaDeFora } from '../render/atmosfera';
 import { caboAlcanca } from '../sim/energia/cabos';
 import { redesIsoladas } from '../sim/energia';
@@ -847,13 +848,15 @@ export function iniciarPartida(): void {
       nacoes: sim.state.nacoes
         .filter((n) => n !== jogador && !sim.state.placar[n]?.eliminada)
         .map((n) => {
-          // UI-17: o prazo que ela me deu, ou o que eu dei a ela.
-          const prazo = prazoDoAviso(sim.state, n, jogador) ?? prazoDoAviso(sim.state, jogador, n);
+          // UI-17: o prazo que ela me deu; D-88: o aviso que eu dei não tem prazo de guerra.
+          const prazo = prazoDoAviso(sim.state, n, jogador);
           const estado = emGuerra(sim.state, n, jogador)
             ? ('inimigo' as const)
             : prazo !== null
               ? ('alerta' as const)
-              : ('pacifico' as const);
+              : prazoDoAviso(sim.state, jogador, n) !== null
+                ? ('invadida' as const)
+                : ('pacifico' as const);
           return { id: n, cor: corDaNacao(n), estado, prazo };
         }),
     };
@@ -1278,6 +1281,14 @@ export function iniciarPartida(): void {
     centrarEm(camera, a.local);
   };
   acoesDosAlertas.irPara = irAoAlerta;
+  // REG-29 (D-88): o jogador declara guerra (Comando serializável, como qualquer ordem).
+  acoesDaDiplomacia.declararGuerra = (nacao) =>
+    sim.enqueue({
+      tick: sim.state.tick,
+      nacao: jogador,
+      tipo: DECLARAR_GUERRA_COMMAND,
+      dados: { nacao },
+    });
   // UI-06: Espaço vai ao último alerta.
   window.addEventListener('keydown', (e) => {
     if (e.code !== 'Space' || e.repeat || direto?.ativo != null) return;

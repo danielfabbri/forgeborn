@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { getComponent, param, type Sim, type SimEvent } from '../../src/sim';
 import { ATIVAR_IA_COMMAND } from '../../src/sim/ia';
 import { INICIAR_PARTIDA_COMMAND } from '../../src/sim/producao';
-import { emGuerra, temperamento } from '../../src/sim/relacoes/temperamento';
+import {
+  DECLARAR_GUERRA_COMMAND,
+  emGuerra,
+  temperamento,
+} from '../../src/sim/relacoes/temperamento';
 import { criar, mundoLiso, ordenar, partida, ponto, pos } from './mundo-teste';
 
 /** Partida com as nações em paz (o padrão dos testes é guerra). */
@@ -26,25 +30,24 @@ describe('T-164 — REG-24 a REG-28, CMB-29, IA-11, D-81: temperamento e domíni
     expect(emGuerra(sim.state, 'bra', 'usa')).toBe(false);
   });
 
-  it('REG-25/REG-26: entrar no domínio avisa na hora; ficar além de ultimato_s vira guerra', () => {
+  it('REG-25/REG-26: no domínio de uma IA, o aviso é na hora; ficar além de ultimato_s vira guerra', () => {
     const sim = emPaz();
-    criar(sim, [{ estrutura: 'storage', x: 0, z: 0 }]);
+    // O domínio é da IA (usa); quem invade é o jogador (bra).
+    ordenar(sim, ATIVAR_IA_COMMAND, { nivel: 'normal' }, 'usa');
+    criar(sim, [{ estrutura: 'storage', x: 0, z: 0 }], 'usa');
     const eventos: SimEvent[] = [];
     // A menos de dominio_estrutura_m do Armazém.
-    criar(sim, [{ unidade: 'hover_explorer', x: param('dominio_estrutura_m') - 10, z: 0 }], 'usa');
+    criar(sim, [{ unidade: 'hover_explorer', x: param('dominio_estrutura_m') - 10, z: 0 }]);
     rodar(sim, 1, eventos);
-    expect(temperamento(sim.state, 'bra', 'usa')).toBe('alerta');
+    expect(temperamento(sim.state, 'usa', 'bra')).toBe('alerta');
     expect(alertas(eventos, 'AL-19')).toEqual([
-      expect.objectContaining({ nacao: 'usa', outra: 'bra' }),
-    ]);
-    expect(alertas(eventos, 'AL-22')).toEqual([
       expect.objectContaining({ nacao: 'bra', outra: 'usa' }),
     ]);
     rodar(sim, param('ultimato_s') - 2, eventos);
     expect(emGuerra(sim.state, 'bra', 'usa')).toBe(false);
     rodar(sim, 2, eventos);
     expect(emGuerra(sim.state, 'bra', 'usa')).toBe(true);
-    expect(temperamento(sim.state, 'usa', 'bra')).toBe('inimigo');
+    expect(temperamento(sim.state, 'bra', 'usa')).toBe('inimigo');
     expect(alertas(eventos, 'AL-20')).toHaveLength(2);
   });
 
@@ -103,8 +106,9 @@ describe('T-164 — REG-24 a REG-28, CMB-29, IA-11, D-81: temperamento e domíni
     criar(sim, [{ estrutura: 'laser_tower', x: 0, z: 0 }]);
     criar(sim, [{ unidade: 'hover_explorer', x: 12, z: 0 }], 'usa');
     const eventos: SimEvent[] = [];
-    rodar(sim, param('ultimato_s') - 1, eventos);
+    rodar(sim, param('ultimato_s') + 5, eventos);
     expect(eventos.some((e) => e.tipo === 'disparo')).toBe(false);
+    ordenar(sim, DECLARAR_GUERRA_COMMAND, { nacao: 'usa' });
     rodar(sim, 3, eventos);
     expect(emGuerra(sim.state, 'bra', 'usa')).toBe(true);
     expect(eventos.some((e) => e.tipo === 'disparo')).toBe(true);
@@ -138,5 +142,85 @@ describe('T-164 — REG-24 a REG-28, CMB-29, IA-11, D-81: temperamento e domíni
     rodar(sim, param('ultimato_s') + 10);
     expect(emGuerra(sim.state, 'bra', 'usa')).toBe(false);
     expect(getComponent(sim.state, intruso!, 'unit')).toBeDefined();
+  });
+});
+
+describe('T-175 — REG-26, REG-29, IA-12, D-88: domínio do jogador e Declarar guerra', () => {
+  it('REG-26: estrutura nunca invade (não pode sair)', () => {
+    const sim = emPaz();
+    criar(sim, [{ estrutura: 'storage', x: 0, z: 0 }]);
+    criar(sim, [{ estrutura: 'storage', x: param('dominio_estrutura_m') - 20, z: 0 }], 'usa');
+    rodar(sim, param('ultimato_s') + 5);
+    expect(temperamento(sim.state, 'bra', 'usa')).toBe('pacifico');
+    expect(temperamento(sim.state, 'usa', 'bra')).toBe('pacifico');
+  });
+
+  it('REG-25: o domínio de uma unidade não vale dentro da base alheia', () => {
+    const sim = emPaz();
+    criar(sim, [
+      { estrutura: 'storage', x: 0, z: 0 },
+      { unidade: 'hover_explorer', x: 20, z: 0 },
+    ]);
+    // O batedor alheio encosta no hover do jogador, dentro da base dele.
+    criar(sim, [{ unidade: 'hover_scout', x: 24, z: 0 }], 'usa');
+    rodar(sim, 1);
+    expect(temperamento(sim.state, 'bra', 'usa')).toBe('alerta');
+    // O jogador não é intruso: ninguém pede que ele saia.
+    expect(temperamento(sim.state, 'usa', 'bra')).toBe('pacifico');
+  });
+
+  it('REG-26: no domínio do jogador há AL-22 e aviso, mas nunca guerra automática', () => {
+    const sim = emPaz();
+    criar(sim, [{ estrutura: 'storage', x: 0, z: 0 }]);
+    criar(sim, [{ unidade: 'hover_scout', x: param('dominio_estrutura_m') - 10, z: 0 }], 'usa');
+    const eventos: SimEvent[] = [];
+    rodar(sim, 1, eventos);
+    expect(temperamento(sim.state, 'bra', 'usa')).toBe('alerta');
+    expect(alertas(eventos, 'AL-22')).toEqual([
+      expect.objectContaining({ nacao: 'bra', outra: 'usa' }),
+    ]);
+    expect(alertas(eventos, 'AL-19')).toEqual([]);
+    rodar(sim, 2 * param('ultimato_s'), eventos);
+    expect(emGuerra(sim.state, 'bra', 'usa')).toBe(false);
+    expect(alertas(eventos, 'AL-20')).toEqual([]);
+  });
+
+  it('REG-29: declarar_guerra abre a guerra na hora (AL-20 para os dois)', () => {
+    const sim = emPaz();
+    ordenar(sim, DECLARAR_GUERRA_COMMAND, { nacao: 'usa' });
+    const eventos = sim.step();
+    expect(emGuerra(sim.state, 'bra', 'usa')).toBe(true);
+    expect(alertas(eventos, 'AL-20')).toHaveLength(2);
+    // Contra si mesma ou nação desconhecida, nada.
+    const outra = emPaz();
+    ordenar(outra, DECLARAR_GUERRA_COMMAND, { nacao: 'bra' });
+    ordenar(outra, DECLARAR_GUERRA_COMMAND, { nacao: 'xyz' });
+    outra.step();
+    expect(emGuerra(outra.state, 'bra', 'usa')).toBe(false);
+  });
+
+  it('IA-11/IA-12: o batedor da IA sai do domínio do jogador; a onda provocadora declara guerra no fim do prazo', () => {
+    const sim = emPaz();
+    ordenar(sim, INICIAR_PARTIDA_COMMAND, {
+      modo: 'padrao',
+      nacoes: [
+        { nacao: 'bra', zona: ponto(0, 0) },
+        { nacao: 'usa', zona: ponto(0, 130) },
+      ],
+    });
+    ordenar(sim, ATIVAR_IA_COMMAND, { nivel: 'normal' }, 'usa');
+    rodar(sim, 1);
+    const [a, b] = criar(
+      sim,
+      [
+        { unidade: 'hover_ex1', x: 20, z: 0 },
+        { unidade: 'hover_ex1', x: 22, z: 0 },
+      ],
+      'usa',
+    );
+    const ia = sim.state.ias['usa']!;
+    ia.onda = { vrInicial: 1, alvo: 'bra', ponto: ponto(20, 0), membros: [a!, b!] };
+    rodar(sim, param('ultimato_s') + 3);
+    expect(emGuerra(sim.state, 'bra', 'usa')).toBe(true);
   });
 });

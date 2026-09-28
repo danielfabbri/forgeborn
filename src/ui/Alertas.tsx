@@ -4,7 +4,7 @@
  */
 import type { Alerta } from '../game/alertas';
 import { t, type TextKey } from '../i18n';
-import { acoesDosAlertas, alertasVisiveis } from './hud';
+import { acoesDaDiplomacia, acoesDosAlertas, alertasVisiveis, barraSuperior } from './hud';
 
 /** Texto do alerta com as variáveis traduzidas (nomes de itens, recursos, rumos e nações). */
 export function textoDoAlerta(a: Alerta): string {
@@ -58,18 +58,38 @@ export function PilhaDeAlertas() {
   if (alertas.length === 0) return null;
   return (
     <div class="alertas" data-testid="alertas">
-      {alertas.map((a) => (
-        <button
-          key={a.seq}
-          class={`alerta ${a.prioridade}`}
-          data-testid="alerta"
-          data-id={a.id}
-          disabled={!a.local}
-          onClick={() => acoesDosAlertas.irPara(a)}
-        >
-          {textoDoAlerta(a)}
-        </button>
-      ))}
+      {alertas.map((a) => {
+        const alerta = (
+          <button
+            key={a.seq}
+            class={`alerta ${a.prioridade}`}
+            data-testid="alerta"
+            data-id={a.id}
+            disabled={!a.local}
+            onClick={() => acoesDosAlertas.irPara(a)}
+          >
+            {textoDoAlerta(a)}
+          </button>
+        );
+        // REG-29 (D-88): no AL-22, o jogador pode declarar guerra ao intruso.
+        const outra = a.id === 'AL-22' ? String(a.vars.outra ?? '') : '';
+        const emPaz = barraSuperior.value.nacoes.some(
+          (n) => n.id === outra && n.estado !== 'inimigo',
+        );
+        if (!outra || !emPaz) return alerta;
+        return (
+          <div key={a.seq} class="alerta-com-acao">
+            {alerta}
+            <button
+              class="declarar-guerra"
+              data-testid="alerta-declarar-guerra"
+              onClick={() => acoesDaDiplomacia.declararGuerra(outra)}
+            >
+              {t('temperamento.declarar_guerra')}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }

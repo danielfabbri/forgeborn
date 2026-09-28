@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.3.1 — rascunho para aprovação |
+| Versão do SPEC | 1.3.2 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1518,7 +1518,7 @@ Confrontos de referência (simulação com foco de fogo e aproximação pelo alc
 ### 21.3 Invariantes (normativos, testados em `tests/balance/`)
 
 - **INV-01** — Um Hover de Exploração minerando Fe a 30 m do depósito (entre os centros da jazida e da Nave, como as distâncias de `dados:jazidas`) paga o próprio custo em VR em até 75 s, contando só o que já foi descarregado.
-- **INV-02** — Com estoque padrão e diretiva automática, a abertura "1 Hover extra → Impressora" entrega a Impressora entre 45 s e 60 s de jogo (D-30) (jazidas iniciais nas distâncias médias de `dados:jazidas`).
+- **INV-02** — Com estoque padrão e diretiva automática, a abertura "1 Hover extra → Impressora" entrega a Impressora entre 30 s e 45 s de jogo (D-30, D-83) (jazidas iniciais nas distâncias médias de `dados:jazidas`).
 - **INV-03** — 4 OPQ vencem 6 EX1 (mesmo VR) em campo aberto, começando a 25 m, com 20%–60% do HP total restante.
 - **INV-04** — 6 EX1 vencem 4 Drones Laser (mesmo VR) com 40%–80% do HP total restante.
 - **INV-05** — 4 Drones Laser vencem 4 OPQ sem perdas.
@@ -1761,3 +1761,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.2.0 | 2026-09-27 | D-82: IA-12 (provocação conforme a dificuldade); IA-04 e IA-11 remetem a ela. |
 | 1.3.0 | 2026-09-27 | D-83: `dados:custos` (estruturas ×0,7, `tempo_s` ×0,6, `antenna`), `dados:estruturas` (`geracao_en_s` da solar 4,5, `antenna`), `vel_m_s` dos hovers ×1,5, `taxa_mineracao_u_s` ×1,5, `carga_hover_u` 20, UNI-04, UNI-14, PRD-01, ENE-03, TEC-27, UI-07, CTL-03, CTL-16, atalho E Antena, Missão 1 libera a Antena; `barras_opacidade_nao_selecionados_pct`, `atmosfera_opacidade_pct`. |
 | 1.3.1 | 2026-09-27 | D-84: AUD-03, alertas de prioridade baixa sem voz nem sinal sonoro. |
+| 1.3.2 | 2026-09-27 | INV-02: 30–45 s (era 45–60 s), consequência do ritmo mais rápido de D-83 (a Impressora sai aos 38 s). |

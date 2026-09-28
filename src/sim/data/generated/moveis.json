@@ -148,5 +148,50 @@
     "mov_en_s": 0.6,
     "pairar_en_s": 0,
     "arma": null
+  },
+  {
+    "id": "boat_transport",
+    "hp": 400,
+    "blindagem": "blindada",
+    "camada": "agua",
+    "vel_m_s": 6,
+    "giro_graus_s": 90,
+    "raio_m": 3,
+    "visao_m": 18,
+    "deteccao_m": 0,
+    "bateria_en": 800,
+    "mov_en_s": 0.8,
+    "pairar_en_s": 0,
+    "arma": null
+  },
+  {
+    "id": "boat_artillery",
+    "hp": 350,
+    "blindagem": "blindada",
+    "camada": "agua",
+    "vel_m_s": 7,
+    "giro_graus_s": 120,
+    "raio_m": 2.4,
+    "visao_m": 24,
+    "deteccao_m": 0,
+    "bateria_en": 500,
+    "mov_en_s": 0.7,
+    "pairar_en_s": 0,
+    "arma": "boat_laser"
+  },
+  {
+    "id": "boat_antenna",
+    "hp": 200,
+    "blindagem": "leve",
+    "camada": "agua",
+    "vel_m_s": 8,
+    "giro_graus_s": 150,
+    "raio_m": 2,
+    "visao_m": 80,
+    "deteccao_m": 40,
+    "bateria_en": 400,
+    "mov_en_s": 0.5,
+    "pairar_en_s": 0,
+    "arma": null
   }
 ]

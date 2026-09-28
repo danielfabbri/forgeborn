@@ -193,5 +193,20 @@
     "manutencao_en_s": 0,
     "deposito": false,
     "arma": null
+  },
+  {
+    "id": "port",
+    "nome": "Porto",
+    "hp": 900,
+    "pegada_m": 10,
+    "visao_m": 16,
+    "deteccao_m": 0,
+    "geracao_en_s": 0,
+    "banco_en": 0,
+    "portas": 2,
+    "taxa_porta_en_s": 10,
+    "manutencao_en_s": 0,
+    "deposito": false,
+    "arma": null
   }
 ]

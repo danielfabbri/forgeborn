@@ -88,6 +88,24 @@
     "vel_projetil_m_s": null
   },
   {
+    "id": "boat_laser",
+    "tipo_dano": "laser",
+    "dano": 16,
+    "recarga_s": 1,
+    "alcance_m": 16,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "solo",
+      "ar"
+    ],
+    "en_disparo": 2,
+    "fonte_en": "bateria",
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
     "id": "ship_pd",
     "tipo_dano": "laser",
     "dano": 10,

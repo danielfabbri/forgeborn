@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.8.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.9.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -40,6 +40,7 @@ export type ArmasId =
   | 'drone_laser_gun'
   | 'bomb'
   | 'tower_laser'
+  | 'boat_laser'
   | 'ship_pd'
   | 'mine_blast'
   | 'sat_laser'
@@ -124,6 +125,10 @@ export type CustosId =
   | 'mag_tower'
   | 'antenna'
   | 'power_hub'
+  | 'port'
+  | 'boat_transport'
+  | 'boat_artillery'
+  | 'boat_antenna'
   | 'missile_short'
   | 'missile_long'
   | 'mine';
@@ -194,7 +199,8 @@ export type EstruturasId =
   | 'aa_battery'
   | 'mag_tower'
   | 'antenna'
-  | 'power_hub';
+  | 'power_hub'
+  | 'port';
 
 export interface EstruturasRow {
   id: EstruturasId;
@@ -287,7 +293,10 @@ export type MoveisId =
   | 'drone_bomber'
   | 'drone_laser'
   | 'mobile_silo'
-  | 'mobile_battery';
+  | 'mobile_battery'
+  | 'boat_transport'
+  | 'boat_artillery'
+  | 'boat_antenna';
 
 export interface MoveisRow {
   id: MoveisId;
@@ -421,6 +430,9 @@ export type ParametrosChave =
   | 'reparo_impressora_unidade_hp_s'
   | 'max_reparadores'
   | 'raio_reparo_auto_m'
+  | 'porto_distancia_borda_m'
+  | 'transporte_capacidade'
+  | 'embarque_distancia_m'
   | 'estado_combate_s'
   | 'nucleo_splash_pct'
   | 'leash_agressivo_m'
@@ -505,6 +517,9 @@ export type ParametrosChave =
   | 'ia_kite_pct'
   | 'ia_minas_distancia_m'
   | 'ia_misseis_curtos'
+  | 'ia_porto_distancia_m'
+  | 'ia_barcos_artilharia'
+  | 'ia_barcos_antena'
   | 'ia_misseis_longos'
   | 'ia_missil_longo_intervalo_s'
   | 'tutorial_raio_armazem_m'
@@ -514,10 +529,8 @@ export type ParametrosChave =
   | 'tempestade_mult_visao'
   | 'tempestade_mult_solar'
   | 'tempestade_aviso_s'
-  | 'lagos_por_setor'
-  | 'lago_raio_min_m'
-  | 'lago_raio_max_m'
-  | 'lago_folga_zona_m'
+  | 'mar_cobertura_pct'
+  | 'mar_folga_zona_m'
   | 'pedras_por_10k_m2'
   | 'pedra_raio_min_m'
   | 'pedra_raio_max_m'

@@ -415,6 +415,78 @@
     "tempo_s": 9
   },
   {
+    "id": "port",
+    "nome": "Porto",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 70,
+    "si": 20,
+    "cu": 20,
+    "li": 0,
+    "ti": 0,
+    "u": 0,
+    "vr": 120,
+    "ref_x": null,
+    "en_impressao": 100,
+    "tempo_s": 21
+  },
+  {
+    "id": "boat_transport",
+    "nome": "Embarcação de Transporte",
+    "categoria": "movel",
+    "produzido_por": [
+      "port"
+    ],
+    "fe": 40,
+    "si": 10,
+    "cu": 15,
+    "li": 10,
+    "ti": 0,
+    "u": 0,
+    "vr": 92.5,
+    "ref_x": null,
+    "en_impressao": 60,
+    "tempo_s": 15
+  },
+  {
+    "id": "boat_artillery",
+    "nome": "Embarcação de Artilharia",
+    "categoria": "movel",
+    "produzido_por": [
+      "port"
+    ],
+    "fe": 40,
+    "si": 10,
+    "cu": 25,
+    "li": 10,
+    "ti": 10,
+    "u": 0,
+    "vr": 137.5,
+    "ref_x": null,
+    "en_impressao": 80,
+    "tempo_s": 16
+  },
+  {
+    "id": "boat_antenna",
+    "nome": "Embarcação Antena",
+    "categoria": "movel",
+    "produzido_por": [
+      "port"
+    ],
+    "fe": 20,
+    "si": 30,
+    "cu": 20,
+    "li": 0,
+    "ti": 0,
+    "u": 0,
+    "vr": 80,
+    "ref_x": null,
+    "en_impressao": 50,
+    "tempo_s": 10
+  },
+  {
     "id": "missile_short",
     "nome": "Míssil de Curto Alcance",
     "categoria": "municao",

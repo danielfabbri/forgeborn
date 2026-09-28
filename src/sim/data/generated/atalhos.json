@@ -102,7 +102,7 @@
   {
     "contexto": "printer",
     "tecla": "B",
-    "acao": "Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição"
+    "acao": "Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição, O Porto"
   },
   {
     "contexto": "missile_silo",
@@ -158,6 +158,16 @@
     "contexto": "satellite_uplink",
     "tecla": "S",
     "acao": "Imprimir Satélite"
+  },
+  {
+    "contexto": "port",
+    "tecla": "T / A / N",
+    "acao": "Imprimir Transporte / Artilharia / Antena (UNI-16)"
+  },
+  {
+    "contexto": "boat_transport",
+    "tecla": "D",
+    "acao": "Desembarcar no ponto (UNI-20)"
   },
   {
     "contexto": "satellite_uplink",

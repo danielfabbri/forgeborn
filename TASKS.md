@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v1.8.0 |
+| Derivado de | `SPEC.md` v1.9.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -44,6 +44,7 @@
 | M15 Pós-v1 | T-150 – T-160 | Cenários e missões 3–8, salvar partida, inglês |
 | M16 Vastidão | T-161 – T-169 | Corpos do tamanho proporcional, ritmo de exploração (D-79) |
 | M17 Rede e cidades | T-170 – T-179 | Rede elétrica por cabos (D-85) |
+| M18 Mares | T-180 – T-189 | Mares, Porto e embarcações (D-90) |
 
 ## Caminho crítico até o MVP
 
@@ -391,3 +392,16 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: estrutura não conta como intrusa; domínio de unidade não vale dentro da base alheia; no domínio de uma IA o prazo é `ultimato_s` e vira guerra; no domínio do jogador não há guerra automática, a IA recolhe as unidades e o jogador recebe AL-22 com Declarar guerra; o Comando "declarar_guerra" abre a guerra; o temperamento da barra também declara; a onda provocadora declara guerra ao jogador no fim do prazo.
 - [x] **T-176 — Jazidas espalhadas, maiores e com cara de pedra** · M · Spec: ECO-04, ECO-07, ECO-30, D-89 · Dep: T-171 · Feito: 2026-09-28
   - Aceite: quantidades de `dados:jazidas` × perfil; toda jazida a ≥ `jazida_espacamento_min_m` das outras; jazidas espalhadas na densidade de ECO-30, simétricas, longe das zonas de pouso; presets continuam válidos; jazidas desenhadas como rocha com veios e cristais na cor do recurso; Fe e Cu com as cores novas.
+
+## M18 — Mares (D-90)
+
+- [ ] **T-180 — Mares orgânicos com ilhas** · G · Spec: CEN-04, CEN-11, MOV-01, PRD-10, §14.7, D-90 · Dep: T-176
+  - Aceite: nos cenários com líquido, `mar_cobertura_pct`% da superfície abaixo do nível, com formas orgânicas e ilhas, simétrica, terra firme a `mar_folga_zona_m` das zonas; unidades de solo param na borda; nada fica no líquido (exceto o Porto); validação conta o mar; presets de Titã válidos; o mar desenhado com a névoa.
+- [ ] **T-181 — Porto e embarcações** · G · Spec: UNI-16 – UNI-19, MOV-08, CMB-04, PRD-10, `dados:custos`, `dados:moveis`, `dados:estruturas`, `boat_laser`, D-90 · Dep: T-180
+  - Aceite: a Impressora imprime o Porto só sobre o líquido perto da terra; o Porto imprime as três embarcações, que só andam no líquido e recarregam nas portas dele; a Artilharia atira com `boat_laser`; a Antena enxerga `visao_m`.
+- [ ] **T-182 — Transporte: embarcar e desembarcar** · M · Spec: UNI-20, D-90 · Dep: T-181
+  - Aceite: até `transporte_capacidade` unidades de solo embarcam pela borda; somem do mapa; desembarcam em terra em volta do ponto; morrem com o Transporte; drones não embarcam.
+- [ ] **T-183 — Visual e interface naval** · M · Spec: UNI-16 – UNI-20, atalhos, ART-04, D-90 · Dep: T-181
+  - Aceite: modelos do Porto e das embarcações; cartões, fotos e atalhos (B → O; T/A/N no Porto; D no Transporte); ordem de embarque pelo clique direito.
+- [ ] **T-184 — IA naval** · G · Spec: IA-14, D-90 · Dep: T-182
+  - Aceite: com líquido perto da base, a IA constrói o Porto e mantém as embarcações; leva a onda e a expansão pelo mar quando não há caminho por terra (headless em Titã).

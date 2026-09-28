@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.8.0 — rascunho para aprovação |
+| Versão do SPEC | 1.9.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -558,7 +558,7 @@ flowchart LR
 
 ### 7.4 Construção de estruturas
 
-- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas, jazidas (com folga de `distancia_min_jazida_m`) e pedras (CEN-17), e fora dos lagos de metano (CEN-04). A pegada é um quadrado no plano tangente, alinhado ao norte local (CEN-15). Unidades próprias dentro da pegada são empurradas para fora quando a obra começa. Entre posicionar e instalar o canteiro, a pegada fica reservada: nenhuma outra estrutura pode ser posicionada sobre ela, mas unidades passam (D-29).
+- **PRD-10** — Posicionamento válido: terreno explorado; inclinação até `inclinacao_max_construcao_graus`; pegada livre de estruturas, jazidas (com folga de `distancia_min_jazida_m`) e pedras (CEN-17), e fora do líquido (CEN-04); o Porto é o contrário: a pegada toda sobre o líquido e o centro a até `porto_distancia_borda_m` da terra (UNI-16, D-90). A pegada é um quadrado no plano tangente, alinhado ao norte local (CEN-15). Unidades próprias dentro da pegada são empurradas para fora quando a obra começa. Entre posicionar e instalar o canteiro, a pegada fica reservada: nenhuma outra estrutura pode ser posicionada sobre ela, mas unidades passam (D-29).
 - **PRD-11** — A Impressora vai até o local (casco a até `raio_deposito_m` da borda da pegada, D-29), instala o **canteiro** e imprime a estrutura em camadas. O canteiro nasce com `hp_inicial_canteiro_pct`% do HP e ganha HP proporcional ao progresso. Dano sofrido durante a obra é descontado do HP final.
 - **PRD-12** — Estrutura em construção não funciona (não gera energia, não dispara, não recebe descargas) até chegar a 100%.
 - **PRD-13** — Canteiro abandonado não se degrada e pode ser retomado por qualquer Impressora ou Hover de Exploração próprio.
@@ -628,6 +628,10 @@ flowchart LR
 | mag_tower | Torre Magnética | estrutura | printer | 49 | 21 | 35 | 14 | 11 | 0 | 183,5 | — | 120 | 24 |
 | antenna | Antena | estrutura | printer | 30 | 50 | 30 | 0 | 0 | 0 | 125 | — | 50 | 12 |
 | power_hub | Central de Distribuição | estrutura | printer | 8 | 5 | 12 | 0 | 0 | 0 | 31 | — | 20 | 9 |
+| port | Porto | estrutura | printer | 70 | 20 | 20 | 0 | 0 | 0 | 120 | — | 100 | 21 |
+| boat_transport | Embarcação de Transporte | movel | port | 40 | 10 | 15 | 10 | 0 | 0 | 92,5 | — | 60 | 15 |
+| boat_artillery | Embarcação de Artilharia | movel | port | 40 | 10 | 25 | 10 | 10 | 0 | 137,5 | — | 80 | 16 |
+| boat_antenna | Embarcação Antena | movel | port | 20 | 30 | 20 | 0 | 0 | 0 | 80 | — | 50 | 10 |
 | missile_short | Míssil de Curto Alcance | municao | missile_silo | 20 | 0 | 10 | 5 | 0 | 0 | 45 | — | 40 | 12 |
 | missile_long | Míssil de Longo Alcance | municao | missile_silo | 60 | 0 | 30 | 20 | 20 | 5 | 230 | — | 150 | 27 |
 | mine | Mina | municao | hover_minelayer | 6 | 0 | 2 | 1 | 0 | 0 | 11 | — | 20 | 3,6 |
@@ -651,6 +655,9 @@ Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação
 | drone_laser | 130 | blindada | ar | 12,0 | 300 | 1,0 | 22 | 0 | 360 | 1,4 | 0,4 | drone_laser_gun |
 | mobile_silo | 320 | blindada | solo | 4,0 | 150 | 2,2 | 14 | 0 | 500 | 1,0 | 0 | — |
 | mobile_battery | 200 | blindada | solo | 4,5 | 180 | 1,8 | 14 | 0 | 2000 | 0,6 | 0 | — |
+| boat_transport | 400 | blindada | agua | 6,0 | 90 | 3,0 | 18 | 0 | 800 | 0,8 | 0 | — |
+| boat_artillery | 350 | blindada | agua | 7,0 | 120 | 2,4 | 24 | 0 | 500 | 0,7 | 0 | boat_laser |
+| boat_antenna | 200 | leve | agua | 8,0 | 150 | 2,0 | 80 | 40 | 400 | 0,5 | 0 | — |
 
 ### 8.3 Estruturas
 
@@ -672,6 +679,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | mag_tower | Torre Magnética | 600 | 5 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | antenna | Antena | 250 | 3 | 100 | 0 | 0 | 0 | 0 | 0 | 1 | nao | — |
 | power_hub | Central de Distribuição | 250 | 3 | 8 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
+| port | Porto | 900 | 10 | 16 | 0 | 0 | 0 | 2 | 10 | 0 | nao | — |
 
 ### 8.4 Armas
 
@@ -685,6 +693,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | drone_laser_gun | laser | 11 | 0,6 | 9 | 0 | 0 | — | solo+ar | 1 | bateria | hitscan | — |
 | bomb | explosivo | 60 | 3,0 | 3 | 0 | 3,5 | 50 | solo | 8 | bateria | balistico | — |
 | tower_laser | laser | 15 | 1,0 | 13 | 0 | 0 | — | solo+ar | 2 | rede | hitscan | — |
+| boat_laser | laser | 16 | 1,0 | 16 | 0 | 0 | — | solo+ar | 2 | bateria | hitscan | — |
 | ship_pd | laser | 10 | 1,0 | 14 | 0 | 0 | — | solo+ar | 1 | rede | hitscan | — |
 | mine_blast | explosivo | 150 | — | 2 | 0 | 4 | 40 | solo | 0 | — | gatilho | — |
 | sat_laser | laser | 20 | 2,0 | 60 | 0 | 0 | — | orbita | 0 | — | hitscan | — |
@@ -809,6 +818,19 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **UNI-13** — Campo eletromagnético de raio `mag_raio_m`. Unidades móveis inimigas no campo ficam mais lentas (até `mag_lentidao_max_pct` no centro) e perdem energia da bateria (até `mag_dreno_max_en_s` no centro); o efeito cai em linha até zero na borda e, em unidades blindadas, vale `mag_fator_blindada_pct`. Vários campos não se somam: vale o mais forte. A torre guarda o que drena até `mag_banco_max_en`; cheia, para de drenar até gastar parte. Ela repassa a até `mag_max_aliados` unidades próprias no campo, as de menor % primeiro, até `mag_repasse_en_s` cada (D-65), e repara até `mag_max_aliados` unidades móveis próprias no campo, as mais feridas primeiro, a `mag_reparo_hp_s` cada (D-72).
 - **UNI-14** — **Antena** (`antenna`, D-83): estrutura de observação de alta visibilidade: enxerga `visao_m` em volta (a maior visão fixa do jogo), não detecta furtivos, não tem arma e consome `manutencao_en_s` da rede; sem energia, não enxerga.
 - **UNI-15** — **Central de Distribuição** (`power_hub`, D-85): estrutura barata e frágil, uma caixa baixa de junção no chão (D-86), que só serve de ponto da rede: tem `cabo_saidas_central` saídas para bifurcar a rede (D-87) e alcança `cabo_alcance_central_m` com seus cabos, para levar a rede a outras áreas. Não gera, não guarda nem gasta energia.
+- **UNI-16** — **Porto** (`port`, D-90): estrutura naval impressa pela Impressora (PRD-10: sobre o líquido, perto da terra), que ela imprime da borda: vale o casco a até `porto_distancia_borda_m` da pegada. Imprime as embarcações, que nascem na água ao lado; tem portas de recarga (ENE-12) para elas. Precisa de rede (ENE-29).
+- **UNI-17** — **Embarcação de Transporte** (`boat_transport`): leva até `transporte_capacidade` unidades de solo pelo mar (UNI-20). Desarmada.
+- **UNI-18** — **Embarcação de Artilharia** (`boat_artillery`): laser `boat_laser`, contra corpos de solo (inclusive em terra, dentro do alcance) e drones.
+- **UNI-19** — **Embarcação Antena** (`boat_antenna`): desarmada; `visao_m` e `deteccao_m` grandes, para abrir a visão do mar.
+- **UNI-20** — **Embarque e desembarque** (D-90): com unidades de solo próprias selecionadas, o clique direito num Transporte próprio as manda embarcar (Comando "embarcar"): cada uma vai até a borda mais perto do Transporte e embarca quando o casco fica a até `embarque_distancia_m` do casco dele, se houver vaga; embarcada, sai do mapa (não é vista nem atingida). Com o Transporte selecionado, o clique direito na terra (ou a tecla D) o manda desembarcar ali (Comando "desembarcar"): ele vai até o ponto de líquido mais perto e põe todos em terra em volta do ponto de terra mais perto. Drones não embarcam. Se o Transporte é destruído, as unidades embarcadas também são.
+
+<!-- dados:parametros -->
+| chave | valor | unidade | descricao |
+|---|---|---|---|
+| porto_distancia_borda_m | 12 | m | Distância máxima do centro do Porto à terra (PRD-10); alcance da Impressora ao imprimi-lo (UNI-16) |
+| transporte_capacidade | 10 | unidades | Unidades de solo que um Transporte leva (UNI-20) |
+| embarque_distancia_m | 3 | m | Distância casco a casco para embarcar (UNI-20) |
+
 - **Visual:** coluna de bobinas com anéis que brilham enquanto o campo age.
 
 ### 8.6 Autonomia padrão (resumo)
@@ -844,7 +866,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ### 9.2 Camadas e alvos
 
-- **CMB-04** — Há duas camadas: **solo** (hovers, estruturas, minas, drones pousados) e **ar** (drones em voo). A coluna `alvos` da arma define quais camadas ela atinge. Disparos não exigem linha de visada: vale só o alcance (D-31).
+- **CMB-04** — Há duas camadas: **solo** (hovers, embarcações, estruturas, minas, drones pousados) e **ar** (drones em voo). A coluna `alvos` da arma define quais camadas ela atinge. Disparos não exigem linha de visada: vale só o alcance (D-31).
 - **CMB-05** — Drones pousados são alvos de solo, mas não acionam minas.
 
 ### 9.3 Projéteis
@@ -975,13 +997,14 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 ## 11. Movimento
 
-- **MOV-01** — Camada de solo: hovers flutuam ~0,6 m acima do terreno e transpõem inclinações (em relação à vertical local, CEN-14) até `inclinacao_max_hover_graus`. Acima disso o terreno é intransponível (paredões, bordas de cratera).
+- **MOV-01** — Camada de solo: hovers flutuam ~0,6 m acima do terreno e transpõem inclinações (em relação à vertical local, CEN-14) até `inclinacao_max_hover_graus`. Acima disso o terreno é intransponível (paredões, bordas de cratera). O líquido (CEN-04) também é intransponível: a unidade de solo para na borda (D-90).
 - **MOV-02** — Camada aérea: drones voam a `altitude_drone_m` acima da esfera de raio `raio_m` (altura radial) e ignoram relevo e obstáculos de solo. "Em linha reta" quer dizer pelo arco de grande círculo.
 - **MOV-03** — Aceleração até a velocidade máxima em `aceleracao_solo_s` (solo) ou `aceleracao_ar_s` (ar). Giro a `giro_graus_s`.
 - **MOV-04** — Colisão: unidades de solo são círculos (`raio_m`) com separação suave entre si; estruturas, jazidas e pedras (CEN-17) são obstáculos rígidos. Drones só se separam de outros drones.
 - **MOV-05** — Pathfinding em grade de `celula_navegacao_m`: A* para unidades isoladas e **flow field** para grupos com `flow_field_min_unidades` ou mais. Minas inimigas reveladas e zonas de radiação têm custo alto (são evitadas).
 - **MOV-06** — Movimento em grupo mantém a formação relativa e anda na velocidade da unidade mais lenta. Desligável ("mover livre").
 - **MOV-07** — **Pouso de drones:** drone ocioso por `pouso_automatico_s` pousa (consumo 0). Decola em `tempo_decolagem_s` ao receber ordem ou quando há inimigo ao alcance da visão. Pousado, é alvo de solo e não dispara. Também pode pousar pelo comando Pousar (leva `tempo_pouso_s`).
+- **MOV-08** — **Camada de água** (D-90): embarcações flutuam na superfície do líquido e só andam nele, na grade de `celula_navegacao_m` restrita às células de líquido (A* e flow field como MOV-05). Colidem entre si e com o Porto; drones as sobrevoam. Para os tiros (CMB-04) são corpos da camada solo.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1046,7 +1069,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ship | E | Imprimir Hover de Exploração |
 | ship | I | Imprimir Impressora 3D |
 | ship | Q | Recolher ou liberar os mineradores (CMB-28) |
-| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição |
+| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição, O Porto |
 | missile_silo | C / L | Fabricar míssil curto / longo |
 | printer | U | Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, B Bombardeiro, L Drone Laser, V Silo, C Bateria |
 | hover_explorer | C | Coletar |
@@ -1058,6 +1081,8 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | drones | L | Pousar ou decolar |
 | mobile_silo | G | Descarregar agora |
 | satellite_uplink | S | Imprimir Satélite |
+| port | T / A / N | Imprimir Transporte / Artilharia / Antena (UNI-16) |
+| boat_transport | D | Desembarcar no ponto (UNI-20) |
 | satellite_uplink | T | Reposicionar satélite |
 | satellite_uplink | G | Varredura Orbital |
 | gate | T | Trancar ou destrancar o portão |
@@ -1112,6 +1137,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 - **IA-11** — Temperamento da IA (D-81): avisada (REG-26), recolhe os corpos do domínio alheio antes do prazo, menos na Brutal e na onda de provocação (IA-12), que ficam. A IA escolhe expansões e rotas de batedor fora do domínio de nações pacíficas com ela, menos na Brutal.
 - **IA-12** — Provocação (D-82): sem nenhuma guerra, quando a onda estaria pronta (IA-04), a IA escolhe um alvo e manda a onda para o domínio dele, ignorando o aviso; contra outra IA, a guerra começa pelo prazo de REG-26; contra o jogador, quando o prazo do aviso acaba com a onda no domínio, a IA declara guerra (REG-29, D-88). Fácil nunca provoca. Normal só provoca a nação conhecida mais fraca (menos estruturas conhecidas) e só se ela tiver menos estruturas que a própria IA. Difícil provoca a mais próxima; Brutal, a mais fraca.
 - **IA-13** — Cabos da IA (D-85, D-87): a IA pluga cada estrutura pronta que precisa de energia (e as Centrais) na Nave ou Central mais próxima da rede da Nave ao alcance e com saída livre; se não há saída livre ao alcance, ela planta uma Central ao lado da estrutura. Ela só posiciona essas estruturas onde algum ponto dessa rede alcança. Para uma expansão fora do alcance, ela primeiro planta uma Central de Distribuição no caminho (D-86).
+- **IA-14** — **IA naval** (D-90): em mapa com líquido a até `ia_porto_distancia_m` da base, a IA constrói um Porto e mantém `ia_barcos_artilharia` Embarcações de Artilharia e `ia_barcos_antena` Embarcação Antena. Quando o alvo da onda (IA-04) ou a expansão (IA-07) não tem caminho por terra, ela imprime Transportes e leva a onda (ou uma Impressora com escolta) pelo mar, desembarcando no litoral mais perto do alvo.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1132,6 +1158,9 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ia_kite_pct | 60 | % | micro 3: OPQ e drones recuam com o inimigo a menos dessa fração do alcance |
 | ia_minas_distancia_m | 30 | m | Distância da base em que a IA planta minas |
 | ia_misseis_curtos | 2 | mísseis | Curtos que a IA mantém prontos |
+| ia_porto_distancia_m | 150 | m | Distância máxima do líquido à base para a IA construir um Porto (IA-14) |
+| ia_barcos_artilharia | 2 | embarcações | Embarcações de Artilharia que a IA mantém (IA-14) |
+| ia_barcos_antena | 1 | embarcações | Embarcações Antena que a IA mantém (IA-14) |
 | ia_misseis_longos | 1 | mísseis | Longos que a IA mantém prontos (Normal para cima) |
 | ia_missil_longo_intervalo_s | 90 | s | Intervalo mínimo entre longos lançados pela IA |
 | tutorial_raio_armazem_m | 30 | m | Distância máxima do Armazém do passo 5 do tutorial à jazida de Cobre |
@@ -1208,7 +1237,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | tita | Titã | 455 | 0,1 | 1,0 | 1,0 | 0,75 | 0,85 | 1,0 | 1,0 | 1,2 | 1,0 | 1,2 | 1,2 | lagos_metano | v1.0 |
 
 - **CEN-03** — Evento `tempestade_poeira` (Marte): ocorre em intervalos sorteados pela seed entre `tempestade_intervalo_min_s` e `tempestade_intervalo_max_s` e dura `tempestade_duracao_s`. Durante o evento a visão de todos os corpos (névoa e detecção de alvos) é multiplicada por `tempestade_mult_visao` e a geração solar por `tempestade_mult_solar`. O aviso AL-15 sai `tempestade_aviso_s` antes.
-- **CEN-04** — Evento `lagos_metano` (Titã): lagos de metano nas baixadas do relevo, `lagos_por_setor` por setor de simetria (a contagem respeita a simetria de CEN-06), cada um com raio entre `lago_raio_min_m` e `lago_raio_max_m`, com a borda a pelo menos `lago_folga_zona_m` do centro de qualquer zona de pouso, longe dos pontos médios (ECO-08) e sem jazidas dentro. Hovers atravessam na velocidade normal e drones sobrevoam; nenhuma estrutura (inclusive Muro e Portão) nem mina pode ser posicionada sobre um lago (PRD-10, D-78).
+- **CEN-04** — **Mares** (D-90): cenário com evento de líquido (hoje `lagos_metano`, Titã; vale para qualquer corpo com água ou outro líquido na superfície) tem mares e lagos de formas orgânicas, com ilhas: toda a superfície abaixo do nível do líquido é mar, cobrindo `mar_cobertura_pct`% da área, com a mesma simetria de CEN-06. O terreno a até `mar_folga_zona_m` de cada zona de pouso é terra firme. Unidades de solo não entram no líquido: param na borda (MOV-01); drones sobrevoam; embarcações só andam nele (MOV-08). Nenhuma estrutura, mina, pedra ou jazida fica no líquido, exceto o Porto (UNI-16, PRD-10).
 - **CEN-05** — Europa: `mult_vel_hover` e `mult_giro_hover` representam o gelo (mais rápido, gira pior).
 
 <!-- dados:parametros -->
@@ -1220,10 +1249,8 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | tempestade_mult_visao | 0,6 | × | Visão durante a tempestade |
 | tempestade_mult_solar | 0,5 | × | Geração solar durante a tempestade |
 | tempestade_aviso_s | 20 | s | Antecedência do aviso AL-15 |
-| lagos_por_setor | 4 | lagos | Lagos de metano por setor de simetria (CEN-04) |
-| lago_raio_min_m | 15 | m | Raio mínimo de um lago de metano |
-| lago_raio_max_m | 35 | m | Raio máximo de um lago de metano |
-| lago_folga_zona_m | 70 | m | Distância mínima do centro de uma zona de pouso à borda de um lago |
+| mar_cobertura_pct | 25 | % | Fração da superfície coberta pelo líquido (CEN-04) |
+| mar_folga_zona_m | 100 | m | Raio de terra firme em volta do centro de cada zona de pouso (CEN-04) |
 
 ### 14.2 Tamanho dos corpos
 
@@ -1244,7 +1271,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **CEN-08** — Cada zona de pouso é um platô plano (inclinação < 5° em relação à vertical local) de raio 50 m, com 2–3 saídas (rampas de pelo menos 12 m de largura). "Plano" numa esfera é altura radial constante: o platô acompanha a curvatura.
 - **CEN-09** — Relevo: crateras (raio 10–60 m, borda até 8 m de altura, bordas acima de 30° intransponíveis salvo brechas), colinas suaves e sulcos, cobrindo o planeta inteiro. Não há borda de mapa.
 - **CEN-10** — As jazidas seguem `dados:jazidas` × perfil do cenário, respeitando as distâncias.
-- **CEN-11** — Validação obrigatória: há caminho de solo entre todas as zonas de pouso; entre zonas vizinhas há pelo menos 2 rotas distintas; toda jazida é alcançável por solo; nenhuma jazida fica a menos de 6 m de um paredão. Seed inválida → tenta a próxima.
+- **CEN-11** — Validação obrigatória: há caminho entre todas as zonas de pouso por terra ou pelo mar (atravessar o líquido de barco conta, D-90); entre zonas vizinhas há pelo menos 2 rotas distintas (idem); a terra de toda zona de pouso sem caminho por terra até as outras toca o mar (para o transporte); toda jazida é alcançável por terra a partir de uma zona de pouso ou de um litoral; nenhuma jazida fica a menos de 6 m de um paredão. Seed inválida → tenta a próxima.
 - **CEN-12** — Cada cenário publica 3 seeds curadas (presets) mais a opção "Aleatória".
 - **CEN-13** — Formato de mapa: JSON (metadados, zonas de pouso, jazidas, adereços) + heightmap de 16 bits nas 6 faces da cubo-esfera (CEN-14, ~1 m por texel) + máscara de materiais.
 - **CEN-14** — **Geometria do planeta.** Posições são pontos da esfera de raio `raio_m` mais uma altura radial. "Para cima" é a vertical local (do centro para o ponto). Distâncias horizontais (alcance, visão, raios de busca, pegadas) são **arcos de grande círculo** sobre a esfera de raio `raio_m`. A superfície é dividida numa **cubo-esfera equiangular**: 6 faces com a mesma grade, alinhadas aos eixos x, y e z. As zonas de pouso ficam em 4 vértices alternados do cubo (N = 4) ou nos centros das faces ±z (N = 2). Nas arestas do cubo as grades se emendam; nos 8 vértices do cubo cada célula tem 7 vizinhas em vez de 8.
@@ -1271,7 +1298,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 - **Ambientação:** uma lua pequena sob uma atmosfera espessa: céu laranja nebuloso e sem estrelas, o Sol só um brilho difuso atrás da névoa; penumbra, luz fraca e alaranjada, sombras quase apagadas; névoa densa que esconde a distância; solo de gelo e sedimentos (bege acinzentado com tons de ocre); os lagos de metano escuros e espelhados, refletindo o céu. Vento de fundo (AUD-02).
 - **Presets:** *Xanadu* (N = 2, 2 jogadores), *Ligeia Mare* (N = 4, 2–4), *Kraken Mare* (N = 4, 3–4).
-- **Eventos:** `lagos_metano` (CEN-04).
+- **Eventos:** `lagos_metano` (CEN-04): mares de metano com ilhas, em ~um quarto da superfície; Porto e embarcações (UNI-16 a UNI-20).
 - **Uso:** Free Battle na v1.0; a Missão 8 entra na campanha quando as Missões 4 a 7 existirem (D-78).
 
 ---
@@ -1697,7 +1724,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-76 | Macetes digitados na partida para acelerar o teste das fases, começando pelos de recurso (TEC-27). | Pedido do produto. | Aprovada |
 | D-77 | Marte e a Missão 3 entram na v1.0 (antes em v1.x): cenário com ambientação própria, tempestade de poeira, 3 presets e a missão na campanha. | Pedido do produto: seguir a campanha para Marte depois das fases da Lua. | Aprovada |
 | D-78 | Titã entra na v1.0 só no Free Battle; a Missão 8 segue na v1.x, depois das Missões 4 a 7, para manter a ordem da campanha. Lagos de metano (CEN-04): 2/1/2 por setor de simetria nos mapas P/M/G (4, 4 e 8 lagos; a proposta de 3/5/7 não respeita a simetria de CEN-06), raio de 15 a 35 m, a 70 m das zonas de pouso, sem jazidas; hovers atravessam na velocidade normal; estruturas, muros e minas não. | Pedido do produto (criar Titã) e respostas às duas perguntas: "Titã só no Free Battle" e a proposta dos lagos. | Aprovada |
-| D-79 | Vastidão: cada corpo tem o próprio raio (`raio_m` em `dados:cenarios`, raiz cúbica do raio real, Lua 400 m; CEN-16), sem escolha de tamanho no Free Battle; 2 a 4 jogadores em qualquer corpo; `primeiro_ataque_min` ×2,5; novo pilar P6; EXP-03, EXP-04, INV-12 e os tempos-par das missões 1–8 (×2) ajustados ao ritmo novo; lagos de Titã passam a `lagos_por_setor`. Substitui dados:tamanhos_mapa e as chaves lagos_por_setor_p/m/g (IDs não reutilizados, GOV-03). | Pedido do produto: "Cada cenário deve ter o seu próprio tamanho… Quero mais vastidão… menos batalha rápida e mais colonização, exploração, com tempo pra admirar estar em outro planeta." Respostas: raiz cúbica; 2 a 4 em qualquer corpo; IA ataca bem mais tarde. | Aprovada |
+| D-79 | Vastidão: cada corpo tem o próprio raio (`raio_m` em `dados:cenarios`, raiz cúbica do raio real, Lua 400 m; CEN-16), sem escolha de tamanho no Free Battle; 2 a 4 jogadores em qualquer corpo; `primeiro_ataque_min` ×2,5; novo pilar P6; EXP-03, EXP-04, INV-12 e os tempos-par das missões 1–8 (×2) ajustados ao ritmo novo; lagos de Titã passam a "lagos_por_setor". Substitui dados:tamanhos_mapa e as chaves lagos_por_setor_p/m/g (IDs não reutilizados, GOV-03). | Pedido do produto: "Cada cenário deve ter o seu próprio tamanho… Quero mais vastidão… menos batalha rápida e mais colonização, exploração, com tempo pra admirar estar em outro planeta." Respostas: raiz cúbica; 2 a 4 em qualquer corpo; IA ataca bem mais tarde. | Aprovada |
 | D-80 | O escuro da névoa (VIS-01) deixa de ser preto absoluto: mostra a silhueta escura do relevo, em todos os cenários e também em 1ª e 3ª pessoa. A informação escondida continua a mesma (nada sobre o terreno). | Pedido do produto: "Na Lua, não quero ausência absoluta de cor no terreno… Quando ando com um personagem, não vejo como é o terreno." | Aprovada |
 | D-81 | Temperamento entre nações (REG-24 a REG-28): todas começam pacíficas; entrar no domínio de outra (60 m das estruturas, 20 m das unidades) gera aviso imediato, e ficar mais de 10 s vira guerra; dano abre a guerra na hora; a guerra esfria depois de 5 min sem combate e fora dos domínios. O disparo automático só mira inimigos (CMB-29); a IA obedece o aviso (menos a Brutal) e só ataca quem está em guerra com ela (IA-04, IA-05, IA-11). | Pedido do produto: "as civilizações poderiam pedir pra você se retirar antes de atacar… começa com todos pacíficos… se você não sair do território em 10 s, o status vira inimigo"; respostas: domínio 60/20 m, guerra esfria, disparo só em inimigos. | Aprovada |
 | D-82 | A IA pacífica provoca guerra conforme a dificuldade (IA-12): a onda entra no domínio do alvo e a guerra começa pelo aviso de 10 s; Fácil nunca, Normal só contra quem é mais fraco que ela, Difícil a mais próxima, Brutal a mais fraca. Mantém as guerras entre IAs e os invariantes de vitória (INV-12, INV-14). | Resposta do produto: "Sim, conforme a dificuldade". | Aprovada |
@@ -1708,6 +1735,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-87 | Ligação 1:1 da rede: cada estrutura tem uma única saída de cabo; a Nave e a Central de Distribuição têm 4 e bifurcam a rede (ENE-26, UNI-15); puxar um cabo de uma estrutura já plugada troca o cabo, e Nave ou Central cheia recusa; a Central cai à metade do custo (8 Fe, 5 Si, 12 Cu). Cabos sem brilho, com traçado orgânico em S (ENE-27). | Pedido do produto: "fios sem o brilho verde… mais orgânicos… em s"; "se você constrói um painel solar, ele só pode ter uma saída… você precisa do hub no meio pra bifurcar"; respostas: 4 saídas na Central, a Nave como uma Central, metade do custo, trocar o cabo. | Aprovada |
 | D-88 | Só unidades móveis invadem domínio (estruturas não saem do lugar), e o domínio de uma unidade não vale dentro da base (domínio de estruturas) de outra nação. No domínio de uma IA, o aviso tem prazo de 30 s e vira guerra; no domínio do jogador, não há guerra automática: AL-22 avisa que uma unidade externa está na base, pede que ela saia e traz o botão Declarar guerra (também no temperamento da barra). A IA só declara guerra ao jogador na provocação (IA-12). | Pedido do produto: "quero aumentar pra 30s"; "o inimigo cria uma unidade de observação… acha a minha base… me pede pra me retirar (o que é impossível) e vira minha inimiga. Isso está errado"; "eu que tenho que chamá-lo de inimigo"; respostas: a onda provocadora declara guerra; botão no aviso e na barra. | Aprovada |
 | D-89 | Jazidas com cara de pedra (rocha com veios e cristais na cor do recurso, ECO-04); Ferro mais laranja (#E0661C) e Cobre mais amarelo (#E8C02A); jazidas a pelo menos 25 m umas das outras (ECO-07); o dobro de recurso em cada jazida (`dados:jazidas`); nova camada de jazidas espalhadas de Fe, Si, Cu e Li pelo planeta, 1 a cada 20.000 m² (ECO-30). | Pedido do produto: "jazidas mais parecidas com as pedras… reconhecer visualmente que não é uma pedra"; "ferro mais laranja e o cobre mais amarelo"; "mais espalhadas"; "2x mais recursos… passe mais tempo ali"; respostas: mínimo de 25 m, "quero mais jazidas pelo cenário", nova camada espalhada, cores recomendadas. | Aprovada |
+| D-90 | Mares (CEN-04): líquido em `mar_cobertura_pct` 25% da superfície, formas orgânicas com ilhas, terra firme a `mar_folga_zona_m` das zonas; unidades de solo param na borda; zonas podem depender de barco (CEN-11 conta o mar). Camada de água (MOV-08). Porto (UNI-16) e embarcações de Transporte (10 unidades), Artilharia (laser) e Antena (UNI-17 a UNI-20), com os números aprovados (HP, velocidade, raio, visão, custo, bateria, `boat_laser`, `porto_distancia_borda_m`). IA naval completa (IA-14). **Proposta:** giro, `mov_en_s`, `en_impressao` das embarcações e do Porto, `mar_folga_zona_m` 100, `embarque_distancia_m` 3, portas do Porto (2 × 10 EN/s) e os parâmetros `ia_porto_distancia_m`, `ia_barcos_artilharia`, `ia_barcos_antena`. Retira "lagos_por_setor", "lago_raio_min_m", "lago_raio_max_m" e "lago_folga_zona_m" (GOV-03). | Pedido do produto: "mares de metano de Titã com formas mais orgânicas… lagos ou mares enormes, inclusive com ilhas… as unidades não podem entrar no mar… Porto… embarcação de transporte (até 10 unidades), de artilharia (laser), antena… também para outros planetas com líquido"; respostas: ~25% da superfície, pode exigir barco, IA usa tudo, números da proposta aprovados. | Aprovada |
 
 ---
 
@@ -1800,8 +1828,8 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 0.23.3 | 2026-09-27 | D-75: AUD-01 (`entrance.mp3` até a Visão do Universo, corte seco para a `map.mp3`) e AUD-04 (som ao passar o mouse sobre botões). |
 | 0.24.0 | 2026-09-27 | D-76: TEC-27 (macetes na partida: "mais" + recurso soma `macete_quantidade` ao estoque). |
 | 0.25.0 | 2026-09-27 | D-77: Marte (`marte`) e a Missão 3 (`m03`) passam a v1.0; §14.6 (ambientação, presets e eventos de Marte); CEN-03 detalha que a visão reduzida vale para névoa e detecção; §2.1. |
-| 0.26.0 | 2026-09-27 | D-78: Titã (`tita`) na v1.0 (Free Battle); CEN-04 com lagos_por_setor_p, lagos_por_setor_m, lagos_por_setor_g (retiradas em 1.0.0), `lago_raio_min_m`, `lago_raio_max_m` e `lago_folga_zona_m`; PRD-10 recusa lagos; §14.7; §2.1. |
-| 1.0.0 | 2026-09-27 | D-79 (MAJOR: novo pilar P6 Vastidão): `raio_m` em `dados:cenarios` e CEN-16 no lugar de dados:tamanhos_mapa; FB-03 e `dados:free_battle` sem tamanho; `dados:missoes` sem a coluna `mapa` e com tempos-par ×2 (exceto m00); `primeiro_ataque_min` ×2,5; EXP-03, EXP-04, INV-12, INV-14; CEN-04 com `lagos_por_setor`. |
+| 0.26.0 | 2026-09-27 | D-78: Titã (`tita`) na v1.0 (Free Battle); CEN-04 com lagos_por_setor_p, lagos_por_setor_m, lagos_por_setor_g (retiradas em 1.0.0), "lago_raio_min_m", "lago_raio_max_m" e "lago_folga_zona_m"; PRD-10 recusa lagos; §14.7; §2.1. |
+| 1.0.0 | 2026-09-27 | D-79 (MAJOR: novo pilar P6 Vastidão): `raio_m` em `dados:cenarios` e CEN-16 no lugar de dados:tamanhos_mapa; FB-03 e `dados:free_battle` sem tamanho; `dados:missoes` sem a coluna `mapa` e com tempos-par ×2 (exceto m00); `primeiro_ataque_min` ×2,5; EXP-03, EXP-04, INV-12, INV-14; CEN-04 com "lagos_por_setor". |
 | 1.0.1 | 2026-09-27 | D-80: VIS-01, o escuro mostra a silhueta do relevo. |
 | 1.1.0 | 2026-09-27 | D-81: §4.7 (REG-24 a REG-28, `dominio_estrutura_m`, `dominio_unidade_m`, `ultimato_s`, `guerra_esfria_s`), CMB-29, IA-04, IA-05, IA-11, UI-17, AL-19 a AL-22; §22. TEC-14: orçamento medido na Lua, com hierarquia (D-79). |
 | 1.2.0 | 2026-09-27 | D-82: IA-12 (provocação conforme a dificuldade); IA-04 e IA-11 remetem a ela. |
@@ -1814,3 +1842,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.7.0 | 2026-09-28 | D-88: REG-26 (só unidades invadem; sem guerra automática no domínio do jogador), REG-29 (declarar guerra), `ultimato_s` 30, AL-22, IA-12, UI-17. |
 | 1.7.1 | 2026-09-28 | D-88: REG-25 (domínio de unidade não vale dentro da base alheia). |
 | 1.8.0 | 2026-09-28 | D-89: cores de Fe e Cu em `dados:recursos`, ECO-04 (visual), ECO-07 (`jazida_espacamento_min_m`), `dados:jazidas` (quantidades ×2 e zona espalhada), ECO-30 (`jazidas_espalhadas_por_10k_m2`). |
+| 1.9.0 | 2026-09-28 | D-90: CEN-04 (mares; `mar_cobertura_pct`, `mar_folga_zona_m`; retira lagos_por_setor, lago_raio_min_m, lago_raio_max_m, lago_folga_zona_m), CEN-11, MOV-01, MOV-08, CMB-04, PRD-10, UNI-16 a UNI-20 (`port`, `boat_transport`, `boat_artillery`, `boat_antenna`, `boat_laser`, `porto_distancia_borda_m`, `transporte_capacidade`, `embarque_distancia_m`), IA-14 (`ia_porto_distancia_m`, `ia_barcos_artilharia`, `ia_barcos_antena`), atalhos, §14.7. |

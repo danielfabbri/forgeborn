@@ -53,6 +53,7 @@
   "motivo.ocupado": "Espaço ocupado",
   "motivo.jazida": "Perto demais de uma jazida",
   "motivo.lago": "Não dá para construir sobre um lago de metano",
+  "motivo.pedra": "Há uma pedra no caminho",
   "alerta.AL-06": "Recursos insuficientes: faltam {lista}.",
   "alerta.AL-11": "Limite atingido: {limite}.",
   "limite.limite_corpos": "corpos",

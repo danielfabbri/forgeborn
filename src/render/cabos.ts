@@ -1,6 +1,6 @@
 /**
- * Cabos da rede elétrica (ENE-27, D-85): fitas finas no chão entre as estruturas, na cor da nação,
- * com pulsos de energia correndo por elas; e um marcador vermelho piscando sobre as estruturas do
+ * Cabos da rede elétrica (ENE-27, D-85, D-86): fitas finas e pretas no chão entre as estruturas,
+ * com pulsos verde-claros correndo por elas enquanto a rede tem energia; e um marcador vermelho piscando sobre as estruturas do
  * jogador que precisam de energia e estão sem rede (ENE-29). Só apresentação.
  */
 import {
@@ -27,7 +27,8 @@ const MAX_MARCADORES = 64;
 export interface CaboDesenhavel {
   a: Vec3;
   b: Vec3;
-  cor: string;
+  /** A rede do cabo tem energia (o brilho corre por ele)? */
+  ligado: boolean;
 }
 
 export interface MarcadorSemRede {
@@ -43,17 +44,17 @@ export class CabosRender {
   private chave = '';
   private readonly material = new ShaderMaterial({
     uniforms: { uTempo: { value: 0 } },
-    vertexShader: `attribute vec3 aCor; attribute float aAo;
-      varying vec3 vCor; varying float vAo;
+    vertexShader: `attribute float aLigado; attribute float aAo;
+      varying float vLigado; varying float vAo;
       void main() {
-        vCor = aCor; vAo = aAo;
+        vLigado = aLigado; vAo = aAo;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }`,
-    fragmentShader: `uniform float uTempo; varying vec3 vCor; varying float vAo;
+    fragmentShader: `uniform float uTempo; varying float vLigado; varying float vAo;
       void main() {
-        // Base escura com um fio da cor da nação e pulsos de energia correndo pelo cabo.
-        float pulso = pow(max(sin(vAo * 0.35 - uTempo * 6.0), 0.0), 12.0);
-        vec3 cor = mix(vec3(0.05, 0.055, 0.065), vCor, 0.35 + 0.65 * pulso);
+        // Cabo preto; com energia, pulsos verde-claros correm por ele.
+        float pulso = pow(max(sin(vAo * 0.35 - uTempo * 6.0), 0.0), 10.0) * vLigado;
+        vec3 cor = mix(vec3(0.015, 0.016, 0.018), vec3(0.55, 1.0, 0.6), pulso);
         gl_FragColor = vec4(cor, 1.0);
       }`,
     side: DoubleSide,
@@ -79,7 +80,7 @@ export class CabosRender {
 
   /** Refaz as fitas só quando a lista de cabos muda. */
   sync(cabos: readonly CaboDesenhavel[], semRede: readonly MarcadorSemRede[], agora: number): void {
-    const chave = cabos.map((c) => `${c.a.join(',')}|${c.b.join(',')}|${c.cor}`).join(';');
+    const chave = cabos.map((c) => `${c.a.join(',')}|${c.b.join(',')}|${c.ligado}`).join(';');
     if (chave !== this.chave) {
       this.chave = chave;
       this.reconstruir(cabos);
@@ -106,12 +107,10 @@ export class CabosRender {
     }
     if (cabos.length === 0) return;
     const pos: number[] = [];
-    const cor: number[] = [];
+    const ligado: number[] = [];
     const ao: number[] = [];
     const idx: number[] = [];
-    const c = new Color();
     for (const cabo of cabos) {
-      c.set(cabo.cor);
       const a = normalizar(cabo.a);
       const b = normalizar(cabo.b);
       const angulo = arco(a, b);
@@ -137,7 +136,7 @@ export class CabosRender {
             d[1] * r + lat[1] * s * (LARGURA_M / 2),
             d[2] * r + lat[2] * s * (LARGURA_M / 2),
           );
-          cor.push(c.r, c.g, c.b);
+          ligado.push(cabo.ligado ? 1 : 0);
           ao.push(t * angulo * this.raio);
         }
         if (k > 0) {
@@ -148,7 +147,7 @@ export class CabosRender {
     }
     const geo = new BufferGeometry();
     geo.setAttribute('position', new BufferAttribute(new Float32Array(pos), 3));
-    geo.setAttribute('aCor', new BufferAttribute(new Float32Array(cor), 3));
+    geo.setAttribute('aLigado', new BufferAttribute(new Float32Array(ligado), 1));
     geo.setAttribute('aAo', new BufferAttribute(new Float32Array(ao), 1));
     geo.setIndex(idx);
     this.malha = new Mesh(geo, this.material);

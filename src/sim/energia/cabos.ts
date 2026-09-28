@@ -140,10 +140,15 @@ export function tipoPrecisaDeEnergia(tipo: EstruturasId): boolean {
 }
 
 /**
- * Estruturas que imprimem com a energia da rede (PRD-06). O Armazém funciona sem rede (ENE-29):
- * só o disparo do Abrigo depende dela.
+ * Estruturas que imprimem com a energia da rede (PRD-06), o Armazém (ENE-29, D-86: depósito e
+ * abrigo só com rede) e a Central de Distribuição (UNI-15: só serve plugada).
  */
-const TIPOS_QUE_CONSOMEM = new Set<string>(['satellite_uplink', 'missile_silo']);
+const TIPOS_QUE_CONSOMEM = new Set<string>([
+  'satellite_uplink',
+  'missile_silo',
+  'storage',
+  'power_hub',
+]);
 
 /** ENE-29: a estrutura precisa de energia? */
 export function precisaDeEnergia(state: SimState, id: EntityId): boolean {
@@ -175,6 +180,30 @@ export function alcancaAlguma(
       raioDaPegada(outro);
     return dist <= alcance + 1e-9;
   });
+}
+
+/**
+ * ENE-29 (D-86): a estrutura está numa rede com energia (alguém gera ou há banco guardado)?
+ * O Armazém só recebe descargas e abriga hovers assim.
+ */
+export function naRedeComEnergia(state: SimState, id: EntityId): boolean {
+  return redeTemEnergia(state, redeDe(state, id));
+}
+
+function redeTemEnergia(state: SimState, membros: readonly EntityId[]): boolean {
+  return (
+    bancoDe(state, membros) > 1e-9 ||
+    membros.some((m) => statsEstrutura(getComponent(state, m, 'structure')!.tipo).geracao_en_s > 0)
+  );
+}
+
+/** As estruturas da nação que estão numa rede com energia (ENE-27 e ART-13, para o render). */
+export function ligadasComEnergia(state: SimState, nacao: NacaoId): Set<EntityId> {
+  return new Set(
+    redesDa(state, nacao)
+      .filter((g) => redeTemEnergia(state, g))
+      .flat(),
+  );
 }
 
 /** Banco (EN) guardado nas estruturas da lista. */

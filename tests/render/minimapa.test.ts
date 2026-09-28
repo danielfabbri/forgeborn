@@ -7,6 +7,7 @@ import {
   desprojetarMundi,
   longitudeDe,
   pintarGlobo,
+  pintarMundi,
   projetar,
   projetarMundi,
 } from '../../src/render/minimapa';
@@ -108,8 +109,16 @@ describe('T-168 — CTL-03, D-83: minimapa em mapa-múndi', () => {
     }
   });
 
-  it('CTL-03: o norte não depende do foco (o mapa só rola leste–oeste)', () => {
+  it('CTL-03: o norte não depende da longitude do meio', () => {
     const polo: Vec3 = [0, 1, 0];
     for (const lon0 of [0, 1, 2.5, -3]) expect(projetarMundi(lon0, polo).y).toBeCloseTo(1, 9);
+  });
+
+  it('CTL-03 (D-86): o nunca visto é escuro, mas não preto', () => {
+    const px = new Uint8ClampedArray(8 * 4 * 4);
+    pintarMundi(px, 8, 4, 0, new Array<number>(6 * 4 * 4).fill(0), 4);
+    // Pixel do equador (longe da sombra dos polos).
+    const i = (1 * 8 + 3) * 4;
+    expect(px[i]! + px[i + 1]! + px[i + 2]!).toBeGreaterThan(90);
   });
 });

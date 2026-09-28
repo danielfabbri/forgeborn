@@ -33,6 +33,8 @@ import { somInterno, tocarSom } from '../audio/sfx';
 import { SomDaPartida } from '../audio/somDaPartida';
 import { Poeira } from '../render/poeira';
 import { criarLagos } from '../render/lagos';
+import { criarPedras } from '../render/pedras';
+import { LuzesRender } from '../render/luzes';
 import { tempestadeAtiva } from '../sim/cenario/tempestade';
 import { trilhas } from '../audio/trilhas';
 import { falar } from '../audio/voz';
@@ -166,7 +168,7 @@ import { emGuerra, prazoDoAviso } from '../sim/relacoes/temperamento';
 import { AtmosferaDeFora } from '../render/atmosfera';
 import { caboAlcanca } from '../sim/energia/cabos';
 import { redesIsoladas } from '../sim/energia';
-import { precisaDeEnergia, redesDa } from '../sim/energia/cabos';
+import { ligadasComEnergia, precisaDeEnergia, redesDa } from '../sim/energia/cabos';
 import { CabosRender, type MarcadorSemRede } from '../render/cabos';
 
 /** D-42: a habilidade do clique direito de cada unidade (chave de i18n). */
@@ -326,6 +328,17 @@ export function iniciarPartida(): void {
     ambientacao.escuroBrilho,
   );
   if (lagos) view.scene.add(lagos);
+  // CEN-17: pedras neutras.
+  const pedras = criarPedras(
+    pronto.mapa.pedras ?? [],
+    R,
+    (d) => alturaEm(pronto.mapa, d),
+    ambientacao.tinta,
+    ambientacao.grama,
+    nevoa,
+    ambientacao.escuroBrilho,
+  );
+  if (pedras) view.scene.add(pedras);
   // CEN-03/§14.6: a tempestade de poeira (força 0 a 1, suavizada) no céu, na névoa, na luz e no ar.
   const poeira = ambientacao.tempestade ? new Poeira(ambientacao.tempestade.cor) : null;
   if (poeira) view.scene.add(poeira.objeto);
@@ -479,6 +492,8 @@ export function iniciarPartida(): void {
   // ENE-27/ENE-29 (D-85): cabos no chão e marcadores de sem rede.
   const cabosRender = new CabosRender(view.scene, R, (d) => alturaEm(pronto.mapa, d));
   let semRede: MarcadorSemRede[] = [];
+  let comEnergia = new Set<EntityId>();
+  const luzes = new LuzesRender(view.scene);
   let ultimoSemRede = 0;
   const sincronizarCabos = (): void => {
     const st = sim.state;
@@ -493,11 +508,15 @@ export function iniciarPartida(): void {
       .map(([a, b]) => ({
         a: direcao(a),
         b: direcao(b),
-        cor: corDaNacao(getComponent(st, a, 'owner')!.nacao),
+        ligado: comEnergia.has(a),
       }));
     const agora = performance.now();
     if (agora - ultimoSemRede > 250) {
       ultimoSemRede = agora;
+      // ENE-27/ART-13 (D-86): estruturas de todas as nações numa rede com energia.
+      comEnergia = new Set(
+        Object.keys(st.energia).flatMap((n) => [...ligadasComEnergia(st, n as NacaoId)]),
+      );
       const ligadas = new Set(
         redesDa(st, jogador)
           .filter((g) => g.length > 1)
@@ -515,6 +534,16 @@ export function iniciarPartida(): void {
         .map((c) => ({ x: c.x, y: c.y, z: c.z, cima: c.cima, altura: c.altura }));
     }
     cabosRender.sync(cabos, semRede, agora);
+    // ART-13: luzes piscando nas estruturas ligadas (as alheias, só as à vista).
+    luzes.sync(
+      unidades.corpos
+        .filter(
+          (c) =>
+            !c.movel && c.nacao !== null && comEnergia.has(c.id) && !getComponent(st, c.id, 'obra'),
+        )
+        .map((c) => ({ ...c, cor: corDaNacao(c.nacao!) })),
+      agora,
+    );
   };
   const emblemas = new EmblemasRender(view.scene);
   const retrato = new RetratoRender();
@@ -991,10 +1020,16 @@ export function iniciarPartida(): void {
 
   /** VIS-09/CTL-03: minimapa no canto inferior esquerdo (UI-05), só no modo RTS. */
   const minimapa = comandos
-    ? new Minimapa(uiRoot, pronto.grades.nevoa.esfera.n, {
-        centrar: (d) => centrarEm(camera, d),
-        ordenar: (d) => comandos.ordenarEm(d),
-      })
+    ? new Minimapa(
+        uiRoot,
+        pronto.grades.nevoa.esfera.n,
+        {
+          centrar: (d) => centrarEm(camera, d),
+          ordenar: (d) => comandos.ordenarEm(d),
+        },
+        // CTL-03 (D-86): o mapa-múndi fica parado, com a zona de pouso do jogador no meio.
+        zonaInicial.d,
+      )
     : null;
   const desenharMinimapa = (): void => {
     if (!minimapa) return;

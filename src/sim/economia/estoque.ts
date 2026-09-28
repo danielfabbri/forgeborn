@@ -10,6 +10,7 @@ import type { SimState } from '../core/state';
 import type { EntityId, NacaoId } from '../core/types';
 import { dados, param, type RecursosId } from '../data';
 import { arco, type Vec3 } from '../map/esfera';
+import { naRedeComEnergia } from '../energia/cabos';
 import { celulaDe } from '../map/grids';
 import { fluxoPara } from '../units/navegacao';
 import { statsEstrutura } from '../units/stats';
@@ -29,7 +30,9 @@ export function ehDeposito(state: SimState, id: EntityId): boolean {
   const estrutura = getComponent(state, id, 'structure');
   // PRD-12: em obra não recebe descargas.
   if (!estrutura || getComponent(state, id, 'obra')) return false;
-  return statsEstrutura(estrutura.tipo).deposito;
+  if (!statsEstrutura(estrutura.tipo).deposito) return false;
+  // ENE-29 (D-86): o Armazém só recebe descargas numa rede com energia (a Nave sempre).
+  return estrutura.tipo === 'ship' || naRedeComEnergia(state, id);
 }
 
 export function cargaDoSilo(silo: { carga: Partial<Record<RecursosId, number>> }): number {

@@ -10,7 +10,9 @@ import { jazidasElegiveis } from '../economia/diretiva';
 import { pontosDeEntrega } from '../economia/estoque';
 import { leituraDaRede } from '../energia/rede';
 import { custoDe } from '../producao/custos';
-import { direcaoDe, distanciaM } from '../units/superficie';
+import { direcaoDe, distanciaM, raioDoMundo } from '../units/superficie';
+import { alcancaAlguma, redePrincipal } from '../energia/cabos';
+import { avancar, tangente, type Vec3 } from '../map/esfera';
 import { explorado } from '../visao/nevoa';
 import { comandar, dificuldade, podePagar, temTraco, tierPermitido } from './base';
 import { procurarLocal } from './local';
@@ -147,7 +149,43 @@ function decidirExpansao(ctx: SystemContext, q: Quadro, extras: CustosId[]): voi
     )
     .sort((a, b) => distanciaM(ctx, a, q.base) - distanciaM(ctx, b, q.base));
   const alvo = candidatas[0];
-  if (alvo) construir(ctx, q, 'storage', alvo, [10, 13, 16, 20]);
+  if (!alvo) return;
+  if (construir(ctx, q, 'storage', alvo, ANEIS_DA_EXPANSAO)) return;
+  // IA-13 (D-86): o Armazém precisa de rede; fora do alcance, planta uma Central no caminho.
+  plantarCentral(ctx, q, alvo);
+}
+
+const ANEIS_DA_EXPANSAO = [10, 13, 16, 20];
+
+/**
+ * IA-13 (D-86): uma Central de Distribuição a partir do ponto da rede da Nave mais perto do alvo,
+ * rumo a ele, dentro do alcance do cabo. Uma de cada vez: espera a anterior ficar pronta e plugada.
+ */
+export function plantarCentral(ctx: SystemContext, q: Quadro, alvo: Vec3): void {
+  const { state } = ctx;
+  if ((q.naFila['power_hub'] ?? 0) > 0) return;
+  const rede = redePrincipal(state, q.nacao);
+  const naRede = new Set(rede);
+  const pendente = entitiesWith(state, 'structure', 'owner').some(
+    (id) =>
+      getComponent(state, id, 'owner')!.nacao === q.nacao &&
+      getComponent(state, id, 'structure')!.tipo === 'power_hub' &&
+      !naRede.has(id),
+  );
+  if (pendente || rede.length === 0) return;
+  // Se a rede já alcança o alvo, o Armazém falhou por outro motivo: Central não resolve.
+  if (alcancaAlguma(ctx, 'storage', alvo, rede)) return;
+  const pontos = rede
+    .map((id) => direcaoDe(getComponent(state, id, 'position')!))
+    .sort((a, b) => distanciaM(ctx, a, alvo) - distanciaM(ctx, b, alvo));
+  const origem = pontos[0]!;
+  const rumo = tangente(origem, alvo);
+  if (!rumo) return;
+  const falta = distanciaM(ctx, origem, alvo);
+  // Um pouco antes do limite do cabo, para sobrar espaço à procura de local.
+  const passo = Math.min(falta, 0.8 * param('cabo_alcance_central_m'));
+  const centro = avancar(origem, rumo, passo / raioDoMundo(ctx)).p;
+  construir(ctx, q, 'power_hub', centro, [0, 5, 10, 15]);
 }
 
 /** O que a IA quer comprar em seguida (para saber que recurso falta). */

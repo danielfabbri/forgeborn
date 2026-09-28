@@ -35,6 +35,7 @@ import {
 } from './heightmap';
 import { fbm3 } from './noise';
 import type { Lago } from './lagos';
+import type { Pedra } from './pedras';
 
 export type { Simetria };
 
@@ -81,6 +82,8 @@ export const GERADOR_LUA = {
    * numa faixa de `transicao` × o raio.
    */
   lago: { profundidade: 3, margem: 0.15, transicao: 0.5, amostras: 24, tentativas: 200 },
+  /** CEN-17: vão mínimo (m) entre pedras, para um hover passar, e tentativas por pedra. */
+  pedra: { vao: 5, tentativas: 20 },
 } as const;
 
 const G = GERADOR_LUA;
@@ -557,6 +560,27 @@ export function gerarMapaLunar(
   const resolucao = celulasPorAresta(R, texel);
   const alturas = new Uint16Array(6 * (resolucao + 1) * (resolucao + 1));
   // Em blocos de vértices: cada bloco só testa as feições que o alcançam (desempenho, D-79).
+  function sortearPedras(): Pedra[] {
+    const saida: Pedra[] = [];
+    const quantidade = Math.round((param('pedras_por_10k_m2') * area) / 10000 / n);
+    const faixa: [number, number] = [param('pedra_raio_min_m'), param('pedra_raio_max_m')];
+    for (let c = 0; c < quantidade; c++) {
+      for (let tentativa = 0; tentativa < G.pedra.tentativas; tentativa++) {
+        const raio = entre(rng, faixa);
+        const p = direcaoSorteada(rng);
+        if (!respeitaZonas(p, raio)) continue;
+        if (!longeDosCentrais(p, raio)) continue;
+        if (lagos.some((l) => R * arco(l.d, p) < l.raio * (1 + G.lago.transicao) + raio)) continue;
+        const copias = replicas(p);
+        if (copias.slice(1).some((q) => R * arco(p, q) < 2 * raio + G.pedra.vao)) continue;
+        if (saida.some((o) => R * arco(p, o.d) < raio + o.raio + G.pedra.vao)) continue;
+        for (const q of copias) saida.push({ d: q, raio });
+        break;
+      }
+    }
+    return saida;
+  }
+
   const BLOCO = 16;
   for (let face = 0; face < 6; face++) {
     for (let j0 = 0; j0 <= resolucao; j0 += BLOCO) {
@@ -588,6 +612,9 @@ export function gerarMapaLunar(
     }
   }
 
+  // CEN-17: pedras neutras, sorteadas depois do relevo para não mudar as alturas.
+  const pedras = sortearPedras();
+
   return {
     seed,
     raio,
@@ -600,5 +627,6 @@ export function gerarMapaLunar(
     centrais: geo.centrais,
     crateras,
     lagos,
+    pedras,
   };
 }

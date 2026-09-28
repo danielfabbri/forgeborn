@@ -21,7 +21,7 @@ import { statsMovel } from '../units/stats';
 import { direcaoDe, distanciaM } from '../units/superficie';
 import { alvoValido, armaDe } from './armas';
 import { aplicarDano, type TipoDeDano } from './dano';
-import { gastarDaRede } from '../energia/cabos';
+import { gastarDaRede, naRedeComEnergia } from '../energia/cabos';
 
 export const RECOLHER_MINERADORES_COMMAND = 'recolher_mineradores';
 
@@ -37,7 +37,10 @@ function abrigosDa(ctx: SystemContext, nacao: NacaoId): EntityId[] {
     (id) =>
       getComponent(ctx.state, id, 'owner')!.nacao === nacao &&
       ABRIGOS.has(getComponent(ctx.state, id, 'structure')!.tipo) &&
-      !getComponent(ctx.state, id, 'obra'),
+      !getComponent(ctx.state, id, 'obra') &&
+      // ENE-29 (D-86): o Armazém só abriga numa rede com energia.
+      (getComponent(ctx.state, id, 'structure')!.tipo === 'ship' ||
+        naRedeComEnergia(ctx.state, id)),
   );
 }
 

@@ -1,5 +1,5 @@
-import { arco, centroDaCelula, type Vec3 } from './esfera';
-import { celulaDe, type GradeNavegacao } from './grids';
+import type { Vec3 } from './esfera';
+import { celulaDe, celulasNoRaioDa, type GradeNavegacao } from './grids';
 
 /**
  * Células transponíveis alcançáveis a partir de `inicio`, andando só entre vizinhas de lado
@@ -37,27 +37,7 @@ export function noComponente(nav: GradeNavegacao, componente: Uint8Array, d: Vec
  * de d (as vizinhas de fora do raio não são expandidas).
  */
 export function celulasNoRaio(nav: GradeNavegacao, d: Vec3, raio_m: number): number[] {
-  const esfera = nav.esfera;
-  const limite = raio_m / nav.raio_m;
-  // Um pouco de folga para expandir células cujo centro fica logo além do raio.
-  const expandir = limite + 1.2 * esfera.anguloNominal;
-  const inicio = celulaDe(nav, d);
-  const vistos = new Set<number>([inicio]);
-  const fila = [inicio];
-  const dentro: number[] = [];
-  for (let k = 0; k < fila.length; k++) {
-    const c = fila[k]!;
-    const a = arco(d, centroDaCelula(esfera, c));
-    if (a <= limite) dentro.push(c);
-    if (a > expandir) continue;
-    for (let v = 0; v < 8; v++) {
-      const w = esfera.vizinhos[c * 8 + v]!;
-      if (w < 0 || vistos.has(w)) continue;
-      vistos.add(w);
-      fila.push(w);
-    }
-  }
-  return dentro;
+  return celulasNoRaioDa(nav, d, raio_m);
 }
 
 /** Todas as células cujo centro está a até `raio_m` de d são transponíveis? */

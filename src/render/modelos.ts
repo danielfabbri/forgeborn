@@ -619,22 +619,26 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
   },
   // UNI-15 (D-85): Central de Distribuição — poste baixo com a cabeça de junção, isoladores em
   // volta (de onde saem os cabos) e o anel da nação.
+  // UNI-15 (D-86): caixa de junção baixa no chão, com os bornes dos cabos nos quatro lados.
   power_hub: () => {
     const m = new Montagem();
-    m.cilindro(1.4, 0.3, GRAFITE, {}, 8);
-    m.caixa(1.6, 0.5, 1.6, METAL, { y: 0.3 });
-    m.cilindro(0.35, 3.2, PAINEL, { y: 0.8 }, 10, 0.28);
-    m.cilindro(0.75, 0.5, METAL, { y: 3.9 }, 10);
-    for (let k = 0; k < 6; k++) {
-      const a = (k / 6) * Math.PI * 2;
-      const x = Math.cos(a) * 0.95;
-      const z = Math.sin(a) * 0.95;
-      m.caixa(0.5, 0.08, 0.08, GRAFITE, { x: x * 0.6, z: z * 0.6, y: 4.15, ry: -a });
-      // Isolador em pilha de discos.
-      for (let d = 0; d < 3; d++) m.cilindro(0.14, 0.06, VIDRO, { x, z, y: 3.95 + d * 0.1 }, 8);
+    m.caixa(2.7, 0.12, 2.7, GRAFITE);
+    m.caixa(2.3, 0.55, 2.3, METAL, { y: 0.12 });
+    // Tampa com aletas de ventilação e a faixa da nação.
+    m.caixa(2.1, 0.1, 2.1, PAINEL, { y: 0.67 });
+    for (let k = -2; k <= 2; k++) m.caixa(0.08, 0.06, 1.5, GRAFITE, { x: k * 0.3, y: 0.77 });
+    m.caixa(2.34, 0.08, 2.34, 'nacao', { y: 0.45 });
+    // Bornes: um por lado, rente ao chão, de onde os cabos saem.
+    for (let k = 0; k < 4; k++) {
+      const a = (k / 4) * Math.PI * 2;
+      m.caixa(0.5, 0.3, 0.3, GRAFITE, {
+        x: Math.cos(a) * 1.25,
+        z: Math.sin(a) * 1.25,
+        y: 0.12,
+        ry: -a,
+      });
     }
-    m.cilindro(0.8, 0.1, 'nacao', { y: 3.75 }, 16);
-    return m.esfera(0.2, 'nacao', { y: 4.6 }).pronta();
+    return m.pronta();
   },
   // UNI-11: mísseis (fotos do cartão e o voo), deitados em +x.
   missile_short: () => {

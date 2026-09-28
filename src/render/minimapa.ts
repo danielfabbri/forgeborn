@@ -52,8 +52,9 @@ export function desprojetar(base: BaseDoGlobo, x: number, y: number): Vec3 | nul
 
 /** Cores dos três estados (VIS-01): escuro, névoa, visível. */
 const CORES_DA_NEVOA: ReadonlyArray<readonly [number, number, number]> = [
-  [16, 17, 22],
-  [62, 64, 72],
+  // D-86: o nunca visto é escuro, mas não preto.
+  [44, 47, 58],
+  [78, 81, 92],
   [128, 130, 126],
 ];
 
@@ -219,18 +220,19 @@ export class Minimapa {
   readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
   private readonly imagem: ImageData;
-  /** CTL-03: longitude no meio do mapa (a do ponto focal, arredondada ao pixel). */
-  private lon0 = 0;
-  private foco: Vec3 = [1, 0, 0];
-  /** Arrasto em curso: x inicial (px da página) e a longitude do foco no começo. */
-  private arrasto: { x0: number; lon: number; lat: number; moveu: boolean } | null = null;
-  private pintado: { lon0: number; versao: number } | null = null;
+  /** CTL-03 (D-86): longitude fixa no meio do mapa, a da zona de pouso do jogador. */
+  private readonly lon0: number;
+  /** Botão esquerdo pressionado sobre o mapa: arrastar leva a câmera junto. */
+  private arrastando = false;
+  private pintado: number | null = null;
 
   constructor(
     camada: HTMLElement,
     private readonly n: number,
     private readonly acoes: AcoesDoMinimapa,
+    centro: Vec3,
   ) {
+    this.lon0 = longitudeDe(normalizar(centro));
     this.canvas = document.createElement('canvas');
     this.canvas.width = LARGURA_MUNDI_PX;
     this.canvas.height = ALTURA_MUNDI_PX;
@@ -245,38 +247,23 @@ export class Minimapa {
       e.preventDefault();
       e.stopPropagation();
       if (e.button === 0) {
-        const f = normalizar(this.foco);
-        this.arrasto = {
-          x0: e.clientX,
-          lon: longitudeDe(f),
-          lat: Math.asin(Math.max(-1, Math.min(1, f[1]))),
-          moveu: false,
-        };
+        // Clique: a câmera vai ao ponto.
+        this.arrastando = true;
+        const d = this.direcaoDoEvento(e);
+        if (d) this.acoes.centrar(d);
       } else if (e.button === 2) {
         const d = this.direcaoDoEvento(e);
         if (d) this.acoes.ordenar(d);
       }
     });
-    // CTL-03: arrastar rola o mapa (e a câmera) só entre leste e oeste.
+    // CTL-03 (D-86): o mapa fica parado; arrastar leva a câmera ao ponto sob o cursor.
     this.canvas.addEventListener('mousemove', (e) => {
-      const a = this.arrasto;
-      if (!a) return;
-      const dx = e.clientX - a.x0;
-      if (!a.moveu && Math.abs(dx) < 3) return;
-      a.moveu = true;
-      const largura = this.canvas.getBoundingClientRect().width || LARGURA_MUNDI_PX;
-      const lon = a.lon - (dx / largura) * 2 * Math.PI;
-      const cl = Math.cos(a.lat);
-      this.acoes.centrar([cl * Math.cos(lon), Math.sin(a.lat), -cl * Math.sin(lon)]);
+      if (!this.arrastando) return;
+      const d = this.direcaoDoEvento(e);
+      if (d) this.acoes.centrar(d);
     });
-    window.addEventListener('mouseup', (e) => {
-      const a = this.arrasto;
-      this.arrasto = null;
-      // Clique sem arrastar: a câmera vai ao ponto.
-      if (a && !a.moveu && e.button === 0) {
-        const d = this.direcaoDoEvento(e);
-        if (d) this.acoes.centrar(d);
-      }
+    window.addEventListener('mouseup', () => {
+      this.arrastando = false;
     });
   }
 
@@ -301,12 +288,8 @@ export class Minimapa {
   }
 
   desenhar(c: ConteudoDoMinimapa): void {
-    this.foco = c.foco;
-    // Repinta só quando a longitude anda um pixel ou a névoa muda.
-    const passo = (2 * Math.PI) / LARGURA_MUNDI_PX;
-    this.lon0 = Math.round(longitudeDe(normalizar(c.foco)) / passo) * passo;
-    const p0 = this.pintado;
-    if (!p0 || p0.versao !== c.versaoNevoa || p0.lon0 !== this.lon0) {
+    // Repinta só quando a névoa muda (o mapa não se move).
+    if (this.pintado !== c.versaoNevoa) {
       pintarMundi(
         this.imagem.data,
         LARGURA_MUNDI_PX,
@@ -315,7 +298,7 @@ export class Minimapa {
         c.estados,
         this.n,
       );
-      this.pintado = { lon0: this.lon0, versao: c.versaoNevoa };
+      this.pintado = c.versaoNevoa;
     }
     const g = this.ctx;
     g.clearRect(0, 0, LARGURA_MUNDI_PX, ALTURA_MUNDI_PX);

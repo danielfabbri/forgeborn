@@ -379,9 +379,9 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-170 — Rede elétrica por cabos e Central de Distribuição** · G · Spec: ENE-01, ENE-02, ENE-06, ENE-22, ENE-25 – ENE-29, UNI-15, IA-13, CAM-07, AL-23, D-85 · Dep: T-167 · Feito: 2026-09-27
   - Aceite: redes por componente de cabos, com banco por estrutura; plugar com o clique direito dentro do alcance (30/80 m) e desplugar pelo cartão; cabos no chão; estrutura sem rede não recebe nem entrega (ícone e AL-23); a IA pluga e posiciona ao alcance; Central de Distribuição (modelo, B → D); nuclear sempre ligada; HUD com a rede da Nave e a da seleção; tutorial ensina a plugar.
-- [ ] **T-171 — Pedras neutras** · M · Spec: CEN-17, MOV-04, PRD-10, D-86 · Dep: T-161
+- [x] **T-171 — Pedras neutras** · M · Spec: CEN-17, MOV-04, PRD-10, D-86 · Dep: T-161 · Feito: 2026-09-28
   - Aceite: pedras geradas pela seed com a densidade e os raios do SPEC, simétricas, fora dos platôs, rampas e jazidas; bloqueiam hovers e construção, não drones; presets continuam válidos.
-- [ ] **T-172 — Rede: Armazém na rede, cabos pretos com brilho, Central baixa, luzes e IA de expansão** · M · Spec: ENE-27, ENE-29, UNI-15, IA-13, ART-13, D-86 · Dep: T-170
+- [x] **T-172 — Rede: Armazém na rede, cabos pretos com brilho, Central baixa, luzes e IA de expansão** · M · Spec: ENE-27, ENE-29, UNI-15, IA-13, ART-13, D-86 · Dep: T-170 · Feito: 2026-09-28
   - Aceite: Armazém fora da rede não recebe descargas; cabos pretos com brilho verde só com energia; modelo baixo da Central; luzes piscando só nas ligadas; a IA planta Central para expandir.
-- [ ] **T-173 — Minimapa fixo** · P · Spec: CTL-03, D-86 · Dep: T-168
+- [x] **T-173 — Minimapa fixo** · P · Spec: CTL-03, D-86 · Dep: T-168 · Feito: 2026-09-28
   - Aceite: mapa-múndi parado com a zona de pouso no meio; o escuro não é preto; clique e arrasto movem a câmera.

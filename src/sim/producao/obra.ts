@@ -57,9 +57,10 @@ import { explorado } from '../visao/nevoa';
 import { bonusDaNacao } from '../ia/base';
 import { encerrarTrabalho } from './trabalho';
 import { emLago } from '../map/lagos';
+import { emPedra } from '../map/pedras';
 
 /** PRD-10: por que o local não serve (UI-08), ou null se serve. */
-export type MotivoRecusa = 'inexplorado' | 'inclinacao' | 'ocupado' | 'jazida' | 'lago';
+export type MotivoRecusa = 'inexplorado' | 'inclinacao' | 'ocupado' | 'jazida' | 'lago' | 'pedra';
 
 /** Base local (leste, norte) no plano tangente em d, alinhada ao norte local (CEN-15). */
 function baseLocal(d: Vec3): { leste: Vec3; norte: Vec3 } {
@@ -134,7 +135,10 @@ export function validarPosicionamento(
         if (nacao && !explorado(ctx, nacao, p)) return 'inexplorado';
         // CEN-04: nada sobre os lagos de metano.
         if (emLago(ctx.mundo.mapa, p)) return 'lago';
-        if (!ehConstruivel(grade, celulaDe(grade, p))) return 'inclinacao';
+        if (!ehConstruivel(grade, celulaDe(grade, p))) {
+          // CEN-17: a célula bloqueada por uma pedra dá o motivo próprio.
+          return emPedra(ctx.mundo.mapa, p, passo) ? 'pedra' : 'inclinacao';
+        }
       }
     }
   }

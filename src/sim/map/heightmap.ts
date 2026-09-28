@@ -20,6 +20,7 @@ import {
   type Vec3,
 } from './esfera';
 import type { Lago } from './lagos';
+import type { Pedra } from './pedras';
 
 export const ALTURA_BASE_M = 100;
 
@@ -31,6 +32,8 @@ export interface Heightmap {
   alturas: Uint16Array;
   /** CEN-04: lagos de metano (só em Titã). */
   lagos?: Lago[];
+  /** CEN-17: pedras neutras. */
+  pedras?: Pedra[];
 }
 
 export function codificarAltura(h: number): number {

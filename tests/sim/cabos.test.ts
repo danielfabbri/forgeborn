@@ -1,9 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { dados, param, type Sim } from '../../src/sim';
 import type { SystemContext } from '../../src/sim/core/pipeline';
-import { distanciaEntreBordas, redeDe } from '../../src/sim/energia/cabos';
+import {
+  alcancaAlguma,
+  distanciaEntreBordas,
+  ligadasComEnergia,
+  naRedeComEnergia,
+  redeDe,
+  redePrincipal,
+  tipoPrecisaDeEnergia,
+} from '../../src/sim/energia/cabos';
+import { ehDeposito, pontosDeEntrega } from '../../src/sim/economia/estoque';
+import { ATIVAR_IA_COMMAND } from '../../src/sim/ia';
+import { plantarCentral } from '../../src/sim/ia/economia';
+import { montarQuadro } from '../../src/sim/ia/quadro';
+import { arco } from '../../src/sim/map/esfera';
 import { leituraDaRedeDe } from '../../src/sim/energia/rede';
-import { criar, mundoLiso, ordenar, partida } from './mundo-teste';
+import { criar, mundoLiso, ordenar, partida, ponto, revelar } from './mundo-teste';
 
 const ctx = (sim: Sim): SystemContext => ({
   state: sim.state,
@@ -107,5 +120,62 @@ describe('T-170 — ENE-25 a ENE-28, UNI-15, D-85: rede por cabos', () => {
       }
     }
     expect(eventos).toEqual([]);
+  });
+});
+
+describe('T-172 — ENE-29, IA-13, D-86: Armazém na rede e Central da IA', () => {
+  it('ENE-29: Armazém fora da rede não é depósito nem abrigo; plugado na Nave, é', () => {
+    const sim = partida(mundoLiso());
+    const [nave] = criar(sim, [{ estrutura: 'ship', x: 0, z: 0 }]);
+    const [armazem] = criar(sim, [{ estrutura: 'storage', x: 40, z: 0, semCabo: true }]);
+    const entregas = () => pontosDeEntrega(ctx(sim), 'bra').map((p) => p.id);
+    expect(tipoPrecisaDeEnergia('storage')).toBe(true);
+    expect(ehDeposito(sim.state, armazem!)).toBe(false);
+    expect(entregas()).toEqual([nave]);
+    plugar(sim, armazem!, nave!);
+    expect(naRedeComEnergia(sim.state, armazem!)).toBe(true);
+    expect(ehDeposito(sim.state, armazem!)).toBe(true);
+    expect(entregas()).toContain(armazem);
+  });
+
+  it('ENE-27/ART-13: só as estruturas numa rede com energia contam como ligadas (brilho e luzes)', () => {
+    const sim = partida(mundoLiso());
+    const [nave] = criar(sim, [{ estrutura: 'ship', x: 0, z: 0 }]);
+    const [solar] = criar(sim, [{ estrutura: 'solar_plant', x: 18, z: 0 }]);
+    const [sozinho] = criar(sim, [{ estrutura: 'storage', x: 0, z: 60, semCabo: true }]);
+    const ligadas = ligadasComEnergia(sim.state, 'bra');
+    expect(ligadas.has(nave!)).toBe(true);
+    expect(ligadas.has(solar!)).toBe(true);
+    expect(ligadas.has(sozinho!)).toBe(false);
+  });
+
+  it('IA-13: fora do alcance, a IA planta uma Central rumo ao alvo, ao alcance da rede', () => {
+    const sim = partida(mundoLiso());
+    criar(sim, [{ estrutura: 'ship', x: 0, z: 0 }]);
+    criar(sim, [{ unidade: 'printer', x: 12, z: 0 }]);
+    ordenar(sim, ATIVAR_IA_COMMAND, { nivel: 'normal' });
+    sim.step();
+    revelar(sim);
+    sim.state.estoques['bra'] = { fe: 9999, si: 9999, cu: 9999, li: 9999, ti: 9999, u: 9999 };
+    const c = ctx(sim);
+    const q = montarQuadro(c, 'bra')!;
+    const antes = sim.state.commandQueue.length;
+    plantarCentral(c, q, ponto(0, 200));
+    const novos = sim.state.commandQueue.slice(antes);
+    const pedido = novos.find((cmd) => cmd.tipo === 'posicionar_estrutura')!;
+    expect((pedido.dados as { tipo: string }).tipo).toBe('power_hub');
+    const d = pedido.dados as { x: number; y: number; z: number };
+    expect(alcancaAlguma(c, 'power_hub', [d.x, d.y, d.z], redePrincipal(sim.state, 'bra'))).toBe(
+      true,
+    );
+    // Rumo ao alvo: mais perto dele do que a Nave.
+    const R = mundoLiso().mapa.raio_m;
+    expect(R * arco([d.x, d.y, d.z], ponto(0, 200))).toBeLessThan(
+      R * arco(ponto(0, 0), ponto(0, 200)),
+    );
+    // Com o alvo já ao alcance, não planta.
+    const depois = sim.state.commandQueue.length;
+    plantarCentral(c, montarQuadro(c, 'bra')!, ponto(0, 30));
+    expect(sim.state.commandQueue.length).toBe(depois);
   });
 });

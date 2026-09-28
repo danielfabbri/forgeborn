@@ -4,6 +4,7 @@
  */
 import { param } from '../data';
 import {
+  arco,
   celulaDaDirecao,
   celulasPorAresta,
   centroDaCelula as centroNaEsfera,
@@ -149,11 +150,49 @@ export function derivarGrades(mapa: Heightmap & { simetria?: Simetria }): Grades
     construivel[c] = inclinacaoObra[c]! <= limiteConstrucao ? 1 : 0;
   }
 
+  // CEN-17: as pedras bloqueiam hovers e construção.
+  for (const pedra of mapa.pedras ?? []) {
+    for (const c of celulasDaPedra(nav, pedra.d, pedra.raio)) passavel[c] = 0;
+    for (const c of celulasDaPedra(obra, pedra.d, pedra.raio)) construivel[c] = 0;
+  }
+
   return {
     navegacao: { ...nav, passavel },
     construcao: { ...obra, construivel },
     nevoa: criarGrade(mapa.raio_m, param('celula_nevoa_m')),
   };
+}
+
+/** Células que a pedra toca: centro a até raio + meia célula (e sempre a do centro). */
+function celulasDaPedra(grade: Grade, d: Vec3, raio_m: number): number[] {
+  const saida = celulasNoRaioDa(grade, d, raio_m + grade.celula_m / 2);
+  const centro = celulaDe(grade, d);
+  return saida.includes(centro) ? saida : [...saida, centro];
+}
+
+/** Células da grade cujo centro está a até `raio_m` de d (busca em largura a partir de d). */
+export function celulasNoRaioDa(grade: Grade, d: Vec3, raio_m: number): number[] {
+  const esfera = grade.esfera;
+  const limite = raio_m / grade.raio_m;
+  // Um pouco de folga para expandir células cujo centro fica logo além do raio.
+  const expandir = limite + 1.2 * esfera.anguloNominal;
+  const inicio = celulaDe(grade, d);
+  const vistos = new Set<number>([inicio]);
+  const fila = [inicio];
+  const dentro: number[] = [];
+  for (let k = 0; k < fila.length; k++) {
+    const c = fila[k]!;
+    const a = arco(d, centroNaEsfera(esfera, c));
+    if (a <= limite) dentro.push(c);
+    if (a > expandir) continue;
+    for (let v = 0; v < 8; v++) {
+      const w = esfera.vizinhos[c * 8 + v]!;
+      if (w < 0 || vistos.has(w)) continue;
+      vistos.add(w);
+      fila.push(w);
+    }
+  }
+  return dentro;
 }
 
 export function ehPassavel(grade: GradeNavegacao, indice: number): boolean {

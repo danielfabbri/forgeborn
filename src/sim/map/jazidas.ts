@@ -25,6 +25,7 @@ import {
 import { celulaDe, type GradesDoMapa } from './grids';
 import { GERADOR_LUA, type MapaLunar, type PontoMedio, rumoSemRampa } from './lunar';
 import { emLago } from './lagos';
+import { emPedra } from './pedras';
 
 export type ZonaDeJazida = 'inicial' | 'expansao' | 'contestada' | 'central';
 
@@ -123,8 +124,9 @@ export function distribuirJazidas(
     noComponente(nav, alcancavel, p) &&
     [...ocupadas, ...extras].every((q) => distancia(p, q) >= D.espacamento_m) &&
     (noPlato || zonas.every((zona) => distancia(p, zona.d) >= foraDosPlatos)) &&
-    // CEN-04: nenhuma jazida dentro (nem colada) de um lago de metano.
-    !emLago(mapa, p, param('distancia_min_jazida_m'));
+    // CEN-04 e CEN-17: nenhuma jazida dentro (nem colada) de um lago de metano ou de uma pedra.
+    !emLago(mapa, p, param('distancia_min_jazida_m')) &&
+    !emPedra(mapa, p, param('distancia_min_jazida_m'));
 
   /** Coloca um grupo de jazidas em volta de c; devolve as posições ou null. */
   const agrupar = (

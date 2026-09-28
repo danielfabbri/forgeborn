@@ -34,7 +34,7 @@ test.describe('T-074: minimapa', () => {
     await page.waitForTimeout(800);
   });
 
-  test('UI-05/CTL-03: no canto inferior esquerdo; clique move a câmera para o ponto', async ({
+  test('UI-05/CTL-03: no canto inferior esquerdo; clique e arrasto movem a câmera, o mapa fica parado', async ({
     page,
   }) => {
     const caixa = (await page.getByTestId('minimapa').boundingBox())!;
@@ -50,11 +50,19 @@ test.describe('T-074: minimapa', () => {
     const depois = (await sonda(page, (s) => s.camera!.foco))!;
     // Mapa-múndi: 0,3 da largura é ~0,6π de longitude (e 0,2 da altura, ~0,1π de latitude).
     expect(angulo(antes, depois)).toBeGreaterThan(0.3);
-    // CTL-03 (D-83): o ponto clicado vai para o meio na horizontal; na vertical fica a latitude
-    // dele, com o norte sempre para cima.
-    const centro = (await sonda(page, (s, d) => s.noMinimapa(d as Vec3), depois))!;
-    expect(Math.abs(centro.x - cx)).toBeLessThan(2);
-    expect(Math.abs(centro.y - (cy - caixa.height * 0.2))).toBeLessThan(2);
+    // CTL-03 (D-86): o mapa não se move; o novo foco fica onde se clicou.
+    const ponto = (await sonda(page, (s, d) => s.noMinimapa(d as Vec3), depois))!;
+    expect(Math.abs(ponto.x - (cx + caixa.width * 0.3))).toBeLessThan(2);
+    expect(Math.abs(ponto.y - (cy - caixa.height * 0.2))).toBeLessThan(2);
+    // Arrastar leva a câmera junto, com o mapa parado.
+    await page.mouse.move(cx - caixa.width * 0.3, cy);
+    await page.mouse.down();
+    await page.mouse.move(cx - caixa.width * 0.1, cy, { steps: 4 });
+    await page.mouse.up();
+    await page.waitForTimeout(200);
+    const arrastado = (await sonda(page, (s) => s.camera!.foco))!;
+    const noMapa = (await sonda(page, (s, d) => s.noMinimapa(d as Vec3), arrastado))!;
+    expect(Math.abs(noMapa.x - (cx - caixa.width * 0.1))).toBeLessThan(2);
   });
 
   test('CTL-03: clique direito no minimapa dá ordem de movimento', async ({ page }) => {

@@ -196,7 +196,7 @@ describe('T-182 — UNI-20, D-90: embarque e desembarque', () => {
       );
       ordenar(sim, 'embarcar', { ids: hovers, transporte });
       // Onze numa borda estreita: a fila leva um tempo.
-    rodar(sim, 60);
+      rodar(sim, 60);
       expect(getComponent(sim.state, transporte!, 'transporte')!.passageiros).toHaveLength(n);
       expect(hovers.filter((h) => !getComponent(sim.state, h!, 'embarcado'))).toHaveLength(1);
     },

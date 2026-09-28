@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.9.0 — rascunho para aprovação |
+| Versão do SPEC | 1.9.1 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -822,7 +822,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **UNI-17** — **Embarcação de Transporte** (`boat_transport`): leva até `transporte_capacidade` unidades de solo pelo mar (UNI-20). Desarmada.
 - **UNI-18** — **Embarcação de Artilharia** (`boat_artillery`): laser `boat_laser`, contra corpos de solo (inclusive em terra, dentro do alcance) e drones.
 - **UNI-19** — **Embarcação Antena** (`boat_antenna`): desarmada; `visao_m` e `deteccao_m` grandes, para abrir a visão do mar.
-- **UNI-20** — **Embarque e desembarque** (D-90): com unidades de solo próprias selecionadas, o clique direito num Transporte próprio as manda embarcar (Comando "embarcar"): cada uma vai até a borda mais perto do Transporte e embarca quando o casco fica a até `embarque_distancia_m` do casco dele, se houver vaga; embarcada, sai do mapa (não é vista nem atingida). Com o Transporte selecionado, o clique direito na terra (ou a tecla D) o manda desembarcar ali (Comando "desembarcar"): ele vai até o ponto de líquido mais perto e põe todos em terra em volta do ponto de terra mais perto. Drones não embarcam. Se o Transporte é destruído, as unidades embarcadas também são.
+- **UNI-20** — **Embarque e desembarque** (D-90): com unidades de solo próprias selecionadas, o clique direito num Transporte próprio as manda embarcar (Comando "embarcar"): o Transporte encosta na borda mais perto delas, cada uma vai até a borda mais perto do Transporte e embarca quando o casco fica a até `embarque_distancia_m` do casco dele, se houver vaga; embarcada, sai do mapa (não é vista nem atingida). Com o Transporte selecionado, o clique direito na terra (ou a tecla D) o manda desembarcar ali (Comando "desembarcar"): ele vai até o ponto de líquido mais perto e põe todos em terra em volta do ponto de terra mais perto. Drones não embarcam. Se o Transporte é destruído, as unidades embarcadas também são.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1843,3 +1843,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.7.1 | 2026-09-28 | D-88: REG-25 (domínio de unidade não vale dentro da base alheia). |
 | 1.8.0 | 2026-09-28 | D-89: cores de Fe e Cu em `dados:recursos`, ECO-04 (visual), ECO-07 (`jazida_espacamento_min_m`), `dados:jazidas` (quantidades ×2 e zona espalhada), ECO-30 (`jazidas_espalhadas_por_10k_m2`). |
 | 1.9.0 | 2026-09-28 | D-90: CEN-04 (mares; `mar_cobertura_pct`, `mar_folga_zona_m`; retira lagos_por_setor, lago_raio_min_m, lago_raio_max_m, lago_folga_zona_m), CEN-11, MOV-01, MOV-08, CMB-04, PRD-10, UNI-16 a UNI-20 (`port`, `boat_transport`, `boat_artillery`, `boat_antenna`, `boat_laser`, `porto_distancia_borda_m`, `transporte_capacidade`, `embarque_distancia_m`), IA-14 (`ia_porto_distancia_m`, `ia_barcos_artilharia`, `ia_barcos_antena`), atalhos, §14.7. |
+| 1.9.1 | 2026-09-28 | D-90: UNI-20 (o Transporte encosta na borda mais perto das unidades que embarcam). |

@@ -1,4 +1,5 @@
 /** O que a IA sabe de si e do mundo numa decisão (IA-02: inimigos só pela própria névoa). */
+import { ehEmbarcacao } from '../units/stats';
 import type { Ponto } from '../core/components';
 import { getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
@@ -55,11 +56,16 @@ export function montarQuadro(ctx: SystemContext, nacao: NacaoId): Quadro | null 
     nivel: ia.nivel,
     base,
     naves: dosTipos(state, nacao, 'ship'),
-    impressoras: dosTipos(state, nacao, 'printer'),
-    hovers: dosTipos(state, nacao, 'hover_explorer'),
-    exercito: proprios(state, nacao).filter(
-      (id) => getComponent(state, id, 'unit') && getComponent(state, id, 'arma'),
+    // IA-14: a Impressora da expedição por mar só recebe as ordens da expedição.
+    impressoras: dosTipos(state, nacao, 'printer').filter(
+      (id) => id !== ia.expansaoNaval?.impressora,
     ),
+    hovers: dosTipos(state, nacao, 'hover_explorer'),
+    // IA-14: as embarcações armadas ficam fora das ondas (a IA naval cuida delas).
+    exercito: proprios(state, nacao).filter((id) => {
+      const unidade = getComponent(state, id, 'unit');
+      return unidade && getComponent(state, id, 'arma') && !ehEmbarcacao(unidade.tipo);
+    }),
     // CMB-29/IA-05: no combate, só quem está em guerra com a IA.
     inimigos: inimigosVisiveis(ctx, nacao).filter((id) =>
       emGuerra(ctx.state, nacao, getComponent(ctx.state, id, 'owner')!.nacao),

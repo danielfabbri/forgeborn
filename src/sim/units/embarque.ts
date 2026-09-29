@@ -19,7 +19,7 @@ import type { SimState } from '../core/state';
 import type { EntityId } from '../core/types';
 import { param } from '../data';
 import { celulaLivreProxima, centroDoIndice } from '../map/pathfinding';
-import { navegavel } from './navegacao';
+import { navegavel, navegavelAgua } from './navegacao';
 import { moverPara } from './ordens';
 import { ehEmbarcacao, statsMovel } from './stats';
 import { direcaoDe, direcaoDoComando, distanciaM, posicionar } from './superficie';
@@ -30,11 +30,17 @@ export function embarcada(state: SimState, id: EntityId): boolean {
 }
 
 /** Folga (m) além do casco do Transporte em que a terra ainda conta como "na borda". */
-const BORDA_DESEMBARQUE_M = 6;
+const BORDA_DESEMBARQUE_M = 8;
+/** Depois do desembarque, as unidades só seguem ao ponto pedido se ele fica além disto (m). */
+const SEGUIR_AO_PONTO_M = 10;
+/** Folga (m) além do casco em que o Transporte já conta como chegado ao destino. */
+const CHEGADA_M = 4;
 /** O Transporte que se afastou mais que isto do ponto combinado refaz a ida dos passageiros. */
 const REAJUSTE_M = 5;
 /** Intervalo (s) entre as novas idas de quem parou fora do alcance. */
 const TENTATIVA_S = 1;
+/** Alcance (células) da procura do líquido mais perto do ponto de desembarque. */
+const BUSCA_DE_AGUA_CELULAS = 600;
 /** Abaixo desta velocidade (m/s) a unidade a caminho conta como parada. */
 const VELOCIDADE_PARADA_M_S = 0.2;
 
@@ -85,8 +91,10 @@ function desembarcarTodos(ctx: SystemContext, transporte: EntityId, terra: Ponto
   carga.desembarque = null;
   if (soltos.length === 0) return;
   ctx.emit('desembarque', { transporte, unidades: soltos });
-  // Em terra, seguem até o ponto pedido (a formação os espalha, MOV-06).
-  if (g) moverPara(ctx, soltos, destino ?? terra);
+  // Em terra, seguem até o ponto pedido (a formação os espalha, MOV-06), se ele não é ali.
+  if (g && destino && distanciaM(ctx, destino, terra) > SEGUIR_AO_PONTO_M) {
+    moverPara(ctx, soltos, destino);
+  }
 }
 
 /** UNI-20: sistema do embarque (roda com o movimento, depois dele). */
@@ -139,13 +147,16 @@ export function sistemaEmbarque(ctx: SystemContext): void {
     }
     if (!carga.desembarque) continue;
     const loc = getComponent(state, id, 'locomotion')!;
-    if (loc.destino !== null) continue;
+    // Chegou (ou está quase lá, disputando a vaga com outro Transporte).
+    if (loc.destino !== null && distanciaM(ctx, d, loc.destino) > raio(state, id) + CHEGADA_M) {
+      continue;
+    }
     const terra = terraMaisPerto(ctx, d);
     if (!terra) continue;
     if (distanciaM(ctx, d, terra) - raio(state, id) <= BORDA_DESEMBARQUE_M) {
       desembarcarTodos(ctx, id, terra);
-    } else {
-      // Parou longe da terra (o ponto era inalcançável): desiste.
+    } else if (loc.destino === null) {
+      // Parou de vez longe da terra (o ponto era inalcançável): desiste.
       carga.desembarque = null;
     }
   }
@@ -212,7 +223,11 @@ export const comandosDeEmbarque: Record<string, CommandHandler> = {
     if (getComponent(state, d.id, 'owner')?.nacao !== comando.nacao) return;
     const ponto = direcaoDoComando(d);
     if (!ponto) return;
+    // O ponto pode ficar terra adentro: o Transporte vai ao líquido mais perto dele, onde for.
+    const agua = navegavelAgua(ctx);
+    const c = agua ? celulaLivreProxima(agua, ponto, BUSCA_DE_AGUA_CELULAS) : -1;
+    if (agua && c < 0) return;
     getComponent(state, d.id, 'transporte')!.desembarque = ponto;
-    moverPara(ctx, [d.id], ponto);
+    moverPara(ctx, [d.id], agua ? centroDoIndice(agua.nav, c) : ponto);
   },
 };

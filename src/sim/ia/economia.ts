@@ -18,6 +18,8 @@ import {
   redePrincipal,
   tipoPrecisaDeEnergia,
 } from '../energia/cabos';
+import { mesmaTerra } from '../map/conectividade';
+import { emLiquido } from '../map/lagos';
 import { avancar, tangente, type Vec3 } from '../map/esfera';
 import { explorado } from '../visao/nevoa';
 import { comandar, dificuldade, podePagar, temTraco, tierPermitido } from './base';
@@ -33,8 +35,14 @@ function filaDe(ctx: SystemContext, id: EntityId): number {
 
 /** Impressora com vaga na fila (a de fila mais curta). */
 export function impressoraComVaga(ctx: SystemContext, q: Quadro): EntityId | null {
+  const nav = ctx.mundo?.grades.navegacao;
   const livres = q.impressoras
     .filter((id) => filaDe(ctx, id) < param('ia_fila_por_produtor'))
+    // IA-14: só as que estão na terra da base (a da expedição por mar trabalha na ilha).
+    .filter((id) => id !== q.ia.expansaoNaval?.impressora)
+    .filter(
+      (id) => !nav || mesmaTerra(nav, direcaoDe(getComponent(ctx.state, id, 'position')!), q.base),
+    )
     .sort((a, b) => filaDe(ctx, a) - filaDe(ctx, b) || a - b);
   return livres[0] ?? null;
 }
@@ -57,7 +65,7 @@ export function construir(
   centro = q.base,
   aneis?: readonly number[],
   /** IA-13: pontos da rede que o cabo da estrutura nova precisa alcançar (padrão: a rede da Nave). */
-  alcance?: readonly EntityId[],
+  alcance?: readonly EntityId[] | null,
 ): boolean {
   if (
     !tierPermitido(q.nivel, tipo as CustosId) ||
@@ -70,11 +78,24 @@ export function construir(
   // IA-13 (D-87): quem precisa de energia vai onde uma Nave ou Central com saída livre alcança.
   const precisa = tipoPrecisaDeEnergia(tipo);
   const pontos =
-    alcance ?? (precisa ? pontosDeBifurcacao(ctx.state, q.nacao, tipo === 'power_hub') : undefined);
-  const d = procurarLocal(ctx, q.nacao, tipo, centro, q.ia.onda?.ponto ?? null, aneis, pontos);
+    alcance === null
+      ? null
+      : (alcance ??
+        (precisa ? pontosDeBifurcacao(ctx.state, q.nacao, tipo === 'power_hub') : undefined));
+  // IA-14: na terra da base, onde as Impressoras dela chegam.
+  const d = procurarLocal(
+    ctx,
+    q.nacao,
+    tipo,
+    centro,
+    q.ia.onda?.ponto ?? null,
+    aneis,
+    pontos,
+    q.base,
+  );
   if (!d) {
     // Sem saída livre para estruturas comuns: abre uma Central antes.
-    if (precisa && tipo !== 'power_hub' && pontos!.length === 0)
+    if (precisa && tipo !== 'power_hub' && pontos?.length === 0)
       plantarCentral(ctx, q, centro, true);
     return false;
   }
@@ -155,6 +176,8 @@ function decidirExpansao(ctx: SystemContext, q: Quadro, extras: CustosId[]): voi
     .filter((id) => !falta || getComponent(ctx.state, id, 'jazida')!.recurso === falta)
     .map((id) => direcaoDe(getComponent(ctx.state, id, 'position')!))
     .filter((d) => explorado(ctx, q.nacao, d))
+    // IA-14: por terra só na terra da base (a ilha vai pela expansão por mar).
+    .filter((d) => !ctx.mundo || mesmaTerra(ctx.mundo.grades.navegacao, d, q.base))
     .filter((d) =>
       entregas.every((e) => distanciaM(ctx, d, e.d) > param('ia_distancia_expansao_m')),
     )
@@ -190,7 +213,11 @@ export function plantarCentral(
   paraPlugar = false,
 ): void {
   const { state } = ctx;
-  const naFila = q.naFila['power_hub'] ?? 0;
+  // Na fila e ainda sem canteiro (o canteiro já conta abaixo, como estrutura em obra).
+  const naFila = entitiesWith(state, 'producer', 'owner')
+    .filter((id) => getComponent(state, id, 'owner')!.nacao === q.nacao)
+    .flatMap((id) => getComponent(state, id, 'producer')!.fila)
+    .filter((item) => item.item === 'power_hub' && item.obra === null).length;
   if (naFila >= CENTRAIS_EM_PARALELO) return;
   const rede = redePrincipal(state, q.nacao);
   const naRede = new Set(rede);
@@ -224,7 +251,13 @@ export function plantarCentral(
   const passo = paraPlugar
     ? Math.min(Math.max(falta - 8, falta / 2), limite)
     : Math.min(falta, limite);
-  const centro = avancar(origem, rumo, passo / raioDoMundo(ctx)).p;
+  let recuo = passo;
+  let centro = avancar(origem, rumo, recuo / raioDoMundo(ctx)).p;
+  // D-90: a Central fica em terra; sobre o líquido, recua rumo à rede até achar chão.
+  while (ctx.mundo && emLiquido(ctx.mundo.mapa, centro, 3) && recuo > 4) {
+    recuo -= 4;
+    centro = avancar(origem, rumo, recuo / raioDoMundo(ctx)).p;
+  }
   construir(ctx, q, 'power_hub', centro, [0, 5, 10, 15], bifurcacoes);
 }
 

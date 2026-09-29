@@ -278,6 +278,10 @@ export function decidirMilitar(ctx: SystemContext, q: Quadro): void {
     );
     if (!alvo || membros.length === 0) {
       q.ia.onda = null;
+    } else if (onda.naval) {
+      // IA-14: a onda vai pelo mar; a IA naval dá as ordens até o desembarque.
+      onda.ponto = alvo;
+      return;
     } else if (
       vrOnda < (onda.vrInicial * param('ia_recuo_vr_pct')) / 100 &&
       vrInimigoPerto(ctx, q, centroide(ctx, membros)) > vrOnda

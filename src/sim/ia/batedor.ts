@@ -26,6 +26,22 @@ function anelDeExpansao(ctx: SystemContext, base: Ponto): Ponto[] {
       const min = j.dist_min_m ?? 0;
       return s + (min + (j.dist_max_m ?? min)) / 2;
     }, 0) / linhas.length;
+  return anel(ctx, base, media);
+}
+
+/**
+ * IA-14 (D-90): num mapa com líquido, a costa perto da base (onde cabe o Porto), entre a terra
+ * firme das zonas e `ia_porto_distancia_m`, em dois anéis.
+ */
+function aneisDaCosta(ctx: SystemContext, base: Ponto): Ponto[] {
+  if (!ctx.mundo?.mapa.mar) return [];
+  const de = param('mar_folga_zona_m');
+  const ate = param('ia_porto_distancia_m');
+  return [...anel(ctx, base, de + (ate - de) / 3), ...anel(ctx, base, de + ((ate - de) * 2) / 3)];
+}
+
+/** Pontos num anel de raio `metros` em volta da base, espaçados de uma visão do batedor. */
+function anel(ctx: SystemContext, base: Ponto, media: number): Ponto[] {
   const R = raioDoMundo(ctx);
   // Pontos espaçados de uma visão inteira do batedor, para o anel todo ser visto.
   const visao = dados.moveis.find((m) => m.id === 'hover_scout')!.visao_m;
@@ -57,7 +73,11 @@ function pontosDoMapa(ctx: SystemContext): Ponto[] {
 const FOLGA_DO_PRAZO_S = 30;
 
 export function decidirBatedor(ctx: SystemContext, q: Quadro): void {
-  const pontos = [...anelDeExpansao(ctx, q.base), ...pontosDoMapa(ctx)];
+  const pontos = [
+    ...anelDeExpansao(ctx, q.base),
+    ...aneisDaCosta(ctx, q.base),
+    ...pontosDoMapa(ctx),
+  ];
   if (pontos.length === 0) return;
   const batedores = dosTipos(ctx.state, q.nacao, 'hover_scout').slice(0, param('ia_batedores'));
   const prazos = (q.ia.prazoDoBatedor ??= {});

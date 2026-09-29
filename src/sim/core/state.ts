@@ -105,6 +105,26 @@ export interface EstadoDaIa {
     ponto: [number, number, number];
     /** Quem partiu na onda; os que nascem depois esperam a próxima. */
     membros: number[];
+    /**
+     * IA-14 (D-90): a onda vai pelo mar (o alvo não tem caminho por terra): embarcar nos
+     * Transportes, esperar todos (até `prazo_tick`), navegar e desembarcar perto do alvo.
+     */
+    naval?: {
+      fase: 'embarcar' | 'aguardar' | 'navegar';
+      transportes: number[];
+      prazo_tick: number;
+    };
+  } | null;
+  /**
+   * IA-14 (D-90): expansão pelo mar: uma Impressora vai de Transporte até a jazida `alvo` (numa
+   * ilha) e ergue lá uma Usina Solar e um Armazém ligados por cabo.
+   */
+  expansaoNaval?: {
+    alvo: [number, number, number];
+    impressora: number;
+    transporte: number | null;
+    fase: 'transporte' | 'embarcar' | 'navegar' | 'construir';
+    prazo_tick: number;
   } | null;
   /** Batedor: índices dos pontos de exploração já visitados. */
   visitados: number[];

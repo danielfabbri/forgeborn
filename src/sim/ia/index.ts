@@ -15,6 +15,7 @@ import { CATEGORIAS, decidirProducao, observar, prioridades } from './producao';
 import { metaDeHovers, montarQuadro, type Quadro } from './quadro';
 import { obedecerAvisos } from './temperamento';
 import { plugarEstruturas } from './cabos';
+import { decidirNaval } from './naval';
 
 export { bonusDaNacao, dificuldade, niveis, type Nivel } from './base';
 export { pesos, prioridades } from './producao';
@@ -62,6 +63,8 @@ export function sistemaIa(ctx: SystemContext): void {
     const exercitoPronto = vrDe(state, q.exercito) >= dificuldade(q.nivel, 'vr_exercito_ataque');
     if (!(esperando && exercitoPronto)) decidirProducao(ctx, q);
     decidirMilitar(ctx, q);
+    // IA-14: Porto, embarcações, ondas e expansões pelo mar.
+    decidirNaval(ctx, q);
     decidirBatedor(ctx, q);
     // IA-13: pluga as estruturas prontas na rede da Nave.
     plugarEstruturas(ctx, q);

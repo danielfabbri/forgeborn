@@ -43,7 +43,7 @@ const E1: Vec3 = [0, 0, 1];
 const E2: Vec3 = [0, 1, 0];
 
 /** Direção do ponto local (x, z), em metros a partir da BASE. */
-export function ponto(x: number, z: number, raio = RAIO): Vec3 {
+export function ponto(x: number, z: number, raio: number = RAIO): Vec3 {
   const dist = Math.hypot(x, z);
   if (dist < 1e-12) return BASE;
   const rumo = normalizar([E1[0] * x + E2[0] * z, E1[1] * x + E2[1] * z, E1[2] * x + E2[2] * z]);

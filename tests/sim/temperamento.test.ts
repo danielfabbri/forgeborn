@@ -17,7 +17,7 @@ function rodar(sim: Sim, s: number, eventos?: SimEvent[]) {
     eventos?.push(...novos);
   }
 }
-const alertas = (eventos: SimEvent[], id: string) =>
+const alertas = (eventos: readonly SimEvent[], id: string) =>
   eventos
     .filter((e) => e.tipo === 'alerta' && (e.dados as { id: string }).id === id)
     .map((e) => e.dados);

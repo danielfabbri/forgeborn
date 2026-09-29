@@ -3,6 +3,9 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig(({ mode }) => ({
   plugins: [preact()],
+  // TEC-02/T-143: GitHub Pages serve o site em /forgeborn/ (repositório sem domínio próprio).
+  // Em dev e nos outros deploys (Netlify, Vercel) a raiz continua '/'.
+  base: process.env.GITHUB_PAGES ? '/forgeborn/' : '/',
   server: {
     // Porta própria, longe da 5173 padrão do Vite (usada por outros projetos na máquina).
     port: 5180,

@@ -73,11 +73,27 @@ test.describe('T-183: Porto e embarcações na interface', () => {
     }
     expect(pontos.length).toBeGreaterThanOrEqual(2);
     const [p1, p2] = [pontos[0]!, pontos[pontos.length - 1]!];
-    expect(await sonda(page, (s, a) => s.criarNaTela('port', 'bra', a.x, a.y), p1)).toBe(true);
+    expect(
+      await sonda(
+        page,
+        (s, a) => {
+          const q = a as { x: number; y: number };
+          return s.criarNaTela('port', 'bra', q.x, q.y);
+        },
+        p1,
+      ),
+    ).toBe(true);
     await page.waitForTimeout(400);
-    expect(await sonda(page, (s, a) => s.criarNaTela('boat_transport', 'bra', a.x, a.y), p2)).toBe(
-      true,
-    );
+    expect(
+      await sonda(
+        page,
+        (s, a) => {
+          const q = a as { x: number; y: number };
+          return s.criarNaTela('boat_transport', 'bra', q.x, q.y);
+        },
+        p2,
+      ),
+    ).toBe(true);
     await page.waitForTimeout(600);
 
     // TEC-27: recursos para imprimir.

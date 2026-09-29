@@ -20,11 +20,13 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
+  /* UI-12: escala da interface (Configurações > Acessibilidade). */
+  zoom: var(--escala-ui, 1);
 }
 
 .debug-overlay {
   position: absolute;
-  top: 8px;
+  top: 40px;
   right: 8px;
   min-width: 160px;
   padding: 8px 10px;
@@ -43,4 +45,1298 @@ body {
   position: absolute;
   border: 1px solid rgba(220, 240, 255, 0.9);
   background: rgba(160, 200, 255, 0.12);
+}
+
+.painel-producao,
+.aviso-producao {
+  position: absolute;
+  left: 8px;
+  font:
+    12px/1.5 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: rgba(5, 10, 18, 0.82);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.painel-producao {
+  bottom: 8px;
+  left: auto;
+  right: 8px;
+  min-width: 260px;
+  max-width: 420px;
+  pointer-events: auto;
+}
+
+.aviso-producao {
+  bottom: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffd27a;
+}
+
+.painel-producao button {
+  font: inherit;
+  color: inherit;
+  background: rgba(40, 60, 90, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 3px;
+  margin: 2px 4px 2px 0;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+
+.painel-producao button.ativa {
+  background: rgba(70, 130, 200, 0.7);
+}
+
+.painel-producao .painel-estoque {
+  color: #9fb8d8;
+  margin-bottom: 4px;
+}
+
+.painel-producao .motivo {
+  color: #ff7a7a;
+}
+
+.painel-producao .item-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.painel-producao .barra {
+  flex: 1;
+  height: 6px;
+  background: rgba(120, 160, 220, 0.2);
+}
+
+.painel-producao .barra span {
+  display: block;
+  height: 100%;
+  background: #46e08a;
+}
+
+.barra-superior {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  padding: 6px 12px;
+  font:
+    13px/1.4 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: linear-gradient(rgba(5, 10, 18, 0.9), rgba(5, 10, 18, 0.7));
+  border-bottom: 1px solid rgba(120, 160, 220, 0.3);
+}
+
+.barra-superior .icone {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.barra-superior small {
+  color: #8aa4c4;
+}
+
+.barra-superior .relogio {
+  margin-left: auto;
+}
+
+.painel-selecao,
+.tooltip {
+  position: absolute;
+  font:
+    12px/1.5 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: rgba(5, 10, 18, 0.85);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 4px;
+}
+
+.painel-selecao {
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 300px;
+  max-width: 520px;
+  padding: 8px 10px;
+  pointer-events: auto;
+}
+
+.painel-selecao .corpo {
+  display: flex;
+  gap: 10px;
+}
+
+.painel-selecao .retrato {
+  width: 96px;
+  height: 96px;
+  background: radial-gradient(rgba(60, 90, 130, 0.5), rgba(5, 10, 18, 0.2));
+  border-radius: 3px;
+}
+
+.painel-selecao .dados {
+  flex: 1;
+}
+
+.barra-sel {
+  display: inline-block;
+  vertical-align: middle;
+  width: 90px;
+  height: 6px;
+  margin-left: 6px;
+  background: rgba(120, 160, 220, 0.2);
+}
+
+.barra-sel span {
+  display: block;
+  height: 100%;
+}
+
+.barra-sel.hp span {
+  background: #46e08a;
+}
+
+.barra-sel.en span {
+  background: #3fd8f0;
+}
+
+.barra-sel.jazida span {
+  background: #c9b27a;
+}
+
+.painel-selecao .grupos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.painel-selecao .grupo {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: rgba(40, 60, 90, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 3px;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+
+.painel-selecao .mini-barras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 160px;
+}
+
+.painel-selecao .mini-barras .barra-sel {
+  width: 14px;
+  height: 3px;
+  margin: 0;
+}
+
+.tooltip {
+  padding: 3px 8px;
+  pointer-events: none;
+}
+
+.fim-de-partida {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 16px 40px;
+  font:
+    700 42px/1.2 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+  letter-spacing: 0.08em;
+  color: #e8f4ff;
+  background: rgba(5, 10, 18, 0.8);
+  border: 1px solid rgba(120, 160, 220, 0.5);
+  border-radius: 4px;
+}
+
+.fim-de-partida.vitoria {
+  color: #46e08a;
+}
+
+.fim-de-partida.derrota {
+  color: #ff6b6b;
+}
+
+/* UI-05: minimapa no canto inferior esquerdo. */
+.minimapa {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  width: 240px;
+  height: 120px;
+  border-radius: 6px;
+  background: rgba(5, 10, 18, 0.6);
+  box-shadow: 0 0 0 1px rgba(120, 160, 220, 0.35);
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+/* FLX-01 / FLX-08: splash e carregamento. */
+.carregamento {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: #000;
+  color: #cfe3ff;
+  font:
+    13px/1.5 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+}
+.carregamento .logo {
+  font:
+    700 44px/1 'Segoe UI',
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.35em;
+  color: #e8f2ff;
+  text-shadow: 0 0 24px rgba(120, 190, 255, 0.45);
+}
+.carregamento .trilho {
+  width: min(420px, 70vw);
+  height: 4px;
+  background: rgba(120, 160, 220, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.carregamento .barra {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #4fa6ff, #9fe3ff);
+  transition: width 0.25s ease-out;
+}
+.carregamento .etapa {
+  opacity: 0.7;
+}
+.carregamento .dica {
+  max-width: min(560px, 80vw);
+  text-align: center;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+/* Menus (§3). */
+.menus {
+  position: absolute;
+  inset: 0;
+  font:
+    14px/1.5 'Segoe UI',
+    system-ui,
+    sans-serif;
+  color: #dce9ff;
+}
+.menus button,
+.pausa button,
+.fim-partida button {
+  pointer-events: auto;
+  font: inherit;
+  color: #dce9ff;
+  background: rgba(20, 35, 60, 0.85);
+  border: 1px solid rgba(120, 170, 240, 0.4);
+  border-radius: 4px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.menus button:hover:not(:disabled),
+.pausa button:hover:not(:disabled),
+.fim-partida button:hover:not(:disabled) {
+  background: rgba(40, 70, 120, 0.9);
+  border-color: rgba(160, 210, 255, 0.8);
+}
+.menus button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.menus button.ativa {
+  background: rgba(60, 120, 200, 0.9);
+  border-color: #9fd8ff;
+}
+.menus button.primario,
+.pausa button.primario,
+.fim-partida button.primario {
+  background: rgba(40, 140, 90, 0.9);
+  border-color: #6fe3a6;
+}
+.menus small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.7;
+}
+.menus select {
+  pointer-events: auto;
+  font: inherit;
+  color: #dce9ff;
+  background: #0d1624;
+  border: 1px solid rgba(120, 170, 240, 0.4);
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+.discreto {
+  opacity: 0.7;
+}
+.abertura {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 12vh;
+  text-align: center;
+  pointer-events: auto;
+}
+.abertura h1 {
+  font:
+    300 42px/1.2 'Segoe UI',
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.12em;
+  margin: 0 0 18px;
+  text-shadow: 0 0 30px rgba(120, 190, 255, 0.5);
+}
+.abertura .piscando {
+  font-size: 17px;
+  letter-spacing: 0.2em;
+  color: #e3f0ff;
+  text-shadow: 0 0 12px rgba(120, 190, 255, 0.6);
+}
+.piscando {
+  animation: piscar 1.6s ease-in-out infinite;
+}
+@keyframes piscar {
+  50% {
+    opacity: 0.25;
+  }
+}
+.painel-menu {
+  position: absolute;
+  pointer-events: auto;
+  background: rgba(5, 10, 18, 0.82);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 6px;
+  padding: 18px 22px;
+}
+.painel-menu h1,
+.painel-menu h2,
+.painel-menu h3 {
+  margin: 0 0 12px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+.modo {
+  left: 8vw;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 260px;
+}
+.modo h1 {
+  letter-spacing: 0.35em;
+}
+.modo button {
+  text-align: left;
+  font-size: 16px;
+}
+.creditos,
+.configuracoes {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(640px, 90vw);
+  max-height: 80vh;
+  overflow: auto;
+}
+.configuracoes .abas,
+.opcoes {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.configuracoes .conteudo-aba {
+  margin: 14px 0;
+  min-height: 120px;
+}
+.configuracoes .campo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  pointer-events: auto;
+}
+.configuracoes .campo > span {
+  min-width: 90px;
+}
+.configuracoes input {
+  pointer-events: auto;
+}
+.atalhos {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+.atalhos td {
+  padding: 3px 6px;
+  border-bottom: 1px solid rgba(120, 160, 220, 0.15);
+}
+.atalhos .contexto {
+  opacity: 0.65;
+  white-space: nowrap;
+}
+.atalhos kbd {
+  font-family: ui-monospace, Consolas, monospace;
+  background: rgba(120, 160, 220, 0.15);
+  border-radius: 3px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+.universo-topo {
+  position: absolute;
+  left: 24px;
+  top: 16px;
+}
+.universo-topo h2 {
+  margin: 0;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+}
+.universo-painel {
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.universo-painel .cenario {
+  text-align: left;
+}
+.universo-painel .cenario.disponivel {
+  border-color: #8fe3ff;
+}
+.universo-rotulos {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.universo-rotulos .rotulo {
+  position: absolute;
+  transform: translateX(-50%);
+  font:
+    12px/1 'Segoe UI',
+    system-ui,
+    sans-serif;
+  color: #b9c7da;
+  white-space: nowrap;
+  text-shadow: 0 0 4px #000;
+}
+.universo-rotulos .rotulo.bloqueado {
+  color: #7d8390;
+}
+.universo-rotulos .rotulo.disponivel {
+  color: #bff0ff;
+}
+.universo-rotulos .rotulo.selecionado {
+  color: #fff;
+  font-weight: 600;
+}
+.config-partida {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(920px, 94vw);
+  max-height: 92vh;
+  overflow: auto;
+}
+.config-partida .colunas {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+}
+.opcoes-fb {
+  flex: 1;
+}
+.linha-fb {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 6px 0;
+}
+.linha-fb .rotulo {
+  width: 130px;
+  padding-top: 6px;
+  opacity: 0.8;
+}
+.linha-fb .controle {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.linha-fb .opcoes button {
+  padding: 5px 10px;
+}
+.explicacao {
+  color: #ffcf7a;
+  font-size: 12px;
+  width: 100%;
+}
+.previa {
+  width: 260px;
+  text-align: center;
+}
+.previa-mapa {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: #05080d;
+  pointer-events: auto;
+  cursor: grab;
+}
+.config-partida .acoes {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+/* FLX-11 / REG-21: pausa. */
+.pausa,
+.fim-partida {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.55);
+  font:
+    14px/1.5 'Segoe UI',
+    system-ui,
+    sans-serif;
+  color: #dce9ff;
+}
+.painel-pausa {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 240px;
+  background: rgba(5, 10, 18, 0.9);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 6px;
+  padding: 18px 22px;
+}
+.painel-pausa h2 {
+  margin: 0 0 6px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+.aviso-pausa {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: rgba(40, 30, 5, 0.85);
+  border: 1px solid #ffcf7a;
+  color: #ffe2a8;
+  font:
+    13px/1.5 'Segoe UI',
+    system-ui,
+    sans-serif;
+}
+
+/* FLX-12: fim de partida. */
+.painel-fim {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(860px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: rgba(5, 10, 18, 0.92);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 6px;
+  padding: 18px 22px;
+}
+.painel-fim h1 {
+  margin: 0;
+  font-weight: 300;
+  font-size: 40px;
+  letter-spacing: 0.15em;
+}
+.fim-partida.vitoria h1 {
+  color: #8ff0b4;
+}
+.fim-partida.derrota h1 {
+  color: #ff8a80;
+}
+.estatisticas {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.estatisticas th,
+.estatisticas td {
+  padding: 4px 8px;
+  text-align: right;
+  border-bottom: 1px solid rgba(120, 160, 220, 0.15);
+}
+.estatisticas th small {
+  display: block;
+  font-weight: 400;
+  opacity: 0.7;
+}
+.estatisticas .rotulo,
+.estatisticas th:first-child {
+  text-align: left;
+  opacity: 0.8;
+}
+.painel-fim .acoes {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+/* CTL-14: HUD do controle direto. O HUD do RTS some; o minimapa fica reduzido. */
+body.em-controle-direto .painel-selecao,
+body.em-controle-direto .painel-producao,
+body.em-controle-direto .tooltip,
+body.em-controle-direto .caixa-selecao {
+  display: none;
+}
+body.em-controle-direto .minimapa {
+  width: 160px;
+  height: 80px;
+}
+.hud-direto {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font:
+    12px/1.4 ui-monospace,
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+}
+.hud-direto .mira {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(220, 240, 255, 0.8);
+  border-radius: 50%;
+}
+.hud-direto .mira::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  transform: translate(-50%, -50%);
+  background: currentColor;
+  border-radius: 50%;
+}
+.hud-direto .mira.inimigo {
+  border-color: #ff5a4f;
+  color: #ff5a4f;
+}
+.hud-direto .mira.jazida {
+  border-color: #ffd27a;
+  color: #ffd27a;
+}
+.hud-direto .mira.aliado {
+  border-color: #7fe3a0;
+  color: #7fe3a0;
+}
+.hud-direto .trava {
+  position: absolute;
+  left: -11px;
+  top: -11px;
+  width: 44px;
+  height: 44px;
+  transform: rotate(-90deg);
+}
+.hud-direto .trava circle {
+  fill: none;
+  stroke: #ffb347;
+  stroke-width: 2.5;
+}
+.hud-direto .trava circle.travado {
+  stroke: #ff3b30;
+}
+.bussola {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  width: 360px;
+  height: 22px;
+  transform: translateX(-50%);
+  background: rgba(5, 10, 18, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bussola .ponto,
+.bussola .sinal,
+.bussola .centro {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.bussola .sinal {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff3b3b;
+}
+.bussola .centro {
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+}
+.status-direto {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(5, 10, 18, 0.7);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+.barra-direto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.barra-direto span {
+  width: 42px;
+}
+.barra-direto .trilho {
+  flex: 1;
+  height: 6px;
+  background: rgba(120, 160, 220, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.barra-direto .cheio {
+  height: 100%;
+}
+.barra-direto.hp .cheio {
+  background: #5fd38a;
+}
+.barra-direto.en .cheio {
+  background: #4fd6ff;
+}
+.barra-direto.arma .cheio {
+  background: #ffb347;
+}
+.barra-direto.carga .cheio {
+  background: #c9a46a;
+}
+.dicas-direto {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  background: rgba(5, 10, 18, 0.6);
+  border-radius: 3px;
+  opacity: 0.85;
+}
+.sinal-perdido {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  pointer-events: none;
+  overflow: hidden;
+}
+.sinal-perdido .estatica {
+  position: absolute;
+  inset: -50%;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 3px),
+    repeating-radial-gradient(
+      circle at 30% 40%,
+      rgba(255, 255, 255, 0.12) 0 1px,
+      transparent 1px 4px
+    );
+  animation: estatica 0.12s steps(3) infinite;
+}
+@keyframes estatica {
+  0% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(-7%, 4%);
+  }
+  66% {
+    transform: translate(5%, -6%);
+  }
+}
+.sinal-perdido p {
+  position: relative;
+  font:
+    700 40px/1 ui-monospace,
+    Consolas,
+    monospace;
+  letter-spacing: 0.3em;
+  color: #ff5a4f;
+  text-shadow: 0 0 12px rgba(255, 90, 79, 0.7);
+}
+
+/* UI-15: botões de parados ao lado do minimapa. */
+.parados {
+  position: absolute;
+  left: 256px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: auto;
+}
+.parado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 64px;
+  padding: 6px 10px;
+  font:
+    14px/1 ui-monospace,
+    Consolas,
+    monospace;
+  color: #8fa3bf;
+  background: rgba(5, 10, 18, 0.8);
+  border: 1px solid rgba(120, 160, 220, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.parado .icone {
+  font-size: 16px;
+}
+.parado.com-parados {
+  color: #ffd27a;
+  border-color: #ffb84a;
+  box-shadow: 0 0 8px rgba(255, 184, 74, 0.45);
+}
+.parado:hover {
+  background: rgba(20, 32, 52, 0.9);
+}
+body.em-controle-direto .parados {
+  display: none;
+}
+
+/* UI-06: pilha de alertas à esquerda, acima do minimapa. */
+.alertas {
+  position: absolute;
+  left: 8px;
+  bottom: 196px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 340px;
+  pointer-events: auto;
+}
+.alerta {
+  font:
+    12px/1.4 ui-monospace,
+    Consolas,
+    monospace;
+  text-align: left;
+  color: #dce9ff;
+  background: rgba(5, 10, 18, 0.85);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-left: 3px solid #7fa8d8;
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+  animation: alerta-entra 0.25s ease-out;
+}
+.alerta:disabled {
+  cursor: default;
+}
+.alerta.media {
+  border-left-color: #ffd27a;
+}
+.alerta.alta {
+  border-left-color: #ff8a3d;
+}
+.alerta.critica {
+  border-left-color: #ff3b30;
+  color: #ffd8d4;
+}
+@keyframes alerta-entra {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+.barra-superior .botao-menu {
+  pointer-events: auto;
+  font: inherit;
+  color: #cfe3ff;
+  background: rgba(40, 70, 120, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.45);
+  border-radius: 3px;
+  padding: 1px 10px;
+  cursor: pointer;
+  margin-left: 12px;
+}
+
+/* FLX-09: durante a cinemática de pouso, só a dica de pular. */
+body.em-cinematica #ui {
+  display: none;
+}
+.dica-pouso {
+  position: fixed;
+  right: 20px;
+  bottom: 18px;
+  z-index: 30;
+  font:
+    13px/1.4 ui-monospace,
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: rgba(5, 10, 18, 0.6);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 3px;
+  padding: 4px 10px;
+  pointer-events: none;
+}
+
+/* UI-04: cartão de produção com a foto de cada item; a dica mostra nome e receita. */
+.opcoes.cartao {
+  display: grid;
+  grid-template-columns: repeat(5, 64px);
+  gap: 4px;
+  margin: 6px 0;
+}
+.opcao-cartao {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  background: rgba(20, 35, 60, 0.85);
+  border: 1px solid rgba(120, 170, 240, 0.4);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.opcao-cartao:hover {
+  border-color: #9fd8ff;
+  background: rgba(40, 70, 120, 0.9);
+}
+.opcao-cartao .foto-item {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.opcao-cartao .foto-item.vazia {
+  font-size: 9px;
+  line-height: 1.1;
+  color: #cfe3ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.opcao-cartao kbd {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  font:
+    10px/1 ui-monospace,
+    Consolas,
+    monospace;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+.opcao-cartao .dica-item {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  z-index: 5;
+  min-width: 170px;
+  text-align: left;
+  font:
+    12px/1.5 ui-monospace,
+    Consolas,
+    monospace;
+  color: #cfe3ff;
+  background: rgba(5, 10, 18, 0.95);
+  border: 1px solid rgba(120, 160, 220, 0.5);
+  border-radius: 4px;
+  padding: 6px 8px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.opcao-cartao:hover .dica-item {
+  display: block;
+}
+.dica-item .receita {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 3px 0;
+}
+.dica-item .receita .icone {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 3px;
+}
+.dica-item .receita .falta {
+  color: #ff6b5f;
+}
+
+/* UNI-10: mísseis prontos no cartão da Base de Lança-Mísseis. */
+.misseis-prontos {
+  margin: 4px 0;
+}
+.missil-pronto .foto-item {
+  width: 28px;
+  height: 28px;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+/* CAM-09/FLX-05/FLX-06: slots, Escolha de Nação e Briefing da campanha. */
+.slots .slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+}
+.cartoes-nacao {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+}
+.cartao-nacao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  border: 2px solid;
+  border-radius: 8px;
+  background: rgba(5, 10, 18, 0.8);
+  color: #dce9ff;
+  cursor: pointer;
+}
+.cartao-nacao .emblema {
+  width: 34px;
+  height: 34px;
+}
+.briefing dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  text-align: left;
+}
+.briefing dt {
+  color: #8fa3bf;
+}
+.briefing .item {
+  margin-right: 8px;
+}
+.briefing .item.novo {
+  color: #ffd27a;
+}
+.estrelas-missao {
+  font-size: 34px;
+  color: #ffd27a;
+  letter-spacing: 6px;
+}
+
+/* UI-17: temperamento das outras nações na barra do topo. */
+.temperamento {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.temperamento .icone {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.temperamento.alerta {
+  color: #ffd27a;
+  animation: pulso-tutorial 0.6s ease-in-out infinite alternate;
+}
+.temperamento.inimigo {
+  color: #ff7a6a;
+  font-weight: bold;
+}
+.temperamento {
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+.temperamento.invadida {
+  color: #ffd27a;
+}
+/* REG-29 (D-88): Declarar guerra, na barra e no AL-22. */
+.temperamento-caixa {
+  position: relative;
+  display: inline-flex;
+  pointer-events: auto;
+}
+.temperamento-caixa .declarar-guerra {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  white-space: nowrap;
+  z-index: 5;
+}
+.declarar-guerra {
+  font:
+    bold 12px/1.4 ui-monospace,
+    Consolas,
+    monospace;
+  color: #ffd8d4;
+  background: rgba(90, 14, 10, 0.92);
+  border: 1px solid #ff6a5a;
+  border-radius: 3px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.declarar-guerra:hover {
+  background: rgba(140, 22, 16, 0.95);
+}
+.alerta-com-acao {
+  display: flex;
+  gap: 4px;
+  align-items: stretch;
+}
+.alerta-com-acao .alerta {
+  flex: 1;
+}
+
+/* TEC-27: campo de macetes no centro da tela. */
+.campo-macetes {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(5, 10, 18, 0.92);
+  border: 1px solid #7fb8ff;
+  border-radius: 8px;
+  pointer-events: auto;
+  z-index: 50;
+}
+.campo-macetes input {
+  width: min(360px, 80vw);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 16px;
+  color: #dce9ff;
+  background: #0b1524;
+  border: 1px solid #35557f;
+  border-radius: 4px;
+}
+.campo-macetes small {
+  color: #ff8a7a;
+}
+
+/* CAM-07: painel do tutorial e destaque do elemento que resolve o passo. */
+.painel-tutorial {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 560px;
+  padding: 10px 14px;
+  background: rgba(5, 10, 18, 0.88);
+  border: 1px solid #7fb8ff;
+  border-radius: 8px;
+  color: #dce9ff;
+  pointer-events: auto;
+  text-align: center;
+}
+.painel-tutorial p {
+  margin: 6px 0;
+}
+.tutorial-destaque {
+  outline: 2px solid #ffd27a !important;
+  box-shadow: 0 0 12px rgba(255, 210, 122, 0.8) !important;
+  animation: pulso-tutorial 1s ease-in-out infinite alternate;
+}
+@keyframes pulso-tutorial {
+  from {
+    outline-color: #ffd27a;
+  }
+  to {
+    outline-color: #ffffff;
+  }
+}
+body.em-controle-direto .painel-tutorial {
+  display: none;
 }

@@ -40,21 +40,12 @@
     "padrao": "lua"
   },
   {
-    "opcao": "tamanho_mapa",
-    "valores": [
-      "p",
-      "m",
-      "g"
-    ],
-    "padrao": "m"
-  },
-  {
     "opcao": "mapa",
     "valores": [
       "presets",
       "aleatoria"
     ],
-    "padrao": "preset do tamanho"
+    "padrao": "1º preset do cenário"
   },
   {
     "opcao": "zona_pouso",

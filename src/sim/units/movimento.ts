@@ -3,6 +3,8 @@
  * unidade pelo grande círculo, separação entre corpos, obstáculos rígidos, pouso e decolagem de
  * drones e altura final (solo ou voo).
  */
+import { abrigado } from '../combate/abrigo';
+import { maisPertoNoEixo } from './segmentos';
 import type { ComponentMap, Ponto } from '../core/components';
 import { entitiesWith, getComponent } from '../core/entities';
 import type { SystemContext } from '../core/pipeline';
@@ -21,9 +23,14 @@ import {
 } from '../map/esfera';
 import { celulaDe } from '../map/grids';
 import { aEstrela, linhaLivre, livre, type Navegavel, passoDoFluxo } from '../map/pathfinding';
-import { fluxoPara, navegavel } from './navegacao';
+import { siloImovel } from '../economia/silo';
+import { emReserva, gastar } from '../energia/bateria';
+import { ehEmbarcacaoId, fluxoPara, navegavel, navegavelAgua, navegavelDe } from './navegacao';
 import { ALTURA_HOVER_M, altitudeDrone, statsMovel } from './stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from './superficie';
+import { multVisao } from '../cenario/tempestade';
+import { multEnDrone } from '../cenario/modificadores';
+import { emGuerra } from '../relacoes/temperamento';
 
 type Locomocao = ComponentMap['locomotion'];
 
@@ -70,12 +77,14 @@ function chegou(ctx: SystemContext, g: Navegavel | null, id: EntityId, loc: Loco
     const [a, b] = ordem.patrulha;
     ordem.patrulha = [b, a];
     loc.destino = a;
-    tracarRota(g, loc, d, ehAereaId(ctx, id));
+    tracarRota(navegavelDe(ctx, id) ?? g, loc, d, ehAereaId(ctx, id));
     return;
   }
   loc.destino = null;
   loc.limiteVel = null;
-  if (ordem.tipo === 'mover') ordem.tipo = 'nenhuma';
+  if (ordem.tipo === 'mover' || ordem.tipo === 'mover_ignorando' || ordem.tipo === 'atacar_mover') {
+    ordem.tipo = 'nenhuma';
+  }
 }
 
 function proximoAlvo(
@@ -114,9 +123,10 @@ function inimigoVisivel(ctx: SystemContext, id: EntityId): boolean {
   const { state } = ctx;
   const dono = getComponent(state, id, 'owner')!.nacao;
   const d = direcaoDe(getComponent(state, id, 'position')!);
-  const visao = statsMovel(getComponent(state, id, 'unit')!.tipo).visao_m;
+  const visao = statsMovel(getComponent(state, id, 'unit')!.tipo).visao_m * multVisao(state);
   return entitiesWith(state, 'owner', 'position').some((outro) => {
-    if (getComponent(state, outro, 'owner')!.nacao === dono) return false;
+    // CMB-29: só nações em guerra fazem o drone decolar sozinho.
+    if (!emGuerra(state, dono, getComponent(state, outro, 'owner')!.nacao)) return false;
     return distanciaM(ctx, d, direcaoDe(getComponent(state, outro, 'position')!)) <= visao;
   });
 }
@@ -124,7 +134,9 @@ function inimigoVisivel(ctx: SystemContext, id: EntityId): boolean {
 /** MOV-07: pouso automático e decolagem. Devolve se o drone pode se deslocar agora. */
 function atualizarAr(ctx: SystemContext, id: EntityId, loc: Locomocao, dt: number): boolean {
   const ar = getComponent(ctx.state, id, 'air')!;
-  const temOrdem = loc.destino !== null;
+  const semEnergia = emReserva(ctx, id);
+  // D-28: sem energia, o drone não decola (e a ordem não o tira do chão).
+  const temOrdem = loc.destino !== null && !semEnergia;
   const decolar = () => {
     ar.estado = 'decolando';
     ar.timer_s = param('tempo_decolagem_s');
@@ -132,7 +144,8 @@ function atualizarAr(ctx: SystemContext, id: EntityId, loc: Locomocao, dt: numbe
   };
   switch (ar.estado) {
     case 'voando':
-      if (!temOrdem && loc.ocioso_s >= param('pouso_automatico_s')) {
+      // D-28: drone em voo sem energia pousa onde está.
+      if (semEnergia || (!temOrdem && loc.ocioso_s >= param('pouso_automatico_s'))) {
         ar.estado = 'pousando';
         ar.timer_s = param('tempo_pouso_s');
         return false;
@@ -140,11 +153,11 @@ function atualizarAr(ctx: SystemContext, id: EntityId, loc: Locomocao, dt: numbe
       return true;
     case 'pousando':
       ar.timer_s -= dt;
-      if (temOrdem || inimigoVisivel(ctx, id)) decolar();
+      if (!semEnergia && (temOrdem || inimigoVisivel(ctx, id))) decolar();
       else if (ar.timer_s <= 0) ar.estado = 'pousado';
       return false;
     case 'pousado':
-      if (temOrdem || inimigoVisivel(ctx, id)) decolar();
+      if (!semEnergia && (temOrdem || inimigoVisivel(ctx, id))) decolar();
       return false;
     case 'decolando':
       ar.timer_s -= dt;
@@ -153,8 +166,10 @@ function atualizarAr(ctx: SystemContext, id: EntityId, loc: Locomocao, dt: numbe
   }
 }
 
-function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number): void {
+function passo(ctx: SystemContext, gSolo: Navegavel | null, id: EntityId, dt: number): void {
   const { state } = ctx;
+  // MOV-08 (D-90): a embarcação só anda no líquido.
+  const g = ehEmbarcacaoId(ctx, id) ? navegavelAgua(ctx) : gSolo;
   const s = statsMovel(getComponent(state, id, 'unit')!.tipo);
   const aerea = s.camada === 'ar';
   const loc = getComponent(state, id, 'locomotion')!;
@@ -165,6 +180,19 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
   // O rumo é mantido tangente (a separação e o arredondamento podem desviá-lo um pouco).
   let rumo: Vec3 = tangente(d, loc.rumo) ?? norteEm(d);
 
+  // ECO-22: silo ancorado não anda; UNI-03: nem a Sentinela.
+  if (siloImovel(getComponent(state, id, 'silo')) || getComponent(state, id, 'sentinela')) {
+    loc.speed = 0;
+    loc.rumo = rumo;
+    return;
+  }
+
+  // CTL-10: em controle direto, o jogador conduz (D-44: sem rota nem ordens).
+  if (getComponent(state, id, 'pilotado')) {
+    passoPilotado(ctx, g, id, dt);
+    return;
+  }
+
   if (aerea && !atualizarAr(ctx, id, loc, dt)) {
     loc.speed = 0;
     loc.rumo = rumo;
@@ -172,7 +200,11 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
   }
 
   const alvo = ordem.tipo === 'manter' ? null : proximoAlvo(ctx, g, id, loc, d);
-  const velMax = Math.min(s.vel_m_s, loc.limiteVel ?? Infinity);
+  // ENE-11: no Modo Reserva anda a `modo_reserva_vel_pct`% da velocidade.
+  const reserva = emReserva(ctx, id) ? param('modo_reserva_vel_pct') / 100 : 1;
+  // UNI-13: o campo da Torre Magnética deixa a unidade mais lenta.
+  const campo = 1 - (getComponent(ctx.state, id, 'lentidao')?.fator ?? 0);
+  const velMax = Math.min(s.vel_m_s * reserva * campo, loc.limiteVel ?? Infinity);
   // MOV-03: da parada à velocidade máxima em aceleracao_*_s.
   const aceleracao = s.vel_m_s / param(aerea ? 'aceleracao_ar_s' : 'aceleracao_solo_s');
   let velAlvo = 0;
@@ -212,8 +244,14 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
       else loc.speed = 0;
     }
   }
+  const avancou = R * arco(d, novo);
   posicionar(ctx, pos, novo, 0);
   loc.rumo = tangente(novo, rumo) ?? rumo;
+  // ENE-10: mover gasta `mov_en_s` por segundo em movimento; drone parado no ar paga o pairar.
+  // CEN-02: nos drones, o gasto é multiplicado por `mult_en_drone` do cenário.
+  const mult = multEnDrone(ctx.state, aerea);
+  if (avancou > 1e-9) gastar(ctx, id, s.mov_en_s * mult * dt);
+  else if (aerea) gastar(ctx, id, s.pairar_en_s * mult * dt);
 
   // Unidade presa (aglomeração, funil ou quina): se em TEMPO_TRAVADO_S não se afastou
   // DESLOCAMENTO_MINIMO_M da âncora, contando o efeito da separação, refaz a rota por A*.
@@ -229,8 +267,118 @@ function passo(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number
     if (loc.travado_s >= TEMPO_TRAVADO_S) {
       loc.travado_s = 0;
       loc.ancora = d;
-      tracarRota(g, loc, novo, aerea);
+      tracarRota(navegavelDe(ctx, id) ?? g, loc, novo, aerea);
     }
+  }
+}
+
+/** D-42: pouso e decolagem do drone em controle direto; devolve se ele pode se deslocar. */
+function arPilotado(ctx: SystemContext, id: EntityId, pousar: boolean, dt: number): boolean {
+  const ar = getComponent(ctx.state, id, 'air')!;
+  const semEnergia = emReserva(ctx, id);
+  switch (ar.estado) {
+    case 'voando':
+      // D-28: sem energia, pousa onde está.
+      if (pousar || semEnergia) {
+        ar.estado = 'pousando';
+        ar.timer_s = param('tempo_pouso_s');
+        return false;
+      }
+      return true;
+    case 'pousando':
+      ar.timer_s -= dt;
+      if (ar.timer_s <= 0) ar.estado = 'pousado';
+      return false;
+    case 'pousado':
+      if (!pousar && !semEnergia) {
+        ar.estado = 'decolando';
+        ar.timer_s = param('tempo_decolagem_s');
+      }
+      return false;
+    case 'decolando':
+      ar.timer_s -= dt;
+      if (ar.timer_s <= 0) ar.estado = 'voando';
+      return false;
+  }
+}
+
+/**
+ * CTL-10/CTL-12: movimento do controle direto. O corpo gira até a mira no ritmo de
+ * `giro_graus_s`; W/S e A/D deslocam no rumo do corpo. Sincronia e Impulso somam bônus de
+ * velocidade (D-41); o Impulso multiplica o gasto de movimento por `impulso_mult_en`.
+ */
+function passoPilotado(ctx: SystemContext, g: Navegavel | null, id: EntityId, dt: number): void {
+  const { state } = ctx;
+  const s = statsMovel(getComponent(state, id, 'unit')!.tipo);
+  const aerea = s.camada === 'ar';
+  const loc = getComponent(state, id, 'locomotion')!;
+  const pos = getComponent(state, id, 'position')!;
+  const p = getComponent(state, id, 'pilotado')!;
+  const R = raioDoMundo(ctx);
+  const d = direcaoDe(pos);
+  let rumo: Vec3 = tangente(d, loc.rumo) ?? norteEm(d);
+  loc.destino = null;
+  loc.rota = [];
+
+  const desejado = tangente(d, p.rumo);
+  if (desejado) {
+    const giro = ((s.giro_graus_s * Math.PI) / 180) * dt;
+    const delta = anguloNoPlano(d, rumo, desejado);
+    rumo = normalizar(girar(rumo, d, Math.max(-giro, Math.min(giro, delta))));
+  }
+  loc.rumo = rumo;
+  if (aerea && !arPilotado(ctx, id, p.pousar, dt)) {
+    loc.speed = 0;
+    return;
+  }
+
+  const direita = normalizar(produtoVetorial(rumo, d));
+  const entrada = Math.min(1, Math.hypot(p.frente, p.lateral));
+  const desejo: Vec3 = [
+    rumo[0] * p.frente + direita[0] * p.lateral,
+    rumo[1] * p.frente + direita[1] * p.lateral,
+    rumo[2] * p.frente + direita[2] * p.lateral,
+  ];
+  if (entrada > 1e-6) p.deslocamento = normalizar(desejo);
+  const impulso = p.impulso && entrada > 1e-6;
+  const reserva = emReserva(ctx, id) ? param('modo_reserva_vel_pct') / 100 : 1;
+  const bonus =
+    1 +
+    param('controle_direto_bonus_vel_pct') / 100 +
+    (impulso ? param('impulso_bonus_vel_pct') / 100 : 0);
+  const campo = 1 - (getComponent(ctx.state, id, 'lentidao')?.fator ?? 0);
+  const velAlvo = s.vel_m_s * reserva * bonus * entrada * campo;
+  const aceleracao = s.vel_m_s / param(aerea ? 'aceleracao_ar_s' : 'aceleracao_solo_s');
+  const dv = aceleracao * bonus * dt;
+  loc.speed =
+    loc.speed < velAlvo ? Math.min(velAlvo, loc.speed + dv) : Math.max(velAlvo, loc.speed - dv);
+
+  const direcao = p.deslocamento ? tangente(d, p.deslocamento) : null;
+  let novo = d;
+  const angulo = (loc.speed * dt) / R;
+  if (direcao && angulo > 0) {
+    const cheio = avancar(d, direcao, angulo);
+    // MOV-01: o terreno intransponível barra o hover; ele desliza pela borda quando dá.
+    if (aerea || livreEm(g, cheio.p)) {
+      novo = cheio.p;
+    } else {
+      const lateral = [Math.PI / 4, -Math.PI / 4]
+        .map((a) => avancar(d, normalizar(girar(direcao, d, a)), angulo * Math.SQRT1_2))
+        .find((t) => livreEm(g, t.p));
+      if (lateral) novo = lateral.p;
+      else loc.speed = 0;
+    }
+  }
+  const avancou = R * arco(d, novo);
+  posicionar(ctx, pos, novo, 0);
+  loc.rumo = tangente(novo, rumo) ?? rumo;
+  if (p.deslocamento) p.deslocamento = tangente(novo, p.deslocamento) ?? p.deslocamento;
+  // ENE-10 e CTL-12: o Impulso multiplica o gasto de movimento.
+  const mult = multEnDrone(ctx.state, aerea);
+  if (avancou > 1e-9) {
+    gastar(ctx, id, s.mov_en_s * mult * (impulso ? param('impulso_mult_en') : 1) * dt);
+  } else if (aerea) {
+    gastar(ctx, id, s.pairar_en_s * mult * dt);
   }
 }
 
@@ -258,22 +406,32 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
   );
   const baldes = new Map<string, EntityId[]>();
   const celula = (d: Vec3) => d.map((v) => Math.floor((v * R) / BALDE_M)) as Vec3;
-  const chave = (solo: boolean, c: Vec3) => `${solo ? 's' : 'a'}:${c[0]}:${c[1]}:${c[2]}`;
+  // MOV-08: embarcações só se separam de embarcações (camada própria, 'w').
+  const camadaDe = (id: EntityId) => (ehEmbarcacaoId(ctx, id) ? 'w' : noSolo(ctx, id) ? 's' : 'a');
+  const chave = (camada: string, c: Vec3) => `${camada}:${c[0]}:${c[1]}:${c[2]}`;
+  const gAgua = navegavelAgua(ctx);
+  const gDe = (id: EntityId) => (ehEmbarcacaoId(ctx, id) ? gAgua : g);
   for (const id of ids) {
-    const k = chave(noSolo(ctx, id), celula(dirs.get(id)!));
+    const k = chave(camadaDe(id), celula(dirs.get(id)!));
     const lista = baldes.get(k);
     if (lista) lista.push(id);
     else baldes.set(k, [id]);
   }
-  const peso = (id: EntityId) => (getComponent(state, id, 'order')!.tipo === 'manter' ? 0 : 1);
+  // Quem mantém posição (CMB-13) e o silo ancorado não são empurrados.
+  const peso = (id: EntityId) =>
+    getComponent(state, id, 'order')!.tipo === 'manter' ||
+    siloImovel(getComponent(state, id, 'silo'))
+      ? 0
+      : 1;
   for (const id of ids) {
-    const solo = noSolo(ctx, id);
+    const camada = camadaDe(id);
+    const solo = camada !== 'a';
     const ra = statsMovel(getComponent(state, id, 'unit')!.tipo).raio_m;
     const c = celula(dirs.get(id)!);
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         for (let dz = -1; dz <= 1; dz++) {
-          for (const outro of baldes.get(chave(solo, [c[0] + dx, c[1] + dy, c[2] + dz])) ?? []) {
+          for (const outro of baldes.get(chave(camada, [c[0] + dx, c[1] + dy, c[2] + dz])) ?? []) {
             if (outro <= id) continue;
             const p = dirs.get(id)!;
             const q = dirs.get(outro)!;
@@ -298,8 +456,8 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
               [u[0] * sobreposicao * wb, u[1] * sobreposicao * wb, u[2] * sobreposicao * wb],
               R,
             );
-            if (!solo || livreEm(g, novoP)) dirs.set(id, novoP);
-            if (!solo || livreEm(g, novoQ)) dirs.set(outro, novoQ);
+            if (!solo || livreEm(gDe(id), novoP)) dirs.set(id, novoP);
+            if (!solo || livreEm(gDe(outro), novoQ)) dirs.set(outro, novoQ);
           }
         }
       }
@@ -308,18 +466,22 @@ function separar(ctx: SystemContext, g: Navegavel | null, ids: EntityId[]): void
   // Obstáculos rígidos empurram unidades de solo para fora.
   const obstaculos = entitiesWith(state, 'obstacle', 'position').map((o) => ({
     d: direcaoDe(getComponent(state, o, 'position')!),
-    raio: getComponent(state, o, 'obstacle')!.raio,
+    o: getComponent(state, o, 'obstacle')!,
   }));
   for (const id of ids) {
     if (!noSolo(ctx, id)) continue;
     const r = statsMovel(getComponent(state, id, 'unit')!.tipo).raio_m;
     for (const o of obstaculos) {
       const p = dirs.get(id)!;
-      const raio = o.raio + r;
-      const dist = R * arco(p, o.d);
+      const raio = o.o.raio + r;
+      // D-56: Muro e Portão empurram a partir do ponto mais perto do eixo.
+      const c = maisPertoNoEixo(R, o.d, o.o, p);
+      const dist = R * arco(p, c);
       if (dist >= raio) continue;
-      const fora = tangente(o.d, p) ?? norteEm(o.d);
-      dirs.set(id, avancar(o.d, fora, raio / R).p);
+      const fora = tangente(c, p) ?? norteEm(c);
+      const empurrado = avancar(c, fora, raio / R).p;
+      // A embarcação só é empurrada para o líquido.
+      if (!ehEmbarcacaoId(ctx, id) || livreEm(gAgua, empurrado)) dirs.set(id, empurrado);
     }
   }
   for (const id of ids) posicionar(ctx, getComponent(state, id, 'position')!, dirs.get(id)!, 0);
@@ -330,7 +492,8 @@ function ajustarAltura(ctx: SystemContext, ids: EntityId[]): void {
   for (const id of ids) {
     const pos = getComponent(state, id, 'position')!;
     const d = direcaoDe(pos);
-    const chao = chaoEm(ctx, d) + ALTURA_HOVER_M;
+    // MOV-08: a embarcação flutua na superfície do líquido (o chão ali é o nível dele).
+    const chao = chaoEm(ctx, d) + (ehEmbarcacaoId(ctx, id) ? 0 : ALTURA_HOVER_M);
     const ar = getComponent(state, id, 'air');
     let altura = chao;
     if (ar && ar.estado !== 'pousado') {
@@ -350,7 +513,11 @@ function ajustarAltura(ctx: SystemContext, ids: EntityId[]): void {
 
 export function sistemaMovimento(ctx: SystemContext): void {
   const g = navegavel(ctx);
-  const ids = entitiesWith(ctx.state, 'unit', 'locomotion', 'position');
+  // CMB-28: hovers recolhidos estão fora do mapa.
+  const ids = entitiesWith(ctx.state, 'unit', 'locomotion', 'position').filter(
+    // UNI-20: embarcadas também.
+    (id) => !abrigado(ctx.state, id) && !getComponent(ctx.state, id, 'embarcado'),
+  );
   for (const id of ids) passo(ctx, g, id, ctx.dt);
   separar(ctx, g, ids);
   ajustarAltura(ctx, ids);

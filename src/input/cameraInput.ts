@@ -21,6 +21,8 @@ export interface EntradaCamera {
 export interface OpcoesEntradaCamera {
   /** CTL-02: a rolagem pelas bordas é desligável. */
   rolagemPelasBordas: () => boolean;
+  /** Controle direto (CTL-08): a câmera RTS não recebe entrada. */
+  bloqueado?: () => boolean;
 }
 
 export function ligarEntradaCamera(
@@ -66,6 +68,7 @@ export function ligarEntradaCamera(
   };
   const roda = (evento: WheelEvent) => {
     evento.preventDefault();
+    if (opcoes.bloqueado?.()) return;
     aplicarZoom(estado, Math.sign(evento.deltaY));
   };
 
@@ -80,6 +83,10 @@ export function ligarEntradaCamera(
 
   return {
     atualizar(dt: number) {
+      if (opcoes.bloqueado?.()) {
+        atualizarCamera(estado, dt);
+        return;
+      }
       let frente = (setas.has('ArrowUp') ? 1 : 0) - (setas.has('ArrowDown') ? 1 : 0);
       let lado = (setas.has('ArrowRight') ? 1 : 0) - (setas.has('ArrowLeft') ? 1 : 0);
       if (mouse && opcoes.rolagemPelasBordas()) {

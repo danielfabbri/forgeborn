@@ -6,12 +6,44 @@
  * que ainda exista rota. Na prática, as duas rotas saem por rampas diferentes. No planeta todas
  * as zonas de pouso são vizinhas (CEN-07), então todos os pares são verificados.
  */
-import type { CenariosId, TamanhosMapaId } from '../data';
+import type { CenariosId } from '../data';
 import { celulasNoRaio, componenteConectado, noComponente, temFolga } from './conectividade';
 import { arco, centroDaCelula } from './esfera';
 import { celulaDe, derivarGrades, type GradeNavegacao, type GradesDoMapa } from './grids';
 import { type DistribuicaoDeJazidas, distribuirJazidas } from './jazidas';
 import { GERADOR_LUA, gerarMapaLunar, type MapaLunar, type Simetria } from './lunar';
+import { dados } from '../data';
+
+/** CEN-16 (D-79): o raio do planeta é o do cenário. */
+export function raioDoCenario(cenario: CenariosId): number {
+  const c = dados.cenarios.find((x) => x.id === cenario);
+  if (!c) throw new Error(`Cenário desconhecido: ${cenario}`);
+  return c.raio_m;
+}
+
+/**
+ * Prévia do Free Battle (FB-02): só o relevo e as zonas de um preset (seed já validada, CEN-12),
+ * com um vértice a cada `texel` metros; sem grades nem jazidas.
+ */
+export function gerarPrevia(
+  seed: number,
+  zonas: Simetria,
+  cenario: CenariosId,
+  texel = 4,
+): MapaLunar {
+  return gerarMapaLunar(
+    seed,
+    raioDoCenario(cenario),
+    zonas,
+    cenario === 'terra_lab',
+    temLiquido(cenario),
+    texel,
+  );
+}
+
+/** CEN-04 (D-90): cenários com líquido na superfície (evento `lagos_metano`). */
+export const temLiquido = (cenario: CenariosId): boolean =>
+  dados.cenarios.find((c) => c.id === cenario)?.evento === 'lagos_metano';
 
 export type MotivoInvalido =
   | 'zonas_desconectadas'
@@ -52,7 +84,9 @@ function rotaMaisCurta(
     if (atual === destino) break;
     for (let d = 0; d < 4; d++) {
       const v = vizinhos[atual * 8 + d]!;
-      if (v < 0 || anterior[v] !== -1 || bloqueado[v] === 1 || nav.passavel[v] !== 1) continue;
+      if (v < 0 || anterior[v] !== -1 || bloqueado[v] === 1) continue;
+      // D-90: o líquido conta como rota (de barco).
+      if (nav.passavel[v] !== 1 && nav.liquido?.[v] !== 1) continue;
       anterior[v] = atual;
       fila[fim++] = v;
     }
@@ -102,7 +136,8 @@ export function validarMapa(
 ): ProblemaDeMapa[] {
   const nav = grades.navegacao;
   const problemas: ProblemaDeMapa[] = [];
-  const componente = componenteConectado(nav, celulaDe(nav, mapa.zonasDePouso[0]!.d));
+  // D-90: o mar liga (de barco) as zonas e as jazidas das ilhas.
+  const componente = componenteConectado(nav, celulaDe(nav, mapa.zonasDePouso[0]!.d), true);
 
   mapa.zonasDePouso.forEach((zona, k) => {
     if (!noComponente(nav, componente, zona.d)) {
@@ -153,7 +188,6 @@ export interface MapaPronto {
  */
 export function gerarMapaValido(
   seed: number,
-  tamanho: TamanhosMapaId,
   zonas: Simetria,
   cenario: CenariosId,
   validar: typeof validarMapa = validarMapa,
@@ -161,7 +195,14 @@ export function gerarMapaValido(
   const rejeitadas: MapaPronto['rejeitadas'] = [];
   for (let tentativa = 0; tentativa < VALIDACAO.maxTentativas; tentativa++) {
     const atual = seed + tentativa;
-    const mapa = gerarMapaLunar(atual, tamanho, zonas);
+    // §14.5: o Campo de testes da Terra é quase plano; CEN-04: Titã tem mares de metano.
+    const mapa = gerarMapaLunar(
+      atual,
+      raioDoCenario(cenario),
+      zonas,
+      cenario === 'terra_lab',
+      temLiquido(cenario),
+    );
     const grades = derivarGrades(mapa);
     let jazidas: DistribuicaoDeJazidas;
     try {

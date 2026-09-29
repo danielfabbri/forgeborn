@@ -3,7 +3,7 @@
     "zona": "inicial",
     "recurso": "fe",
     "jazidas": 2,
-    "quantidade_u": 1500,
+    "quantidade_u": 3000,
     "dist_min_m": 20,
     "dist_max_m": 45,
     "escopo": "por_jogador"
@@ -12,7 +12,7 @@
     "zona": "inicial",
     "recurso": "si",
     "jazidas": 2,
-    "quantidade_u": 1200,
+    "quantidade_u": 2400,
     "dist_min_m": 20,
     "dist_max_m": 45,
     "escopo": "por_jogador"
@@ -21,7 +21,7 @@
     "zona": "inicial",
     "recurso": "cu",
     "jazidas": 1,
-    "quantidade_u": 1000,
+    "quantidade_u": 4000,
     "dist_min_m": 25,
     "dist_max_m": 45,
     "escopo": "por_jogador"
@@ -30,7 +30,7 @@
     "zona": "inicial",
     "recurso": "li",
     "jazidas": 1,
-    "quantidade_u": 600,
+    "quantidade_u": 1200,
     "dist_min_m": 30,
     "dist_max_m": 45,
     "escopo": "por_jogador"
@@ -39,7 +39,7 @@
     "zona": "expansao",
     "recurso": "fe",
     "jazidas": 1,
-    "quantidade_u": 1500,
+    "quantidade_u": 3000,
     "dist_min_m": 90,
     "dist_max_m": 130,
     "escopo": "por_jogador"
@@ -48,7 +48,7 @@
     "zona": "expansao",
     "recurso": "si",
     "jazidas": 1,
-    "quantidade_u": 1200,
+    "quantidade_u": 2400,
     "dist_min_m": 90,
     "dist_max_m": 130,
     "escopo": "por_jogador"
@@ -57,7 +57,7 @@
     "zona": "expansao",
     "recurso": "cu",
     "jazidas": 1,
-    "quantidade_u": 1000,
+    "quantidade_u": 3000,
     "dist_min_m": 90,
     "dist_max_m": 130,
     "escopo": "por_jogador"
@@ -66,7 +66,7 @@
     "zona": "expansao",
     "recurso": "li",
     "jazidas": 1,
-    "quantidade_u": 800,
+    "quantidade_u": 1600,
     "dist_min_m": 90,
     "dist_max_m": 130,
     "escopo": "por_jogador"
@@ -75,7 +75,7 @@
     "zona": "expansao",
     "recurso": "ti",
     "jazidas": 1,
-    "quantidade_u": 800,
+    "quantidade_u": 1600,
     "dist_min_m": 100,
     "dist_max_m": 130,
     "escopo": "por_jogador"
@@ -84,7 +84,7 @@
     "zona": "contestada",
     "recurso": "ti",
     "jazidas": 2,
-    "quantidade_u": 1000,
+    "quantidade_u": 2000,
     "dist_min_m": 120,
     "dist_max_m": null,
     "escopo": "por_zona"
@@ -93,7 +93,7 @@
     "zona": "contestada",
     "recurso": "li",
     "jazidas": 1,
-    "quantidade_u": 1200,
+    "quantidade_u": 2400,
     "dist_min_m": 120,
     "dist_max_m": null,
     "escopo": "por_zona"
@@ -102,7 +102,7 @@
     "zona": "contestada",
     "recurso": "u",
     "jazidas": 1,
-    "quantidade_u": 300,
+    "quantidade_u": 600,
     "dist_min_m": 120,
     "dist_max_m": null,
     "escopo": "por_zona"
@@ -111,7 +111,7 @@
     "zona": "central",
     "recurso": "ti",
     "jazidas": 2,
-    "quantidade_u": 1200,
+    "quantidade_u": 2400,
     "dist_min_m": null,
     "dist_max_m": null,
     "escopo": "por_mapa"
@@ -120,9 +120,45 @@
     "zona": "central",
     "recurso": "u",
     "jazidas": 2,
-    "quantidade_u": 500,
+    "quantidade_u": 1000,
     "dist_min_m": null,
     "dist_max_m": null,
     "escopo": "por_mapa"
+  },
+  {
+    "zona": "espalhada",
+    "recurso": "fe",
+    "jazidas": 1,
+    "quantidade_u": 3000,
+    "dist_min_m": 150,
+    "dist_max_m": null,
+    "escopo": "por_area"
+  },
+  {
+    "zona": "espalhada",
+    "recurso": "si",
+    "jazidas": 1,
+    "quantidade_u": 2400,
+    "dist_min_m": 150,
+    "dist_max_m": null,
+    "escopo": "por_area"
+  },
+  {
+    "zona": "espalhada",
+    "recurso": "cu",
+    "jazidas": 1,
+    "quantidade_u": 3000,
+    "dist_min_m": 150,
+    "dist_max_m": null,
+    "escopo": "por_area"
+  },
+  {
+    "zona": "espalhada",
+    "recurso": "li",
+    "jazidas": 1,
+    "quantidade_u": 1600,
+    "dist_min_m": 150,
+    "dist_max_m": null,
+    "escopo": "por_area"
   }
 ]

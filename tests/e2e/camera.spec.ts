@@ -8,7 +8,8 @@ interface Camera {
   rumo: number;
 }
 
-const RAIO = 144;
+/** Raio da Lua (CEN-16), o corpo da cena de demonstração. */
+const RAIO = 400;
 
 const lerCamera = (page: Page) =>
   page.evaluate(

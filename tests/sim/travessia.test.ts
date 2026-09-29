@@ -9,15 +9,16 @@ import {
   produtoVetorial,
   type Vec3,
 } from '../../src/sim/map/esfera';
-import { criar, mundoLua, ordenar, partida } from './mundo-teste';
+import { criar, mundoDeTeste, ordenar, partida } from './mundo-teste';
+import type { MapaLunar } from '../../src/sim/map/lunar';
 
 describe('T-023: travessia do planeta M', () => {
   it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])(
     'MOV-05: 100 unidades vão de uma zona de pouso a outra sem ficar presas (seed %i)',
     (seed) => {
-      const mundo = mundoLua(seed);
+      const mundo = mundoDeTeste(seed);
       const R = mundo.mapa.raio_m;
-      const [a, , c] = mundo.mapa.zonasDePouso;
+      const [a, , c] = (mundo.mapa as MapaLunar).zonasDePouso;
       // Grade 10 × 10 com 3 m de passo no platô da zona a, no plano tangente.
       const e1 = norteEm(a!.d);
       const e2 = produtoVetorial(a!.d, e1);

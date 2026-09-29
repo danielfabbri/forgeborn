@@ -1,14 +1,13 @@
 [
   {
-    "ordem": 1,
-    "id": "m01",
-    "cenario": "lua",
-    "nome": "Primeira Forja",
-    "mapa": "p",
+    "ordem": 0,
+    "id": "m00",
+    "cenario": "terra_lab",
+    "nome": "Campo de Testes",
     "oponentes": [
-      "posto_passivo"
+      "alvos_treino"
     ],
-    "objetivo": "Tutorial; destruir o posto avançado inimigo",
+    "objetivo": "Tutorial; destruir os alvos de treino",
     "libera": [
       "hover_explorer",
       "printer",
@@ -16,9 +15,27 @@
       "hover_scout",
       "laser_tower",
       "storage",
-      "solar_plant"
+      "solar_plant",
+      "wall",
+      "gate",
+      "power_hub"
     ],
     "tempo_par_min": 20,
+    "versao": "v1.0"
+  },
+  {
+    "ordem": 1,
+    "id": "m01",
+    "cenario": "lua",
+    "nome": "Primeira Forja",
+    "oponentes": [
+      "posto_passivo"
+    ],
+    "objetivo": "Destruir o posto avançado inimigo",
+    "libera": [
+      "antenna"
+    ],
+    "tempo_par_min": 40,
     "versao": "v1.0"
   },
   {
@@ -26,7 +43,6 @@
     "id": "m02",
     "cenario": "lua_shackleton",
     "nome": "Sombra Eterna",
-    "mapa": "m",
     "oponentes": [
       "normal"
     ],
@@ -34,9 +50,11 @@
     "libera": [
       "mobile_silo",
       "mobile_battery",
-      "hover_opq"
+      "hover_opq",
+      "aa_battery",
+      "mag_tower"
     ],
-    "tempo_par_min": 30,
+    "tempo_par_min": 60,
     "versao": "v1.0"
   },
   {
@@ -44,7 +62,6 @@
     "id": "m03",
     "cenario": "marte",
     "nome": "Poeira Vermelha",
-    "mapa": "m",
     "oponentes": [
       "normal",
       "normal"
@@ -54,15 +71,14 @@
       "nuclear_plant",
       "hover_minelayer"
     ],
-    "tempo_par_min": 40,
-    "versao": "v1.x"
+    "tempo_par_min": 80,
+    "versao": "v1.0"
   },
   {
     "ordem": 4,
     "id": "m04",
     "cenario": "fobos",
     "nome": "Cerco em Fobos",
-    "mapa": "p",
     "oponentes": [
       "dificil"
     ],
@@ -71,7 +87,7 @@
       "drone_laser",
       "drone_bomber"
     ],
-    "tempo_par_min": 30,
+    "tempo_par_min": 60,
     "versao": "v1.x"
   },
   {
@@ -79,16 +95,16 @@
     "id": "m05",
     "cenario": "ceres",
     "nome": "Veios de Ceres",
-    "mapa": "g",
     "oponentes": [
       "normal",
       "dificil"
     ],
     "objetivo": "Eliminar as nações rivais",
     "libera": [
-      "satellite_uplink"
+      "satellite_uplink",
+      "missile_silo"
     ],
-    "tempo_par_min": 45,
+    "tempo_par_min": 90,
     "versao": "v1.x"
   },
   {
@@ -96,14 +112,13 @@
     "id": "m06",
     "cenario": "venus",
     "nome": "Inferno Ácido",
-    "mapa": "m",
     "oponentes": [
       "dificil",
       "dificil"
     ],
     "objetivo": "Eliminar as nações rivais",
     "libera": null,
-    "tempo_par_min": 45,
+    "tempo_par_min": 90,
     "versao": "v1.x"
   },
   {
@@ -111,7 +126,6 @@
     "id": "m07",
     "cenario": "europa",
     "nome": "Sob o Gelo",
-    "mapa": "g",
     "oponentes": [
       "normal",
       "dificil",
@@ -119,7 +133,7 @@
     ],
     "objetivo": "Eliminar as nações rivais",
     "libera": null,
-    "tempo_par_min": 55,
+    "tempo_par_min": 110,
     "versao": "v1.x"
   },
   {
@@ -127,7 +141,6 @@
     "id": "m08",
     "cenario": "tita",
     "nome": "Trono Único",
-    "mapa": "g",
     "oponentes": [
       "dificil",
       "dificil",
@@ -135,7 +148,7 @@
     ],
     "objetivo": "Eliminar todas as nações",
     "libera": null,
-    "tempo_par_min": 60,
+    "tempo_par_min": 120,
     "versao": "v1.x"
   }
 ]

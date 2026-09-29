@@ -47,6 +47,8 @@ export interface EstadoCameraRts {
   alturaAlvo: number;
   /** Raio do planeta (m). */
   raio: number;
+  /** §14.5: altura máxima do cenário (a Terra não mostra a curvatura). */
+  teto?: number;
 }
 
 export function criarEstadoCamera(foco: Vec3, raio: number): EstadoCameraRts {
@@ -60,14 +62,21 @@ export function criarEstadoCamera(foco: Vec3, raio: number): EstadoCameraRts {
   };
 }
 
-/** CTL-16: altura máxima do zoom (visão planetária). */
-export function alturaMaxima(estado: { raio: number }): number {
-  return (C.distanciaPlanetaria_raios - 1) * estado.raio;
+/** CTL-16: altura máxima do zoom (visão planetária); §14.5: na Terra, um teto menor. */
+export function alturaMaxima(estado: { raio: number; teto?: number }): number {
+  return Math.min((C.distanciaPlanetaria_raios - 1) * estado.raio, estado.teto ?? Infinity);
 }
 
 function suave(a: number, b: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
+}
+
+/** CTL-16: quanto a câmera já está na visão planetária (0 na visão RTS, 1 no fim do zoom). */
+export function fatorPlanetario(estado: { altura: number; raio: number; teto?: number }): number {
+  const max = alturaMaxima(estado);
+  if (max <= C.alturaMaxRts_m) return 0;
+  return suave(C.alturaMaxRts_m, max, estado.altura);
 }
 
 /** CTL-01/CTL-16: inclinação (rad) abaixo do horizonte para a altura dada. */

@@ -19,6 +19,7 @@ import {
   tanDaDivisao,
   type Vec3,
 } from './esfera';
+import type { Pedra } from './pedras';
 
 export const ALTURA_BASE_M = 100;
 
@@ -28,6 +29,10 @@ export interface Heightmap {
   resolucao: number;
   /** 6 × (resolucao + 1)² alturas codificadas. */
   alturas: Uint16Array;
+  /** CEN-04 (D-90): líquido na superfície: abaixo de `nivel` (m) é mar ou lago. */
+  mar?: { nivel: number };
+  /** CEN-17: pedras neutras. */
+  pedras?: Pedra[];
 }
 
 export function codificarAltura(h: number): number {
@@ -75,6 +80,12 @@ export function alturaEm(mapa: Heightmap, d: Vec3): number {
   const h11 = mapa.alturas[base + (j + 1) * linha + i + 1]!;
   const cod = (h00 * (1 - u) + h10 * u) * (1 - v) + (h01 * (1 - u) + h11 * u) * v;
   return cod / 100 - ALTURA_BASE_M;
+}
+
+/** CEN-04 (D-90): altura da superfície: o terreno, ou o líquido onde ele fica acima (m). */
+export function alturaDaSuperficie(mapa: Heightmap, d: Vec3): number {
+  const h = alturaEm(mapa, d);
+  return mapa.mar ? Math.max(h, mapa.mar.nivel) : h;
 }
 
 /** Ponto 3D do terreno na direção d, somada uma folga radial opcional. */

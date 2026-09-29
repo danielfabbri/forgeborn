@@ -1,28 +1,28 @@
 [
   {
     "parametro": "reacao_s",
-    "facil": 3,
+    "facil": 4,
     "normal": 1.5,
     "dificil": 0.8,
     "brutal": 0.4
   },
   {
     "parametro": "meta_hovers",
-    "facil": 10,
+    "facil": 6,
     "normal": 18,
     "dificil": 26,
     "brutal": 32
   },
   {
     "parametro": "primeiro_ataque_min",
-    "facil": 11,
-    "normal": 7,
-    "dificil": 5,
-    "brutal": 4
+    "facil": 45,
+    "normal": 18,
+    "dificil": 13,
+    "brutal": 10
   },
   {
     "parametro": "vr_exercito_ataque",
-    "facil": 400,
+    "facil": 250,
     "normal": 700,
     "dificil": 1000,
     "brutal": 1200
@@ -36,10 +36,24 @@
   },
   {
     "parametro": "tiers_permitidos",
+    "facil": 3,
+    "normal": 2,
+    "dificil": 3,
+    "brutal": 3
+  },
+  {
+    "parametro": "tiers_militares",
     "facil": 1,
     "normal": 2,
     "dificil": 3,
     "brutal": 3
+  },
+  {
+    "parametro": "vr_exercito_max",
+    "facil": 400,
+    "normal": 0,
+    "dificil": 0,
+    "brutal": 0
   },
   {
     "parametro": "micro",
@@ -57,14 +71,14 @@
   },
   {
     "parametro": "bonus_coleta_pct",
-    "facil": -20,
+    "facil": -40,
     "normal": 0,
     "dificil": 0,
     "brutal": 20
   },
   {
     "parametro": "bonus_impressao_pct",
-    "facil": 0,
+    "facil": -30,
     "normal": 0,
     "dificil": 0,
     "brutal": 10

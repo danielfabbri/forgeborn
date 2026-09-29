@@ -9,7 +9,7 @@
  * (CEN-14) e ângulo a partir de um rumo de referência que gira junto com a feição.
  */
 import { nextFloat, nextU32, type RngState, seedRng } from '../core/rng';
-import { dados, type TamanhosMapaId } from '../data';
+import { param } from '../data';
 import {
   aplicarRotacao,
   arco,
@@ -34,6 +34,7 @@ import {
   verticeRotacionado,
 } from './heightmap';
 import { fbm3 } from './noise';
+import type { Pedra } from './pedras';
 
 export type { Simetria };
 
@@ -74,6 +75,27 @@ export const GERADOR_LUA = {
   saidaRampa: 20,
   /** Resolução do heightmap: ~1 m entre vértices (CEN-13). */
   texel_m: 1,
+  /**
+   * CEN-04 (D-90): mares. Um campo de ruído simétrico (`frequencia`, `oitavas`) define as bacias;
+   * o limiar sai das `amostras` para cobrir `mar_cobertura_pct`. Na faixa `banda` (unidades do
+   * campo) a costa desce até o líquido; o fundo fica `profundidade` abaixo do nível; a terra da
+   * costa fica `margem` acima. `nivelQuantil`: o nível do líquido é esse quantil do relevo natural
+   * (fundos de cratera abaixo dele viram lagos). `folgaCentro_m`: terra em volta dos pontos médios.
+   */
+  mar: {
+    frequencia: 1 / 320,
+    oitavas: 3,
+    banda: 0.16,
+    /** Ruído de detalhe (ilhas e recortes da costa). */
+    ilhas: { frequencia: 1 / 90, peso: 0.45 },
+    profundidade: 4,
+    margem: 0.3,
+    amostras: 6000,
+    nivelQuantil: 0.02,
+    folgaCentro_m: 70,
+  },
+  /** CEN-17: vão mínimo (m) entre pedras, para um hover passar, e tentativas por pedra. */
+  pedra: { vao: 5, tentativas: 20 },
 } as const;
 
 const G = GERADOR_LUA;
@@ -122,7 +144,8 @@ interface Sulco {
 
 export interface MapaLunar extends Heightmap {
   seed: number;
-  tamanho: TamanhosMapaId;
+  /** Raio do planeta (m): o `raio_m` do cenário (CEN-16). */
+  raio: number;
   simetria: Simetria;
   zonasDePouso: ZonaDePouso[];
   contestados: PontoMedio[];
@@ -288,10 +311,21 @@ function alturaSulco(s: Sulco, p: Vec3, raioPlaneta: number): number {
   return -s.profundidade * q * q;
 }
 
-export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetria): MapaLunar {
-  const definicao = dados.tamanhos_mapa.find((t) => t.id === tamanho);
-  if (!definicao) throw new Error(`Tamanho de mapa desconhecido: ${tamanho}`);
-  const R = definicao.raio_m;
+/** §14.5: relevo quase plano, sem crateras nem sulcos (Terra — Campo de testes). */
+const FATOR_RELEVO_PLANO = 0.3;
+
+export function gerarMapaLunar(
+  seed: number,
+  raio: number,
+  n: Simetria,
+  plano = false,
+  /** CEN-04 (D-90): o cenário tem líquido na superfície (mares). */
+  comMar = false,
+  /** Metros entre vértices: 1 no jogo (CEN-13); maior só para prévias. */
+  texel: number = G.texel_m,
+): MapaLunar {
+  if (!(raio > 0)) throw new Error(`Raio de mapa inválido: ${raio}`);
+  const R = raio;
   const grupo = rotacoesDeSimetria(n);
   const rng = seedRng(seed);
   const seedRuido = nextU32(rng) | 0;
@@ -343,7 +377,7 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
 
   // Crateras (CEN-09).
   const crateras: Cratera[] = [];
-  for (const classe of G.classesCratera) {
+  for (const classe of plano ? [] : G.classesCratera) {
     const quantidade = Math.floor((classe.densidade * area) / n / 10000 + nextFloat(rng));
     for (let c = 0; c < quantidade; c++) {
       for (let tentativa = 0; tentativa < G.tentativas; tentativa++) {
@@ -391,14 +425,15 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
       const p = direcaoSorteada(rng);
       if (!longeDosCentrais(p, sigma)) continue;
       if (!respeitaZonas(p, 2 * sigma)) continue;
-      for (const q of replicas(p)) colinas.push({ d: q, altura, sigma });
+      const h = plano ? altura * FATOR_RELEVO_PLANO : altura;
+      for (const q of replicas(p)) colinas.push({ d: q, altura: h, sigma });
       break;
     }
   }
 
   // Sulcos (canais rasos e sinuosos), andando pela superfície com o rumo girando aos poucos.
   const sulcos: Sulco[] = [];
-  const quantidadeSulcos = inteiroEntre(rng, G.sulcos.porSetor);
+  const quantidadeSulcos = plano ? 0 : inteiroEntre(rng, G.sulcos.porSetor);
   for (let c = 0; c < quantidadeSulcos; c++) {
     for (let tentativa = 0; tentativa < 20; tentativa++) {
       const largura = entre(rng, G.sulcos.largura);
@@ -433,20 +468,114 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
     }
   }
 
-  const alturaNatural = (p: Vec3): number => {
+  /** As feições que podem alcançar um trecho do mapa (todas, ou as de um bloco de vértices). */
+  interface Feicoes {
+    colinas: Colina[];
+    crateras: Cratera[];
+    sulcos: Sulco[];
+  }
+  const todas: Feicoes = { colinas, crateras, sulcos };
+  const alturaSemLagos = (p: Vec3, f: Feicoes = todas): number => {
     let ruido = 0;
     for (const sigma of grupo) {
       const q = aplicarRotacao(sigma, p);
       ruido += fbm3(q[0] * R, q[1] * R, q[2] * R, seedRuido, G.ruido.oitavas, G.ruido.frequencia);
     }
-    let h = (ruido / Math.sqrt(n)) * G.ruido.amplitude;
-    for (const c of colinas) {
+    let h = (ruido / Math.sqrt(n)) * G.ruido.amplitude * (plano ? FATOR_RELEVO_PLANO : 1);
+    for (const c of f.colinas) {
       const d = R * arco(c.d, p);
       if (d < 3 * c.sigma) h += c.altura * Math.exp(-(d * d) / (c.sigma * c.sigma));
     }
-    for (const c of crateras) h += alturaCratera(c, p, R);
-    for (const s of sulcos) h += alturaSulco(s, p, R);
+    for (const c of f.crateras) h += alturaCratera(c, p, R);
+    for (const s of f.sulcos) h += alturaSulco(s, p, R);
     return h;
+  };
+  /**
+   * Feições que alcançam o círculo de centro `centro` e raio angular `raioAng`. O filtro só
+   * descarta quem soma exatamente 0 ali, então a altura sai idêntica à da lista completa.
+   */
+  const feicoesPerto = (centro: Vec3, raioAng: number): Feicoes => {
+    const perto = (d: Vec3, alcanceAng: number) => arco(d, centro) <= alcanceAng + raioAng + 1e-9;
+    return {
+      colinas: colinas.filter((c) => perto(c.d, (3 * c.sigma) / R)),
+      crateras: crateras.filter((c) => perto(c.d, Math.min(Math.PI, (c.raio * 1.6 + 8) / R))),
+      sulcos: sulcos.filter((s) =>
+        perto(s.centro, Math.acos(Math.max(-1, Math.min(1, s.cosAlcance)))),
+      ),
+    };
+  };
+
+  // CEN-04 (D-90): mares de formas orgânicas. O campo é a soma das rotações do grupo (simétrico),
+  // empurrado para cima perto das zonas de pouso e dos pontos médios (terra firme).
+  const seedMar = (Math.imul(seed | 0, 0x2c1b3c6d) ^ 0x5bd1e995) | 0;
+  const folgaZona = param('mar_folga_zona_m');
+  const campoMar = (p: Vec3): number => {
+    let f = 0;
+    for (const sigma of grupo) {
+      const q = aplicarRotacao(sigma, p);
+      f += fbm3(q[0] * R, q[1] * R, q[2] * R, seedMar, G.mar.oitavas, G.mar.frequencia);
+      // Detalhe: recorta a costa e ergue ilhas dentro dos mares.
+      f +=
+        G.mar.ilhas.peso *
+        fbm3(q[0] * R, q[1] * R, q[2] * R, seedMar ^ 0x1f, 2, G.mar.ilhas.frequencia);
+    }
+    f /= Math.sqrt(n);
+    for (const zona of zonasDePouso) {
+      const d = R * arco(zona.d, p);
+      f += 3 * (1 - smoothstep(folgaZona, folgaZona + 40, d));
+    }
+    for (const m of pontosMedios) {
+      const d = R * arco(m.d, p);
+      f += 3 * (1 - smoothstep(G.mar.folgaCentro_m, G.mar.folgaCentro_m + 30, d));
+    }
+    return f;
+  };
+  /** Nível do líquido e limiar do campo, pelas amostras (espiral de Fibonacci, determinística). */
+  let nivel = -Infinity;
+  let limiar = -Infinity;
+  if (comMar) {
+    const amostras: Array<{ h: number; f: number }> = [];
+    const N = G.mar.amostras;
+    for (let k = 0; k < N; k++) {
+      const y = 1 - (2 * (k + 0.5)) / N;
+      const r = Math.sqrt(1 - y * y);
+      const fi = k * Math.PI * (3 - Math.sqrt(5));
+      const p: Vec3 = [r * Math.cos(fi), y, r * Math.sin(fi)];
+      amostras.push({ h: alturaSemLagos(p), f: campoMar(p) });
+    }
+    const hs = amostras.map((a) => a.h).sort((a, b) => a - b);
+    nivel = hs[Math.floor(G.mar.nivelQuantil * (N - 1))]!;
+    // Limiar por bisseção: a fração coberta (mar ou lago natural) bate `mar_cobertura_pct`.
+    const alvo = param('mar_cobertura_pct') / 100;
+    const fs = amostras.map((a) => a.f);
+    let lo = Math.min(...fs);
+    let hi = Math.max(...fs);
+    for (let it = 0; it < 40; it++) {
+      const meio = (lo + hi) / 2;
+      const coberta = amostras.filter((a) => a.f < meio || a.h < nivel).length / N;
+      if (coberta < alvo) lo = meio;
+      else hi = meio;
+    }
+    limiar = (lo + hi) / 2;
+  }
+  const alturaNatural = (p: Vec3, f: Feicoes = todas): number => {
+    const h = alturaSemLagos(p, f);
+    if (!comMar) return h;
+    const s = (campoMar(p) - limiar) / G.mar.banda;
+    let final = h;
+    if (s < 0) {
+      // Mar: o fundo desce até `profundidade` abaixo do nível.
+      final = nivel - G.mar.margem - G.mar.profundidade * smoothstep(0, 2, -s);
+    } else if (s < 1) {
+      // Costa: do nível até o relevo natural.
+      const terra = Math.max(h, nivel + G.mar.margem);
+      final = nivel + G.mar.margem + (terra - nivel - G.mar.margem) * smoothstep(0, 1, s);
+    }
+    // Terra firme em volta das zonas de pouso (sem lagos de cratera ali).
+    if (zonasDePouso.some((z) => R * arco(z.d, p) < folgaZona)) {
+      final = Math.max(final, nivel + G.mar.margem);
+    }
+    return final;
   };
 
   // CEN-08: platôs planos (altura radial constante) com penhascos, exceto nas rampas.
@@ -475,24 +604,79 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
   };
 
   // Alturas: só um vértice de cada órbita do grupo é calculado; os outros são cópias exatas.
-  const resolucao = celulasPorAresta(R, G.texel_m);
+  const resolucao = celulasPorAresta(R, texel);
   const alturas = new Uint16Array(6 * (resolucao + 1) * (resolucao + 1));
+  // Em blocos de vértices: cada bloco só testa as feições que o alcançam (desempenho, D-79).
+  /** CEN-04: o ponto p e um anel de raio `folga` (m) em volta estão em terra? */
+  const emTerra = (p: Vec3, folga: number): boolean => {
+    const acima = (q: Vec3) => aplicarPlatos(q, alturaNatural(q)) >= nivel + G.mar.margem;
+    if (!acima(p)) return false;
+    const norte = norteEm(p);
+    for (let k = 0; k < 8; k++) {
+      if (!acima(avancar(p, girar(norte, p, (k / 8) * TAU), folga / R).p)) return false;
+    }
+    return true;
+  };
+
+  function sortearPedras(): Pedra[] {
+    const saida: Pedra[] = [];
+    const quantidade = Math.round((param('pedras_por_10k_m2') * area) / 10000 / n);
+    const faixa: [number, number] = [param('pedra_raio_min_m'), param('pedra_raio_max_m')];
+    for (let c = 0; c < quantidade; c++) {
+      for (let tentativa = 0; tentativa < G.pedra.tentativas; tentativa++) {
+        const raio = entre(rng, faixa);
+        const p = direcaoSorteada(rng);
+        if (!respeitaZonas(p, raio)) continue;
+        if (!longeDosCentrais(p, raio)) continue;
+        // CEN-04: nenhuma pedra no líquido (nem encostada nele: confere um anel em volta).
+        if (comMar && !emTerra(p, raio + 2)) continue;
+        const copias = replicas(p);
+        if (copias.slice(1).some((q) => R * arco(p, q) < 2 * raio + G.pedra.vao)) continue;
+        if (saida.some((o) => R * arco(p, o.d) < raio + o.raio + G.pedra.vao)) continue;
+        for (const q of copias) saida.push({ d: q, raio });
+        break;
+      }
+    }
+    return saida;
+  }
+
+  const BLOCO = 16;
   for (let face = 0; face < 6; face++) {
-    for (let j = 0; j <= resolucao; j++) {
-      for (let i = 0; i <= resolucao; i++) {
-        const v = indiceDoVertice(resolucao, face, i, j);
-        const orbita = grupo.map((sigma) => verticeRotacionado(resolucao, v, sigma));
-        if (orbita.some((w) => w < v)) continue;
-        const p = direcaoDoVertice(resolucao, face, i, j);
-        const valor = codificarAltura(aplicarPlatos(p, alturaNatural(p)));
-        for (const w of orbita) alturas[w] = valor;
+    for (let j0 = 0; j0 <= resolucao; j0 += BLOCO) {
+      for (let i0 = 0; i0 <= resolucao; i0 += BLOCO) {
+        const i1 = Math.min(resolucao, i0 + BLOCO - 1);
+        const j1 = Math.min(resolucao, j0 + BLOCO - 1);
+        const centro = direcaoDoVertice(resolucao, face, (i0 + i1) / 2, (j0 + j1) / 2);
+        const raioAng =
+          Math.max(
+            ...[
+              [i0, j0],
+              [i1, j0],
+              [i0, j1],
+              [i1, j1],
+            ].map(([i, j]) => arco(centro, direcaoDoVertice(resolucao, face, i!, j!))),
+          ) * 1.05;
+        const f = feicoesPerto(centro, raioAng);
+        for (let j = j0; j <= j1; j++) {
+          for (let i = i0; i <= i1; i++) {
+            const v = indiceDoVertice(resolucao, face, i, j);
+            const orbita = grupo.map((sigma) => verticeRotacionado(resolucao, v, sigma));
+            if (orbita.some((w) => w < v)) continue;
+            const p = direcaoDoVertice(resolucao, face, i, j);
+            const valor = codificarAltura(aplicarPlatos(p, alturaNatural(p, f)));
+            for (const w of orbita) alturas[w] = valor;
+          }
+        }
       }
     }
   }
 
+  // CEN-17: pedras neutras, sorteadas depois do relevo para não mudar as alturas.
+  const pedras = sortearPedras();
+
   return {
     seed,
-    tamanho,
+    raio,
     simetria: n,
     raio_m: R,
     resolucao,
@@ -501,5 +685,7 @@ export function gerarMapaLunar(seed: number, tamanho: TamanhosMapaId, n: Simetri
     contestados: geo.contestados,
     centrais: geo.centrais,
     crateras,
+    ...(comMar ? { mar: { nivel } } : {}),
+    pedras,
   };
 }

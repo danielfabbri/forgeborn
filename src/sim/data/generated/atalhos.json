@@ -95,9 +95,19 @@
     "acao": "Imprimir Impressora 3D"
   },
   {
+    "contexto": "ship",
+    "tecla": "Q",
+    "acao": "Recolher ou liberar os mineradores (CMB-28)"
+  },
+  {
     "contexto": "printer",
     "tecla": "B",
-    "acao": "Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento"
+    "acao": "Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição, O Porto"
+  },
+  {
+    "contexto": "missile_silo",
+    "tecla": "C / L",
+    "acao": "Fabricar míssil curto / longo"
   },
   {
     "contexto": "printer",
@@ -141,18 +151,23 @@
   },
   {
     "contexto": "mobile_silo",
-    "tecla": "T",
-    "acao": "Ancorar ou desancorar"
-  },
-  {
-    "contexto": "mobile_silo",
     "tecla": "G",
     "acao": "Descarregar agora"
   },
   {
-    "contexto": "mobile_battery",
-    "tecla": "T",
-    "acao": "Modo suporte liga/desliga"
+    "contexto": "satellite_uplink",
+    "tecla": "S",
+    "acao": "Imprimir Satélite"
+  },
+  {
+    "contexto": "port",
+    "tecla": "T / A / N",
+    "acao": "Imprimir Transporte / Artilharia / Antena (UNI-16)"
+  },
+  {
+    "contexto": "boat_transport",
+    "tecla": "D",
+    "acao": "Desembarcar no ponto (UNI-20)"
   },
   {
     "contexto": "satellite_uplink",
@@ -165,9 +180,9 @@
     "acao": "Varredura Orbital"
   },
   {
-    "contexto": "nuclear_plant",
+    "contexto": "gate",
     "tecla": "T",
-    "acao": "Ligar ou desligar"
+    "acao": "Trancar ou destrancar o portão"
   },
   {
     "contexto": "controle_direto",

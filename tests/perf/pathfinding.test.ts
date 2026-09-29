@@ -5,7 +5,7 @@ import { aEstrela, campoDeFluxo, type Navegavel } from '../../src/sim/map/pathfi
 import { mundoLua } from '../sim/mundo-teste';
 
 describe('TEC-14: orçamento de pathfinding', () => {
-  it('TEC-14: cada ordem custa menos de 5 ms no planeta M (A* e campo de fluxo)', () => {
+  it('TEC-14: cada ordem custa menos de 5 ms na Lua (A* e campo de fluxo)', () => {
     const { mapa, grades } = mundoLua();
     const g: Navegavel = { nav: grades.navegacao, bloqueado: null };
     const [a, , c] = mapa.zonasDePouso;

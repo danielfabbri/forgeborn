@@ -4,7 +4,7 @@
  */
 import type { SystemContext } from '../core/pipeline';
 import { arco, normalizar, type Vec3 } from '../map/esfera';
-import { alturaEm } from '../map/heightmap';
+import { alturaDaSuperficie } from '../map/heightmap';
 
 /** Raio da esfera lisa usada quando a partida não tem mundo. */
 export const RAIO_SEM_MUNDO_M = 1000;
@@ -25,7 +25,8 @@ export function direcaoDe(pos: Posicao): Vec3 {
 
 /** Altura do terreno (m, radial, acima de `raio_m`) na direção d. */
 export function chaoEm(ctx: SystemContext, d: Vec3): number {
-  return ctx.mundo ? alturaEm(ctx.mundo.mapa, d) : 0;
+  // D-90: sobre o líquido, o chão é a superfície dele (embarcações e o Porto flutuam).
+  return ctx.mundo ? alturaDaSuperficie(ctx.mundo.mapa, d) : 0;
 }
 
 /** Coloca a posição na direção d, a `altura` m acima da esfera de raio `raio_m`. */

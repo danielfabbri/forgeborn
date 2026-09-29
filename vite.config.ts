@@ -17,6 +17,9 @@ export default defineConfig(({ mode }) => ({
     include: mode === 'perf' ? ['tests/perf/**/*.test.ts'] : ['tests/**/*.test.ts'],
     exclude: mode === 'perf' ? ['node_modules/**'] : ['tests/perf/**', 'node_modules/**'],
     fileParallelism: mode !== 'perf',
+    // Testes de simulação rodam milhares de ticks; com todos os arquivos em paralelo, os mais
+    // pesados passam dos 5 s padrão. Os orçamentos de tempo de verdade ficam em tests/perf.
+    testTimeout: 30_000,
     environment: 'node',
   },
 }));

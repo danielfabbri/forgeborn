@@ -66,6 +66,42 @@
     "descricao": "Bônus de vitória"
   },
   {
+    "chave": "dominio_estrutura_m",
+    "valor": 60,
+    "unidade": "m",
+    "descricao": "Raio do domínio em volta de cada estrutura (REG-25)"
+  },
+  {
+    "chave": "dominio_unidade_m",
+    "valor": 20,
+    "unidade": "m",
+    "descricao": "Raio do domínio em volta de cada unidade móvel (REG-25)"
+  },
+  {
+    "chave": "ultimato_s",
+    "valor": 30,
+    "unidade": "s",
+    "descricao": "Prazo para sair do domínio alheio depois do aviso (REG-26)"
+  },
+  {
+    "chave": "guerra_esfria_s",
+    "valor": 300,
+    "unidade": "s",
+    "descricao": "Tempo sem dano e fora dos domínios para a guerra virar paz (REG-28)"
+  },
+  {
+    "chave": "jazida_espacamento_min_m",
+    "valor": 25,
+    "unidade": "m",
+    "descricao": "Distância mínima entre duas jazidas (ECO-07)"
+  },
+  {
+    "chave": "jazidas_espalhadas_por_10k_m2",
+    "valor": 0.5,
+    "unidade": "jazidas",
+    "descricao": "Densidade das jazidas espalhadas (ECO-30)"
+  },
+  {
     "chave": "valor_x_vr",
     "valor": 10,
     "unidade": "VR",
@@ -73,7 +109,7 @@
   },
   {
     "chave": "carga_hover_u",
-    "valor": 10,
+    "valor": 20,
     "unidade": "u",
     "descricao": "Carga máxima do Hover de Exploração"
   },
@@ -94,6 +130,24 @@
     "valor": 3,
     "unidade": "hovers",
     "descricao": "Vagas simultâneas por jazida"
+  },
+  {
+    "chave": "raio_jazida_max_m",
+    "valor": 2.5,
+    "unidade": "m",
+    "descricao": "Raio da jazida cheia (visual e colisão)"
+  },
+  {
+    "chave": "raio_jazida_min_m",
+    "valor": 0.8,
+    "unidade": "m",
+    "descricao": "Raio da jazida quase vazia (visual e colisão)"
+  },
+  {
+    "chave": "distancia_mineracao_m",
+    "valor": 1.5,
+    "unidade": "m",
+    "descricao": "Distância máxima entre o casco do hover e a borda da jazida para minerar"
   },
   {
     "chave": "raio_busca_jazida_m",
@@ -168,18 +222,6 @@
     "descricao": "Descarga do silo no depósito"
   },
   {
-    "chave": "tempo_ancorar_silo_s",
-    "valor": 2,
-    "unidade": "s",
-    "descricao": "Ancorar"
-  },
-  {
-    "chave": "tempo_desancorar_silo_s",
-    "valor": 1,
-    "unidade": "s",
-    "descricao": "Desancorar"
-  },
-  {
     "chave": "limiar_ciclo_silo_pct",
     "valor": 100,
     "unidade": "%",
@@ -244,6 +286,24 @@
     "valor": 100,
     "unidade": "u",
     "descricao": "Destroço da Nave: Titânio"
+  },
+  {
+    "chave": "cabo_alcance_m",
+    "valor": 30,
+    "unidade": "m",
+    "descricao": "Distância máxima entre as bordas das pontas de um cabo (ENE-26)"
+  },
+  {
+    "chave": "cabo_alcance_central_m",
+    "valor": 80,
+    "unidade": "m",
+    "descricao": "Idem, quando uma ponta é a Nave ou uma Central de Distribuição"
+  },
+  {
+    "chave": "cabo_saidas_central",
+    "valor": 4,
+    "unidade": "cabos",
+    "descricao": "Saídas de cabo da Nave e da Central de Distribuição; as outras estruturas têm 1 (ENE-26)"
   },
   {
     "chave": "limiar_bateria_baixa_pct",
@@ -331,9 +391,9 @@
   },
   {
     "chave": "bateria_movel_raio_m",
-    "valor": 10,
+    "valor": 8,
     "unidade": "m",
-    "descricao": "Raio do modo suporte"
+    "descricao": "Raio do suporte, casco a casco"
   },
   {
     "chave": "bateria_movel_max_alvos",
@@ -355,7 +415,7 @@
   },
   {
     "chave": "bateria_movel_carga_inicial_pct",
-    "valor": 25,
+    "valor": 100,
     "unidade": "%",
     "descricao": "Carga ao sair da impressão"
   },
@@ -466,6 +526,24 @@
     "valor": 20,
     "unidade": "m",
     "descricao": "Raio do reparo automático da Impressora"
+  },
+  {
+    "chave": "porto_distancia_borda_m",
+    "valor": 12,
+    "unidade": "m",
+    "descricao": "Distância máxima do centro do Porto à terra (PRD-10); alcance da Impressora ao imprimi-lo (UNI-16)"
+  },
+  {
+    "chave": "transporte_capacidade",
+    "valor": 10,
+    "unidade": "unidades",
+    "descricao": "Unidades de solo que um Transporte leva (UNI-20)"
+  },
+  {
+    "chave": "embarque_distancia_m",
+    "valor": 3,
+    "unidade": "m",
+    "descricao": "Distância casco a casco para embarcar (UNI-20)"
   },
   {
     "chave": "estado_combate_s",
@@ -649,9 +727,117 @@
   },
   {
     "chave": "satelite_vel_m_s",
-    "valor": 25,
+    "valor": 8,
     "unidade": "m/s",
     "descricao": "Reposicionamento do satélite"
+  },
+  {
+    "chave": "satelite_hp",
+    "valor": 300,
+    "unidade": "HP",
+    "descricao": "HP do satélite em órbita (UNI-05)"
+  },
+  {
+    "chave": "muro_espessura_m",
+    "valor": 1.5,
+    "unidade": "m",
+    "descricao": "Espessura do segmento de Muro e de Portão (D-56)"
+  },
+  {
+    "chave": "abrigo_vagas",
+    "valor": 6,
+    "unidade": "hovers",
+    "descricao": "Vagas de abrigo por Nave ou Armazém (CMB-28)"
+  },
+  {
+    "chave": "portao_raio_abertura_m",
+    "valor": 8,
+    "unidade": "m",
+    "descricao": "Distância em que uma unidade própria abre o portão"
+  },
+  {
+    "chave": "portao_tempo_abrir_s",
+    "valor": 1,
+    "unidade": "s",
+    "descricao": "Tempo para o portão abrir"
+  },
+  {
+    "chave": "portao_tempo_fechar_apos_s",
+    "valor": 2,
+    "unidade": "s",
+    "descricao": "O portão fecha depois disso sem unidade própria no raio"
+  },
+  {
+    "chave": "misseis_max_base",
+    "valor": 5,
+    "unidade": "mísseis",
+    "descricao": "Mísseis prontos mais na fila por Base de Lança-Mísseis"
+  },
+  {
+    "chave": "aa_acerto_centro_pct",
+    "valor": 90,
+    "unidade": "%",
+    "descricao": "Chance de acerto da Antiaérea até `aa_zona_certeira_pct` do alcance"
+  },
+  {
+    "chave": "aa_acerto_borda_pct",
+    "valor": 40,
+    "unidade": "%",
+    "descricao": "Chance de acerto no limite do alcance"
+  },
+  {
+    "chave": "aa_zona_certeira_pct",
+    "valor": 50,
+    "unidade": "%",
+    "descricao": "Fração do alcance com a chance cheia"
+  },
+  {
+    "chave": "mag_raio_m",
+    "valor": 16,
+    "unidade": "m",
+    "descricao": "Raio do campo da Torre Magnética"
+  },
+  {
+    "chave": "mag_lentidao_max_pct",
+    "valor": 40,
+    "unidade": "%",
+    "descricao": "Redução máxima de velocidade no centro do campo"
+  },
+  {
+    "chave": "mag_dreno_max_en_s",
+    "valor": 6,
+    "unidade": "EN/s",
+    "descricao": "Energia drenada por inimigo no centro do campo"
+  },
+  {
+    "chave": "mag_fator_blindada_pct",
+    "valor": 50,
+    "unidade": "%",
+    "descricao": "Efeito do campo em unidades blindadas"
+  },
+  {
+    "chave": "mag_banco_max_en",
+    "valor": 400,
+    "unidade": "EN",
+    "descricao": "Energia que a torre guarda"
+  },
+  {
+    "chave": "mag_repasse_en_s",
+    "valor": 8,
+    "unidade": "EN/s",
+    "descricao": "Repasse por aliado no campo"
+  },
+  {
+    "chave": "mag_max_aliados",
+    "valor": 4,
+    "unidade": "unidades",
+    "descricao": "Aliados atendidos ao mesmo tempo"
+  },
+  {
+    "chave": "mag_reparo_hp_s",
+    "valor": 4,
+    "unidade": "HP/s",
+    "descricao": "Reparo por aliado no campo da Torre Magnética"
   },
   {
     "chave": "tempo_lancamento_satelite_s",
@@ -786,6 +972,120 @@
     "descricao": "Fração do VR inicial da onda abaixo da qual ela recua"
   },
   {
+    "chave": "ia_impressoras_alvo",
+    "valor": 2,
+    "unidade": "impressoras",
+    "descricao": "Impressoras que a IA mantém"
+  },
+  {
+    "chave": "ia_batedores",
+    "valor": 1,
+    "unidade": "unidades",
+    "descricao": "Hovers de Observação usados como batedores"
+  },
+  {
+    "chave": "ia_fila_por_produtor",
+    "valor": 2,
+    "unidade": "itens",
+    "descricao": "Itens que a IA mantém na fila de cada produtor"
+  },
+  {
+    "chave": "ia_raio_defesa_m",
+    "valor": 40,
+    "unidade": "m",
+    "descricao": "Inimigo visível a esta distância de uma estrutura própria aciona a defesa"
+  },
+  {
+    "chave": "ia_distancia_expansao_m",
+    "valor": 60,
+    "unidade": "m",
+    "descricao": "Distância mínima jazida–depósito para uma expansão"
+  },
+  {
+    "chave": "ia_expansao_hovers_pct",
+    "valor": 60,
+    "unidade": "%",
+    "descricao": "Fração da meta de hovers a partir da qual a IA expande"
+  },
+  {
+    "chave": "ia_expansao_cedo_pct",
+    "valor": 40,
+    "unidade": "%",
+    "descricao": "Idem, com o traço \"expande cedo\""
+  },
+  {
+    "chave": "ia_traco_meta_hovers_pct",
+    "valor": 15,
+    "unidade": "%",
+    "descricao": "Acréscimo à meta de hovers do traço \"meta de hovers\""
+  },
+  {
+    "chave": "ia_ondas_grandes_mult",
+    "valor": 1.25,
+    "unidade": "×",
+    "descricao": "Multiplicador de `vr_exercito_ataque` do traço \"ondas grandes\""
+  },
+  {
+    "chave": "ia_ferido_pct",
+    "valor": 25,
+    "unidade": "%",
+    "descricao": "micro ≥ 2: unidade com HP abaixo disso recua"
+  },
+  {
+    "chave": "ia_kite_pct",
+    "valor": 60,
+    "unidade": "%",
+    "descricao": "micro 3: OPQ e drones recuam com o inimigo a menos dessa fração do alcance"
+  },
+  {
+    "chave": "ia_minas_distancia_m",
+    "valor": 30,
+    "unidade": "m",
+    "descricao": "Distância da base em que a IA planta minas"
+  },
+  {
+    "chave": "ia_misseis_curtos",
+    "valor": 2,
+    "unidade": "mísseis",
+    "descricao": "Curtos que a IA mantém prontos"
+  },
+  {
+    "chave": "ia_porto_distancia_m",
+    "valor": 250,
+    "unidade": "m",
+    "descricao": "Distância máxima do líquido à base para a IA construir um Porto (IA-14)"
+  },
+  {
+    "chave": "ia_barcos_artilharia",
+    "valor": 2,
+    "unidade": "embarcações",
+    "descricao": "Embarcações de Artilharia que a IA mantém (IA-14)"
+  },
+  {
+    "chave": "ia_barcos_antena",
+    "valor": 1,
+    "unidade": "embarcações",
+    "descricao": "Embarcações Antena que a IA mantém (IA-14)"
+  },
+  {
+    "chave": "ia_misseis_longos",
+    "valor": 1,
+    "unidade": "mísseis",
+    "descricao": "Longos que a IA mantém prontos (Normal para cima)"
+  },
+  {
+    "chave": "ia_missil_longo_intervalo_s",
+    "valor": 90,
+    "unidade": "s",
+    "descricao": "Intervalo mínimo entre longos lançados pela IA"
+  },
+  {
+    "chave": "tutorial_raio_armazem_m",
+    "valor": 30,
+    "unidade": "m",
+    "descricao": "Distância máxima do Armazém do passo 5 do tutorial à jazida de Cobre"
+  },
+  {
     "chave": "tempestade_intervalo_min_s",
     "valor": 360,
     "unidade": "s",
@@ -820,5 +1120,53 @@
     "valor": 20,
     "unidade": "s",
     "descricao": "Antecedência do aviso AL-15"
+  },
+  {
+    "chave": "mar_cobertura_pct",
+    "valor": 25,
+    "unidade": "%",
+    "descricao": "Fração da superfície coberta pelo líquido (CEN-04)"
+  },
+  {
+    "chave": "mar_folga_zona_m",
+    "valor": 100,
+    "unidade": "m",
+    "descricao": "Raio de terra firme em volta do centro de cada zona de pouso (CEN-04)"
+  },
+  {
+    "chave": "pedras_por_10k_m2",
+    "valor": 6,
+    "unidade": "pedras",
+    "descricao": "Densidade das pedras neutras (CEN-17)"
+  },
+  {
+    "chave": "pedra_raio_min_m",
+    "valor": 1.5,
+    "unidade": "m",
+    "descricao": "Raio mínimo de uma pedra"
+  },
+  {
+    "chave": "pedra_raio_max_m",
+    "valor": 4,
+    "unidade": "m",
+    "descricao": "Raio máximo de uma pedra"
+  },
+  {
+    "chave": "barras_opacidade_nao_selecionados_pct",
+    "valor": 30,
+    "unidade": "%",
+    "descricao": "Opacidade das barras dos corpos próprios não selecionados (UI-07)"
+  },
+  {
+    "chave": "atmosfera_opacidade_pct",
+    "valor": 90,
+    "unidade": "%",
+    "descricao": "Opacidade da esfera de atmosfera na visão planetária (CTL-16)"
+  },
+  {
+    "chave": "macete_quantidade",
+    "valor": 1000,
+    "unidade": "unidades",
+    "descricao": "Quanto cada macete \"mais\" + recurso soma ao estoque (TEC-27)"
   }
 ]

@@ -27,12 +27,21 @@ function emVoltaDa(zona: ZonaDePouso, raio: number): (u: number, v: number) => {
   };
 }
 
+// Na metade da frente (rampas) e nos lados, longe do arco das jazidas iniciais (atrás).
 const ESTRUTURAS: Array<[EstruturasId, number, number]> = [
-  ['laser_tower', 24, 10],
-  ['storage', 0, 26],
-  ['solar_plant', -24, 10],
-  ['nuclear_plant', -18, -24],
-  ['satellite_uplink', 12, -30],
+  ['laser_tower', 28, 4],
+  ['storage', 2, 28],
+  ['solar_plant', 16, 24],
+  ['nuclear_plant', 20, -20],
+  ['satellite_uplink', 2, -30],
+];
+
+/** Hovers de exploração extras, entre a Nave e as jazidas iniciais (a diretiva os põe a minerar). */
+const EXPLORADORES: Array<[number, number]> = [
+  [-14, -6],
+  [-14, -2],
+  [-14, 2],
+  [-14, 6],
 ];
 
 const UNIDADES: MoveisId[] = [
@@ -66,7 +75,17 @@ export function cenaDaNacao(
 ): Criacao[] {
   const em = emVoltaDa(zona, raio);
   const criacoes: Criacao[] = [{ estrutura: 'ship', nacao, ...em(0, 0) }];
-  for (const [tipo, u, v] of ESTRUTURAS) criacoes.push({ estrutura: tipo, nacao, ...em(u, v) });
+  // A Base da cena já vem com o satélite impresso (D-55), para mostrar a órbita.
+  for (const [tipo, u, v] of ESTRUTURAS) {
+    criacoes.push({
+      estrutura: tipo,
+      nacao,
+      ...em(u, v),
+      ...(tipo === 'satellite_uplink' ? { comSatelite: true } : {}),
+    });
+  }
+  for (const [u, v] of EXPLORADORES)
+    criacoes.push({ unidade: 'hover_explorer', nacao, ...em(u, v) });
   UNIDADES.forEach((tipo, k) => {
     criacoes.push({ unidade: tipo, nacao, ...em(16 + (k % 5) * 4.5, -12 + Math.floor(k / 5) * 6) });
   });

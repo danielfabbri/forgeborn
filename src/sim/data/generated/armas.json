@@ -88,6 +88,24 @@
     "vel_projetil_m_s": null
   },
   {
+    "id": "boat_laser",
+    "tipo_dano": "laser",
+    "dano": 16,
+    "recarga_s": 1,
+    "alcance_m": 16,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "solo",
+      "ar"
+    ],
+    "en_disparo": 2,
+    "fonte_en": "bateria",
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
     "id": "ship_pd",
     "tipo_dano": "laser",
     "dano": 10,
@@ -121,5 +139,92 @@
     "fonte_en": null,
     "projetil": "gatilho",
     "vel_projetil_m_s": null
+  },
+  {
+    "id": "sat_laser",
+    "tipo_dano": "laser",
+    "dano": 20,
+    "recarga_s": 2,
+    "alcance_m": 60,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "orbita"
+    ],
+    "en_disparo": 0,
+    "fonte_en": null,
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
+    "id": "abrigo_laser",
+    "tipo_dano": "laser",
+    "dano": 10,
+    "recarga_s": 1,
+    "alcance_m": 14,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "solo",
+      "ar"
+    ],
+    "en_disparo": 1,
+    "fonte_en": "rede",
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
+    "id": "missil_curto",
+    "tipo_dano": "explosivo",
+    "dano": 350,
+    "recarga_s": 8,
+    "alcance_m": 60,
+    "alcance_min_m": 0,
+    "splash_m": 2,
+    "splash_borda_pct": 50,
+    "alvos": [
+      "solo"
+    ],
+    "en_disparo": 0,
+    "fonte_en": null,
+    "projetil": "missil",
+    "vel_projetil_m_s": 15
+  },
+  {
+    "id": "missil_longo",
+    "tipo_dano": "explosivo",
+    "dano": 1200,
+    "recarga_s": 8,
+    "alcance_m": 250,
+    "alcance_min_m": 0,
+    "splash_m": 4,
+    "splash_borda_pct": 50,
+    "alvos": [
+      "solo"
+    ],
+    "en_disparo": 0,
+    "fonte_en": null,
+    "projetil": "missil",
+    "vel_projetil_m_s": 12
+  },
+  {
+    "id": "aa_missil",
+    "tipo_dano": "explosivo",
+    "dano": 150,
+    "recarga_s": 4,
+    "alcance_m": 30,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "ar",
+      "missil"
+    ],
+    "en_disparo": 5,
+    "fonte_en": "rede",
+    "projetil": "guiado",
+    "vel_projetil_m_s": 40
   }
 ]

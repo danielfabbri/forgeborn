@@ -20,7 +20,7 @@ import {
 import { celulaDe } from '../map/grids';
 import { celulaLivreProxima, centroDoIndice, livre, type Navegavel } from '../map/pathfinding';
 import { tracarRota } from './movimento';
-import { navegavel } from './navegacao';
+import { navegavel, navegavelAgua, navegavelDe } from './navegacao';
 import { statsMovel } from './stats';
 import { direcaoDe, direcaoDoComando, raioDoMundo } from './superficie';
 
@@ -38,7 +38,7 @@ function dadosDe(comando: QueuedCommand): Partial<DadosAlvo> {
   return (comando.dados ?? {}) as Partial<DadosAlvo>;
 }
 
-function daNacao(
+export function daNacao(
   ctx: SystemContext,
   nacao: NacaoId,
   ids: unknown,
@@ -118,13 +118,23 @@ function mandarMover(
   if (ids.length === 0) return;
   const { state } = ctx;
   const g = navegavel(ctx);
-  const lugares = formacao(ctx, g, ids, alvo);
+  // MOV-08 (D-90): embarcações em formação na água, sem campo de fluxo (que é de solo).
+  const agua = (id: EntityId) =>
+    statsMovel(getComponent(state, id, 'unit')!.tipo).camada === 'agua';
+  const naAgua = ids.filter(agua);
+  const lugaresAgua = new Map<EntityId, Ponto>();
+  if (naAgua.length > 0) {
+    formacao(ctx, navegavelAgua(ctx), naAgua, alvo).forEach((l, k) =>
+      lugaresAgua.set(naAgua[k]!, l),
+    );
+  }
+  const lugares = formacao(ctx, g, ids, alvo).map((l, k) => lugaresAgua.get(ids[k]!) ?? l);
   const aerea = (id: EntityId) => statsMovel(getComponent(state, id, 'unit')!.tipo).camada === 'ar';
   const limite =
     livreDeGrupo || ids.length < 2
       ? null
       : Math.min(...ids.map((id) => statsMovel(getComponent(state, id, 'unit')!.tipo).vel_m_s));
-  const deSolo = ids.filter((id) => !aerea(id));
+  const deSolo = ids.filter((id) => !aerea(id) && !agua(id));
   const alvoFluxo =
     g && deSolo.length >= param('flow_field_min_unidades')
       ? (() => {
@@ -144,13 +154,30 @@ function mandarMover(
     loc.limiteVel = limite;
     loc.travado_s = 0;
     loc.ancora = null;
-    if (!aerea(id) && alvoFluxo) {
+    if (!aerea(id) && !agua(id) && alvoFluxo) {
       loc.fluxo = alvoFluxo;
       loc.rota = [];
     } else {
-      tracarRota(g, loc, d, aerea(id));
+      tracarRota(navegavelDe(ctx, id), loc, d, aerea(id));
     }
   });
+}
+
+/** Ordem de mover dada pela simulação (ponto de encontro, PRD-08). */
+export function moverPara(ctx: SystemContext, ids: EntityId[], alvo: Ponto): void {
+  mandarMover(ctx, ids, alvo, false, false);
+}
+
+/** Mover com outro tipo de ordem: M (sem disparar, D-32) ou A (ataque-movimento, CMB-14). */
+export function moverComo(
+  ctx: SystemContext,
+  ids: EntityId[],
+  alvo: Ponto,
+  tipo: 'mover_ignorando' | 'atacar_mover',
+  livreDeGrupo: boolean,
+): void {
+  mandarMover(ctx, ids, alvo, livreDeGrupo, false);
+  for (const id of ids) getComponent(ctx.state, id, 'order')!.tipo = tipo;
 }
 
 function parar(ctx: SystemContext, ids: EntityId[], manter: boolean): void {

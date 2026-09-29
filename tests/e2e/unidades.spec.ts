@@ -65,6 +65,14 @@ async function vazio(page: Page): Promise<{ x: number; y: number }> {
   for (let y = 640; y >= 300; y -= 40) {
     for (let x = 160; x <= 1120; x += 40) {
       if (!telas.every((p) => Math.hypot(p.x - x, p.y - y) >= 80)) continue;
+      // O ponto não pode estar sob a interface (minimapa, painéis).
+      const livre = await page.evaluate(
+        ([px, py]) =>
+          document.elementFromPoint(px!, py!)?.tagName === 'CANVAS' &&
+          document.elementFromPoint(px!, py!)?.closest('#viewport') !== null,
+        [x, y],
+      );
+      if (!livre) continue;
       if (
         await sonda(page, (s, a) => s.chaoNaTela(a % 10000, Math.floor(a / 10000)), y * 10000 + x)
       ) {

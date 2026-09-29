@@ -4,11 +4,15 @@ import { EMIS_NACAO, geometriaDoModelo, TIPOS_DE_MODELO } from '../../src/render
 import { dados } from '../../src/sim';
 
 describe('ART-02/ART-03/TEC-18: modelos placeholder', () => {
-  it('há modelo para as 10 unidades móveis, as 6 estruturas e a mina', () => {
+  it('há modelo para as 13 unidades móveis, as 14 estruturas, a mina, o satélite e os mísseis', () => {
     const esperados = [...dados.moveis.map((m) => m.id), ...dados.estruturas.map((e) => e.id)];
-    expect(esperados).toHaveLength(16);
+    expect(esperados).toHaveLength(27);
     for (const id of esperados) expect(TIPOS_DE_MODELO).toContain(id);
     expect(TIPOS_DE_MODELO).toContain('mine');
+    // D-51: o satélite em órbita é um corpo desenhado.
+    expect(TIPOS_DE_MODELO).toContain('satellite');
+    expect(TIPOS_DE_MODELO).toContain('missile_short');
+    expect(TIPOS_DE_MODELO).toContain('missile_long');
   });
 
   it.each(TIPOS_DE_MODELO)('ART-02: %s tem tarja e olho na cor da nação', (tipo) => {

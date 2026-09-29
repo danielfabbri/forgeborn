@@ -67,7 +67,7 @@
     "texto": "Usina nuclear sem combustível.",
     "gatilho": "Nuclear ligada sem Urânio (ENE-06)",
     "prioridade": "alta",
-    "cooldown_s": 30
+    "cooldown_s": 120
   },
   {
     "id": "AL-11",
@@ -114,7 +114,7 @@
   {
     "id": "AL-17",
     "texto": "Satélite offline.",
-    "gatilho": "Satélite sem energia (ENE-04)",
+    "gatilho": "Sem uso desde a 0.17.0: o satélite não gasta energia (D-51)",
     "prioridade": "alta",
     "cooldown_s": 20
   },
@@ -124,5 +124,40 @@
     "gatilho": "Unidade própria destruída",
     "prioridade": "media",
     "cooldown_s": 3
+  },
+  {
+    "id": "AL-19",
+    "texto": "{nacao} pede que eu me retire do domínio dela.",
+    "gatilho": "Corpo próprio no domínio de uma nação pacífica (REG-26)",
+    "prioridade": "alta",
+    "cooldown_s": 20
+  },
+  {
+    "id": "AL-20",
+    "texto": "{nacao} agora é inimiga.",
+    "gatilho": "Par em guerra (REG-26, REG-27)",
+    "prioridade": "alta",
+    "cooldown_s": 0
+  },
+  {
+    "id": "AL-21",
+    "texto": "Paz com {nacao}.",
+    "gatilho": "Trégua (REG-28)",
+    "prioridade": "media",
+    "cooldown_s": 0
+  },
+  {
+    "id": "AL-22",
+    "texto": "Uma unidade de {nacao} está acessando a nossa base. Pedi que se retire.",
+    "gatilho": "Unidade alheia no domínio do jogador (REG-26); traz o botão Declarar guerra (REG-29)",
+    "prioridade": "media",
+    "cooldown_s": 20
+  },
+  {
+    "id": "AL-23",
+    "texto": "{item} pronta, mas fora da rede.",
+    "gatilho": "Estrutura que precisa de energia fica pronta sem cabo (ENE-29)",
+    "prioridade": "media",
+    "cooldown_s": 10
   }
 ]

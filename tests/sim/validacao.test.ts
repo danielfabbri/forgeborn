@@ -16,7 +16,7 @@ import { GERADOR_LUA, rumoSemRampa } from '../../src/sim/map/lunar';
 import { PRESETS_DE_MAPA } from '../../src/sim/map/presets';
 import { gerarMapaValido, validarMapa } from '../../src/sim/map/validacao';
 
-const PRONTO = gerarMapaValido(24, 'm', 4, 'lua');
+const PRONTO = gerarMapaValido(24, 4, 'lua');
 const { mapa, grades, jazidas } = PRONTO;
 const R = mapa.raio_m;
 const TOPO = GERADOR_LUA.raioPlato + GERADOR_LUA.folgaTopo;
@@ -87,45 +87,70 @@ describe('CEN-11: validação do mapa', () => {
     expect(motivos(umaRampa, jazidas)).toContain('rotas_insuficientes');
   });
 
-  it('seed inválida é recusada com o motivo e o gerador passa para a próxima', () => {
-    const recusaA24 = (...args: Parameters<typeof validarMapa>) =>
-      args[0].seed === 24
-        ? [{ motivo: 'rotas_insuficientes' as const, detalhe: 'teste' }]
-        : validarMapa(...args);
-    const recuo = gerarMapaValido(24, 'm', 4, 'lua', recusaA24);
-    expect(recuo.seed).toBe(25);
-    expect(recuo.rejeitadas).toEqual([
-      { seed: 24, problemas: [{ motivo: 'rotas_insuficientes', detalhe: 'teste' }] },
-    ]);
-    expect(validarMapa(recuo.mapa, recuo.grades, recuo.jazidas)).toEqual([]);
-  });
+  it(
+    'seed inválida é recusada com o motivo e o gerador passa para a próxima',
+    { timeout: 120_000 },
+    () => {
+      const recusaA24 = (...args: Parameters<typeof validarMapa>) =>
+        args[0].seed === 24
+          ? [{ motivo: 'rotas_insuficientes' as const, detalhe: 'teste' }]
+          : validarMapa(...args);
+      const recuo = gerarMapaValido(24, 4, 'lua', recusaA24);
+      expect(recuo.seed).toBe(25);
+      expect(recuo.rejeitadas).toEqual([
+        { seed: 24, problemas: [{ motivo: 'rotas_insuficientes', detalhe: 'teste' }] },
+      ]);
+      expect(validarMapa(recuo.mapa, recuo.grades, recuo.jazidas)).toEqual([]);
+    },
+  );
 });
 
 describe('CEN-12 / §14.4: presets da Lua', () => {
   const HASHES: Record<string, string> = {
-    mare_imbrium: 'a40dd65f0c8a2907',
-    mare_tranquillitatis: '41f84be3e7295a9f',
-    oceanus_procellarum: '3a4d67d1b452b18f',
+    mare_imbrium: '8fd8851e0715804d',
+    mare_tranquillitatis: '1143329964113b28',
+    oceanus_procellarum: 'aa5170e8417b7146',
+    campo_de_testes: '52357d940524e982',
+    cratera_shackleton: '046fe69990b402a1',
+    utopia_planitia: 'fecd98ec43753ca9',
+    valles_marineris: 'acaf4af3417dcd81',
+    hellas_planitia: 'e6f4074ac9a58787',
+    // D-90: os mares de Titã mudaram o relevo (e as seeds curadas).
+    xanadu: '81c48de8b2982d24',
+    ligeia_mare: '61f4c2e8ebe02ad5',
+    kraken_mare: '2ff1eb666568fdfd',
   };
+  const porCenario = (cenario: string) =>
+    PRESETS_DE_MAPA.filter((p) => p.cenario === cenario).map((p) => [p.id, p.zonas, p.jogadores]);
 
-  it('3 presets com os tamanhos e jogadores do §14.4', () => {
-    expect(PRESETS_DE_MAPA.map((p) => [p.id, p.tamanho, p.jogadores])).toEqual([
-      ['mare_imbrium', 'p', [2, 2]],
-      ['mare_tranquillitatis', 'm', [2, 4]],
-      ['oceanus_procellarum', 'g', [3, 4]],
-    ]);
+  it('§14.4/§14.6/§14.7: 3 presets por cenário com as simetrias e os jogadores do SPEC', () => {
+    const tres = (a: string, b: string, c: string) => [
+      [a, 2, [2, 2]],
+      [b, 4, [2, 4]],
+      [c, 4, [3, 4]],
+    ];
+    expect(porCenario('lua')).toEqual(
+      tres('mare_imbrium', 'mare_tranquillitatis', 'oceanus_procellarum'),
+    );
+    expect(porCenario('marte')).toEqual(
+      tres('utopia_planitia', 'valles_marineris', 'hellas_planitia'),
+    );
+    expect(porCenario('tita')).toEqual(tres('xanadu', 'ligeia_mare', 'kraken_mare'));
+    expect(PRESETS_DE_MAPA.find((p) => p.id === 'campo_de_testes')?.soCampanha).toBe(true);
     for (const preset of PRESETS_DE_MAPA) {
-      const tamanho = dados.tamanhos_mapa.find((t) => t.id === preset.tamanho)!;
-      expect(preset.jogadores[0]).toBeGreaterThanOrEqual(tamanho.min_jogadores);
-      expect(preset.jogadores[1]).toBeLessThanOrEqual(tamanho.max_jogadores);
+      // CEN-16: 2 a 4 jogadores em qualquer corpo, cabendo nas zonas do preset.
+      expect(preset.jogadores[0]).toBeGreaterThanOrEqual(2);
+      expect(preset.jogadores[1]).toBeLessThanOrEqual(4);
       expect(preset.zonas).toBeGreaterThanOrEqual(preset.jogadores[1]);
     }
   });
 
   it.each(PRESETS_DE_MAPA)('$id: seed válida de primeira e heightmap fixado', (preset) => {
-    const pronto = gerarMapaValido(preset.seed, preset.tamanho, preset.zonas, preset.cenario);
+    const pronto = gerarMapaValido(preset.seed, preset.zonas, preset.cenario);
     expect(pronto.seed).toBe(preset.seed);
     expect(pronto.rejeitadas).toEqual([]);
+    // CEN-16: o raio do planeta é o do cenário.
+    expect(pronto.mapa.raio_m).toBe(dados.cenarios.find((c) => c.id === preset.cenario)!.raio_m);
     expect(hashNumeros(pronto.mapa.alturas)).toBe(HASHES[preset.id]);
   });
 

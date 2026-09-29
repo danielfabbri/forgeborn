@@ -4,12 +4,15 @@
  */
 import { param } from '../data';
 import {
+  arco,
   celulaDaDirecao,
   celulasPorAresta,
   centroDaCelula as centroNaEsfera,
   type CuboEsfera,
   cuboEsfera,
   direcaoDaFace,
+  fracaoDaFace,
+  indiceDaCelula,
   rotacoesDeSimetria,
   type Simetria,
   tanDaDivisao,
@@ -17,6 +20,7 @@ import {
 } from './esfera';
 import {
   direcaoDoVertice,
+  alturaEm,
   type Heightmap,
   inclinacaoEm,
   indiceDoVertice,
@@ -33,11 +37,15 @@ export interface Grade {
 export interface GradeNavegacao extends Grade {
   /** 1 = transponível por hovers (MOV-01). */
   passavel: Uint8Array;
+  /** CEN-04/MOV-08 (D-90): 1 = líquido (só embarcações). Ausente sem mar. */
+  liquido?: Uint8Array;
 }
 
 export interface GradeConstrucao extends Grade {
   /** 1 = inclinação permite construir (PRD-10). */
   construivel: Uint8Array;
+  /** CEN-04 (D-90): 1 = líquido (só o Porto). Ausente sem mar. */
+  liquido?: Uint8Array;
 }
 
 export interface GradesDoMapa {
@@ -71,22 +79,35 @@ function inclinacaoPorCelula(
   const res = mapa.resolucao;
   const n = grade.esfera.n;
   const maior = new Float32Array(grade.esfera.celulas);
+  // Dentro da face, a coluna da célula só depende de uma coordenada e a linha só da outra: as
+  // posições a meio texel (2i ± 1 numa divisão de 2·res) viram índices por tabela, sem
+  // trigonometria por vértice (desempenho, D-79). Na borda da face (±1 exato) vale o cálculo
+  // completo, que decide a face vizinha.
+  const m = 2 * res;
+  const eixo = new Int32Array(m + 1).fill(-1);
+  for (let k = 1; k < m; k++) {
+    eixo[k] = Math.min(n - 1, Math.max(0, Math.floor(fracaoDaFace(tanDaDivisao(k, m)) * n)));
+  }
+  const diagonais = [
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+    [1, 1],
+  ] as const;
   for (let face = 0; face < 6; face++) {
     for (let j = 0; j <= res; j++) {
       for (let i = 0; i <= res; i++) {
         const valor = porVertice[indiceDoVertice(res, face, i, j)]!;
-        for (const [di, dj] of [
-          [-1, -1],
-          [1, -1],
-          [-1, 1],
-          [1, 1],
-        ] as const) {
-          const d = direcaoDaFace(
-            face,
-            tanDaDivisao(2 * i + di, 2 * res),
-            tanDaDivisao(2 * j + dj, 2 * res),
-          );
-          const c = celulaDaDirecao(n, d);
+        for (const [di, dj] of diagonais) {
+          const ci = eixo[2 * i + di] ?? -1;
+          const cj = eixo[2 * j + dj] ?? -1;
+          const c =
+            ci >= 0 && cj >= 0
+              ? indiceDaCelula(n, face, ci, cj)
+              : celulaDaDirecao(
+                  n,
+                  direcaoDaFace(face, tanDaDivisao(2 * i + di, m), tanDaDivisao(2 * j + dj, m)),
+                );
           if (valor > maior[c]!) maior[c] = valor;
         }
       }
@@ -134,11 +155,66 @@ export function derivarGrades(mapa: Heightmap & { simetria?: Simetria }): Grades
     construivel[c] = inclinacaoObra[c]! <= limiteConstrucao ? 1 : 0;
   }
 
+  // CEN-17: as pedras bloqueiam hovers e construção.
+  for (const pedra of mapa.pedras ?? []) {
+    for (const c of celulasDaPedra(nav, pedra.d, pedra.raio)) passavel[c] = 0;
+    for (const c of celulasDaPedra(obra, pedra.d, pedra.raio)) construivel[c] = 0;
+  }
+
+  // CEN-04 (D-90): o líquido não é de solo nem de construção; as embarcações andam nele.
+  const liquidoNav = mapa.mar ? marcarLiquido(mapa, nav, passavel) : undefined;
+  const liquidoObra = mapa.mar ? marcarLiquido(mapa, obra, construivel) : undefined;
+
   return {
-    navegacao: { ...nav, passavel },
-    construcao: { ...obra, construivel },
+    navegacao: { ...nav, passavel, ...(liquidoNav ? { liquido: liquidoNav } : {}) },
+    construcao: { ...obra, construivel, ...(liquidoObra ? { liquido: liquidoObra } : {}) },
     nevoa: criarGrade(mapa.raio_m, param('celula_nevoa_m')),
   };
+}
+
+/** Marca as células com o centro abaixo do nível do líquido e as tira de `livre`. */
+function marcarLiquido(mapa: Heightmap, grade: Grade, livre: Uint8Array): Uint8Array {
+  const nivel = mapa.mar!.nivel;
+  const liquido = new Uint8Array(grade.esfera.celulas);
+  for (let c = 0; c < liquido.length; c++) {
+    if (alturaEm(mapa, centroNaEsfera(grade.esfera, c)) < nivel) {
+      liquido[c] = 1;
+      livre[c] = 0;
+    }
+  }
+  return liquido;
+}
+
+/** Células que a pedra toca: centro a até raio + meia célula (e sempre a do centro). */
+function celulasDaPedra(grade: Grade, d: Vec3, raio_m: number): number[] {
+  const saida = celulasNoRaioDa(grade, d, raio_m + grade.celula_m / 2);
+  const centro = celulaDe(grade, d);
+  return saida.includes(centro) ? saida : [...saida, centro];
+}
+
+/** Células da grade cujo centro está a até `raio_m` de d (busca em largura a partir de d). */
+export function celulasNoRaioDa(grade: Grade, d: Vec3, raio_m: number): number[] {
+  const esfera = grade.esfera;
+  const limite = raio_m / grade.raio_m;
+  // Um pouco de folga para expandir células cujo centro fica logo além do raio.
+  const expandir = limite + 1.2 * esfera.anguloNominal;
+  const inicio = celulaDe(grade, d);
+  const vistos = new Set<number>([inicio]);
+  const fila = [inicio];
+  const dentro: number[] = [];
+  for (let k = 0; k < fila.length; k++) {
+    const c = fila[k]!;
+    const a = arco(d, centroNaEsfera(esfera, c));
+    if (a <= limite) dentro.push(c);
+    if (a > expandir) continue;
+    for (let v = 0; v < 8; v++) {
+      const w = esfera.vizinhos[c * 8 + v]!;
+      if (w < 0 || vistos.has(w)) continue;
+      vistos.add(w);
+      fila.push(w);
+    }
+  }
+  return dentro;
 }
 
 export function ehPassavel(grade: GradeNavegacao, indice: number): boolean {

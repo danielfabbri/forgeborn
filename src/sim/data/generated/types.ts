@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v0.2.1.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.9.2.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -19,7 +19,12 @@ export type AlertasId =
   | 'AL-15'
   | 'AL-16'
   | 'AL-17'
-  | 'AL-18';
+  | 'AL-18'
+  | 'AL-19'
+  | 'AL-20'
+  | 'AL-21'
+  | 'AL-22'
+  | 'AL-23';
 
 export interface AlertasRow {
   id: AlertasId;
@@ -35,8 +40,14 @@ export type ArmasId =
   | 'drone_laser_gun'
   | 'bomb'
   | 'tower_laser'
+  | 'boat_laser'
   | 'ship_pd'
-  | 'mine_blast';
+  | 'mine_blast'
+  | 'sat_laser'
+  | 'abrigo_laser'
+  | 'missil_curto'
+  | 'missil_longo'
+  | 'aa_missil';
 
 export interface ArmasRow {
   id: ArmasId;
@@ -62,6 +73,7 @@ export interface AtalhosRow {
 
 export type CenariosId =
   | 'lua'
+  | 'terra_lab'
   | 'lua_shackleton'
   | 'marte'
   | 'fobos'
@@ -73,6 +85,7 @@ export type CenariosId =
 export interface CenariosRow {
   id: CenariosId;
   nome: string;
+  raio_m: number;
   fator_solar: number;
   mult_vel_hover: number;
   mult_giro_hover: number;
@@ -104,6 +117,20 @@ export type CustosId =
   | 'solar_plant'
   | 'nuclear_plant'
   | 'satellite_uplink'
+  | 'satellite'
+  | 'wall'
+  | 'gate'
+  | 'missile_silo'
+  | 'aa_battery'
+  | 'mag_tower'
+  | 'antenna'
+  | 'power_hub'
+  | 'port'
+  | 'boat_transport'
+  | 'boat_artillery'
+  | 'boat_antenna'
+  | 'missile_short'
+  | 'missile_long'
   | 'mine';
 
 export interface CustosRow {
@@ -130,6 +157,8 @@ export type DificuldadeParametro =
   | 'vr_exercito_ataque'
   | 'expansoes_max'
   | 'tiers_permitidos'
+  | 'tiers_militares'
+  | 'vr_exercito_max'
   | 'micro'
   | 'adapta_composicao'
   | 'bonus_coleta_pct'
@@ -163,7 +192,15 @@ export type EstruturasId =
   | 'storage'
   | 'solar_plant'
   | 'nuclear_plant'
-  | 'satellite_uplink';
+  | 'satellite_uplink'
+  | 'wall'
+  | 'gate'
+  | 'missile_silo'
+  | 'aa_battery'
+  | 'mag_tower'
+  | 'antenna'
+  | 'power_hub'
+  | 'port';
 
 export interface EstruturasRow {
   id: EstruturasId;
@@ -187,7 +224,6 @@ export type FreeBattleOpcao =
   | 'nacao_oponente'
   | 'dificuldade_oponente'
   | 'cenario'
-  | 'tamanho_mapa'
   | 'mapa'
   | 'zona_pouso'
   | 'recursos_iniciais'
@@ -200,6 +236,29 @@ export interface FreeBattleRow {
   opcao: FreeBattleOpcao;
   valores: number[] | string | string[];
   padrao: number | string;
+}
+
+export type IaPlanoItem =
+  | 'laser_tower'
+  | 'nuclear_plant'
+  | 'aa_battery'
+  | 'satellite_uplink'
+  | 'mag_tower'
+  | 'missile_silo'
+  | 'mobile_silo'
+  | 'mobile_battery'
+  | 'hover_minelayer';
+
+export interface IaPlanoRow {
+  item: IaPlanoItem;
+  facil: number;
+  normal: number;
+  dificil: number;
+  brutal: number;
+  min_facil: number;
+  min_normal: number;
+  min_dificil: number;
+  min_brutal: number;
 }
 
 export interface JazidasRow {
@@ -217,7 +276,6 @@ export interface MissoesRow {
   id: string;
   cenario: string;
   nome: string;
-  mapa: string;
   oponentes: string[];
   objetivo: string;
   libera: string[] | null;
@@ -235,7 +293,10 @@ export type MoveisId =
   | 'drone_bomber'
   | 'drone_laser'
   | 'mobile_silo'
-  | 'mobile_battery';
+  | 'mobile_battery'
+  | 'boat_transport'
+  | 'boat_artillery'
+  | 'boat_antenna';
 
 export interface MoveisRow {
   id: MoveisId;
@@ -292,11 +353,20 @@ export type ParametrosChave =
   | 'pontos_estruturas_vivas_pct'
   | 'bonus_nave_destruida'
   | 'bonus_vitoria'
+  | 'dominio_estrutura_m'
+  | 'dominio_unidade_m'
+  | 'ultimato_s'
+  | 'guerra_esfria_s'
+  | 'jazida_espacamento_min_m'
+  | 'jazidas_espalhadas_por_10k_m2'
   | 'valor_x_vr'
   | 'carga_hover_u'
   | 'tempo_descarga_hover_s'
   | 'raio_deposito_m'
   | 'slots_por_jazida'
+  | 'raio_jazida_max_m'
+  | 'raio_jazida_min_m'
+  | 'distancia_mineracao_m'
   | 'raio_busca_jazida_m'
   | 'raio_diretiva_m'
   | 'fuga_hover_retorno_s'
@@ -309,8 +379,6 @@ export type ParametrosChave =
   | 'diretiva_u_pct'
   | 'capacidade_silo_u'
   | 'taxa_descarga_silo_u_s'
-  | 'tempo_ancorar_silo_s'
-  | 'tempo_desancorar_silo_s'
   | 'limiar_ciclo_silo_pct'
   | 'rendimento_destroco_pct'
   | 'rendimento_carga_silo_pct'
@@ -322,6 +390,9 @@ export type ParametrosChave =
   | 'destroco_nave_cu'
   | 'destroco_nave_li'
   | 'destroco_nave_ti'
+  | 'cabo_alcance_m'
+  | 'cabo_alcance_central_m'
+  | 'cabo_saidas_central'
   | 'limiar_bateria_baixa_pct'
   | 'modo_reserva_vel_pct'
   | 'auto_recarga_trabalhador_pct'
@@ -359,6 +430,9 @@ export type ParametrosChave =
   | 'reparo_impressora_unidade_hp_s'
   | 'max_reparadores'
   | 'raio_reparo_auto_m'
+  | 'porto_distancia_borda_m'
+  | 'transporte_capacidade'
+  | 'embarque_distancia_m'
   | 'estado_combate_s'
   | 'nucleo_splash_pct'
   | 'leash_agressivo_m'
@@ -390,6 +464,24 @@ export type ParametrosChave =
   | 'radar_atualizacao_s'
   | 'satelite_visao_m'
   | 'satelite_vel_m_s'
+  | 'satelite_hp'
+  | 'muro_espessura_m'
+  | 'abrigo_vagas'
+  | 'portao_raio_abertura_m'
+  | 'portao_tempo_abrir_s'
+  | 'portao_tempo_fechar_apos_s'
+  | 'misseis_max_base'
+  | 'aa_acerto_centro_pct'
+  | 'aa_acerto_borda_pct'
+  | 'aa_zona_certeira_pct'
+  | 'mag_raio_m'
+  | 'mag_lentidao_max_pct'
+  | 'mag_dreno_max_en_s'
+  | 'mag_fator_blindada_pct'
+  | 'mag_banco_max_en'
+  | 'mag_repasse_en_s'
+  | 'mag_max_aliados'
+  | 'mag_reparo_hp_s'
   | 'tempo_lancamento_satelite_s'
   | 'varredura_raio_m'
   | 'varredura_duracao_s'
@@ -412,12 +504,39 @@ export type ParametrosChave =
   | 'ia_intervalo_estrategista_s'
   | 'ia_margem_energia_pct'
   | 'ia_recuo_vr_pct'
+  | 'ia_impressoras_alvo'
+  | 'ia_batedores'
+  | 'ia_fila_por_produtor'
+  | 'ia_raio_defesa_m'
+  | 'ia_distancia_expansao_m'
+  | 'ia_expansao_hovers_pct'
+  | 'ia_expansao_cedo_pct'
+  | 'ia_traco_meta_hovers_pct'
+  | 'ia_ondas_grandes_mult'
+  | 'ia_ferido_pct'
+  | 'ia_kite_pct'
+  | 'ia_minas_distancia_m'
+  | 'ia_misseis_curtos'
+  | 'ia_porto_distancia_m'
+  | 'ia_barcos_artilharia'
+  | 'ia_barcos_antena'
+  | 'ia_misseis_longos'
+  | 'ia_missil_longo_intervalo_s'
+  | 'tutorial_raio_armazem_m'
   | 'tempestade_intervalo_min_s'
   | 'tempestade_intervalo_max_s'
   | 'tempestade_duracao_s'
   | 'tempestade_mult_visao'
   | 'tempestade_mult_solar'
-  | 'tempestade_aviso_s';
+  | 'tempestade_aviso_s'
+  | 'mar_cobertura_pct'
+  | 'mar_folga_zona_m'
+  | 'pedras_por_10k_m2'
+  | 'pedra_raio_min_m'
+  | 'pedra_raio_max_m'
+  | 'barras_opacidade_nao_selecionados_pct'
+  | 'atmosfera_opacidade_pct'
+  | 'macete_quantidade';
 
 export interface ParametrosRow {
   chave: ParametrosChave;
@@ -463,19 +582,6 @@ export interface RecursosRow {
   usos: string;
 }
 
-export type TamanhosMapaId =
-  | 'p'
-  | 'm'
-  | 'g';
-
-export interface TamanhosMapaRow {
-  id: TamanhosMapaId;
-  raio_m: number;
-  min_jogadores: number;
-  max_jogadores: number;
-  uso: string;
-}
-
 export interface Tabelas {
   alertas: AlertasRow[];
   armas: ArmasRow[];
@@ -486,6 +592,7 @@ export interface Tabelas {
   estoque_inicial: EstoqueInicialRow[];
   estruturas: EstruturasRow[];
   free_battle: FreeBattleRow[];
+  ia_plano: IaPlanoRow[];
   jazidas: JazidasRow[];
   missoes: MissoesRow[];
   moveis: MoveisRow[];
@@ -494,5 +601,4 @@ export interface Tabelas {
   parametros: ParametrosRow[];
   personalidades: PersonalidadesRow[];
   recursos: RecursosRow[];
-  tamanhos_mapa: TamanhosMapaRow[];
 }

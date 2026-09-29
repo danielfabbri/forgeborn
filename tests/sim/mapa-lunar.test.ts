@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dados, param } from '../../src/sim';
+import { param } from '../../src/sim';
 import { hashNumeros } from '../../src/sim/core/hash';
 import {
   arco,
@@ -26,9 +26,10 @@ import {
   rumoSemRampa,
   type Simetria,
 } from '../../src/sim/map/lunar';
+import { RAIOS_DE_TESTE } from './mundo-teste';
 
-const MAPA_M4 = gerarMapaLunar(7, 'm', 4);
-const MAPA_P2 = gerarMapaLunar(7, 'p', 2);
+const MAPA_M4 = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4);
+const MAPA_P2 = gerarMapaLunar(7, RAIOS_DE_TESTE.p, 2);
 const LIMITE_HOVER = param('inclinacao_max_hover_graus');
 const graus = (rad: number) => (rad * 180) / Math.PI;
 
@@ -59,7 +60,7 @@ function inclinacaoMaxima(mapa: MapaLunar, altura: (p: Vec3) => number, a: Vec3,
 
 describe('CEN-13: heightmap de 16 bits nas 6 faces', () => {
   it('~1 m entre vértices: 6 × (res + 1)² amostras num Uint16Array', () => {
-    const raio = dados.tamanhos_mapa.find((t) => t.id === 'm')!.raio_m;
+    const raio = RAIOS_DE_TESTE.m;
     expect(MAPA_M4.raio_m).toBe(raio);
     expect(MAPA_M4.resolucao).toBe(celulasPorAresta(raio, 1));
     expect(MAPA_M4.alturas).toBeInstanceOf(Uint16Array);
@@ -91,8 +92,12 @@ describe('CEN-13: heightmap de 16 bits nas 6 faces', () => {
 
 describe('CEN-06: determinismo e simetria', () => {
   it('mesma seed ⇒ mesmo hash; outra seed ⇒ outro hash', () => {
-    expect(hashNumeros(gerarMapaLunar(7, 'p', 2).alturas)).toBe(hashNumeros(MAPA_P2.alturas));
-    expect(hashNumeros(gerarMapaLunar(8, 'p', 2).alturas)).not.toBe(hashNumeros(MAPA_P2.alturas));
+    expect(hashNumeros(gerarMapaLunar(7, RAIOS_DE_TESTE.p, 2).alturas)).toBe(
+      hashNumeros(MAPA_P2.alturas),
+    );
+    expect(hashNumeros(gerarMapaLunar(8, RAIOS_DE_TESTE.p, 2).alturas)).not.toBe(
+      hashNumeros(MAPA_P2.alturas),
+    );
   });
 
   it.each([

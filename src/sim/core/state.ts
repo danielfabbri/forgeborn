@@ -4,6 +4,7 @@ import type { ComponentMap, ComponentName } from './components';
 import { type RngState, seedRng } from './rng';
 import type { EntityId, NacaoId, QueuedCommand } from './types';
 import type { EstadoDaTempestade } from '../cenario/tempestade';
+import type { EstadoDaChuva } from '../cenario/chuvaAcida';
 import type { Relacao } from '../relacoes/temperamento';
 
 export type ComponentStores = { [K in ComponentName]?: Record<EntityId, ComponentMap[K]> };
@@ -65,6 +66,8 @@ export interface SimState {
   relacoes: Record<string, Relacao>;
   /** CEN-03: próxima (ou atual) tempestade de poeira; só em cenários com o evento. */
   tempestade?: EstadoDaTempestade;
+  /** CEN-18: próxima (ou atual) chuva ácida (Vênus); só em cenários com o evento. */
+  chuva?: EstadoDaChuva;
   /** REG-11/REG-12: fim da partida, ou null. */
   resultado: { vencedor: NacaoId | null; motivo: 'eliminacao' | 'tempo'; tick: number } | null;
 }

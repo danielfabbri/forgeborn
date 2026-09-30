@@ -8,6 +8,7 @@ import { comandosDaProducao, sistemaProducao } from '../producao';
 import { sistemaMovimento } from './movimento';
 import { afundarTransportes, comandosDeEmbarque, sistemaEmbarque } from './embarque';
 import { sistemaTempestade } from '../cenario/tempestade';
+import { sistemaChuvaAcida } from '../cenario/chuvaAcida';
 import { comandosDeMovimento } from './ordens';
 import { comandosDoTemperamento, sistemaTemperamento } from '../relacoes/temperamento';
 
@@ -19,9 +20,10 @@ export { comandosDeMovimento, formacao } from './ordens';
 export const sistemasDoJogo: Partial<Record<GameSystemId, SystemFn>> = {
   ia: sistemaIa,
   producao: sistemaProducao,
-  // CEN-03: a tempestade do tick é decidida antes da energia e da visão.
+  // CEN-03/CEN-18: a tempestade e a chuva ácida do tick são decididas antes da energia e da visão.
   energia: (ctx) => {
     sistemaTempestade(ctx);
+    sistemaChuvaAcida(ctx);
     sistemaEnergia(ctx);
   },
   // UNI-20: o embarque confere as posições depois do movimento do tick.

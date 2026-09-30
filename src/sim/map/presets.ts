@@ -54,4 +54,8 @@ export const PRESETS_DE_MAPA: readonly PresetDeMapa[] = [
   { id: 'xanadu', cenario: 'tita', zonas: 2, jogadores: [2, 2], seed: 4 },
   { id: 'ligeia_mare', cenario: 'tita', zonas: 4, jogadores: [2, 4], seed: 20 },
   { id: 'kraken_mare', cenario: 'tita', zonas: 4, jogadores: [3, 4], seed: 13 },
+  // §14.8 (D-97): Vênus, Free Battle só por enquanto, com a chuva ácida (CEN-18).
+  { id: 'maxwell_montes', cenario: 'venus', zonas: 2, jogadores: [2, 2], seed: 1 },
+  { id: 'aphrodite_terra', cenario: 'venus', zonas: 4, jogadores: [2, 4], seed: 2 },
+  { id: 'lakshmi_planum', cenario: 'venus', zonas: 4, jogadores: [3, 4], seed: 3 },
 ];

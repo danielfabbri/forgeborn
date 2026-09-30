@@ -196,6 +196,33 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     noite: { ceu: new Color('#180d05'), horizonte: new Color('#2a180d'), estrelas: false },
     vento: 0.25,
   },
+  // §14.8/D-97: céu laranja opaco, sol difuso e avermelhado, solo de basalto, névoa mais densa
+  // que Marte e Titã; nuvens espessas o tempo todo (sem noite por enquanto, D-95 não a cobre).
+  venus: {
+    ...LUA,
+    ceu: new Color('#b8763f'),
+    horizonte: new Color('#d9a768'),
+    estrelas: false,
+    terraNoCeu: false,
+    direcaoSaturno: null,
+    luasNoCeu: [],
+    sol: direcao(38, -30),
+    intensidadeSol: 1.3,
+    ambiente: { cor: new Color('#e0a878'), intensidade: 2.0 },
+    secundaria: { cor: new Color('#c88a52'), intensidade: 0.35 },
+    tinta: [0.75, 0.68, 0.65],
+    neblina: { perto: 60, longe: 260 },
+    escuroBrilho: 0.2,
+    detalhe: 0.7,
+    solNoCeu: { cor: new Color('#ffb37a'), halo: new Color('#e8935a') },
+    // D-95: fora de escopo por enquanto — as nuvens de Vênus já escondem o espaço o tempo
+    // todo, de dia e de noite, então o céu noturno não muda nada visível ainda.
+    noite: null,
+    // CEN-18: chuva ácida (reaproveita o mesmo campo/pipeline da tempestade de poeira, CEN-03),
+    // com névoa mais fechada e um tom esverdeado doentio.
+    tempestade: { cor: new Color('#8a9c3a'), neblina: { perto: 25, longe: 140 }, luz: 0.5 },
+    vento: 0.35,
+  },
 };
 
 export function ambientacaoDe(cenario: CenariosId): Ambientacao {

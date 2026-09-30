@@ -119,11 +119,15 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     xanadu: '81c48de8b2982d24',
     ligeia_mare: '61f4c2e8ebe02ad5',
     kraken_mare: '2ff1eb666568fdfd',
+    // §14.8 (D-97): Vênus.
+    maxwell_montes: 'bee0f137556ad946',
+    aphrodite_terra: 'cc87adf23704c524',
+    lakshmi_planum: 'be9bfedc8d241cb2',
   };
   const porCenario = (cenario: string) =>
     PRESETS_DE_MAPA.filter((p) => p.cenario === cenario).map((p) => [p.id, p.zonas, p.jogadores]);
 
-  it('§14.4/§14.6/§14.7: 3 presets por cenário com as simetrias e os jogadores do SPEC', () => {
+  it('§14.4/§14.6/§14.7/§14.8: 3 presets por cenário com as simetrias e os jogadores do SPEC', () => {
     const tres = (a: string, b: string, c: string) => [
       [a, 2, [2, 2]],
       [b, 4, [2, 4]],
@@ -136,6 +140,9 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
       tres('utopia_planitia', 'valles_marineris', 'hellas_planitia'),
     );
     expect(porCenario('tita')).toEqual(tres('xanadu', 'ligeia_mare', 'kraken_mare'));
+    expect(porCenario('venus')).toEqual(
+      tres('maxwell_montes', 'aphrodite_terra', 'lakshmi_planum'),
+    );
     expect(PRESETS_DE_MAPA.find((p) => p.id === 'campo_de_testes')?.soCampanha).toBe(true);
     for (const preset of PRESETS_DE_MAPA) {
       // CEN-16: 2 a 4 jogadores em qualquer corpo, cabendo nas zonas do preset.

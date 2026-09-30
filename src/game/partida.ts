@@ -36,6 +36,7 @@ import { criarMar } from '../render/lagos';
 import { corDaRocha, criarPedras } from '../render/pedras';
 import { LuzesRender } from '../render/luzes';
 import { tempestadeAtiva } from '../sim/cenario/tempestade';
+import { chuvaAtiva } from '../sim/cenario/chuvaAcida';
 import { trilhas } from '../audio/trilhas';
 import { falar } from '../audio/voz';
 import { textoDoAlerta } from '../ui/Alertas';
@@ -358,7 +359,8 @@ export function iniciarPartida(): void {
   if (atmosferaDeFora) view.scene.add(atmosferaDeFora.objeto);
   const atualizarClima = (dt: number): void => {
     if (!poeira) return;
-    const alvo = tempestadeAtiva(sim.state) ? 1 : 0;
+    // CEN-18: a chuva ácida de Vênus usa o mesmo campo/pipeline visual da tempestade (CEN-03).
+    const alvo = tempestadeAtiva(sim.state) || chuvaAtiva(sim.state) ? 1 : 0;
     forcaDaTempestade += (alvo - forcaDaTempestade) * (1 - Math.exp(-dt / 2.5));
     view.clima(forcaDaTempestade);
     ceu.clima(forcaDaTempestade);

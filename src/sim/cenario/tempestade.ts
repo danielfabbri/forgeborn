@@ -10,6 +10,7 @@ import { nextInt } from '../core/rng';
 import type { SimState } from '../core/state';
 import { param } from '../data';
 import { cenarioDe } from './modificadores';
+import { multSolarDaChuva, multVisaoDaChuva } from './chuvaAcida';
 
 export interface EstadoDaTempestade {
   /** Tick em que a próxima (ou a atual) começa. */
@@ -29,15 +30,21 @@ export function tempestadeAtiva(state: SimState): boolean {
   return t != null && state.tick >= t.inicio && state.tick < t.fim;
 }
 
-/** CEN-02/CEN-03: multiplicador da visão de todos os corpos agora. */
+/**
+ * CEN-02/CEN-03/CEN-18: multiplicador da visão de todos os corpos agora. Cada cenário só tem um
+ * evento (`dados:cenarios.evento`), então a tempestade de poeira e a chuva ácida nunca ficam
+ * ativas ao mesmo tempo — multiplicar os dois fatores dá o mesmo resultado que escolher o certo.
+ */
 export function multVisao(state: SimState): number {
   const base = cenarioDe(state)?.mult_visao ?? 1;
-  return tempestadeAtiva(state) ? base * param('tempestade_mult_visao') : base;
+  const tempestade = tempestadeAtiva(state) ? param('tempestade_mult_visao') : 1;
+  return base * tempestade * multVisaoDaChuva(state);
 }
 
-/** CEN-03: multiplicador temporário da geração solar (ENE-07). */
+/** CEN-03/CEN-18: multiplicador temporário da geração solar (ENE-07). */
 export function multSolarDoEvento(state: SimState): number {
-  return tempestadeAtiva(state) ? param('tempestade_mult_solar') : 1;
+  const tempestade = tempestadeAtiva(state) ? param('tempestade_mult_solar') : 1;
+  return tempestade * multSolarDaChuva(state);
 }
 
 function agendar(state: SimState, aPartirDe: number, tickHz: number): EstadoDaTempestade {

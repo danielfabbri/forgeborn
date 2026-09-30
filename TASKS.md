@@ -345,7 +345,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: tempestade de poeira sorteada pela seed entre os intervalos, com duração, visão e geração solar reduzidas e o AL-15 antes; `mult_visao` do cenário aplicado; 3 presets de Marte válidos (Free Battle); Missão 3 jogável na campanha depois da 2, contra duas IAs Normais; ambientação de Marte (céu caramelo, halo azul no Sol, solo ferrugem) e da tempestade; vento em Marte.
 - [ ] **T-151 — Fobos e Missão 4 (ondas)** · M · Spec: §15
 - [ ] **T-152 — Ceres e Missão 5** · M · Spec: §15
-- [ ] **T-153 — Vênus e Missão 6** · M · Spec: §15
+- [ ] **T-153 — Missão 6 em Vênus** · M · Spec: §15, D-97 · Dep: T-151, T-152, T-200
+  - O cenário Vênus (Free Battle) sai daqui e vira T-200 (M24, D-97): só a Missão 6 da campanha fica nesta tarefa, à espera das Missões 4 e 5 (mesma ordem de T-160 para a Missão 8/Titã).
 - [ ] **T-154 — Europa e Missão 7** · M · Spec: CEN-05, §15
 - [x] **T-155 — Titã e lagos de metano (Free Battle)** · G · Spec: CEN-02, CEN-04, PRD-10, §14.7, §18.2, AUD-02, D-78 · Dep: T-150 · Feito: 2026-09-27
   - Aceite: lagos de metano gerados pela seed nas quantidades e raios de CEN-04, simétricos, longe das zonas e sem jazidas; posicionar estrutura, muro ou mina num lago é recusado (motivo `lago`); hovers atravessam; `mult_en_drone` aplicado aos drones; 3 presets de Titã válidos; ambientação de Titã (céu laranja nebuloso, penumbra, lagos espelhados) e vento.
@@ -450,3 +451,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-199 — Giro livre ao posicionar toda estrutura, inclusive o Porto** · G · Spec: PRD-10, UI-08, CEN-15, D-56, D-96 · Dep: T-181 · Feito: 2026-09-30
   - Aceite: ao posicionar qualquer estrutura (não só Muro/Portão), apertar fixa o centro no ponto clicado e arrastar (com o botão apertado) gira a pegada para apontar ao cursor, em qualquer ângulo; soltar confirma nessa direção; clicar sem arrastar mantém a última direção usada; o Porto segue girando e validando normalmente sobre o líquido (D-90); duas pegadas quadradas giradas em ângulos diferentes não se sobrepõem (checagem por retângulos reais, SAT), mesmo quando o simples teste por caixa alinhada ao norte deixaria passar ou recusaria por engano.
+
+## M24 — Vênus, Free Battle (D-97)
+
+- [ ] **T-200 — Vênus, chuva ácida e Free Battle** · G · Spec: CEN-18, §14.8, §18.2, AUD-02, `dados:cenarios`, `dados:parametros` (`venus_chuva_*`), AL-24, D-97 · Dep: T-155
+  - Aceite: cenário Vênus jogável no Free Battle (3 presets: Maxwell Montes N=2, Aphrodite Terra N=4, Lakshmi Planum N=4), com ambientação própria (céu laranja opaco, sol difuso avermelhado, solo de basalto, relâmpagos decorativos); a chuva ácida (`chuva_acida`) ocorre em intervalos sorteados pela seed, com aviso AL-24 antes, reduz a visão e a geração solar durante a duração, e aplica dano contínuo leve a toda unidade e estrutura do planeta (sem exceção de camada ou nação); fora do evento, nada disso se aplica; a Missão 6 (T-153) fica de fora por enquanto.

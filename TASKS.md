@@ -443,3 +443,5 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: em Titã, Saturno (e as outras luas) ficam com menos nitidez/contraste olhando de dentro da atmosfera do que na visão do espaço (CTL-16), onde ficam nítidos.
 - [x] **T-197 — Fobos e Deimos no céu de Marte** · P · Spec: §14.6, §18.2, D-94 · Dep: T-191 · Feito: 2026-09-30
   - Aceite: de Marte, o céu mostra Fobos e Deimos, pequenos, em direções fixas no mundo.
+- [x] **T-198 — Céu noturno em Marte e Titã** · M · Spec: ART-11, §14.6, §14.7, D-95 · Dep: T-194 · Feito: 2026-09-30
+  - Aceite: em Marte e Titã, o céu muda de cor ao caminhar do lado iluminado para o lado sem Sol direto (e volta, ao caminhar de volta); em Marte o céu noturno mostra estrelas, em Titã não; a Lua, Shackleton e o Campo de testes não mudam.

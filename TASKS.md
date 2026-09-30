@@ -408,9 +408,9 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M19 — Hangar de Drones (D-91)
 
-- [ ] **T-185 — Hangar: estrutura, produção e Impressora sem drones** · G · Spec: PRD-01, UNI-21, `dados:custos`, `dados:estruturas`, atalhos, D-91 · Dep: T-170
+- [x] **T-185 — Hangar: estrutura, produção e Impressora sem drones** · G · Spec: PRD-01, UNI-21, `dados:custos`, `dados:estruturas`, atalhos, D-91 · Dep: T-170 · Feito: 2026-09-30
   - Aceite: a Impressora constrói o Hangar (B → H) e deixa de imprimir Bombardeiro e Laser; pronto e na rede, o Hangar imprime os 3 drones pela própria fila (menu B/L/K), pagos com a energia da rede; sem rede, a impressão não avança.
-- [ ] **T-186 — Drone Kamikaze: unidade e explosão ao colidir** · G · Spec: `dados:moveis`, `dados:armas` (`kamikaze_blast`), CMB-30, UNI-12, D-91 · Dep: T-185
+- [x] **T-186 — Drone Kamikaze: unidade e explosão ao colidir** · G · Spec: `dados:moveis`, `dados:armas` (`kamikaze_blast`), CMB-30, UNI-12, D-91 · Dep: T-185 · Feito: 2026-09-30
   - Aceite: o Kamikaze persegue o alvo, explode ao alcançar o contato com dano em área (CMB-10/CMB-11) e se destrói sempre no ato; a Antiaérea o abate como qualquer drone no ar; modelo e foto do cartão.
-- [ ] **T-187 — IA: Hangar e composição com Kamikaze** · M · Spec: IA-15, `dados:ia_plano`, `dados:personalidades`, `dados:missoes`, D-91 · Dep: T-186
+- [x] **T-187 — IA: Hangar e composição com Kamikaze** · M · Spec: IA-15, `dados:ia_plano`, `dados:personalidades`, `dados:missoes`, D-91 · Dep: T-186 · Feito: 2026-09-30
   - Aceite: a IA constrói 1 Hangar pelo plano e imprime bomb/dlaser/kamikaze nele conforme o peso da personalidade; sem Hangar pronto, essas categorias esperam sem travar as outras; Missão 4 libera "hangar" (e os 3 drones com ele).

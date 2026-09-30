@@ -17,6 +17,7 @@ import {
 import {
   MENU_BASE,
   MENU_ESTRUTURAS,
+  MENU_HANGAR,
   MENU_MISSEIS,
   MENU_PORTO,
   MENU_NAVE,
@@ -64,6 +65,7 @@ const MENUS_DE_ESTRUTURA: ReadonlyArray<[string, OpcaoDeMenu[]]> = [
   ['satellite_uplink', MENU_BASE],
   ['missile_silo', MENU_MISSEIS],
   ['port', MENU_PORTO],
+  ['hangar', MENU_HANGAR],
 ];
 
 /** Distância (px) a partir da qual o arrasto vira caixa de seleção. */

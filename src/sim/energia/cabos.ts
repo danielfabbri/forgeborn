@@ -170,13 +170,15 @@ export function tipoPrecisaDeEnergia(tipo: EstruturasId): boolean {
 
 /**
  * Estruturas que imprimem com a energia da rede (PRD-06), o Armazém (ENE-29, D-86: depósito e
- * abrigo só com rede) e a Central de Distribuição (UNI-15: só serve plugada).
+ * abrigo só com rede), a Central de Distribuição (UNI-15: só serve plugada) e o Hangar de
+ * Drones (UNI-21, D-91: imprime os drones com a energia da rede).
  */
 const TIPOS_QUE_CONSOMEM = new Set<string>([
   'satellite_uplink',
   'missile_silo',
   'storage',
   'power_hub',
+  'hangar',
 ]);
 
 /** ENE-29: a estrutura precisa de energia? */

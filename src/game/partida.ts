@@ -65,6 +65,7 @@ import {
   COM_CARTAO_DE_ACAO,
   MENU_BASE,
   MENU_ESTRUTURAS,
+  MENU_HANGAR,
   MENU_MINAS,
   MENU_MISSEIS,
   MENU_PORTO,
@@ -974,11 +975,13 @@ export function iniciarPartida(): void {
               ? MENU_MISSEIS
               : tipoProdutor === 'port'
                 ? MENU_PORTO
-                : entrada.menu === 'unidades'
-                  ? MENU_UNIDADES
-                  : entrada.menu === 'estruturas'
-                    ? MENU_ESTRUTURAS
-                    : [];
+                : tipoProdutor === 'hangar'
+                  ? MENU_HANGAR
+                  : entrada.menu === 'unidades'
+                    ? MENU_UNIDADES
+                    : entrada.menu === 'estruturas'
+                      ? MENU_ESTRUTURAS
+                      : [];
     // CAM-02: na campanha, os cartões só mostram o que está liberado na missão.
     const opcoes = todasAsOpcoes.filter((o) => liberado(sim.state, o.item));
     const obra = obraId !== undefined ? getComponent(sim.state, obraId, 'obra')! : null;

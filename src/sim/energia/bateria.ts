@@ -19,6 +19,8 @@ const PAPEIS: Record<MoveisId, Papel> = {
   hover_opq: 'militar',
   drone_bomber: 'drone',
   drone_laser: 'drone',
+  // D-91: o Kamikaze recarrega como os outros drones.
+  drone_kamikaze: 'drone',
   mobile_battery: 'bateria_movel',
   // D-90: embarcações (a Artilharia recarrega como militar).
   boat_transport: 'trabalhador',

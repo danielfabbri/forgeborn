@@ -258,8 +258,9 @@ export function ativarEstrutura(ctx: SystemContext, id: EntityId): void {
     });
   }
   // UNI-04 (D-55): a Base de Lançamento imprime o Satélite com a energia da rede (PRD-06);
-  // UNI-16 (D-90): o Porto imprime as embarcações do mesmo jeito.
-  if (tipo === 'satellite_uplink' || tipo === 'port') {
+  // UNI-16 (D-90): o Porto imprime as embarcações do mesmo jeito;
+  // UNI-21 (D-91): o Hangar imprime os drones do mesmo jeito.
+  if (tipo === 'satellite_uplink' || tipo === 'port' || tipo === 'hangar') {
     setComponent(state, id, 'producer', { pontoDeEncontro: null, fila: [] });
     setComponent(state, id, 'consumidor', {
       prioridade: 3,

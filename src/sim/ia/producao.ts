@@ -18,7 +18,7 @@ import {
   tipoDe,
   vrDe,
 } from './base';
-import { construir, impressoraComVaga } from './economia';
+import { construir, hangarComVaga, impressoraComVaga } from './economia';
 import type { Quadro } from './quadro';
 
 /** Categorias de §13.3 e o item de cada uma. */
@@ -29,19 +29,24 @@ export const CATEGORIAS = {
   obs: 'hover_scout',
   bomb: 'drone_bomber',
   dlaser: 'drone_laser',
+  kamikaze: 'drone_kamikaze',
   torres: 'laser_tower',
 } as const satisfies Record<string, CustosId>;
 
 export type Categoria = keyof typeof CATEGORIAS;
 const LISTA = Object.keys(CATEGORIAS) as Categoria[];
 
+/** IA-15 (D-91): categorias que o Hangar fabrica, não a Impressora. */
+const DO_HANGAR = new Set<Categoria>(['bomb', 'dlaser', 'kamikaze']);
+
 /** IA-03: quem cada ameaça observada favorece. */
 const CONTRAS: Record<string, Categoria[]> = {
   drone_laser: ['ex1', 'torres'],
   drone_bomber: ['ex1', 'torres'],
+  drone_kamikaze: ['ex1', 'torres'],
   hover_ex1: ['opq'],
-  hover_opq: ['dlaser', 'bomb'],
-  laser_tower: ['opq', 'bomb'],
+  hover_opq: ['dlaser', 'bomb', 'kamikaze'],
+  laser_tower: ['opq', 'bomb', 'kamikaze'],
 };
 
 /** Dá para juntar o custo do item: cada recurso em falta tem de onde vir. */
@@ -141,6 +146,15 @@ export function decidirProducao(ctx: SystemContext, q: Quadro): void {
     if (categoria === 'torres') {
       if (construir(ctx, q, 'laser_tower')) return;
       continue;
+    }
+    // IA-15 (D-91): os drones saem do Hangar, não da Impressora. Sem Hangar com vaga, essa
+    // categoria espera a próxima decisão sem travar as demais.
+    if (DO_HANGAR.has(categoria)) {
+      const hangar = hangarComVaga(ctx, q);
+      if (hangar === null) continue;
+      comandar(ctx, q.nacao, 'imprimir', { ids: [hangar], item });
+      q.naFila[item] = (q.naFila[item] ?? 0) + 1;
+      return;
     }
     const impressora = impressoraComVaga(ctx, q);
     if (impressora === null) return;

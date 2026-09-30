@@ -20,9 +20,9 @@ import {
 } from '../energia/cabos';
 import { mesmaTerra } from '../map/conectividade';
 import { emLiquido } from '../map/lagos';
-import { avancar, tangente, type Vec3 } from '../map/esfera';
+import { avancar, norteEm, tangente, type Vec3 } from '../map/esfera';
 import { explorado } from '../visao/nevoa';
-import { comandar, dificuldade, podePagar, temTraco, tierPermitido } from './base';
+import { comandar, dificuldade, dosTipos, podePagar, temTraco, tierPermitido } from './base';
 import { procurarLocal } from './local';
 import { metaDeHovers, type Quadro } from './quadro';
 import { donosDoDominio, emGuerra } from '../relacoes/temperamento';
@@ -43,6 +43,15 @@ export function impressoraComVaga(ctx: SystemContext, q: Quadro): EntityId | nul
     .filter(
       (id) => !nav || mesmaTerra(nav, direcaoDe(getComponent(ctx.state, id, 'position')!), q.base),
     )
+    .sort((a, b) => filaDe(ctx, a) - filaDe(ctx, b) || a - b);
+  return livres[0] ?? null;
+}
+
+/** IA-15 (D-91): Hangar pronto com vaga na fila (o de fila mais curta), ou null. */
+export function hangarComVaga(ctx: SystemContext, q: Quadro): EntityId | null {
+  const livres = dosTipos(ctx.state, q.nacao, 'hangar')
+    .filter((id) => !getComponent(ctx.state, id, 'obra'))
+    .filter((id) => filaDe(ctx, id) < param('ia_fila_por_produtor'))
     .sort((a, b) => filaDe(ctx, a) - filaDe(ctx, b) || a - b);
   return livres[0] ?? null;
 }
@@ -242,8 +251,8 @@ export function plantarCentral(
     .sort((a, b) => distanciaM(ctx, a, alvo) - distanciaM(ctx, b, alvo));
   const origem = pontos[0];
   if (!origem) return;
-  const rumo = tangente(origem, alvo);
-  if (!rumo) return;
+  // `centro` costuma ser q.base: quando a origem é a própria Nave, a tangente é nula.
+  const rumo = tangente(origem, alvo) ?? norteEm(origem);
   const falta = distanciaM(ctx, origem, alvo);
   // Um pouco antes do limite do cabo, para sobrar espaço à procura de local; para plugar, a
   // Central fica perto da estrutura, sem encostar nela.
@@ -258,7 +267,9 @@ export function plantarCentral(
     recuo -= 4;
     centro = avancar(origem, rumo, recuo / raioDoMundo(ctx)).p;
   }
-  construir(ctx, q, 'power_hub', centro, [0, 5, 10, 15], bifurcacoes);
+  // Anéis maiores no fim: a base pode já estar apertada perto da origem (bem dentro do alcance
+  // do cabo, 80 m).
+  construir(ctx, q, 'power_hub', centro, [0, 5, 10, 15, 20, 25, 30, 40, 50], bifurcacoes);
 }
 
 /** O que a IA quer comprar em seguida (para saber que recurso falta). */

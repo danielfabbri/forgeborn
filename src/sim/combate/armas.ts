@@ -20,7 +20,7 @@ import { navegavelDe } from '../units/navegacao';
 import { visivelPara } from '../visao/nevoa';
 import { ALTURA_HOVER_M, statsMovel } from '../units/stats';
 import { chaoEm, direcaoDe, distanciaM, posicionar, raioDoMundo } from '../units/superficie';
-import { aplicarDano, camadaDe, danoContra, type TipoDeDano } from './dano';
+import { aplicarDano, camadaDe, danoContra, danoEmArea, type TipoDeDano } from './dano';
 import { multVisao } from '../cenario/tempestade';
 import { emGuerra } from '../relacoes/temperamento';
 
@@ -190,6 +190,23 @@ function disparar(
   ctx.emit('disparo', { atirador, alvo, arma: arma.id });
   if (arma.projetil === 'hitscan') {
     aplicarDano(ctx, alvo, arma.dano, tipo, atirador, nacao);
+    return;
+  }
+  // CMB-30 (D-91): o Kamikaze detona ao encostar (dano em área) e sempre se destrói no ato,
+  // mesmo sem mais ninguém por perto (a área não fere o próprio atacante, CMB-11).
+  if (arma.projetil === 'kamikaze') {
+    danoEmArea(ctx, {
+      centro: direcaoDe(getComponent(state, atirador, 'position')!),
+      raio: arma.splash_m,
+      dano: arma.dano,
+      tipo,
+      bordaPct: arma.splash_borda_pct ?? 100,
+      camadas: arma.alvos as Array<'solo' | 'ar'>,
+      atacante: atirador,
+      nacao,
+    });
+    const vida = getComponent(state, atirador, 'vida');
+    if (vida) vida.hp = 0;
     return;
   }
   const dano = danoContra(state, alvo, arma.dano, tipo);

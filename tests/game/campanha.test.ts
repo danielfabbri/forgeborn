@@ -23,6 +23,13 @@ describe('T-130/T-133 — CAM-01 a CAM-04, CAM-08, D-73: campanha', () => {
       expect.arrayContaining(['satellite_uplink', 'satellite', 'missile_silo', 'missile_short']),
     );
     expect(liberadosNa('m03')).toEqual(expect.arrayContaining(['hover_minelayer', 'mine']));
+    // D-91: a Missão 4 (Fobos) libera o Hangar, que traz os 3 drones consigo (CAM-02).
+    expect(liberadosNa('m03')).not.toEqual(
+      expect.arrayContaining(['hangar', 'drone_bomber', 'drone_laser', 'drone_kamikaze']),
+    );
+    expect(liberadosNa('m04')).toEqual(
+      expect.arrayContaining(['hangar', 'drone_bomber', 'drone_laser', 'drone_kamikaze']),
+    );
   });
 
   it('CAM-03: estrelas pelo tempo-par e pelo HP mínimo da Nave', () => {

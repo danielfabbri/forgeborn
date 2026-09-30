@@ -309,6 +309,20 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     m.add(new TorusGeometry(0.46, 0.04, 6, 16), 'nacao', { y: 0.8, rx: Math.PI / 2 });
     return olho(m, 0.45, 0.45, 0, 0.12).pronta();
   },
+  // UNI-21/D-91: seta compacta e leve, sem compartimento de armas visível — a carga é o próprio
+  // corpo. Só pelo Hangar.
+  drone_kamikaze: () => {
+    const m = new Montagem();
+    // Corpo afilado (mais largo atrás, estreito na ponta, +x) e barbatanas traseiras.
+    m.caixa(0.75, 0.16, 0.5, GRAFITE, { x: -0.15 });
+    m.caixa(0.35, 0.14, 0.22, PAINEL, { x: 0.45 });
+    for (const z of [-1, 1]) {
+      m.caixa(0.3, 0.03, 0.28, GRAFITE, { x: -0.5, z: z * 0.32, ry: z * 0.4 });
+    }
+    // Faixa da nação; a ponta pisca antes do impacto (CMB-30).
+    m.caixa(0.7, 0.04, 0.12, 'nacao', { x: -0.15, y: 0.1 });
+    return olho(m, 0.62, 0.05, 0, 0.08).pronta();
+  },
   // Caçamba grande com rampa lateral.
   mobile_silo: () => {
     const m = casco(new Montagem(), 3.6, 2.8, 0.5, 0.12);
@@ -638,6 +652,19 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
         ry: -a,
       });
     }
+    return m.pronta();
+  },
+  // UNI-21/D-91: hangar baixo e alongado, com o portão de saída (na cor da nação) voltado para
+  // a rampa da Nave; trilhos curtos marcam a saída dos drones.
+  hangar: () => {
+    const m = new Montagem();
+    m.caixa(7.0, 0.15, 5.0, GRAFITE, { y: -0.05 });
+    m.caixa(6.6, 1.7, 4.6, METAL, { y: 0.05 });
+    m.caixa(6.8, 0.2, 4.8, PAINEL, { y: 1.75 });
+    m.caixa(0.15, 1.5, 3.4, 'nacao', { x: 3.35, y: 0.1 });
+    for (const z of [-1.2, 1.2]) m.caixa(1.0, 0.06, 0.22, METAL, { x: 3.9, y: -0.02, z });
+    m.caixa(6.4, 0.08, 0.5, 'nacao', { y: 1.85 });
+    for (const x of [-2.2, 2.2]) antena(m, x, 1.85, -1.6, 0.6);
     return m.pronta();
   },
   // UNI-16 (D-90): Porto flutuante: plataforma sobre o líquido, cais com defensas, guindaste e

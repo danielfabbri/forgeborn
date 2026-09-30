@@ -363,6 +363,8 @@
   "item.boat_transport": "Embarcação de Transporte",
   "item.boat_artillery": "Embarcação de Artilharia",
   "item.boat_antenna": "Embarcação Antena",
+  "item.hangar": "Hangar de Drones",
+  "item.drone_kamikaze": "Drone Kamikaze",
   "item.missile_short": "Míssil de Curto Alcance",
   "item.missile_long": "Míssil de Longo Alcance",
   "producao.misseis_prontos": "Prontos ({n}/{max}):",

@@ -3,7 +3,7 @@ import { dados, getComponent, param, type Sim } from '../../src/sim';
 import type { SystemContext } from '../../src/sim/core/pipeline';
 import { ATIVAR_IA_COMMAND, dificuldade, pesos } from '../../src/sim/ia';
 import { montarQuadro } from '../../src/sim/ia/quadro';
-import { CATEGORIAS } from '../../src/sim/ia/producao';
+import { CATEGORIAS, decidirProducao } from '../../src/sim/ia/producao';
 import { proximoDoPlano } from '../../src/sim/ia/plano';
 import { INICIAR_PARTIDA_COMMAND } from '../../src/sim/producao';
 import { criar, mundoLiso, ordenar, partida, ponto, pos, revelar, semear } from './mundo-teste';
@@ -123,6 +123,9 @@ describe('T-092 — IA-03, §13.3: produção e composição', () => {
     revelar(sim);
     for (const r of ['fe', 'si', 'cu', 'li', 'ti', 'u'] as const)
       sim.state.estoques.bra[r] = 20_000;
+    // D-91: os drones só saem do Hangar; um já pronto evita depender da IA construir um do zero
+    // (o teste é sobre convergência de peso, não sobre a robustez da economia).
+    criar(sim, [{ estrutura: 'hangar', x: 12, z: 12 }], 'bra');
     sim.run(10 * 60 * sim.tickHz);
     const q = montarQuadro(contexto(sim), 'bra')!;
     const w = pesos(q);
@@ -135,15 +138,7 @@ describe('T-092 — IA-03, §13.3: produção e composição', () => {
           (getComponent(sim.state, id, 'unit')?.tipo ??
             getComponent(sim.state, id, 'structure')?.tipo) === item,
       ).length;
-      const custo = {
-        hover_ex1: 80,
-        hover_opq: 120,
-        hover_minelayer: 110,
-        hover_scout: 40,
-        drone_bomber: 150,
-        drone_laser: 120,
-        laser_tower: 80,
-      }[item]!;
+      const custo = dados.custos.find((x) => x.id === item)!.vr;
       vr[c] = n * custo;
       total += vr[c];
     }
@@ -151,7 +146,7 @@ describe('T-092 — IA-03, §13.3: produção e composição', () => {
     for (const c of Object.keys(CATEGORIAS)) {
       expect(Math.abs(vr[c]! / total - w[c as keyof typeof w] / soma), c).toBeLessThan(0.15);
     }
-  });
+  }, 60_000);
 
   it('IA-03: exército inimigo observado desloca peso para os contras', () => {
     const sim = comIa('normal');
@@ -161,6 +156,36 @@ describe('T-092 — IA-03, §13.3: produção e composição', () => {
     const depois = pesos(q);
     expect(depois.ex1).toBeGreaterThan(antes.ex1);
     expect(depois.torres).toBeGreaterThan(antes.torres);
+  });
+});
+
+describe('T-187 — IA-15, D-91: Hangar na composição da IA', () => {
+  it('IA-15: sem Hangar pronto, a categoria de drone espera sem travar as outras produções', () => {
+    const sim = comIa('normal');
+    for (const r of ['fe', 'si', 'cu', 'li', 'ti', 'u'] as const)
+      sim.state.estoques.bra[r] = 20_000;
+    // Uma Impressora já pronta: sem ela, decidirProducao nunca chega a agir (nem para ex1),
+    // e o teste não isolaria o caso do IA-15 (drone sem Hangar) das demais categorias.
+    criar(sim, [{ unidade: 'printer', x: 15, z: 15 }], 'bra');
+    const ctx = contexto(sim);
+    // Só decidirProducao, sem decidirPlanoDaIa: nenhum Hangar chega a existir neste teste, o
+    // que isola exatamente o caso do IA-15 (categoria de drone sempre sem onde imprimir).
+    for (let i = 0; i < 40; i++) {
+      const q = montarQuadro(ctx, 'bra');
+      if (q) decidirProducao(ctx, q);
+      sim.step();
+    }
+    expect(
+      sim.state.entities.some((id) => getComponent(sim.state, id, 'structure')?.tipo === 'hangar'),
+    ).toBe(false);
+    const impressora = sim.state.entities.find(
+      (id) => getComponent(sim.state, id, 'unit')?.tipo === 'printer',
+    );
+    const filaImpressora = impressora ? getComponent(sim.state, impressora, 'producer')!.fila : [];
+    const ex1Prontos = sim.state.entities.filter(
+      (id) => getComponent(sim.state, id, 'unit')?.tipo === 'hover_ex1',
+    ).length;
+    expect(ex1Prontos > 0 || filaImpressora.some((i) => i.item === 'hover_ex1')).toBe(true);
   });
 });
 

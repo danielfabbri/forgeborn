@@ -34,8 +34,6 @@ export const MENU_UNIDADES: OpcaoDeMenu[] = [
   opcao('2', 'hover_opq'),
   opcao('M', 'hover_minelayer'),
   opcao('O', 'hover_scout'),
-  opcao('B', 'drone_bomber'),
-  opcao('L', 'drone_laser'),
   opcao('V', 'mobile_silo'),
   opcao('C', 'mobile_battery'),
 ];
@@ -54,6 +52,7 @@ export const MENU_ESTRUTURAS: OpcaoDeMenu[] = [
   opcao('E', 'antenna'),
   opcao('D', 'power_hub'),
   opcao('O', 'port'),
+  opcao('H', 'hangar'),
 ];
 
 /** §12.4 (Porto) T Transporte, A Artilharia, N Antena (UNI-16, D-90). */
@@ -67,4 +66,11 @@ export const MENU_PORTO: OpcaoDeMenu[] = [
 export const MENU_MISSEIS: OpcaoDeMenu[] = [
   opcao('C', 'missile_short'),
   opcao('L', 'missile_long'),
+];
+
+/** §12.4 (Hangar de Drones) B / L / K (UNI-21, D-91). */
+export const MENU_HANGAR: OpcaoDeMenu[] = [
+  opcao('B', 'drone_bomber'),
+  opcao('L', 'drone_laser'),
+  opcao('K', 'drone_kamikaze'),
 ];

@@ -247,8 +247,8 @@ export interface FreeBattleRow {
 }
 
 export type IaPlanoItem =
-  | 'arsenal'
   | 'laser_tower'
+  | 'arsenal'
   | 'nuclear_plant'
   | 'aa_battery'
   | 'satellite_uplink'

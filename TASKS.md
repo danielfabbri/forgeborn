@@ -417,9 +417,9 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M20 — Fábrica de Artilharia (D-92)
 
-- [ ] **T-188 — Fábrica de Artilharia: estrutura, produção e Impressora sem EX1/OPQ** · G · Spec: PRD-01, UNI-22, `dados:custos`, `dados:estruturas`, atalhos, D-92 · Dep: T-187
+- [x] **T-188 — Fábrica de Artilharia: estrutura, produção e Impressora sem EX1/OPQ** · G · Spec: PRD-01, UNI-22, `dados:custos`, `dados:estruturas`, atalhos, D-92 · Dep: T-187 · Feito: 2026-09-30
   - Aceite: a Impressora constrói a Fábrica (B → B) e deixa de imprimir o EX1 e o OPQ; pronta e na rede, a Fábrica imprime as 3 unidades pela própria fila (menu 1/2/3), pagas com a energia da rede; sem rede, a impressão não avança.
-- [ ] **T-189 — Tanque de Cerco: unidade e arma corpo a corpo** · G · Spec: `dados:moveis`, `dados:armas` (`siege_ram`), UNI-22, D-92 · Dep: T-188
+- [x] **T-189 — Tanque de Cerco: unidade e arma corpo a corpo** · G · Spec: `dados:moveis`, `dados:armas` (`siege_ram`), UNI-22, D-92 · Dep: T-188 · Feito: 2026-09-30
   - Aceite: o Tanque de Cerco persegue o alvo até o contato e martela com `siege_ram` (só solo, sem alcance mínimo); mais lento e resistente que o OPQ; não atinge alvos aéreos; modelo e foto do cartão.
-- [ ] **T-190 — IA, tutorial e missões: Fábrica e composição com o Tanque de Cerco** · M · Spec: IA-16, IA-03, `dados:ia_plano`, `dados:personalidades`, `dados:missoes`, CAM-07, D-92 · Dep: T-189
+- [x] **T-190 — IA, tutorial e missões: Fábrica e composição com o Tanque de Cerco** · M · Spec: IA-16, IA-03, `dados:ia_plano`, `dados:personalidades`, `dados:missoes`, CAM-07, D-92 · Dep: T-189 · Feito: 2026-09-30
   - Aceite: a IA constrói 1 Fábrica pelo plano com prioridade sobre as demais estruturas de apoio e imprime ex1/opq/siege nela conforme o peso da personalidade, sem travar as outras categorias sem Fábrica pronta; Missão 0 libera "arsenal" no lugar do EX1 direto, com o novo passo 9 do tutorial (Fábrica pronta e ligada à rede) antes do passo do EX1; Missão 2 libera o Tanque de Cerco junto com o OPQ.

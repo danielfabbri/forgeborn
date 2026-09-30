@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.11.1 — rascunho para aprovação |
+| Versão do SPEC | 1.12.0 — rascunho para aprovação |
 | Data | 2026-09-30 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1323,7 +1323,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 ### 14.4 Lua (cenário do MVP)
 
-- **Ambientação:** uma lua pequena, com a curvatura visível e o horizonte próximo; regolito cinza, crateras, sol duro e rasante, sombras longas e negras, céu preto estrelado e **a Terra no céu, escura, sem luzes de cidades** (o plano-assinatura do jogo).
+- **Ambientação:** uma lua pequena, com a curvatura visível e o horizonte próximo; regolito cinza, crateras, sol duro e rasante (fixo no mundo, ART-11), sombras longas e negras, céu preto estrelado e **a Terra no céu, escura, sem luzes de cidades**, com continentes e nuvens visíveis no lado iluminado (o plano-assinatura do jogo).
 - **Presets:** *Mare Imbrium* (N = 2, 2 jogadores), *Mare Tranquillitatis* (N = 4, 2–4), *Oceanus Procellarum* (N = 4, 3–4).
 - **Eventos:** nenhum.
 
@@ -1335,7 +1335,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 
 ### 14.7 Titã
 
-- **Ambientação:** uma lua pequena sob uma atmosfera espessa: céu laranja nebuloso e sem estrelas, o Sol só um brilho difuso atrás da névoa; penumbra, luz fraca e alaranjada, sombras quase apagadas; névoa densa que esconde a distância; solo de gelo e sedimentos (bege acinzentado com tons de ocre); os lagos de metano escuros e espelhados, refletindo o céu. Vento de fundo (AUD-02).
+- **Ambientação:** uma lua pequena sob uma atmosfera espessa: céu laranja nebuloso e sem estrelas, o Sol só um brilho difuso atrás da névoa (fixo no mundo, ART-11); penumbra, luz fraca e alaranjada, sombras quase apagadas; névoa densa que esconde a distância; solo de gelo e sedimentos (bege acinzentado com tons de ocre); os lagos de metano escuros e espelhados, refletindo o céu. **Saturno, enorme e com anéis, e algumas de suas outras luas** aparecem no céu, em direções fixas (licença de ambientação: na realidade a neblina de Titã os esconderia). Vento de fundo (AUD-02).
 - **Presets:** *Xanadu* (N = 2, 2 jogadores), *Ligeia Mare* (N = 4, 2–4), *Kraken Mare* (N = 4, 3–4).
 - **Eventos:** `lagos_metano` (CEN-04): mares de metano com ilhas, em ~um quarto da superfície; Porto e embarcações (UNI-16 a UNI-20).
 - **Uso:** Free Battle na v1.0; a Missão 8 entra na campanha quando as Missões 4 a 7 existirem (D-78).
@@ -1490,7 +1490,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **ART-08** — Iluminação e pós-processamento: tone mapping ACES, bloom, sombras em cascata do sol, SSAO a partir do preset Alto, grão de filme sutil.
 - **ART-09** — Visão do Universo: planetas estilizados com atmosfera em rim light, órbitas finas e rótulos limpos.
 - **ART-10** — Interface com estética de "HUD de máquina": linhas finas, números em fonte monoespaçada e cor de destaque igual à da nação do jogador.
-- **ART-11** — **Sem noite** (D-26): o sol acompanha o ponto focal da câmera e incide nele sempre com a mesma elevação rasante; a Terra no céu também se posiciona em relação ao ponto focal. O lado do planeta que o jogador olha está sempre iluminado, com sombras longas.
+- **ART-11** — **Sol fixo e distante** (D-26, revista por D-93): o Sol tem uma única direção fixa no mundo por partida (não acompanha a câmera nem o ponto focal); rotacionar ou percorrer o planeta revela lado claro e lado escuro, como um corpo real. O lado sem luz direta do Sol nunca fica preto puro: a luz ambiente do cenário (§18.2) mantém uma leitura mínima. A Terra no céu (Lua) e os demais corpos celestes do cenário também ficam em direções fixas no mundo, para não se deslocarem quando a câmera gira.
 - **ART-12** — Unidades e estruturas com arma giram só a torre ou os canos para o alvo atual (o corpo segue o próprio rumo); sem alvo, a torre volta para a frente (D-68).
 - **ART-13** — Luzes de sinalização piscam nas estruturas (a do topo na cor da nação, as de canto brancas), só enquanto a estrutura está numa rede com energia; sem rede ou em obra, apagadas (D-86).
 
@@ -1499,14 +1499,14 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | Cenário | Céu | Solo | Luz | Assinatura visual |
 |---|---|---|---|---|
 | Terra — Campo de testes | Azul | Concreto com faixas e marcações | Sol alto, luz do dia | Galpões e cercas do laboratório |
-| Lua | Preto estrelado | Regolito cinza | Sol branco, duro, rasante | A Terra escura no horizonte |
+| Lua | Preto estrelado | Regolito cinza | Sol branco, duro, rasante, fixo no mundo | A Terra escura no horizonte, com continentes e nuvens |
 | Lua — Shackleton | Preto; sol rente ao horizonte | Regolito com gelo nas sombras | Baixa; sombras eternas | Bordas da cratera iluminadas |
 | Marte | Caramelo; pôr do sol azul | Ferrugem | Quente e difusa | Tempestades de poeira |
 | Fobos | Preto, com Marte gigante | Poeira escura | Dura | Marte ocupando meio céu |
 | Ceres | Preto | Regolito escuro | Fraca | Manchas de sal brilhantes (cratera Occator) |
 | Vênus | Laranja opaco | Basalto | Difusa e avermelhada | Relâmpagos nas nuvens |
 | Europa | Preto, com Júpiter enorme | Gelo azul-branco rachado | Fria | Júpiter e suas faixas |
-| Titã | Laranja nebuloso | Gelo e sedimentos | Penumbra | Lagos de metano espelhados |
+| Titã | Laranja nebuloso | Gelo e sedimentos | Penumbra | Lagos de metano espelhados; Saturno e outras luas no céu |
 
 ---
 
@@ -1777,6 +1777,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-90 | Mares (CEN-04): líquido em `mar_cobertura_pct` 25% da superfície, formas orgânicas com ilhas, terra firme a `mar_folga_zona_m` das zonas; unidades de solo param na borda; zonas podem depender de barco (CEN-11 conta o mar). Camada de água (MOV-08). Porto (UNI-16) e embarcações de Transporte (10 unidades), Artilharia (laser) e Antena (UNI-17 a UNI-20), com os números aprovados (HP, velocidade, raio, visão, custo, bateria, `boat_laser`, `porto_distancia_borda_m`). IA naval completa (IA-14). **Proposta:** giro, `mov_en_s`, `en_impressao` das embarcações e do Porto, `mar_folga_zona_m` 100, `embarque_distancia_m` 3, portas do Porto (2 × 10 EN/s) e os parâmetros `ia_porto_distancia_m`, `ia_barcos_artilharia`, `ia_barcos_antena`. Retira "lagos_por_setor", "lago_raio_min_m", "lago_raio_max_m" e "lago_folga_zona_m" (GOV-03). | Pedido do produto: "mares de metano de Titã com formas mais orgânicas… lagos ou mares enormes, inclusive com ilhas… as unidades não podem entrar no mar… Porto… embarcação de transporte (até 10 unidades), de artilharia (laser), antena… também para outros planetas com líquido"; respostas: ~25% da superfície, pode exigir barco, IA usa tudo, números da proposta aprovados. | Aprovada |
 | D-91 | Hangar de Drones (`hangar`, UNI-21): estrutura que a Impressora constrói e que imprime os drones (Bombardeiro, Laser e o novo Kamikaze), com energia da rede, como a Base de Lançamento imprime Satélites; a Impressora deixa de imprimir os três (PRD-01). Kamikaze (`drone_kamikaze`, CMB-30): drone aéreo, leve, que persegue o alvo, explode ao encostar (dano em área) e sempre se destrói no ato; como qualquer drone, é alvo da Antiaérea (UNI-12). IA-15: a IA constrói o Hangar pelo plano e reparte o peso de bomb/dlaser com o kamikaze. Missão 4 passa a liberar "hangar" (deriva os 3 drones). | Pedido do produto: "quero que o hover de impressão 3d possa construir uma unidade estrutura fixa que funcionaria como uma oficina de drones… quem vai construir os drones é uma unidade de Hangar… drone laser, o drone bombardeiro e um outro drone que será o kamikaze… ele voa e se projeta contra unidades ou estruturas inimigas e explode ao colidir… se mata atingindo o inimigo… todos os drones podem ser destruídos por baterias antiaéreas"; números propostos (Hangar e Kamikaze com base nas unidades e estruturas parecidas) aprovados. | Aprovada |
 | D-92 | Fábrica de Artilharia (`arsenal`, UNI-22): estrutura que a Impressora constrói e que imprime o Hover de Defesa EX1, o Hover de Defesa OPQ e o novo Tanque de Cerco, com energia da rede, como o Hangar imprime os drones; a Impressora deixa de imprimir o EX1 e o OPQ (PRD-01). Tanque de Cerco (`siege_tank`): unidade de solo pesada e lenta, com a maior blindagem e o maior dano por golpe do solo, arma corpo a corpo (`siege_ram`, sem alcance mínimo) que martela o alvo; não atinge alvos aéreos; T2 (exige Titânio, como o OPQ). IA-16: a IA constrói a Fábrica pelo plano, com prioridade sobre as demais estruturas de apoio (liberada desde a Missão 0), e reparte o peso de ex1/opq com o Tanque de Cerco. Missão 0 passa a liberar "arsenal" no lugar do EX1 direto (deriva o EX1; novo passo 9 do tutorial, CAM-07); Missão 2 libera o Tanque de Cerco junto com o OPQ. | Pedido do produto: "quero construir uma fábrica de artilharia pra construir hovers e tanques de artilharia. Pode levar o OPQ e o EX1 pra lá. E pode construir também um tanque de ataque físico… é um tanque mais pesado que tem um poder de dano alto e é lento… uma boa unidade pra ir andando e destruir unidades fixas… uma estaca que fica martelando na estrutura… a impressora 3d não deve poder mais construir os hovers de defesa"; escopo (só o tanque físico), nomes (`arsenal`/`siege_tank`), tier (T2) e missão de liberação (m02) confirmados; números propostos (com base nas unidades e estruturas parecidas: HP, pegada, custo da Fábrica; HP, velocidade, dano, alcance, custo e recarga do Tanque; peso `siege` na IA) aprovados. | Aprovada |
+| D-93 | Sol fixo e distante (reverte o "sem noite" de D-26/ART-11): o Sol passa a ter uma única direção fixa no mundo por partida, sem acompanhar o foco da câmera; o lado do planeta sem luz direta fica escuro, mas a luz ambiente do cenário nunca deixa preto puro. A Terra no céu da Lua fica mais realista (continentes e nuvens visíveis no lado iluminado). Titã ganha Saturno (grande, com anéis) e outras luas de Saturno no céu, também em direções fixas, ao lado do Sol distante — licença de ambientação (a neblina real de Titã os esconderia). | Pedido do produto: "quando eu rotaciono ao redor do globo de um planeta, o ponto de luz muda de lugar. Isso não é legal. Eu gostaria que o sol ficasse em algum lugar distante como único ponto de iluminação. O lado escuro dos corpos celestes deve continuar escuro, mas não 100% preto. Pode ter uma luminosidade baixa. Quero olhar pro céu e ver o sol parado distante. E além disso, o número de luas corretas ou planetas próximos daquele corpo celeste. Em Titã, por exemplo, podemos ver outras luas e saturno no céu... o sol distante... A terra vista da Lua poderia ser um pouco mais realista." | Aprovada |
 
 ---
 
@@ -1889,3 +1890,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.10.0 | 2026-09-30 | D-91: PRD-01, UNI-21 (`hangar`), CMB-30 (`kamikaze`), IA-15, `dados:moveis` (`drone_kamikaze`), `dados:armas` (`kamikaze_blast`), `dados:custos` e `dados:estruturas` (`hangar`; `drone_bomber`/`drone_laser` mudam produzido_por para `hangar`), `dados:ia_plano`, `dados:personalidades` (coluna `kamikaze`), `dados:missoes` (m04), atalhos. |
 | 1.11.0 | 2026-09-30 | D-92: PRD-01, UNI-22 (`arsenal`), IA-16, `dados:moveis` e `dados:armas` (`siege_tank`, `siege_ram`), `dados:custos` e `dados:estruturas` (`arsenal`; `hover_ex1`/`hover_opq` mudam produzido_por para `arsenal`), `dados:ia_plano`, `dados:personalidades` (coluna `siege`), `dados:missoes` (m00 libera `arsenal` no lugar do EX1; m02 libera o Tanque de Cerco), IA-03, CAM-07 (10 passos, novo passo 9), atalhos. |
 | 1.11.1 | 2026-09-30 | Visual do Hangar de Drones (UNI-21) e da Fábrica de Artilharia (UNI-22): silhuetas distintas (teto em arco vs. corpo anguloso com chaminés), pedido do produto ("os edifícios estão sem personalidade e parecidos um com o outro"). |
+| 1.12.0 | 2026-09-30 | D-93: ART-11 reescrita (Sol fixo e distante, reverte o "sem noite" de D-26); §14.4 e §18.2 (Terra no céu da Lua com continentes e nuvens); §14.7 e §18.2 (Titã ganha Saturno com anéis e outras luas no céu). |

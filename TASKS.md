@@ -423,3 +423,12 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: o Tanque de Cerco persegue o alvo até o contato e martela com `siege_ram` (só solo, sem alcance mínimo); mais lento e resistente que o OPQ; não atinge alvos aéreos; modelo e foto do cartão.
 - [x] **T-190 — IA, tutorial e missões: Fábrica e composição com o Tanque de Cerco** · M · Spec: IA-16, IA-03, `dados:ia_plano`, `dados:personalidades`, `dados:missoes`, CAM-07, D-92 · Dep: T-189 · Feito: 2026-09-30
   - Aceite: a IA constrói 1 Fábrica pelo plano com prioridade sobre as demais estruturas de apoio e imprime ex1/opq/siege nela conforme o peso da personalidade, sem travar as outras categorias sem Fábrica pronta; Missão 0 libera "arsenal" no lugar do EX1 direto, com o novo passo 9 do tutorial (Fábrica pronta e ligada à rede) antes do passo do EX1; Missão 2 libera o Tanque de Cerco junto com o OPQ.
+
+## M21 — Sol fixo e céu por cenário (D-93)
+
+- [x] **T-191 — Sol fixo e distante, lado escuro nunca preto** · M · Spec: ART-11, D-93 · Dep: T-169 · Feito: 2026-09-30
+  - Aceite: o Sol (e as sombras em cascata) tem uma única direção fixa no mundo por partida; rotacionar ou percorrer o planeta com a câmera não desloca o Sol; o lado sem luz direta permanece visível (nunca preto puro, luz ambiente do cenário).
+- [x] **T-192 — Terra mais realista no céu da Lua** · P · Spec: §14.4, §18.2, D-93 · Dep: T-191 · Feito: 2026-09-30
+  - Aceite: a Terra no céu da Lua mostra continentes e nuvens no lado iluminado, além do oceano e do halo azul já existentes; continua fixa no mundo (T-191).
+- [x] **T-193 — Saturno e outras luas no céu de Titã** · M · Spec: §14.7, §18.2, D-93 · Dep: T-191 · Feito: 2026-09-30
+  - Aceite: de Titã, o céu mostra Saturno grande com anéis e ao menos 2 outras luas menores, todos em direções fixas no mundo, junto do Sol.

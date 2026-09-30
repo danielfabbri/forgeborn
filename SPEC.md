@@ -4,8 +4,8 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.10.0 — rascunho para aprovação |
-| Data | 2026-09-23 |
+| Versão do SPEC | 1.11.0 — rascunho para aprovação |
+| Data | 2026-09-30 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
 | Idioma | pt-BR |
@@ -538,10 +538,11 @@ flowchart LR
 
 - **PRD-01** — Matriz de produção (coluna `produzido_por` em `dados:custos`):
   - **Nave Inicial:** Hover de Exploração e Impressora 3D Móvel, e nada mais (regra do briefing).
-  - **Impressora 3D Móvel:** todas as demais unidades móveis, inclusive o Hover de Exploração, e todas as estruturas. **Não** imprime Impressoras, Naves nem os drones (Bombardeiro, Laser, Kamikaze).
+  - **Impressora 3D Móvel:** todas as demais estruturas e unidades móveis, inclusive o Hover de Exploração. **Não** imprime Impressoras, Naves, os drones (Bombardeiro, Laser, Kamikaze) nem o EX1, o OPQ ou o Tanque de Cerco.
   - **Hover de Plantio de Minas:** fabrica as próprias minas.
   - **Base de Lançamento:** imprime Satélites, quantos a nação quiser, um de cada vez na fila (UNI-04, D-83).
   - **Hangar de Drones:** imprime os drones (Bombardeiro, Laser, Kamikaze), quantos a nação quiser, um de cada vez na fila (UNI-21, D-91).
+  - **Fábrica de Artilharia:** imprime o Hover de Defesa EX1, o Hover de Defesa OPQ e o Tanque de Cerco, quantos a nação quiser, um de cada vez na fila (UNI-22, D-92).
 - **PRD-02** — Só a Nave gera novas Impressoras. Perder a Nave não é derrota imediata, mas deixa a nação dependente das Impressoras que restam (REG-09).
 
 ### 7.2 Fila e pagamento
@@ -608,8 +609,9 @@ flowchart LR
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | hover_explorer | Hover de Exploração | movel | ship+printer | 15 | 10 | 4 | 0 | 0 | 0 | 31 | 3 | 20 | 7,2 |
 | printer | Impressora 3D Móvel | movel | ship | 15 | 10 | 6 | 3 | 0 | 0 | 40 | 4 | 25 | 12 |
-| hover_ex1 | Hover de Defesa EX1 | movel | printer | 30 | 10 | 16 | 8 | 0 | 0 | 80 | 8 | 50 | 10,8 |
-| hover_opq | Hover de Defesa OPQ | movel | printer | 35 | 10 | 12 | 6 | 15 | 0 | 120 | 12 | 70 | 15 |
+| hover_ex1 | Hover de Defesa EX1 | movel | arsenal | 30 | 10 | 16 | 8 | 0 | 0 | 80 | 8 | 50 | 10,8 |
+| hover_opq | Hover de Defesa OPQ | movel | arsenal | 35 | 10 | 12 | 6 | 15 | 0 | 120 | 12 | 70 | 15 |
+| siege_tank | Tanque de Cerco | movel | arsenal | 45 | 10 | 20 | 10 | 20 | 0 | 165 | — | 110 | 21 |
 | hover_minelayer | Hover de Plantio de Minas | movel | printer | 30 | 15 | 10 | 10 | 10 | 0 | 110 | 11 | 65 | 13,2 |
 | hover_scout | Hover de Observação | movel | printer | 10 | 15 | 6 | 3 | 0 | 0 | 40 | 4 | 25 | 7,2 |
 | drone_bomber | Drone Bombardeiro | movel | hangar | 20 | 16 | 16 | 15 | 20 | 0 | 150 | 15 | 90 | 18 |
@@ -629,6 +631,7 @@ flowchart LR
 | aa_battery | Bateria Antiaérea | estrutura | printer | 35 | 14 | 18 | 7 | 7 | 0 | 111 | — | 80 | 18 |
 | mag_tower | Torre Magnética | estrutura | printer | 49 | 21 | 35 | 14 | 11 | 0 | 183,5 | — | 120 | 24 |
 | hangar | Hangar de Drones | estrutura | printer | 49 | 21 | 21 | 7 | 14 | 0 | 157,5 | — | 140 | 24 |
+| arsenal | Fábrica de Artilharia | estrutura | printer | 56 | 21 | 21 | 7 | 14 | 0 | 164,5 | — | 150 | 25,2 |
 | antenna | Antena | estrutura | printer | 30 | 50 | 30 | 0 | 0 | 0 | 125 | — | 50 | 12 |
 | power_hub | Central de Distribuição | estrutura | printer | 8 | 5 | 12 | 0 | 0 | 0 | 31 | — | 20 | 9 |
 | port | Porto | estrutura | printer | 70 | 20 | 20 | 0 | 0 | 0 | 120 | — | 100 | 21 |
@@ -639,7 +642,7 @@ flowchart LR
 | missile_long | Míssil de Longo Alcance | municao | missile_silo | 60 | 0 | 30 | 20 | 20 | 5 | 230 | — | 150 | 27 |
 | mine | Mina | municao | hover_minelayer | 6 | 0 | 2 | 1 | 0 | 0 | 11 | — | 20 | 3,6 |
 
-Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação, Silo, Bateria Móvel, Torre, Armazém, Solar, Muro, Portão, Antena, Central de Distribuição. **T2** (exige Ti) = OPQ, Plantio de Minas, Drones. **T3** (exige U) = Usina Nuclear, Base de Lançamento.
+Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação, Silo, Bateria Móvel, Torre, Armazém, Solar, Muro, Portão, Antena, Central de Distribuição. **T2** (exige Ti) = OPQ, Plantio de Minas, Drones, Tanque de Cerco. **T3** (exige U) = Usina Nuclear, Base de Lançamento.
 
 ### 8.2 Unidades móveis
 
@@ -652,6 +655,7 @@ Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação
 | printer | 240 | blindada | solo | 4,0 | 180 | 1,8 | 16 | 0 | 800 | 0,8 | 0 | — |
 | hover_ex1 | 150 | blindada | solo | 8,25 | 270 | 1,3 | 22 | 0 | 300 | 0,5 | 0 | ex1_laser |
 | hover_opq | 230 | blindada | solo | 6,75 | 180 | 1,6 | 22 | 0 | 400 | 0,7 | 0 | opq_torpedo |
+| siege_tank | 380 | blindada | solo | 4,5 | 140 | 1,9 | 16 | 0 | 450 | 0,9 | 0 | siege_ram |
 | hover_minelayer | 90 | leve | solo | 7,5 | 240 | 1,3 | 18 | 0 | 300 | 0,5 | 0 | — |
 | hover_scout | 70 | leve | solo | 11,25 | 360 | 1,0 | 28 | 14 | 240 | 0,3 | 0 | — |
 | drone_bomber | 90 | leve | ar | 11,0 | 240 | 1,2 | 18 | 0 | 400 | 1,6 | 0,4 | bomb |
@@ -682,6 +686,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | aa_battery | Bateria Antiaérea | 500 | 4 | 24 | 0 | 0 | 0 | 0 | 0 | 0 | nao | aa_missil |
 | mag_tower | Torre Magnética | 600 | 5 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | hangar | Hangar de Drones | 650 | 8 | 14 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
+| arsenal | Fábrica de Artilharia | 750 | 9 | 14 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | antenna | Antena | 250 | 3 | 100 | 0 | 0 | 0 | 0 | 0 | 1 | nao | — |
 | power_hub | Central de Distribuição | 250 | 3 | 8 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | port | Porto | 900 | 10 | 16 | 0 | 0 | 0 | 2 | 10 | 0 | nao | — |
@@ -695,6 +700,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | ex1_laser | laser | 14 | 1,0 | 10 | 0 | 0 | — | solo+ar | 1,5 | bateria | hitscan | — |
 | opq_torpedo | explosivo | 30 | 2,5 | 18 | 3 | 2,5 | 50 | solo | 5 | bateria | guiado | 18 |
+| siege_ram | explosivo | 70 | 1,8 | 2,5 | 0 | 0 | — | solo | 3 | bateria | hitscan | — |
 | drone_laser_gun | laser | 11 | 0,6 | 9 | 0 | 0 | — | solo+ar | 1 | bateria | hitscan | — |
 | bomb | explosivo | 60 | 3,0 | 3 | 0 | 3,5 | 50 | solo | 8 | bateria | balistico | — |
 | kamikaze_blast | explosivo | 90 | — | 2 | 0 | 4 | 40 | solo+ar | 0 | bateria | kamikaze | — |
@@ -737,6 +743,12 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **Restrição:** não atinge alvos aéreos.
 - **Forte contra:** EX1, Torres, estruturas, grupos compactos. **Fraco contra:** Drone Laser, Drone Bombardeiro, minas.
 - **Visual:** largo e pesado, com lançador dorsal de tubos.
+
+#### Tanque de Cerco — `siege_tank`
+- **Papel:** aríete pesado. Lento e caro, mas com o maior dano por golpe do solo; a estaca dianteira martela o alvo em contato (`siege_ram`, alcance corpo a corpo).
+- **Restrição:** não atinge alvos aéreos; sem alcance mínimo, precisa encostar no alvo.
+- **Forte contra:** estruturas isoladas, Torres, unidades paradas. **Fraco contra:** EX1 e OPQ em kiting, Drone Bombardeiro, grupos que o cercam.
+- **Visual:** casco baixo e largo sobre esteiras, com a estaca hidráulica na frente que martela ao atacar.
 
 #### Hover de Plantio de Minas — `hover_minelayer`
 - **Papel:** negação de área. Frágil e desarmado, planta minas fortes e invisíveis.
@@ -839,6 +851,10 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 #### Hangar de Drones — `hangar`
 - **UNI-21** — **Hangar de Drones** (`hangar`, D-91): estrutura fixa que a Impressora constrói (menu B, tecla H) e que, pronta e ligada à rede, imprime os drones (item `drone_bomber`, `drone_laser` ou `drone_kamikaze`, menu próprio B/L/K) com a energia da rede (PRD-06), como a Base de Lançamento imprime Satélites. A Impressora deixa de imprimir os três (PRD-01).
 - **Visual:** hangar baixo e alongado, com o portão de saída voltado para a rampa da Nave.
+
+#### Fábrica de Artilharia — `arsenal`
+- **UNI-22** — **Fábrica de Artilharia** (`arsenal`, D-92): estrutura fixa que a Impressora constrói (menu B, tecla B) e que, pronta e ligada à rede, imprime o Hover de Defesa EX1, o Hover de Defesa OPQ e o Tanque de Cerco (item `hover_ex1`, `hover_opq` ou `siege_tank`, menu próprio 1/2/3) com a energia da rede (PRD-06), como a Base de Lançamento imprime Satélites e o Hangar imprime os drones. A Impressora deixa de imprimir o EX1 e o OPQ (PRD-01).
+- **Visual:** galpão robusto e baixo, com portão largo voltado para a rampa da Nave e trilhos reforçados para a saída dos veículos pesados.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1086,10 +1102,11 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ship | E | Imprimir Hover de Exploração |
 | ship | I | Imprimir Impressora 3D |
 | ship | Q | Recolher ou liberar os mineradores (CMB-28) |
-| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição, O Porto, H Hangar de Drones |
+| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição, O Porto, H Hangar de Drones, B Fábrica de Artilharia |
 | missile_silo | C / L | Fabricar míssil curto / longo |
-| printer | U | Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, V Silo, C Bateria |
+| printer | U | Menu de unidades: E Exploração, M Minas, O Observação, V Silo, C Bateria |
 | hangar | B / L / K | Fabricar Drone Bombardeiro / Drone Laser / Drone Kamikaze (UNI-21) |
+| arsenal | 1 / 2 / 3 | Fabricar Hover de Defesa EX1 / Hover de Defesa OPQ / Tanque de Cerco (UNI-22) |
 | hover_explorer | C | Coletar |
 | hover_explorer | G | Reparar |
 | hover_explorer | F | Reciclar |
@@ -1144,7 +1161,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
   - **Militar:** esquadrões, ondas de ataque, defesa e recuo.
   - **Batedor:** explora com Hovers de Observação e planta Sentinelas nas rotas.
 - **IA-02** — A IA **não trapaceia a visão** em nenhuma dificuldade: usa a própria névoa.
-- **IA-03** — Composição adaptativa (quando `adapta_composicao` = 1): muitos drones inimigos → mais EX1 e Torres; muitos EX1 → mais OPQ; muitos OPQ → mais Drone Laser e Bombardeiros; defesa pesada → mais OPQ e Bombardeiros; minas detectadas → mais Observação.
+- **IA-03** — Composição adaptativa (quando `adapta_composicao` = 1): muitos drones inimigos → mais EX1 e Torres; muitos EX1 → mais OPQ; muitos OPQ → mais Drone Laser e Bombardeiros; defesa pesada → mais OPQ, Bombardeiros e Tanque de Cerco; muitos Tanques de Cerco inimigos → mais OPQ e Torres; minas detectadas → mais Observação.
 - **IA-04** — Uma onda de ataque parte quando o VR do exército ≥ `vr_exercito_ataque` e o relógio passou de `primeiro_ataque_min`. O alvo é a nação conhecida mais próxima com quem a IA está em guerra (na Brutal, a mais fraca); sem nação em guerra, vale a provocação (IA-12). A onda recua se o VR do exército cair abaixo de `ia_recuo_vr_pct`% do inicial e o do defensor for maior.
 - **IA-05** — As IAs também guerreiam entre si, pelas mesmas regras de temperamento (REG-24 a REG-28): só atacam nações com quem estão em guerra (D-81).
 - **IA-06** — A IA respeita `tiers_permitidos` (§8.1) nas estruturas e unidades de apoio e `tiers_militares` nas unidades de combate: 1 = só T1; 2 = T1 + T2; 3 = todos. Com `vr_exercito_max` > 0, a IA não imprime unidades de combate acima desse VR de exército (D-66).
@@ -1157,6 +1174,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 - **IA-13** — Cabos da IA (D-85, D-87): a IA pluga cada estrutura pronta que precisa de energia (e as Centrais) na Nave ou Central mais próxima da rede da Nave ao alcance e com saída livre; se não há saída livre ao alcance, ela planta uma Central ao lado da estrutura. Ela só posiciona essas estruturas onde algum ponto dessa rede alcança. Para uma expansão fora do alcance, ela primeiro planta uma Central de Distribuição no caminho (D-86).
 - **IA-14** — **IA naval** (D-90): em mapa com líquido a até `ia_porto_distancia_m` da base, a IA constrói um Porto e mantém `ia_barcos_artilharia` Embarcações de Artilharia e `ia_barcos_antena` Embarcação Antena. Quando o alvo da onda (IA-04) ou a expansão (IA-07) não tem caminho por terra, ela imprime Transportes e leva a onda (ou uma Impressora com escolta) pelo mar, desembarcando no litoral mais perto do alvo.
 - **IA-15** — **Drones do Hangar** (D-91): a IA constrói um Hangar pelo plano (`dados:ia_plano`) e, conforme a composição de §13.3, imprime `drone_bomber`, `drone_laser` e `drone_kamikaze` nele, em vez da Impressora.
+- **IA-16** — **Fábrica de Artilharia** (D-92): a IA constrói uma Fábrica de Artilharia pelo plano (`dados:ia_plano`), com prioridade sobre as demais estruturas de apoio (item liberado desde a Missão 0), e imprime `hover_ex1`, `hover_opq` e `siege_tank` nela, conforme a composição de §13.3, em vez da Impressora.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1211,6 +1229,7 @@ Quantidades por nível e o minuto a partir do qual a IA busca cada item (IA-08).
 <!-- dados:ia_plano -->
 | item | facil | normal | dificil | brutal | min_facil | min_normal | min_dificil | min_brutal |
 |---|---|---|---|---|---|---|---|---|
+| arsenal | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 | laser_tower | 2 | 3 | 4 | 5 | 0 | 0 | 0 | 0 |
 | nuclear_plant | 1 | 1 | 1 | 1 | 12 | 8 | 6 | 5 |
 | aa_battery | 1 | 2 | 2 | 3 | 12 | 9 | 7 | 6 |
@@ -1227,12 +1246,12 @@ Quantidades por nível e o minuto a partir do qual a IA busca cada item (IA-08).
 Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos proporcionalmente entre os permitidos.
 
 <!-- dados:personalidades -->
-| nacao | estilo | ex1 | opq | minas | obs | bomb | dlaser | kamikaze | torres | tracos |
-|---|---|---|---|---|---|---|---|---|---|---|
-| usa | Supremacia aérea | 25 | 10 | 0 | 5 | 20 | 20 | 15 | 5 | Satélite cedo; ataques aéreos às linhas de coleta |
-| chn | Maré | 50 | 20 | 0 | 5 | 8 | 7 | 5 | 5 | Meta de hovers; expande cedo; ondas grandes |
-| rus | Muralha e martelo | 20 | 40 | 15 | 5 | 5 | 0 | 5 | 10 | Nuclear cedo; Torres e minas nas entradas; avanços lentos com OPQ |
-| bra | Guerrilha logística | 25 | 15 | 15 | 10 | 5 | 15 | 10 | 5 | Sentinelas nas rotas; silos e baterias; assédio à mineração; ataca quem já está em combate |
+| nacao | estilo | ex1 | opq | siege | minas | obs | bomb | dlaser | kamikaze | torres | tracos |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| usa | Supremacia aérea | 19 | 8 | 8 | 0 | 5 | 20 | 20 | 15 | 5 | Satélite cedo; ataques aéreos às linhas de coleta |
+| chn | Maré | 43 | 17 | 10 | 0 | 5 | 8 | 7 | 5 | 5 | Meta de hovers; expande cedo; ondas grandes |
+| rus | Muralha e martelo | 13 | 27 | 20 | 15 | 5 | 5 | 0 | 5 | 10 | Nuclear cedo; Torres e minas nas entradas; avanços lentos com OPQ e o Tanque de Cerco |
+| bra | Guerrilha logística | 17 | 11 | 12 | 15 | 10 | 5 | 15 | 10 | 5 | Sentinelas nas rotas; silos e baterias; assédio à mineração; ataca quem já está em combate |
 
 ---
 
@@ -1331,16 +1350,16 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **CAM-04** — O progresso é salvo automaticamente ao fim de cada missão (TEC-21). Há até 3 slots de campanha.
 - **CAM-05** — A Missão 0 é um tutorial guiado no Campo de Testes de um laboratório na Terra (§14.5): passos com destaque na interface e narração da IA, usando as unidades móveis e fixas liberadas contra alvos de treino. Pode ser pulado. A campanha na Lua começa na Missão 1 (D-73).
 - **CAM-06** — **Oponentes sem Nave.** *Posto avançado* (`posto_passivo`, Missão 1): 2 Torres, 1 Armazém, 1 Usina Solar e 3 EX1 Defensivos em volta da zona de pouso oposta à do jogador; as armas só respondem no alcance. *Alvos de treino* (`alvos_treino`, Missão 0): 1 Armazém, 1 Usina Solar e 3 EX1 Passivos em volta do ponto marcado do passo 6; nunca disparam. Nenhum dos dois coleta, produz ou ataca. A nação é eliminada quando perde todas as estruturas e unidades (no lugar de REG-09), e a missão é vencida (D-73).
-- **CAM-07** — Passos do tutorial (Missão 0) e quando cada um se completa (na ordem; um passo só conta depois do anterior): (1) o Hover inicial entrega Ferro; (2) um 2º Hover de Exploração é impresso; (3) uma Impressora é impressa; (4) uma Usina Solar fica pronta e ligada por cabo à rede da Nave (ENE-26); (5) um Armazém fica pronto a até `tutorial_raio_armazem_m` de uma jazida de Cobre; (6) um Hover de Observação é impresso e o ponto marcado (a zona central de ECO-08 mais próxima da Nave, mostrado por um farol no mundo e no minimapa) fica visível; (7) uma Torre de Defesa fica pronta; (8) um Muro e um Portão ficam prontos; (9) 2 EX1 impressos e os alvos de treino destruídos. Cada passo mostra o texto, fala pela voz da IA (AUD-03) e destaca o elemento da interface que resolve o passo. **Pular tutorial** esconde os passos; o objetivo segue o mesmo (D-73).
+- **CAM-07** — Passos do tutorial (Missão 0) e quando cada um se completa (na ordem; um passo só conta depois do anterior): (1) o Hover inicial entrega Ferro; (2) um 2º Hover de Exploração é impresso; (3) uma Impressora é impressa; (4) uma Usina Solar fica pronta e ligada por cabo à rede da Nave (ENE-26); (5) um Armazém fica pronto a até `tutorial_raio_armazem_m` de uma jazida de Cobre; (6) um Hover de Observação é impresso e o ponto marcado (a zona central de ECO-08 mais próxima da Nave, mostrado por um farol no mundo e no minimapa) fica visível; (7) uma Torre de Defesa fica pronta; (8) um Muro e um Portão ficam prontos; (9) uma Fábrica de Artilharia fica pronta e ligada por cabo à rede da Nave (D-92); (10) 2 EX1 impressos (na Fábrica de Artilharia) e os alvos de treino destruídos. Cada passo mostra o texto, fala pela voz da IA (AUD-03) e destaca o elemento da interface que resolve o passo. **Pular tutorial** esconde os passos; o objetivo segue o mesmo (D-73).
 - **CAM-08** — Fim da missão: na vitória, as estrelas (CAM-03) e o melhor tempo entram no slot e a próxima missão é desbloqueada; a tela de fim mostra as estrelas e **Voltar ao Universo**. Na derrota, **Tentar de novo** ou **Voltar ao Universo**. O HP mínimo da Nave para a ★★★ é medido durante toda a missão (D-73).
 - **CAM-09** — **Slots.** Ao entrar na Campanha, o jogador escolhe um dos 3 slots: vazio (novo: Escolha de Nação, FLX-05) ou em uso (nação, missões concluídas e estrelas; **Continuar** ou **Apagar**, com confirmação). A Missão 2 usa o cenário Lua — Shackleton (§18.2) com a seed curada da missão (D-73).
 
 <!-- dados:missoes -->
 | ordem | id | cenario | nome | oponentes | objetivo | libera | tempo_par_min | versao |
 |---|---|---|---|---|---|---|---|---|
-| 0 | m00 | terra_lab | Campo de Testes | alvos_treino | Tutorial; destruir os alvos de treino | hover_explorer+printer+hover_ex1+hover_scout+laser_tower+storage+solar_plant+wall+gate+power_hub  | 20 | v1.0 |
+| 0 | m00 | terra_lab | Campo de Testes | alvos_treino | Tutorial; destruir os alvos de treino | hover_explorer+printer+arsenal+hover_scout+laser_tower+storage+solar_plant+wall+gate+power_hub  | 20 | v1.0 |
 | 1 | m01 | lua | Primeira Forja | posto_passivo | Destruir o posto avançado inimigo | antenna | 40 | v1.0 |
-| 2 | m02 | lua_shackleton | Sombra Eterna | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq+aa_battery+mag_tower | 60 | v1.0 |
+| 2 | m02 | lua_shackleton | Sombra Eterna | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq+siege_tank+aa_battery+mag_tower | 60 | v1.0 |
 | 3 | m03 | marte | Poeira Vermelha | normal+normal | Eliminar as nações rivais | nuclear_plant+hover_minelayer | 80 | v1.0 |
 | 4 | m04 | fobos | Cerco em Fobos | dificil | Sobreviver 12 min; depois destruir a Nave inimiga | hangar | 60 | v1.x |
 | 5 | m05 | ceres | Veios de Ceres | normal+dificil | Eliminar as nações rivais | satellite_uplink+missile_silo | 90 | v1.x |
@@ -1348,7 +1367,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | 7 | m07 | europa | Sob o Gelo | normal+dificil+dificil | Eliminar as nações rivais | — | 110 | v1.x |
 | 8 | m08 | tita | Trono Único | dificil+dificil+brutal | Eliminar todas as nações | — | 120 | v1.x |
 
-**Missão 0 — Campo de Testes (tutorial, Terra).** Os 9 passos de CAM-07: coletar, imprimir o 2º Hover e a Impressora, energia com a Usina Solar, Armazém perto do Cobre, explorar com o Hover de Observação, Torre de Defesa, Muro e Portão e, por fim, EX1 contra os alvos de treino (`alvos_treino`), que nunca disparam.
+**Missão 0 — Campo de Testes (tutorial, Terra).** Os 10 passos de CAM-07: coletar, imprimir o 2º Hover e a Impressora, energia com a Usina Solar, Armazém perto do Cobre, explorar com o Hover de Observação, Torre de Defesa, Muro e Portão, Fábrica de Artilharia e, por fim, EX1 contra os alvos de treino (`alvos_treino`), que nunca disparam.
 
 **Missão 1 — Primeira Forja (Lua).** A primeira missão de verdade: destruir o posto avançado inimigo (`posto_passivo`, CAM-06): 2 Torres, 1 Armazém, 1 Usina Solar e 3 EX1, que não produzem nem atacam; só se defendem.
 
@@ -1757,6 +1776,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-89 | Jazidas com cara de pedra (rocha com veios e cristais na cor do recurso, ECO-04); Ferro mais laranja (#E0661C) e Cobre mais amarelo (#E8C02A); jazidas a pelo menos 25 m umas das outras (ECO-07); o dobro de recurso em cada jazida (`dados:jazidas`); nova camada de jazidas espalhadas de Fe, Si, Cu e Li pelo planeta, 1 a cada 20.000 m² (ECO-30). | Pedido do produto: "jazidas mais parecidas com as pedras… reconhecer visualmente que não é uma pedra"; "ferro mais laranja e o cobre mais amarelo"; "mais espalhadas"; "2x mais recursos… passe mais tempo ali"; respostas: mínimo de 25 m, "quero mais jazidas pelo cenário", nova camada espalhada, cores recomendadas. | Aprovada |
 | D-90 | Mares (CEN-04): líquido em `mar_cobertura_pct` 25% da superfície, formas orgânicas com ilhas, terra firme a `mar_folga_zona_m` das zonas; unidades de solo param na borda; zonas podem depender de barco (CEN-11 conta o mar). Camada de água (MOV-08). Porto (UNI-16) e embarcações de Transporte (10 unidades), Artilharia (laser) e Antena (UNI-17 a UNI-20), com os números aprovados (HP, velocidade, raio, visão, custo, bateria, `boat_laser`, `porto_distancia_borda_m`). IA naval completa (IA-14). **Proposta:** giro, `mov_en_s`, `en_impressao` das embarcações e do Porto, `mar_folga_zona_m` 100, `embarque_distancia_m` 3, portas do Porto (2 × 10 EN/s) e os parâmetros `ia_porto_distancia_m`, `ia_barcos_artilharia`, `ia_barcos_antena`. Retira "lagos_por_setor", "lago_raio_min_m", "lago_raio_max_m" e "lago_folga_zona_m" (GOV-03). | Pedido do produto: "mares de metano de Titã com formas mais orgânicas… lagos ou mares enormes, inclusive com ilhas… as unidades não podem entrar no mar… Porto… embarcação de transporte (até 10 unidades), de artilharia (laser), antena… também para outros planetas com líquido"; respostas: ~25% da superfície, pode exigir barco, IA usa tudo, números da proposta aprovados. | Aprovada |
 | D-91 | Hangar de Drones (`hangar`, UNI-21): estrutura que a Impressora constrói e que imprime os drones (Bombardeiro, Laser e o novo Kamikaze), com energia da rede, como a Base de Lançamento imprime Satélites; a Impressora deixa de imprimir os três (PRD-01). Kamikaze (`drone_kamikaze`, CMB-30): drone aéreo, leve, que persegue o alvo, explode ao encostar (dano em área) e sempre se destrói no ato; como qualquer drone, é alvo da Antiaérea (UNI-12). IA-15: a IA constrói o Hangar pelo plano e reparte o peso de bomb/dlaser com o kamikaze. Missão 4 passa a liberar "hangar" (deriva os 3 drones). | Pedido do produto: "quero que o hover de impressão 3d possa construir uma unidade estrutura fixa que funcionaria como uma oficina de drones… quem vai construir os drones é uma unidade de Hangar… drone laser, o drone bombardeiro e um outro drone que será o kamikaze… ele voa e se projeta contra unidades ou estruturas inimigas e explode ao colidir… se mata atingindo o inimigo… todos os drones podem ser destruídos por baterias antiaéreas"; números propostos (Hangar e Kamikaze com base nas unidades e estruturas parecidas) aprovados. | Aprovada |
+| D-92 | Fábrica de Artilharia (`arsenal`, UNI-22): estrutura que a Impressora constrói e que imprime o Hover de Defesa EX1, o Hover de Defesa OPQ e o novo Tanque de Cerco, com energia da rede, como o Hangar imprime os drones; a Impressora deixa de imprimir o EX1 e o OPQ (PRD-01). Tanque de Cerco (`siege_tank`): unidade de solo pesada e lenta, com a maior blindagem e o maior dano por golpe do solo, arma corpo a corpo (`siege_ram`, sem alcance mínimo) que martela o alvo; não atinge alvos aéreos; T2 (exige Titânio, como o OPQ). IA-16: a IA constrói a Fábrica pelo plano, com prioridade sobre as demais estruturas de apoio (liberada desde a Missão 0), e reparte o peso de ex1/opq com o Tanque de Cerco. Missão 0 passa a liberar "arsenal" no lugar do EX1 direto (deriva o EX1; novo passo 9 do tutorial, CAM-07); Missão 2 libera o Tanque de Cerco junto com o OPQ. | Pedido do produto: "quero construir uma fábrica de artilharia pra construir hovers e tanques de artilharia. Pode levar o OPQ e o EX1 pra lá. E pode construir também um tanque de ataque físico… é um tanque mais pesado que tem um poder de dano alto e é lento… uma boa unidade pra ir andando e destruir unidades fixas… uma estaca que fica martelando na estrutura… a impressora 3d não deve poder mais construir os hovers de defesa"; escopo (só o tanque físico), nomes (`arsenal`/`siege_tank`), tier (T2) e missão de liberação (m02) confirmados; números propostos (com base nas unidades e estruturas parecidas) a aprovar. | Proposta |
 
 ---
 
@@ -1867,3 +1887,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.9.1 | 2026-09-28 | D-90: UNI-20 (o Transporte encosta na borda mais perto das unidades que embarcam). |
 | 1.9.2 | 2026-09-28 | D-90 (proposta): `ia_porto_distancia_m` 250 (com a terra firme de `mar_folga_zona_m` em volta das zonas, o mar mais perto fica além de 130 m). |
 | 1.10.0 | 2026-09-30 | D-91: PRD-01, UNI-21 (`hangar`), CMB-30 (`kamikaze`), IA-15, `dados:moveis` (`drone_kamikaze`), `dados:armas` (`kamikaze_blast`), `dados:custos` e `dados:estruturas` (`hangar`; `drone_bomber`/`drone_laser` mudam produzido_por para `hangar`), `dados:ia_plano`, `dados:personalidades` (coluna `kamikaze`), `dados:missoes` (m04), atalhos. |
+| 1.11.0 | 2026-09-30 | D-92: PRD-01, UNI-22 (`arsenal`), IA-16, `dados:moveis` e `dados:armas` (`siege_tank`, `siege_ram`), `dados:custos` e `dados:estruturas` (`arsenal`; `hover_ex1`/`hover_opq` mudam produzido_por para `arsenal`), `dados:ia_plano`, `dados:personalidades` (coluna `siege`), `dados:missoes` (m00 libera `arsenal` no lugar do EX1; m02 libera o Tanque de Cerco), IA-03, CAM-07 (10 passos, novo passo 9), atalhos. |

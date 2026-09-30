@@ -60,6 +60,21 @@
     "arma": "opq_torpedo"
   },
   {
+    "id": "siege_tank",
+    "hp": 380,
+    "blindagem": "blindada",
+    "camada": "solo",
+    "vel_m_s": 4.5,
+    "giro_graus_s": 140,
+    "raio_m": 1.9,
+    "visao_m": 16,
+    "deteccao_m": 0,
+    "bateria_en": 450,
+    "mov_en_s": 0.9,
+    "pairar_en_s": 0,
+    "arma": "siege_ram"
+  },
+  {
     "id": "hover_minelayer",
     "hp": 90,
     "blindagem": "leve",

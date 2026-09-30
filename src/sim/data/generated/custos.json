@@ -41,7 +41,7 @@
     "nome": "Hover de Defesa EX1",
     "categoria": "movel",
     "produzido_por": [
-      "printer"
+      "arsenal"
     ],
     "fe": 30,
     "si": 10,
@@ -59,7 +59,7 @@
     "nome": "Hover de Defesa OPQ",
     "categoria": "movel",
     "produzido_por": [
-      "printer"
+      "arsenal"
     ],
     "fe": 35,
     "si": 10,
@@ -71,6 +71,24 @@
     "ref_x": 12,
     "en_impressao": 70,
     "tempo_s": 15
+  },
+  {
+    "id": "siege_tank",
+    "nome": "Tanque de Cerco",
+    "categoria": "movel",
+    "produzido_por": [
+      "arsenal"
+    ],
+    "fe": 45,
+    "si": 10,
+    "cu": 20,
+    "li": 10,
+    "ti": 20,
+    "u": 0,
+    "vr": 165,
+    "ref_x": null,
+    "en_impressao": 110,
+    "tempo_s": 21
   },
   {
     "id": "hover_minelayer",
@@ -413,6 +431,24 @@
     "ref_x": null,
     "en_impressao": 140,
     "tempo_s": 24
+  },
+  {
+    "id": "arsenal",
+    "nome": "Fábrica de Artilharia",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 56,
+    "si": 21,
+    "cu": 21,
+    "li": 7,
+    "ti": 14,
+    "u": 0,
+    "vr": 164.5,
+    "ref_x": null,
+    "en_impressao": 150,
+    "tempo_s": 25.2
   },
   {
     "id": "antenna",

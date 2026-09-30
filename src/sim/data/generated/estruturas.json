@@ -180,6 +180,21 @@
     "arma": null
   },
   {
+    "id": "arsenal",
+    "nome": "Fábrica de Artilharia",
+    "hp": 750,
+    "pegada_m": 9,
+    "visao_m": 14,
+    "deteccao_m": 0,
+    "geracao_en_s": 0,
+    "banco_en": 0,
+    "portas": 0,
+    "taxa_porta_en_s": 0,
+    "manutencao_en_s": 0,
+    "deposito": false,
+    "arma": null
+  },
+  {
     "id": "antenna",
     "nome": "Antena",
     "hp": 250,

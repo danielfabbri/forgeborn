@@ -1,5 +1,16 @@
 [
   {
+    "item": "arsenal",
+    "facil": 1,
+    "normal": 1,
+    "dificil": 1,
+    "brutal": 1,
+    "min_facil": 0,
+    "min_normal": 0,
+    "min_dificil": 0,
+    "min_brutal": 0
+  },
+  {
     "item": "laser_tower",
     "facil": 2,
     "normal": 3,

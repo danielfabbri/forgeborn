@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v1.10.0 |
+| Derivado de | `SPEC.md` v1.11.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -414,3 +414,12 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: o Kamikaze persegue o alvo, explode ao alcançar o contato com dano em área (CMB-10/CMB-11) e se destrói sempre no ato; a Antiaérea o abate como qualquer drone no ar; modelo e foto do cartão.
 - [x] **T-187 — IA: Hangar e composição com Kamikaze** · M · Spec: IA-15, `dados:ia_plano`, `dados:personalidades`, `dados:missoes`, D-91 · Dep: T-186 · Feito: 2026-09-30
   - Aceite: a IA constrói 1 Hangar pelo plano e imprime bomb/dlaser/kamikaze nele conforme o peso da personalidade; sem Hangar pronto, essas categorias esperam sem travar as outras; Missão 4 libera "hangar" (e os 3 drones com ele).
+
+## M20 — Fábrica de Artilharia (D-92)
+
+- [ ] **T-188 — Fábrica de Artilharia: estrutura, produção e Impressora sem EX1/OPQ** · G · Spec: PRD-01, UNI-22, `dados:custos`, `dados:estruturas`, atalhos, D-92 · Dep: T-187
+  - Aceite: a Impressora constrói a Fábrica (B → B) e deixa de imprimir o EX1 e o OPQ; pronta e na rede, a Fábrica imprime as 3 unidades pela própria fila (menu 1/2/3), pagas com a energia da rede; sem rede, a impressão não avança.
+- [ ] **T-189 — Tanque de Cerco: unidade e arma corpo a corpo** · G · Spec: `dados:moveis`, `dados:armas` (`siege_ram`), UNI-22, D-92 · Dep: T-188
+  - Aceite: o Tanque de Cerco persegue o alvo até o contato e martela com `siege_ram` (só solo, sem alcance mínimo); mais lento e resistente que o OPQ; não atinge alvos aéreos; modelo e foto do cartão.
+- [ ] **T-190 — IA, tutorial e missões: Fábrica e composição com o Tanque de Cerco** · M · Spec: IA-16, IA-03, `dados:ia_plano`, `dados:personalidades`, `dados:missoes`, CAM-07, D-92 · Dep: T-189
+  - Aceite: a IA constrói 1 Fábrica pelo plano com prioridade sobre as demais estruturas de apoio e imprime ex1/opq/siege nela conforme o peso da personalidade, sem travar as outras categorias sem Fábrica pronta; Missão 0 libera "arsenal" no lugar do EX1 direto, com o novo passo 9 do tutorial (Fábrica pronta e ligada à rede) antes do passo do EX1; Missão 2 libera o Tanque de Cerco junto com o OPQ.

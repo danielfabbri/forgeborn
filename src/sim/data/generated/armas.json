@@ -35,6 +35,23 @@
     "vel_projetil_m_s": 18
   },
   {
+    "id": "siege_ram",
+    "tipo_dano": "explosivo",
+    "dano": 70,
+    "recarga_s": 1.8,
+    "alcance_m": 2.5,
+    "alcance_min_m": 0,
+    "splash_m": 0,
+    "splash_borda_pct": null,
+    "alvos": [
+      "solo"
+    ],
+    "en_disparo": 3,
+    "fonte_en": "bateria",
+    "projetil": "hitscan",
+    "vel_projetil_m_s": null
+  },
+  {
     "id": "drone_laser_gun",
     "tipo_dano": "laser",
     "dano": 11,

@@ -11,7 +11,7 @@
     "libera": [
       "hover_explorer",
       "printer",
-      "hover_ex1",
+      "arsenal",
       "hover_scout",
       "laser_tower",
       "storage",
@@ -51,6 +51,7 @@
       "mobile_silo",
       "mobile_battery",
       "hover_opq",
+      "siege_tank",
       "aa_battery",
       "mag_tower"
     ],

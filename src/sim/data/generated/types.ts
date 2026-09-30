@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.10.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.11.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -37,6 +37,7 @@ export interface AlertasRow {
 export type ArmasId =
   | 'ex1_laser'
   | 'opq_torpedo'
+  | 'siege_ram'
   | 'drone_laser_gun'
   | 'bomb'
   | 'kamikaze_blast'
@@ -107,6 +108,7 @@ export type CustosId =
   | 'printer'
   | 'hover_ex1'
   | 'hover_opq'
+  | 'siege_tank'
   | 'hover_minelayer'
   | 'hover_scout'
   | 'drone_bomber'
@@ -126,6 +128,7 @@ export type CustosId =
   | 'aa_battery'
   | 'mag_tower'
   | 'hangar'
+  | 'arsenal'
   | 'antenna'
   | 'power_hub'
   | 'port'
@@ -202,6 +205,7 @@ export type EstruturasId =
   | 'aa_battery'
   | 'mag_tower'
   | 'hangar'
+  | 'arsenal'
   | 'antenna'
   | 'power_hub'
   | 'port';
@@ -243,6 +247,7 @@ export interface FreeBattleRow {
 }
 
 export type IaPlanoItem =
+  | 'arsenal'
   | 'laser_tower'
   | 'nuclear_plant'
   | 'aa_battery'
@@ -293,6 +298,7 @@ export type MoveisId =
   | 'printer'
   | 'hover_ex1'
   | 'hover_opq'
+  | 'siege_tank'
   | 'hover_minelayer'
   | 'hover_scout'
   | 'drone_bomber'
@@ -562,6 +568,7 @@ export interface PersonalidadesRow {
   estilo: string;
   ex1: number;
   opq: number;
+  siege: number;
   minas: number;
   obs: number;
   bomb: number;

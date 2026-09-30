@@ -122,7 +122,7 @@
     "perfil_li": 0.8,
     "perfil_ti": 1,
     "perfil_u": 1.2,
-    "evento": null,
+    "evento": "chuva_acida",
     "versao": "v1.x"
   },
   {

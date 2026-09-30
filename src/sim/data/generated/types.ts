@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.15.0.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.16.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -24,7 +24,8 @@ export type AlertasId =
   | 'AL-20'
   | 'AL-21'
   | 'AL-22'
-  | 'AL-23';
+  | 'AL-23'
+  | 'AL-24';
 
 export interface AlertasRow {
   id: AlertasId;
@@ -543,6 +544,13 @@ export type ParametrosChave =
   | 'tempestade_aviso_s'
   | 'mar_cobertura_pct'
   | 'mar_folga_zona_m'
+  | 'venus_chuva_intervalo_min_s'
+  | 'venus_chuva_intervalo_max_s'
+  | 'venus_chuva_duracao_s'
+  | 'venus_chuva_mult_visao'
+  | 'venus_chuva_mult_solar'
+  | 'venus_chuva_dano_hp_s'
+  | 'venus_chuva_aviso_s'
   | 'pedras_por_10k_m2'
   | 'pedra_raio_min_m'
   | 'pedra_raio_max_m'

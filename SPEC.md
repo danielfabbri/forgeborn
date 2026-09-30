@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.15.0 — rascunho para aprovação |
+| Versão do SPEC | 1.16.0 — rascunho para aprovação |
 | Data | 2026-09-30 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -1271,13 +1271,14 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | marte | Marte | 500 | 0,6 | 1,0 | 1,0 | 1,0 | 1,0 | 1,4 | 1,0 | 1,0 | 0,9 | 0,8 | 1,0 | tempestade_poeira | v1.0 |
 | fobos | Fobos | 150 | 0,6 | 1,1 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 1,0 | 1,0 | 0,8 | — | v1.x |
 | ceres | Ceres | 260 | 0,35 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 0,8 | 1,0 | 1,3 | 1,5 | 1,5 | — | v1.x |
-| venus | Vênus | 610 | 0,25 | 1,0 | 1,0 | 1,5 | 0,9 | 1,2 | 1,2 | 1,0 | 0,8 | 1,0 | 1,2 | — | v1.x |
+| venus | Vênus | 610 | 0,25 | 1,0 | 1,0 | 1,5 | 0,9 | 1,2 | 1,2 | 1,0 | 0,8 | 1,0 | 1,2 | chuva_acida | v1.x |
 | europa | Europa | 385 | 0,15 | 1,15 | 0,75 | 1,0 | 1,0 | 0,8 | 1,0 | 1,0 | 1,2 | 1,0 | 1,5 | — | v1.x |
 | tita | Titã | 455 | 0,1 | 1,0 | 1,0 | 0,75 | 0,85 | 1,0 | 1,0 | 1,2 | 1,0 | 1,2 | 1,2 | lagos_metano | v1.0 |
 
 - **CEN-03** — Evento `tempestade_poeira` (Marte): ocorre em intervalos sorteados pela seed entre `tempestade_intervalo_min_s` e `tempestade_intervalo_max_s` e dura `tempestade_duracao_s`. Durante o evento a visão de todos os corpos (névoa e detecção de alvos) é multiplicada por `tempestade_mult_visao` e a geração solar por `tempestade_mult_solar`. O aviso AL-15 sai `tempestade_aviso_s` antes.
 - **CEN-04** — **Mares** (D-90): cenário com evento de líquido (hoje `lagos_metano`, Titã; vale para qualquer corpo com água ou outro líquido na superfície) tem mares e lagos de formas orgânicas, com ilhas: toda a superfície abaixo do nível do líquido é mar, cobrindo `mar_cobertura_pct`% da área, com a mesma simetria de CEN-06. O terreno a até `mar_folga_zona_m` de cada zona de pouso é terra firme. Unidades de solo não entram no líquido: param na borda (MOV-01); drones sobrevoam; embarcações só andam nele (MOV-08). Nenhuma estrutura, mina, pedra ou jazida fica no líquido, exceto o Porto (UNI-16, PRD-10).
 - **CEN-05** — Europa: `mult_vel_hover` e `mult_giro_hover` representam o gelo (mais rápido, gira pior).
+- **CEN-18** — Evento `chuva_acida` (Vênus, D-97): ocorre em intervalos sorteados pela seed entre `venus_chuva_intervalo_min_s` e `venus_chuva_intervalo_max_s` e dura `venus_chuva_duracao_s`. Durante o evento a visão de todos os corpos é multiplicada por `venus_chuva_mult_visao`, a geração solar por `venus_chuva_mult_solar` (mesmo formato de CEN-03) e, além disso, toda unidade e estrutura (de qualquer nação, sem exceção de camada) sofre `venus_chuva_dano_hp_s` de dano contínuo (CMB-01, multiplicador `ambiental`), sem bônus nem mínimo de 1 por acerto — uniforme pelo planeta inteiro, sem centro nem borda (ao contrário da área de CMB-26). O aviso AL-24 sai `venus_chuva_aviso_s` antes.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1290,6 +1291,13 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | tempestade_aviso_s | 20 | s | Antecedência do aviso AL-15 |
 | mar_cobertura_pct | 25 | % | Fração da superfície coberta pelo líquido (CEN-04) |
 | mar_folga_zona_m | 100 | m | Raio de terra firme em volta do centro de cada zona de pouso (CEN-04) |
+| venus_chuva_intervalo_min_s | 300 | s | Intervalo mínimo entre chuvas ácidas (CEN-18) |
+| venus_chuva_intervalo_max_s | 420 | s | Intervalo máximo entre chuvas ácidas (CEN-18) |
+| venus_chuva_duracao_s | 45 | s | Duração da chuva ácida (CEN-18) |
+| venus_chuva_mult_visao | 0,7 | × | Visão durante a chuva ácida (CEN-18) |
+| venus_chuva_mult_solar | 0,5 | × | Geração solar durante a chuva ácida (CEN-18) |
+| venus_chuva_dano_hp_s | 0,5 | HP/s | Dano contínuo da chuva ácida, a toda unidade e estrutura (CEN-18) |
+| venus_chuva_aviso_s | 20 | s | Antecedência do aviso AL-24 (CEN-18) |
 
 ### 14.2 Tamanho dos corpos
 
@@ -1339,6 +1347,13 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **Presets:** *Xanadu* (N = 2, 2 jogadores), *Ligeia Mare* (N = 4, 2–4), *Kraken Mare* (N = 4, 3–4).
 - **Eventos:** `lagos_metano` (CEN-04): mares de metano com ilhas, em ~um quarto da superfície; Porto e embarcações (UNI-16 a UNI-20).
 - **Uso:** Free Battle na v1.0; a Missão 8 entra na campanha quando as Missões 4 a 7 existirem (D-78).
+
+### 14.8 Vênus
+
+- **Ambientação:** um planeta pequeno, sob nuvens espessas e opacas de ponta a ponta (sem espaço visível de dentro do cenário, nem de dia nem de noite): céu laranja opaco, sem estrelas; o Sol só um brilho difuso e avermelhado, sem disco nítido nem sombras duras; solo de basalto escuro; relâmpagos piscando nas nuvens, decorativos (sem efeito de jogo). Névoa mais densa que Marte e Titã (o "opaco" do nome). Na chuva ácida (CEN-18) a névoa fecha ainda mais, o céu ganha um tom esverdeado doentio e toda unidade e estrutura expostas perdem HP aos poucos, além da visão e da geração solar caindo, como na tempestade de Marte. Vento de fundo (AUD-02).
+- **Presets:** *Maxwell Montes* (N = 2, 2 jogadores), *Aphrodite Terra* (N = 4, 2–4), *Lakshmi Planum* (N = 4, 3–4).
+- **Eventos:** `chuva_acida` (CEN-18).
+- **Uso:** Free Battle só por enquanto; a Missão 6 entra na campanha quando as Missões 4 e 5 existirem (D-97, mesmo padrão de D-78 para Titã). Sem céu noturno (D-95) por enquanto: as nuvens já escondem o espaço o tempo todo, de dia e de noite.
 
 ---
 
@@ -1468,6 +1483,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | AL-21 | Paz com {nacao}. | Trégua (REG-28) | media | 0 |
 | AL-22 | Uma unidade de {nacao} está acessando a nossa base. Pedi que se retire. | Unidade alheia no domínio do jogador (REG-26); traz o botão Declarar guerra (REG-29) | media | 20 |
 | AL-23 | {item} pronta, mas fora da rede. | Estrutura que precisa de energia fica pronta sem cabo (ENE-29) | media | 10 |
+| AL-24 | Chuva ácida se aproximando. | Evento de cenário (CEN-18) | media | 0 |
 
 ### 17.3 Acessibilidade
 
@@ -1504,7 +1520,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | Marte | Caramelo; pôr do sol azul | Ferrugem | Quente e difusa | Tempestades de poeira; Fobos e Deimos no céu |
 | Fobos | Preto, com Marte gigante | Poeira escura | Dura | Marte ocupando meio céu |
 | Ceres | Preto | Regolito escuro | Fraca | Manchas de sal brilhantes (cratera Occator) |
-| Vênus | Laranja opaco | Basalto | Difusa e avermelhada | Relâmpagos nas nuvens |
+| Vênus | Laranja opaco | Basalto | Difusa e avermelhada | Relâmpagos nas nuvens; chuva ácida periódica |
 | Europa | Preto, com Júpiter enorme | Gelo azul-branco rachado | Fria | Júpiter e suas faixas |
 | Titã | Laranja nebuloso | Gelo e sedimentos | Penumbra | Lagos de metano espelhados; Saturno e outras luas no céu |
 
@@ -1781,6 +1797,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-94 | Correções e extensões de D-93: (1) luz ambiente da Lua, Shackleton e Marte sobe bastante — o lado escuro tinha ficado preto demais para jogar; (2) o Sol vira um corpo visível no céu (disco brilhante e distante), não só uma direção de luz, e continua visível na visão do espaço (antes ele sumia quando o céu dava lugar ao espaço estrelado); (3) Saturno (e os demais corpos vistos de dentro de uma atmosfera) ficam um pouco menos nítidos (neblina) do que na visão do espaço, onde ficam nítidos; (4) Marte ganha Fobos e Deimos no céu, como as luas de Saturno em Titã. | Pedido do produto: "a lua e marte ficaram impossível de jogar no lado escuro... ficou absolutamente preto. Não pode... tem ficar jogável, com uma mínima iluminação. Outra coisa, não vi o sol no espaço... vi um sol em titã dentro da atmosfera, mas quando vai pra visão de longe, o sol some. Quero ver o sol assim como ficou saturno no céu. Bem distante e brilhante. Saturno tem que ficar um pouco menos nítido quando estamos dentro do planeta por causa da atmosfera. E pode fazer as luas de marte também." | Aprovada |
 | D-95 | Céu noturno nos cenários com atmosfera (Marte e Titã por enquanto): o lado do planeta sem Sol direto passa a ver um céu próprio de noite (cor e, em Marte, estrelas visíveis — Titã continua sem estrelas, de dia e de noite, pela neblina espessa), em vez do mesmo céu de dia com o halo/disco do Sol apagado. A transição segue o ângulo entre o "para cima" do ponto focal e a direção fixa do Sol (ART-11). Lua, Shackleton e Campo de testes não mudam (sem cúpula, ou fora do pedido). | Pedido do produto: "Quando eu estiver em um corpo celeste que tiver atmosfera e for andando até o lado que o sol não bate, o céu precisa ficar a noite. Marte e titã por enquanto." | Aprovada |
 | D-96 | Giro livre ao posicionar generalizado para toda estrutura (antes só Muro e Portão, D-56): apertar fixa o centro no ponto clicado e arrastar (com o botão ainda apertado) aponta a pegada para o cursor, em qualquer ângulo; soltar confirma, e clicar sem arrastar mantém a última direção usada. Inclui o Porto, com as mesmas regras de posicionamento sobre o líquido (D-90). A checagem de sobreposição entre pegadas passa a comparar os retângulos reais (SAT), não mais uma caixa alinhada ao norte — necessário porque duas pegadas quadradas giradas em ângulos diferentes podem se sobrepor sem que seus centros estejam "dentro" uma da outra no eixo norte-leste. | Pedido do produto: "Sempre que eu for criar uma unidade física, quando eu clicar e posicionar ela, com o mouse ainda clicado, eu rotaciono ela pra enxaixar na melhor posição."; respostas: giro livre em qualquer ângulo (não só passos de 90°), e o Porto entra na mudança. | Aprovada |
+| D-97 | Vênus entra só no Free Battle (a Missão 6 segue na v1.x, depois das Missões 4 e 5, para manter a ordem da campanha, mesmo padrão de D-78 para Titã): céu laranja opaco, sol difuso avermelhado, solo de basalto, relâmpagos decorativos nas nuvens, 3 presets; evento próprio `chuva_acida` (CEN-18), sorteado pela seed como a tempestade de poeira de Marte (intervalo, duração, aviso AL-24, visão e geração solar reduzidas), mais um dano contínuo leve a toda unidade e estrutura expostas, planeta inteiro, sem centro nem borda. **Proposta:** os números de `venus_chuva_*` (intervalo 300–420 s, duração 45 s, visão ×0,7, solar ×0,5, dano 0,5 HP/s, aviso 20 s). | Pedido do produto: "agora faça Vênus"; escopo (Free Battle primeiro, como Titã) e evento de risco (visão/solar reduzidos e dano leve, à escolha do produto) respondidos por perguntas de esclarecimento; números propostos com base na tempestade de poeira (CEN-03) e na radiação da Usina Nuclear (CMB-24), à espera de ajuste do produto. | Aprovada |
 
 ---
 
@@ -1897,3 +1914,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.13.0 | 2026-09-30 | D-94: ART-11 (Sol também é um corpo visível no céu, sempre; corpos de dentro de uma atmosfera ficam menos nítidos que na visão do espaço); luz ambiente da Lua, Shackleton e Marte sobe (lado escuro jogável); §14.6 e §18.2 (Marte ganha Fobos e Deimos no céu). |
 | 1.14.0 | 2026-09-30 | D-95: ART-11 e §14.6/§14.7 (céu noturno do lado sem Sol direto, em Marte e Titã — Marte com estrelas, Titã sem). |
 | 1.15.0 | 2026-09-30 | D-96: PRD-10, UI-08 e CEN-15 (giro livre ao posicionar generalizado de Muro/Portão para toda estrutura, inclusive o Porto; sobreposição de pegadas por SAT entre retângulos girados). |
+| 1.16.0 | 2026-09-30 | D-97: Vênus no Free Battle (CEN-18, `chuva_acida`, `dados:parametros` `venus_chuva_*`, AL-24, §14.8, §18.2, `dados:cenarios` evento de Vênus); Missão 6 adiada para quando as Missões 4 e 5 existirem. |

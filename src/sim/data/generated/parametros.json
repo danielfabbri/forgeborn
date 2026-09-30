@@ -1134,6 +1134,48 @@
     "descricao": "Raio de terra firme em volta do centro de cada zona de pouso (CEN-04)"
   },
   {
+    "chave": "venus_chuva_intervalo_min_s",
+    "valor": 300,
+    "unidade": "s",
+    "descricao": "Intervalo mínimo entre chuvas ácidas (CEN-18)"
+  },
+  {
+    "chave": "venus_chuva_intervalo_max_s",
+    "valor": 420,
+    "unidade": "s",
+    "descricao": "Intervalo máximo entre chuvas ácidas (CEN-18)"
+  },
+  {
+    "chave": "venus_chuva_duracao_s",
+    "valor": 45,
+    "unidade": "s",
+    "descricao": "Duração da chuva ácida (CEN-18)"
+  },
+  {
+    "chave": "venus_chuva_mult_visao",
+    "valor": 0.7,
+    "unidade": "×",
+    "descricao": "Visão durante a chuva ácida (CEN-18)"
+  },
+  {
+    "chave": "venus_chuva_mult_solar",
+    "valor": 0.5,
+    "unidade": "×",
+    "descricao": "Geração solar durante a chuva ácida (CEN-18)"
+  },
+  {
+    "chave": "venus_chuva_dano_hp_s",
+    "valor": 0.5,
+    "unidade": "HP/s",
+    "descricao": "Dano contínuo da chuva ácida, a toda unidade e estrutura (CEN-18)"
+  },
+  {
+    "chave": "venus_chuva_aviso_s",
+    "valor": 20,
+    "unidade": "s",
+    "descricao": "Antecedência do aviso AL-24 (CEN-18)"
+  },
+  {
     "chave": "pedras_por_10k_m2",
     "valor": 6,
     "unidade": "pedras",

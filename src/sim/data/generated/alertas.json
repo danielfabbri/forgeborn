@@ -159,5 +159,12 @@
     "gatilho": "Estrutura que precisa de energia fica pronta sem cabo (ENE-29)",
     "prioridade": "media",
     "cooldown_s": 10
+  },
+  {
+    "id": "AL-24",
+    "texto": "Chuva ácida se aproximando.",
+    "gatilho": "Evento de cenário (CEN-18)",
+    "prioridade": "media",
+    "cooldown_s": 0
   }
 ]

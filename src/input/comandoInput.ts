@@ -15,6 +15,7 @@ import {
   ToqueDuplo,
 } from '../game/selecao';
 import {
+  MENU_ARSENAL,
   MENU_BASE,
   MENU_ESTRUTURAS,
   MENU_HANGAR,
@@ -66,6 +67,7 @@ const MENUS_DE_ESTRUTURA: ReadonlyArray<[string, OpcaoDeMenu[]]> = [
   ['missile_silo', MENU_MISSEIS],
   ['port', MENU_PORTO],
   ['hangar', MENU_HANGAR],
+  ['arsenal', MENU_ARSENAL],
 ];
 
 /** Distância (px) a partir da qual o arrasto vira caixa de seleção. */

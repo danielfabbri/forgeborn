@@ -77,8 +77,9 @@ describe('T-090 — IA-01, IA-02, IA-06, IA-07: arquitetura da IA', () => {
     expect(w.dlaser).toBe(0);
     const total = Object.values(w).reduce((s, v) => s + v, 0);
     expect(total).toBeCloseTo(100, 9);
-    // bra: ex1 25, obs 10, torres 5 → proporção mantida entre os permitidos.
-    expect(w.ex1 / w.obs).toBeCloseTo(25 / 10, 9);
+    // bra: ex1 17, obs 10, torres 5 (D-92: pesos redistribuídos com o Tanque de Cerco) →
+    // proporção mantida entre os permitidos.
+    expect(w.ex1 / w.obs).toBeCloseTo(17 / 10, 9);
   });
 
   it('§13.2: o bônus de coleta da dificuldade acelera a mineração da IA', () => {
@@ -123,9 +124,11 @@ describe('T-092 — IA-03, §13.3: produção e composição', () => {
     revelar(sim);
     for (const r of ['fe', 'si', 'cu', 'li', 'ti', 'u'] as const)
       sim.state.estoques.bra[r] = 20_000;
-    // D-91: os drones só saem do Hangar; um já pronto evita depender da IA construir um do zero
-    // (o teste é sobre convergência de peso, não sobre a robustez da economia).
+    // D-91/D-92: os drones só saem do Hangar, e EX1/OPQ/Cerco só da Fábrica de Artilharia; já
+    // prontos evita depender da IA construir os dois do zero (o teste é sobre convergência de
+    // peso, não sobre a robustez da economia).
     criar(sim, [{ estrutura: 'hangar', x: 12, z: 12 }], 'bra');
+    criar(sim, [{ estrutura: 'arsenal', x: -12, z: 12 }], 'bra');
     sim.run(10 * 60 * sim.tickHz);
     const q = montarQuadro(contexto(sim), 'bra')!;
     const w = pesos(q);
@@ -159,17 +162,18 @@ describe('T-092 — IA-03, §13.3: produção e composição', () => {
   });
 });
 
-describe('T-187 — IA-15, D-91: Hangar na composição da IA', () => {
-  it('IA-15: sem Hangar pronto, a categoria de drone espera sem travar as outras produções', () => {
+describe('T-187/T-190 — IA-15, IA-16, D-91, D-92: Hangar e Fábrica na composição da IA', () => {
+  it('sem Hangar nem Fábrica prontos, as categorias deles esperam sem travar as demais (obs/minas)', () => {
     const sim = comIa('normal');
     for (const r of ['fe', 'si', 'cu', 'li', 'ti', 'u'] as const)
       sim.state.estoques.bra[r] = 20_000;
-    // Uma Impressora já pronta: sem ela, decidirProducao nunca chega a agir (nem para ex1),
-    // e o teste não isolaria o caso do IA-15 (drone sem Hangar) das demais categorias.
+    // Uma Impressora já pronta: sem ela, decidirProducao nunca chega a agir (nem para obs),
+    // e o teste não isolaria o caso do IA-15/IA-16 (drone/EX1/OPQ/Cerco sem produtor) das demais.
     criar(sim, [{ unidade: 'printer', x: 15, z: 15 }], 'bra');
     const ctx = contexto(sim);
-    // Só decidirProducao, sem decidirPlanoDaIa: nenhum Hangar chega a existir neste teste, o
-    // que isola exatamente o caso do IA-15 (categoria de drone sempre sem onde imprimir).
+    // Só decidirProducao, sem decidirPlanoDaIa: nem Hangar nem Fábrica chegam a existir neste
+    // teste, o que isola exatamente o caso do IA-15/IA-16 (bomb/dlaser/kamikaze/ex1/opq/siege
+    // sempre sem onde imprimir).
     for (let i = 0; i < 40; i++) {
       const q = montarQuadro(ctx, 'bra');
       if (q) decidirProducao(ctx, q);
@@ -178,24 +182,34 @@ describe('T-187 — IA-15, D-91: Hangar na composição da IA', () => {
     expect(
       sim.state.entities.some((id) => getComponent(sim.state, id, 'structure')?.tipo === 'hangar'),
     ).toBe(false);
+    expect(
+      sim.state.entities.some((id) => getComponent(sim.state, id, 'structure')?.tipo === 'arsenal'),
+    ).toBe(false);
     const impressora = sim.state.entities.find(
       (id) => getComponent(sim.state, id, 'unit')?.tipo === 'printer',
     );
     const filaImpressora = impressora ? getComponent(sim.state, impressora, 'producer')!.fila : [];
-    const ex1Prontos = sim.state.entities.filter(
-      (id) => getComponent(sim.state, id, 'unit')?.tipo === 'hover_ex1',
-    ).length;
-    expect(ex1Prontos > 0 || filaImpressora.some((i) => i.item === 'hover_ex1')).toBe(true);
+    // obs (hover_scout) e minas (hover_minelayer) continuam saindo da Impressora (D-91/D-92 só
+    // move os drones e o EX1/OPQ/Cerco); qualquer um dos dois prova que a Impressora não travou.
+    const prontos = (t: string) =>
+      sim.state.entities.filter((id) => getComponent(sim.state, id, 'unit')?.tipo === t).length;
+    const naFila = (t: string) => filaImpressora.some((i) => i.item === t);
+    expect(
+      prontos('hover_scout') > 0 ||
+        naFila('hover_scout') ||
+        prontos('hover_minelayer') > 0 ||
+        naFila('hover_minelayer'),
+    ).toBe(true);
   });
 });
 
 describe('T-093 — IA-04, IA-05, §13.2: militar e dificuldades', () => {
   it('IA-04/IA-05: a primeira onda respeita primeiro_ataque_min e vr_exercito_ataque; as IAs se atacam', () => {
     // Seed em que as duas IAs atacam e se ferem (muda com o balanceamento: com D-49 a seed 1 não
-    // servia; com D-66, a 3; com D-79, a 1; com D-81, a 4). A regra não depende do tamanho do corpo: no
-    // planeta pequeno (Campo de testes) o teste é mais rápido.
+    // servia; com D-66, a 3; com D-79, a 1; com D-81, a 4; com D-92, a 1 de novo). A regra não
+    // depende do tamanho do corpo: no planeta pequeno (Campo de testes) o teste é mais rápido.
     const { sim, nacoes } = criarPartida({
-      seed: 4,
+      seed: 1,
       ias: ['normal', 'normal'],
       maxMin: 40,
       cenario: 'terra_lab',
@@ -297,9 +311,12 @@ describe('T-096 — IA-06, IA-08 a IA-10, D-66: a IA evolui estruturas', () => {
     const ctx = contexto(sim);
     const q = montarQuadro(ctx, 'bra')!;
     const torres = dados.ia_plano.find((l) => l.item === 'laser_tower')!;
+    const arsenal = dados.ia_plano.find((l) => l.item === 'arsenal')!;
     const aa = dados.ia_plano.find((l) => l.item === 'aa_battery')!;
-    // Torres já contam desde o minuto 0; com elas feitas, a Antiaérea só entra no minuto dela.
+    // Torres e Fábrica de Artilharia (D-92) já contam desde o minuto 0; com elas feitas, a
+    // Antiaérea só entra no minuto dela.
     q.naFila['laser_tower'] = torres.facil;
+    q.naFila['arsenal'] = arsenal.facil;
     q.minutos = aa.min_facil - 1;
     expect(proximoDoPlano(ctx, q)).not.toBe('aa_battery');
     q.minutos = aa.min_facil + 1;

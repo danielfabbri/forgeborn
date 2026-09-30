@@ -29,7 +29,8 @@ describe('T-185 — PRD-01, UNI-21, D-91: Hangar de Drones', () => {
     expect(produz('printer', 'drone_bomber')).toBe(false);
     expect(produz('printer', 'drone_laser')).toBe(false);
     expect(produz('printer', 'drone_kamikaze')).toBe(false);
-    expect(produz('printer', 'hover_ex1')).toBe(true);
+    // D-92: EX1 saiu da Impressora também (agora é a Fábrica de Artilharia); Observação não.
+    expect(produz('printer', 'hover_scout')).toBe(true);
     expect(produz('hangar', 'drone_bomber')).toBe(true);
     expect(produz('hangar', 'drone_laser')).toBe(true);
     expect(produz('hangar', 'drone_kamikaze')).toBe(true);

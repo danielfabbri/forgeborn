@@ -18,13 +18,14 @@ import {
   tipoDe,
   vrDe,
 } from './base';
-import { construir, hangarComVaga, impressoraComVaga } from './economia';
+import { arsenalComVaga, construir, hangarComVaga, impressoraComVaga } from './economia';
 import type { Quadro } from './quadro';
 
 /** Categorias de §13.3 e o item de cada uma. */
 export const CATEGORIAS = {
   ex1: 'hover_ex1',
   opq: 'hover_opq',
+  siege: 'siege_tank',
   minas: 'hover_minelayer',
   obs: 'hover_scout',
   bomb: 'drone_bomber',
@@ -39,6 +40,9 @@ const LISTA = Object.keys(CATEGORIAS) as Categoria[];
 /** IA-15 (D-91): categorias que o Hangar fabrica, não a Impressora. */
 const DO_HANGAR = new Set<Categoria>(['bomb', 'dlaser', 'kamikaze']);
 
+/** IA-16 (D-92): categorias que a Fábrica de Artilharia fabrica, não a Impressora. */
+const DO_ARSENAL = new Set<Categoria>(['ex1', 'opq', 'siege']);
+
 /** IA-03: quem cada ameaça observada favorece. */
 const CONTRAS: Record<string, Categoria[]> = {
   drone_laser: ['ex1', 'torres'],
@@ -46,7 +50,8 @@ const CONTRAS: Record<string, Categoria[]> = {
   drone_kamikaze: ['ex1', 'torres'],
   hover_ex1: ['opq'],
   hover_opq: ['dlaser', 'bomb', 'kamikaze'],
-  laser_tower: ['opq', 'bomb', 'kamikaze'],
+  siege_tank: ['opq', 'torres'],
+  laser_tower: ['opq', 'bomb', 'kamikaze', 'siege'],
 };
 
 /** Dá para juntar o custo do item: cada recurso em falta tem de onde vir. */
@@ -153,6 +158,16 @@ export function decidirProducao(ctx: SystemContext, q: Quadro): void {
       const hangar = hangarComVaga(ctx, q);
       if (hangar === null) continue;
       comandar(ctx, q.nacao, 'imprimir', { ids: [hangar], item });
+      q.naFila[item] = (q.naFila[item] ?? 0) + 1;
+      return;
+    }
+    // IA-16 (D-92): EX1, OPQ e o Tanque de Cerco saem da Fábrica de Artilharia, não da
+    // Impressora. Sem Fábrica com vaga, essa categoria espera a próxima decisão sem travar as
+    // demais.
+    if (DO_ARSENAL.has(categoria)) {
+      const arsenal = arsenalComVaga(ctx, q);
+      if (arsenal === null) continue;
+      comandar(ctx, q.nacao, 'imprimir', { ids: [arsenal], item });
       q.naFila[item] = (q.naFila[item] ?? 0) + 1;
       return;
     }

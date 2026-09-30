@@ -39,8 +39,9 @@ describe('T-134 — CAM-07: passos do tutorial', () => {
     criar(sim, [{ estrutura: 'solar_plant', x: -30, z: 10 }]);
     avancar();
     expect(tut.passo).toBe(5);
-    // Armazém longe do Cobre não conta; perto, conta.
-    criar(sim, [{ estrutura: 'storage', x: -40, z: -30 }]);
+    // Armazém longe do Cobre não conta; perto, conta. (`semCabo`: um armazém extra e descartável
+    // não deve gastar uma saída de cabo da Nave que o passo 9, mais adiante, vai precisar.)
+    criar(sim, [{ estrutura: 'storage', x: -40, z: -30, semCabo: true }]);
     avancar();
     expect(tut.passo).toBe(5);
     criar(sim, [{ estrutura: 'storage', x: 40 + param('tutorial_raio_armazem_m') / 2 + 6, z: 0 }]);
@@ -51,12 +52,19 @@ describe('T-134 — CAM-07: passos do tutorial', () => {
     sim.step();
     avancar();
     expect(tut.passo).toBe(7);
+    // Muro e Portão não precisam de energia (ENE-29): `semCabo` evita gastar uma saída da Nave
+    // à toa, que o passo 9 vai precisar.
     criar(sim, [
       { estrutura: 'laser_tower', x: 20, z: -20 },
-      { estrutura: 'wall', x: 30, z: -30 },
-      { estrutura: 'gate', x: 45, z: -30 },
+      { estrutura: 'wall', x: 30, z: -30, semCabo: true },
+      { estrutura: 'gate', x: 45, z: -30, semCabo: true },
     ]);
     avancar();
     expect(tut.passo).toBe(9);
+    // D-92: a Fábrica de Artilharia precisa estar pronta e ligada à rede, como a Usina Solar do
+    // passo 4.
+    criar(sim, [{ estrutura: 'arsenal', x: -10, z: -5 }]);
+    avancar();
+    expect(tut.passo).toBe(10);
   });
 });

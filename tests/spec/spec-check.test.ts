@@ -54,7 +54,7 @@ describe('TEC-11: spec:check', () => {
   });
 
   it('acusa pesos de personalidade que não somam 100', () => {
-    const texto = quebrar('| usa | Supremacia aérea | 25 |', '| usa | Supremacia aérea | 26 |');
+    const texto = quebrar('| usa | Supremacia aérea | 19 |', '| usa | Supremacia aérea | 20 |');
     expect(problemas(texto)).toContainEqual({
       tipo: 'personalidades',
       tabela: 'personalidades',

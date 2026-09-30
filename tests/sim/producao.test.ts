@@ -89,12 +89,13 @@ describe('T-050 — PRD-01 a PRD-06: filas e pagamento', () => {
     for (const item of ['hover_explorer', 'printer', 'hover_ex1'] as const) {
       ordenar(sim, 'imprimir', { ids: [nave], item });
     }
-    for (const item of ['printer', 'hover_explorer', 'hover_ex1'] as const) {
+    // D-92: EX1 e OPQ também não são mais da Impressora (só a Fábrica de Artilharia).
+    for (const item of ['printer', 'hover_explorer', 'hover_ex1', 'hover_opq'] as const) {
       ordenar(sim, 'imprimir', { ids: [impressora], item });
     }
     passo(sim);
     expect(fila(sim, nave!).map((i) => i.item)).toEqual(['hover_explorer', 'printer']);
-    expect(fila(sim, impressora!).map((i) => i.item)).toEqual(['hover_explorer', 'hover_ex1']);
+    expect(fila(sim, impressora!).map((i) => i.item)).toEqual(['hover_explorer']);
   });
 
   it('PRD-03: a fila da Nave aceita até fila_max_nave itens', () => {
@@ -668,7 +669,8 @@ describe('ENE-16 — Impressora e auto-recarga', () => {
       { unidade: 'printer', x: 40, z: 0 },
     ]);
     ordenar(sim, 'debug_encher_banco', {});
-    ordenar(sim, 'imprimir', { ids: [impressora], item: 'hover_ex1' });
+    // D-92: EX1 saiu da Impressora; qualquer item ainda dela serve pra este teste de recarga.
+    ordenar(sim, 'imprimir', { ids: [impressora], item: 'hover_scout' });
     sim.run(sim.tickHz);
     const b = bateria(sim, impressora!);
     b.en = (b.max * param('auto_recarga_impressora_pct')) / 100;
@@ -678,7 +680,7 @@ describe('ENE-16 — Impressora e auto-recarga', () => {
     const guardado = fila(sim, impressora!)[0]!.progresso;
     expect(rodarAte(sim, () => recarga.estado === 'acoplada', 30)).toBe(true);
     expect(fila(sim, impressora!)[0]!.progresso).toBe(guardado);
-    expect(rodarAte(sim, () => unidadesDo(sim, 'hover_ex1').length === 1, 120)).toBe(true);
+    expect(rodarAte(sim, () => unidadesDo(sim, 'hover_scout').length === 1, 120)).toBe(true);
     const p = pos(sim, impressora!);
     expect(Math.hypot(p.x - 40, p.z)).toBeLessThan(1);
     expect(nave).toBeDefined();

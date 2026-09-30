@@ -249,6 +249,15 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     m.cilindro(0.7, 0.12, METAL, { x: -0.1, y: 0.63 }, 12);
     return olho(m, 1.37, 0.5).pronta();
   },
+  // D-92: casco baixo e largo, mais pesado e blindado que o OPQ; a estaca hidráulica na frente
+  // martela o alvo em contato (siege_ram, sem alcance mínimo).
+  siege_tank: () => {
+    const m = casco(new Montagem(), 2.6, 2.6, 0.55, 0.15);
+    m.caixa(1.0, 0.5, 1.6, METAL, { x: 1.3, y: 0.35 });
+    m.cilindro(0.1, 0.9, GRAFITE, { x: 1.85, y: 0.35, rz: Math.PI / 2 }, 8);
+    m.caixa(0.28, 0.28, 0.28, METAL, { x: 2.35, y: 0.35 });
+    return olho(m, 1.35, 0.55).pronta();
+  },
   // Casco achatado com tambor giratório de minas na traseira.
   hover_minelayer: () => {
     const m = casco(new Montagem(), 2.4, 1.9, 0.35);
@@ -665,6 +674,19 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     for (const z of [-1.2, 1.2]) m.caixa(1.0, 0.06, 0.22, METAL, { x: 3.9, y: -0.02, z });
     m.caixa(6.4, 0.08, 0.5, 'nacao', { y: 1.85 });
     for (const x of [-2.2, 2.2]) antena(m, x, 1.85, -1.6, 0.6);
+    return m.pronta();
+  },
+  // UNI-22/D-92: fábrica robusta e baixa, portão largo (na cor da nação) voltado para a rampa
+  // da Nave, com pilares reforçados e trilhos largos para a saída dos veículos pesados.
+  arsenal: () => {
+    const m = new Montagem();
+    m.caixa(7.6, 0.16, 5.6, GRAFITE, { y: -0.05 });
+    m.caixa(7.2, 2.2, 5.2, METAL, { y: 0.1 });
+    m.caixa(7.4, 0.22, 5.4, PAINEL, { y: 2.25 });
+    m.caixa(0.18, 1.9, 3.8, 'nacao', { x: 3.65, y: 0.15 });
+    for (const z of [-1.4, 1.4]) m.caixa(1.2, 0.08, 0.28, METAL, { x: 4.2, y: -0.02, z });
+    m.caixa(6.9, 0.1, 0.6, 'nacao', { y: 2.36 });
+    for (const x of [-2.6, 2.6]) m.caixa(0.5, 2.3, 0.5, GRAFITE, { x, y: 0.05 });
     return m.pronta();
   },
   // UNI-16 (D-90): Porto flutuante: plataforma sobre o líquido, cais com defensas, guindaste e

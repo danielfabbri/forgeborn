@@ -63,6 +63,7 @@ import { ligarEntradaCamera } from '../input/cameraInput';
 import { ligarEntradaComandos } from '../input/comandoInput';
 import {
   COM_CARTAO_DE_ACAO,
+  MENU_ARSENAL,
   MENU_BASE,
   MENU_ESTRUTURAS,
   MENU_HANGAR,
@@ -977,11 +978,13 @@ export function iniciarPartida(): void {
                 ? MENU_PORTO
                 : tipoProdutor === 'hangar'
                   ? MENU_HANGAR
-                  : entrada.menu === 'unidades'
-                    ? MENU_UNIDADES
-                    : entrada.menu === 'estruturas'
-                      ? MENU_ESTRUTURAS
-                      : [];
+                  : tipoProdutor === 'arsenal'
+                    ? MENU_ARSENAL
+                    : entrada.menu === 'unidades'
+                      ? MENU_UNIDADES
+                      : entrada.menu === 'estruturas'
+                        ? MENU_ESTRUTURAS
+                        : [];
     // CAM-02: na campanha, os cartões só mostram o que está liberado na missão.
     const opcoes = todasAsOpcoes.filter((o) => liberado(sim.state, o.item));
     const obra = obraId !== undefined ? getComponent(sim.state, obraId, 'obra')! : null;

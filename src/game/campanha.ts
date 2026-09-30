@@ -45,6 +45,7 @@ const DERIVADOS: Record<string, string[]> = {
   hover_minelayer: ['mine'],
   missile_silo: ['missile_short', 'missile_long'],
   hangar: ['drone_bomber', 'drone_laser', 'drone_kamikaze'],
+  arsenal: ['hover_ex1'],
 };
 
 /** CAM-02: itens liberados na missão (cumulativo até ela), com os derivados. */

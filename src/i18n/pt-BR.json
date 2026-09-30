@@ -365,6 +365,8 @@
   "item.boat_antenna": "Embarcação Antena",
   "item.hangar": "Hangar de Drones",
   "item.drone_kamikaze": "Drone Kamikaze",
+  "item.arsenal": "Fábrica de Artilharia",
+  "item.siege_tank": "Tanque de Cerco",
   "item.missile_short": "Míssil de Curto Alcance",
   "item.missile_long": "Míssil de Longo Alcance",
   "producao.misseis_prontos": "Prontos ({n}/{max}):",
@@ -451,6 +453,7 @@
   "tutorial.passo6": "Imprima um Hover de Observação na Impressora (U). Depois selecione-o e clique com o botão direito no farol amarelo (também marcado com uma estrela no minimapa).",
   "tutorial.passo7": "Defesa fixa: construa uma Torre de Defesa. Ela atira sozinha no que entra no alcance.",
   "tutorial.passo8": "Muros bloqueiam; portões abrem só para mim. Construa um Muro e um Portão (arraste para girar).",
-  "tutorial.passo9": "Imprima 2 EX1 e destrua os alvos de treino. Clique com o botão direito num alvo para atacar.",
+  "tutorial.passo9": "Reforço pesado: com a Impressora selecionada, abra as estruturas (B) e construa uma Fábrica de Artilharia. Pronta, selecione-a e clique com o botão direito na Nave para puxar o cabo.",
+  "tutorial.passo10": "Imprima 2 EX1 na Fábrica de Artilharia e destrua os alvos de treino. Clique com o botão direito num alvo para atacar.",
   "tutorial.ir_ao_ponto": "Mostrar o ponto marcado"
 }

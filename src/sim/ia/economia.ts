@@ -56,6 +56,15 @@ export function hangarComVaga(ctx: SystemContext, q: Quadro): EntityId | null {
   return livres[0] ?? null;
 }
 
+/** IA-16 (D-92): Fábrica de Artilharia pronta com vaga na fila (a de fila mais curta), ou null. */
+export function arsenalComVaga(ctx: SystemContext, q: Quadro): EntityId | null {
+  const livres = dosTipos(ctx.state, q.nacao, 'arsenal')
+    .filter((id) => !getComponent(ctx.state, id, 'obra'))
+    .filter((id) => filaDe(ctx, id) < param('ia_fila_por_produtor'))
+    .sort((a, b) => filaDe(ctx, a) - filaDe(ctx, b) || a - b);
+  return livres[0] ?? null;
+}
+
 /** Estruturas do tipo da nação (prontas ou em obra). */
 export function contarEstruturas(ctx: SystemContext, q: Quadro, tipo: EstruturasId): number {
   const existentes = entitiesWith(ctx.state, 'structure', 'owner').filter(

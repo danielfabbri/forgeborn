@@ -1,7 +1,7 @@
 /**
- * Tutorial da Missão 0 (CAM-05, CAM-07, D-73): os 9 passos em ordem, cada um com a condição de
- * conclusão lida do estado e dos eventos da simulação (só leitura) e o elemento da interface que
- * o resolve (para o destaque).
+ * Tutorial da Missão 0 (CAM-05, CAM-07, D-73, D-92): os 10 passos em ordem, cada um com a
+ * condição de conclusão lida do estado e dos eventos da simulação (só leitura) e o elemento da
+ * interface que o resolve (para o destaque).
  */
 import { entitiesWith, getComponent, type NacaoId, param, type SimEvent } from '../sim';
 import type { SystemContext } from '../sim/core/pipeline';
@@ -10,7 +10,7 @@ import { direcaoDe, distanciaM } from '../sim/units/superficie';
 import { estadoEm, VISIVEL } from '../sim/visao/nevoa';
 import { redePrincipal } from '../sim/energia';
 
-export const TOTAL_DE_PASSOS = 9;
+export const TOTAL_DE_PASSOS = 10;
 
 /** Seletores (CSS) do que resolve cada passo, para o destaque na interface. */
 export const DESTAQUES: Record<number, string[]> = {
@@ -22,7 +22,8 @@ export const DESTAQUES: Record<number, string[]> = {
   6: ['[data-item="hover_scout"]'],
   7: ['[data-item="laser_tower"]'],
   8: ['[data-item="wall"]', '[data-item="gate"]'],
-  9: ['[data-item="hover_ex1"]'],
+  9: ['[data-item="arsenal"]'],
+  10: ['[data-item="hover_ex1"]'],
 };
 
 function contar(ctx: SystemContext, nacao: NacaoId, tipo: string, prontas = true): number {
@@ -35,7 +36,7 @@ function contar(ctx: SystemContext, nacao: NacaoId, tipo: string, prontas = true
 }
 
 export class Tutorial {
-  /** Passo atual (1..9); 10 = concluído. */
+  /** Passo atual (1..10); 11 = concluído. */
   passo = 1;
   private entregouFerro = false;
   private ex1Impressos = 0;
@@ -93,6 +94,11 @@ export class Tutorial {
       case 8:
         return contar(ctx, n, 'wall') >= 1 && contar(ctx, n, 'gate') >= 1;
       case 9:
+        // D-92: pronta e ligada por cabo à rede da Nave (como o passo 4 da Usina Solar).
+        return redePrincipal(ctx.state, n).some(
+          (id) => getComponent(ctx.state, id, 'structure')!.tipo === 'arsenal',
+        );
+      case 10:
         return this.ex1Impressos >= 2 && ctx.state.resultado?.vencedor === n;
       default:
         return false;

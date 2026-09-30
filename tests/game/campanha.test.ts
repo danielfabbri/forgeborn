@@ -14,11 +14,16 @@ describe('T-130/T-133 — CAM-01 a CAM-04, CAM-08, D-73: campanha', () => {
   it('CAM-02: liberação cumulativa, com os itens que acompanham quem os fabrica', () => {
     const m00 = liberadosNa('m00');
     expect(m00).toEqual(expect.arrayContaining(['hover_explorer', 'printer', 'wall', 'gate']));
+    // D-92: a Missão 0 libera a Fábrica de Artilharia no lugar do EX1 direto (deriva o EX1).
+    expect(m00).toEqual(expect.arrayContaining(['arsenal', 'hover_ex1']));
     expect(m00).not.toContain('hover_opq');
+    expect(m00).not.toContain('siege_tank');
     // A Missão 1 acumula a 0 e libera a Antena (D-83).
     expect(new Set(liberadosNa('m01'))).toEqual(new Set([...m00, 'antenna']));
     const m02 = liberadosNa('m02');
-    expect(m02).toEqual(expect.arrayContaining([...m00, 'hover_opq', 'aa_battery', 'mag_tower']));
+    expect(m02).toEqual(
+      expect.arrayContaining([...m00, 'hover_opq', 'siege_tank', 'aa_battery', 'mag_tower']),
+    );
     expect(liberadosNa('m05')).toEqual(
       expect.arrayContaining(['satellite_uplink', 'satellite', 'missile_silo', 'missile_short']),
     );

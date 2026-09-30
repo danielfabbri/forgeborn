@@ -17,6 +17,8 @@ const PAPEIS: Record<MoveisId, Papel> = {
   printer: 'impressora',
   hover_ex1: 'militar',
   hover_opq: 'militar',
+  // D-92: o Tanque de Cerco recarrega como as demais unidades militares.
+  siege_tank: 'militar',
   drone_bomber: 'drone',
   drone_laser: 'drone',
   // D-91: o Kamikaze recarrega como os outros drones.

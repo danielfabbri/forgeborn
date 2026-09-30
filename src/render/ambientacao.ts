@@ -13,6 +13,8 @@ export interface Ambientacao {
   estrelas: boolean;
   /** A Terra escura no céu (ART-11). */
   terraNoCeu: boolean;
+  /** §14.7/D-93: Saturno (com anéis) e outras luas no céu de Titã. */
+  saturnoNoCeu: boolean;
   /** Sol no referencial local (x = leste, y = cima, z = sul). */
   sol: Vector3;
   intensidadeSol: number;
@@ -64,9 +66,12 @@ const LUA: Ambientacao = {
   horizonte: null,
   estrelas: true,
   terraNoCeu: true,
+  saturnoNoCeu: false,
   sol: direcao(24, -35),
   intensidadeSol: 3.4,
-  ambiente: { cor: new Color(0x8899aa), intensidade: 0.12 },
+  // D-93: sol fixo revela um lado escuro de verdade; a ambiente mantém uma leitura mínima nele
+  // (nunca preto puro, ART-11), um pouco mais forte do que quando o sol seguia a câmera.
+  ambiente: { cor: new Color(0x8899aa), intensidade: 0.2 },
   secundaria: { cor: new Color(0x7090ff), intensidade: 0.35 },
   tinta: [1, 1, 1],
   marcacoes: false,
@@ -90,7 +95,7 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     ...LUA,
     sol: direcao(11, -60),
     intensidadeSol: 3.0,
-    ambiente: { cor: new Color(0x7a88a0), intensidade: 0.16 },
+    ambiente: { cor: new Color(0x7a88a0), intensidade: 0.24 },
     tinta: [0.92, 0.95, 1.0],
     gelo: true,
   },
@@ -100,6 +105,7 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     horizonte: new Color('#7fb3e6'),
     estrelas: false,
     terraNoCeu: false,
+    saturnoNoCeu: false,
     sol: direcao(58, -30),
     intensidadeSol: 3.0,
     ambiente: { cor: new Color('#b7cde6'), intensidade: 0.4 },
@@ -125,6 +131,7 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     horizonte: new Color('#d4a377'),
     estrelas: false,
     terraNoCeu: false,
+    saturnoNoCeu: false,
     sol: direcao(34, -40),
     intensidadeSol: 2.4,
     ambiente: { cor: new Color('#e0b08a'), intensidade: 0.34 },
@@ -144,6 +151,7 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     horizonte: new Color('#7e5028'),
     estrelas: false,
     terraNoCeu: false,
+    saturnoNoCeu: true,
     sol: direcao(42, -25),
     intensidadeSol: 1.1,
     ambiente: { cor: new Color('#e0a060'), intensidade: 0.5 },

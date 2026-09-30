@@ -1597,7 +1597,7 @@ export function iniciarPartida(): void {
     // ART-11: aqui o observador é o próprio olho; o céu é refeito a partir dele.
     const r = R + alturaEm(pronto.mapa, onde) + 1.8;
     const olho = new Vector3(onde[0] * r, onde[1] * r, onde[2] * r);
-    ceu.atualizar(onde, norteEm(onde, camera.frente), olho);
+    ceu.atualizar(onde, olho);
     const horizonte = ceu.terra.clone().addScaledVector(cima, -ceu.terra.dot(cima)).normalize();
     view.camera.position.copy(olho);
     view.camera.up.copy(cima);
@@ -1615,7 +1615,7 @@ export function iniciarPartida(): void {
       // CTL-15: câmera de 1ª ou 3ª pessoa na unidade.
       const d = normalizar(pose.olho);
       camera.foco = d;
-      ceu.atualizar(d, norteEm(d), new Vector3(...pose.olho));
+      ceu.atualizar(d, new Vector3(...pose.olho));
       view.camera.up.set(...pose.cima);
       view.camera.position.set(...pose.olho);
       pontoFocal.set(...pose.alvo);
@@ -1631,13 +1631,8 @@ export function iniciarPartida(): void {
     chaoSuave += (chao - chaoSuave) * (1 - Math.exp(-6 * dt));
     const { olho, alvo, cima } = poseDaCamera(camera, chaoSuave);
     pontoFocal.set(...alvo);
-    // ART-11: Sol e Terra no referencial local do foco.
-    ceu.atualizar(
-      camera.foco,
-      norteEm(camera.foco, camera.frente),
-      pontoFocal,
-      new Vector3(...olho),
-    );
+    // ART-11 (D-93): Sol e Terra são fixos no mundo; só a posição de tela acompanha a câmera.
+    ceu.atualizar(camera.foco, pontoFocal, new Vector3(...olho));
     view.camera.up.set(...cima);
     view.camera.position.set(...olho);
     if (modoCamera === 'cinematica') {
@@ -1796,7 +1791,7 @@ export function iniciarPartida(): void {
           tocarSom('explosao_grande', 0.7);
         }
         const pose = poseDaCinematica(zona, R, chao, f, e.alturaDaNave);
-        ceu.atualizar(zona, norteEm(zona), new Vector3(...pose.alvo));
+        ceu.atualizar(zona, new Vector3(...pose.alvo));
         view.camera.up.set(...pose.cima);
         view.camera.position.set(...pose.olho);
         pontoFocal.set(...pose.alvo);

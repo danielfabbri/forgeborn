@@ -3,12 +3,15 @@
  * A Terra fica perto do Sol no céu, então quase toda a face visível está na noite:
  * só um crescente fino e o halo azul da atmosfera.
  *
- * ART-11 (sem noite): Sol e Terra são definidos no referencial local do ponto focal (norte,
- * leste e vertical), então acompanham a câmera ao redor do planeta.
+ * ART-11 (D-93, Sol fixo e distante): Sol, Terra e os demais corpos celestes do cenário têm uma
+ * direção fixa no mundo, definida uma vez (no referencial leste/cima/sul do polo norte) e nunca
+ * recalculada; só a posição deles no céu (perto do ponto focal, por serem "infinitamente"
+ * distantes) e a orientação da cúpula (`uCima`) acompanham a câmera.
  */
 import {
   BackSide,
   CylinderGeometry,
+  DoubleSide,
   Quaternion,
   BufferAttribute,
   Color,
@@ -17,11 +20,12 @@ import {
   Mesh,
   Points,
   PointsMaterial,
+  RingGeometry,
   ShaderMaterial,
   SphereGeometry,
   Vector3,
 } from 'three';
-import type { Vec3 } from '../sim/map/esfera';
+import { norteEm, type Vec3 } from '../sim/map/esfera';
 import { type Ambientacao, ambientacaoDe } from './ambientacao';
 
 function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
@@ -36,6 +40,9 @@ function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
  */
 export const DIRECAO_SOL = direcao(24, -35);
 export const DIRECAO_TERRA = direcao(13, 12);
+/** §14.7/D-93: Saturno e duas de suas outras luas, no céu de Titã. */
+export const DIRECAO_SATURNO = direcao(32, 130);
+export const DIRECOES_LUAS_DE_SATURNO = [direcao(18, 152), direcao(48, 108), direcao(8, 172)];
 
 /** Leva uma direção do referencial local do foco (leste, cima, sul) para o mundo. */
 export function paraOMundo(local: Vector3, foco: Vec3, norte: Vec3): Vector3 {
@@ -47,6 +54,20 @@ export function paraOMundo(local: Vector3, foco: Vec3, norte: Vec3): Vector3 {
     .addScaledVector(cima, local.y)
     .addScaledVector(n, -local.z)
     .normalize();
+}
+
+/**
+ * D-93: ponto fixo (equador) só para fixar Sol/Terra/Saturno etc. no mundo uma única vez — o
+ * referencial leste/cima/sul é definido aqui e nunca mais recalculado, então esses corpos não
+ * se movem quando a câmera percorre ou gira ao redor do planeta (ao contrário do ponto focal,
+ * que segue a câmera e por isso serve à cúpula do céu e à posição de tela desses corpos).
+ */
+const FOCO_FIXO: Vec3 = [1, 0, 0];
+const NORTE_FIXO = norteEm(FOCO_FIXO);
+
+/** Direção (mundo), fixa para a partida inteira, de uma direção local (D-93). */
+function direcaoFixaNoMundo(local: Vector3): Vector3 {
+  return paraOMundo(local, FOCO_FIXO, NORTE_FIXO);
 }
 
 const DISTANCIA_CEU = 4000;
@@ -88,7 +109,11 @@ export function estrelas(): Points<BufferGeometry, PointsMaterial> {
   return new Points(geometria, material);
 }
 
-/** A Terra depois do Silêncio: oceano sem luzes de cidades (FLX-02 também a usa). */
+/**
+ * A Terra depois do Silêncio: oceano com continentes e nuvens (D-93), sem luzes de cidades
+ * (FLX-02 também a usa). Continentes e nuvens são procedurais (ondas sobre longitude/latitude
+ * da normal), no estilo das cadeias de montanha do panorama (§14.5) — sem textura externa.
+ */
 export function terra(raio = 170): Mesh<SphereGeometry, ShaderMaterial> {
   const material = new ShaderMaterial({
     uniforms: { uSol: { value: DIRECAO_SOL.clone() } },
@@ -113,7 +138,17 @@ export function terra(raio = 170): Mesh<SphereGeometry, ShaderMaterial> {
         float borda = pow(1.0 - max(dot(n, normalize(vVista)), 0.0), 3.0);
         vec3 noite = vec3(0.003, 0.005, 0.011);
         vec3 oceano = vec3(0.05, 0.13, 0.30);
-        vec3 cor = mix(noite, oceano, dia);
+        float lon = atan(n.z, n.x);
+        float lat = n.y;
+        float mancha = 0.5 + 0.3 * sin(lon * 2.0 + lat * 3.0) + 0.2 * sin(lon * 5.0 - lat * 2.0)
+          + 0.1 * sin(lon * 11.0 + lat * 7.0);
+        float continente = smoothstep(0.55, 0.66, mancha);
+        vec3 solo = mix(vec3(0.22, 0.33, 0.15), vec3(0.45, 0.36, 0.22), sin(lon * 7.0 + lat * 4.0) * 0.5 + 0.5);
+        vec3 diurno = mix(oceano, solo, continente);
+        float nuvem = smoothstep(0.58, 0.7, 0.5 + 0.3 * sin(lon * 5.0 - lat * 6.0 + 2.0)
+          + 0.2 * sin(lon * 9.0 + lat * 2.0));
+        diurno = mix(diurno, vec3(0.92, 0.94, 0.97), nuvem * 0.7);
+        vec3 cor = mix(noite, diurno, dia);
         cor += vec3(0.30, 0.55, 1.0) * borda * (0.12 + 0.88 * smoothstep(-0.25, 0.25, luz));
         gl_FragColor = vec4(cor, 1.0);
       }
@@ -124,21 +159,120 @@ export function terra(raio = 170): Mesh<SphereGeometry, ShaderMaterial> {
   return malha;
 }
 
+/** §14.7/D-93: bolinha de luz simples para uma lua distante de Saturno, sem detalhe de relevo. */
+function luaDistante(raio: number, cor: Color): Mesh<SphereGeometry, ShaderMaterial> {
+  const material = new ShaderMaterial({
+    uniforms: { uSol: { value: DIRECAO_SOL.clone() }, uCor: { value: cor } },
+    vertexShader: /* glsl */ `
+      varying vec3 vNormal;
+      void main() {
+        vNormal = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uSol;
+      uniform vec3 uCor;
+      varying vec3 vNormal;
+      void main() {
+        float luz = max(dot(normalize(vNormal), uSol), 0.0);
+        gl_FragColor = vec4(uCor * (0.08 + 0.92 * luz), 1.0);
+      }
+    `,
+  });
+  return new Mesh(new SphereGeometry(raio, 16, 10), material);
+}
+
+/**
+ * §14.7/D-93: Saturno visto de Titã — disco grande com faixas (como um gigante gasoso) e anéis
+ * inclinados; licença de ambientação (a neblina real de Titã o esconderia).
+ */
+function saturno(): Group {
+  const grupo = new Group();
+  const raio = 260;
+  const corpo = new ShaderMaterial({
+    uniforms: { uSol: { value: DIRECAO_SOL.clone() } },
+    vertexShader: /* glsl */ `
+      varying vec3 vNormal;
+      void main() {
+        vNormal = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uSol;
+      varying vec3 vNormal;
+      void main() {
+        vec3 n = normalize(vNormal);
+        float luz = dot(n, uSol);
+        float dia = smoothstep(-0.05, 0.4, luz);
+        float faixa = sin(n.y * 26.0) * 0.5 + 0.5;
+        vec3 clara = vec3(0.92, 0.85, 0.68);
+        vec3 escura = vec3(0.78, 0.66, 0.48);
+        vec3 diurno = mix(escura, clara, faixa);
+        vec3 noite = diurno * 0.05;
+        gl_FragColor = vec4(mix(noite, diurno, dia), 1.0);
+      }
+    `,
+  });
+  const esfera = new Mesh(new SphereGeometry(raio, 48, 24), corpo);
+  grupo.add(esfera);
+  const anel = new Mesh(
+    new RingGeometry(raio * 1.35, raio * 2.3, 64, 1),
+    new ShaderMaterial({
+      uniforms: { uSol: { value: DIRECAO_SOL.clone() } },
+      vertexShader: /* glsl */ `
+        varying vec2 vLocal;
+        varying vec3 vNormal;
+        void main() {
+          vLocal = position.xy;
+          vNormal = normalize(mat3(modelMatrix) * normal);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform vec3 uSol;
+        varying vec2 vLocal;
+        varying vec3 vNormal;
+        void main() {
+          float r = length(vLocal) / ${raio.toFixed(1)};
+          float faixas = sin(r * 40.0) * 0.5 + 0.5;
+          float vazio = smoothstep(1.55, 1.62, r) * (1.0 - smoothstep(1.66, 1.73, r));
+          vec3 cor = mix(vec3(0.55, 0.48, 0.38), vec3(0.82, 0.76, 0.62), faixas);
+          float luz = max(dot(normalize(vNormal), uSol), 0.0);
+          float alfa = (0.75 - vazio * 0.6) * (0.35 + 0.65 * luz);
+          gl_FragColor = vec4(cor, alfa);
+        }
+      `,
+      side: DoubleSide,
+      transparent: true,
+      depthWrite: false,
+    }),
+  );
+  anel.rotation.x = Math.PI / 2 - 0.45;
+  grupo.add(anel);
+  grupo.position.copy(direcaoFixaNoMundo(DIRECAO_SATURNO)).multiplyScalar(DISTANCIA_CEU * 0.85);
+  grupo.lookAt(0, 0, 0);
+  return grupo;
+}
+
 export interface Ceu {
   objeto: Group;
   /** CEN-03: força da tempestade de poeira (0 a 1) no céu. */
   clima(forca: number): void;
   /** CTL-16 (D-83): 0 no chão, 1 no fim do zoom: o céu dá lugar ao espaço estrelado. */
   espaco(t: number): void;
-  /** Direção (mundo) para o Sol no ponto focal atual. */
+  /** Direção (mundo) para o Sol — fixa pela partida inteira (D-93). */
   sol: Vector3;
-  /** Direção (mundo) para a Terra no ponto focal atual. */
+  /** Direção (mundo) para a Terra — fixa pela partida inteira (D-93). */
   terra: Vector3;
   /**
-   * ART-11: reposiciona Sol e Terra para o ponto focal (direção) e o norte dele. `olho` (a
-   * posição da câmera) assenta o fundo da Terra na borda do planeta vista dali (§14.5).
+   * ART-11 (D-93): reaproxima os corpos celestes fixos (Sol, Terra, Saturno...) do ponto focal
+   * (por serem "infinitamente" distantes, só a posição de tela muda) e orienta a cúpula do céu
+   * pelo "para cima" local dele. `olho` (a posição da câmera) assenta o fundo da Terra na borda
+   * do planeta vista dali (§14.5).
    */
-  atualizar(foco: Vec3, norte: Vec3, pontoFocal: Vector3, olho?: Vector3): void;
+  atualizar(foco: Vec3, pontoFocal: Vector3, olho?: Vector3): void;
 }
 
 /**
@@ -262,6 +396,14 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   const objeto = new Group();
   objeto.name = 'ceu';
   const astro = ambientacao.terraNoCeu ? terra() : null;
+  const corpoDeSaturno = ambientacao.saturnoNoCeu ? saturno() : null;
+  const dirSaturnoFixa = direcaoFixaNoMundo(DIRECAO_SATURNO);
+  const luas = ambientacao.saturnoNoCeu
+    ? DIRECOES_LUAS_DE_SATURNO.map((d, k) => ({
+        malha: luaDistante(9 + k * 3, new Color(0xcac2b4)),
+        direcaoFixa: direcaoFixaNoMundo(d),
+      }))
+    : [];
   // Com céu (atmosfera), as estrelas só aparecem ao afastar (CTL-16).
   const pontos = ambientacao.estrelas || ambientacao.ceu ? estrelas() : null;
   if (pontos) {
@@ -273,6 +415,8 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
     objeto.add(pontos);
   }
   if (astro) objeto.add(astro);
+  if (corpoDeSaturno) objeto.add(corpoDeSaturno);
+  for (const lua of luas) objeto.add(lua.malha);
   const domo =
     ambientacao.ceu && ambientacao.horizonte
       ? cupula(
@@ -289,10 +433,11 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   const girar = new Quaternion();
   const acima = new Vector3(0, 1, 0);
   const cimaLocal = new Vector3();
+  // D-93: Sol, Terra e Saturno ficam numa única direção do mundo pela partida inteira (ART-11).
   const ceu: Ceu = {
     objeto,
-    sol: ambientacao.sol.clone(),
-    terra: DIRECAO_TERRA.clone(),
+    sol: direcaoFixaNoMundo(ambientacao.sol),
+    terra: direcaoFixaNoMundo(DIRECAO_TERRA),
     clima(forca) {
       if (domo) domo.material.uniforms.uForca!.value = forca;
     },
@@ -304,12 +449,23 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
         pontos.material.opacity = t;
       }
     },
-    atualizar(foco, norte, pontoFocal, olho) {
-      ceu.sol.copy(paraOMundo(ambientacao.sol, foco, norte));
-      ceu.terra.copy(paraOMundo(DIRECAO_TERRA, foco, norte));
+    atualizar(foco, pontoFocal, olho) {
       if (astro) {
         astro.position.copy(pontoFocal).addScaledVector(ceu.terra, DISTANCIA_CEU * 0.9);
         astro.material.uniforms.uSol!.value.copy(ceu.sol);
+      }
+      if (corpoDeSaturno) {
+        corpoDeSaturno.position
+          .copy(pontoFocal)
+          .addScaledVector(dirSaturnoFixa, DISTANCIA_CEU * 0.85);
+        corpoDeSaturno.lookAt(pontoFocal);
+        for (const parte of corpoDeSaturno.children as Mesh<never, ShaderMaterial>[]) {
+          parte.material.uniforms.uSol!.value.copy(ceu.sol);
+        }
+      }
+      for (const lua of luas) {
+        lua.malha.position.copy(pontoFocal).addScaledVector(lua.direcaoFixa, DISTANCIA_CEU * 0.92);
+        lua.malha.material.uniforms.uSol!.value.copy(ceu.sol);
       }
       if (domo) {
         domo.position.copy(pontoFocal);

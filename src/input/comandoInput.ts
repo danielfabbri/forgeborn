@@ -336,23 +336,27 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   };
 
   /**
-   * D-56: Muro e Portão. `giro` existe enquanto o botão está apertado: o segmento gira em volta
-   * do pivô (o centro, ou a ponta encaixada) apontando para o cursor.
+   * D-56/D-96: toda estrutura gira pelo arrasto. `giro` existe enquanto o botão está apertado: a
+   * pegada gira em volta do pivô (o centro, ou a ponta encaixada em Muro/Portão) apontando para
+   * o cursor.
    */
   let giro: { pivo: Vec3; encaixado: boolean; rumo: Vec3 } | null = null;
-  /** Último giro usado (ângulo a partir do norte local), para o próximo segmento livre. */
+  /** Último giro usado (ângulo a partir do norte local), para a próxima estrutura livre. */
   let ultimoAngulo = 0;
-  /** O segmento sob o cursor agora (centro e rumo), para o holograma e a confirmação. */
+  /** A estrutura sob o cursor agora (centro e rumo), para o holograma e a confirmação. */
   let segmentoAtual: { centro: Vec3; rumo: Vec3 } | null = null;
 
-  const segmentoSob = (d: Vec3): { pivo: Vec3; encaixado: boolean; rumo: Vec3 } => {
+  /** Pivô inicial do giro: ponta livre encaixada (só Muro/Portão, D-56) ou o próprio ponto. */
+  const pivoSob = (tipo: EstruturasId, d: Vec3): { pivo: Vec3; encaixado: boolean; rumo: Vec3 } => {
+    if (!ehSegmento(tipo))
+      return { pivo: d, encaixado: false, rumo: rumoDoAngulo(d, ultimoAngulo) };
     const encaixe = encaixeEm(pontasLivres(sim.state, jogador, o.mapa.raio_m), d, o.mapa.raio_m);
     return encaixe
       ? { pivo: encaixe.ponta, encaixado: true, rumo: encaixe.saida }
       : { pivo: d, encaixado: false, rumo: rumoDoAngulo(d, ultimoAngulo) };
   };
 
-  /** UI-08: holograma verde ou vermelho sob o cursor. */
+  /** UI-08: holograma verde ou vermelho sob o cursor, já girado (D-56/D-96). */
   const atualizarHolograma = (px: number, py: number) => {
     if (!posicionando) return;
     const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
@@ -361,14 +365,9 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
       return;
     }
     const d = normalizar(ponto);
-    if (!ehSegmento(posicionando)) {
-      motivo = o.validarLocal?.(posicionando, d) ?? null;
-      o.holograma?.mostrar(posicionando, d, motivo === null);
-      return;
-    }
-    let base = giro ?? segmentoSob(d);
+    let base = giro ?? pivoSob(posicionando, d);
     if (giro) {
-      // Arrastando: o segmento aponta do pivô para o cursor.
+      // Arrastando: a estrutura aponta do pivô para o cursor.
       const rumo =
         arco(giro.pivo, d) * o.mapa.raio_m > GIRO_MINIMO_M ? tangente(giro.pivo, d) : null;
       if (rumo) giro = base = { ...giro, rumo };
@@ -384,12 +383,12 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
     o.holograma?.mostrar(posicionando, segmentoAtual.centro, motivo === null, segmentoAtual.rumo);
   };
 
-  /** D-56: apertar começa o giro do segmento (no centro, ou na ponta encaixada). */
+  /** D-56/D-96: apertar começa o giro da estrutura (no centro, ou na ponta encaixada). */
   const comecarGiro = (px: number, py: number): boolean => {
-    if (!posicionando || !ehSegmento(posicionando)) return false;
+    if (!posicionando) return false;
     const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
     if (!ponto) return false;
-    giro = segmentoSob(normalizar(ponto));
+    giro = pivoSob(posicionando, normalizar(ponto));
     atualizarHolograma(px, py);
     return true;
   };
@@ -397,34 +396,19 @@ export function ligarEntradaComandos(o: OpcoesEntradaComandos): EntradaComandos 
   const confirmarPosicionamento = (px: number, py: number, manter: boolean) => {
     if (!posicionando) return;
     const impressora = impressoraLivre();
-    if (ehSegmento(posicionando)) {
-      atualizarHolograma(px, py);
-      const seg = segmentoAtual;
-      giro = null;
-      if (!seg || impressora === null) return;
-      if (o.validarLocal?.(posicionando, seg.centro, seg.rumo)) return;
-      ultimoAngulo = anguloDoRumo(seg.centro, seg.rumo);
-      enviar('posicionar_estrutura', {
-        id: impressora,
-        tipo: posicionando,
-        x: seg.centro[0],
-        y: seg.centro[1],
-        z: seg.centro[2],
-        rumo: seg.rumo,
-      });
-      if (!manter) sairDaProducao();
-      return;
-    }
-    const ponto = pontoNoTerreno(o.camera, viewport, px, py, o.mapa);
-    if (!ponto || impressora === null) return;
-    const d = normalizar(ponto);
-    if (o.validarLocal?.(posicionando, d)) return;
+    atualizarHolograma(px, py);
+    const seg = segmentoAtual;
+    giro = null;
+    if (!seg || impressora === null) return;
+    if (o.validarLocal?.(posicionando, seg.centro, seg.rumo)) return;
+    ultimoAngulo = anguloDoRumo(seg.centro, seg.rumo);
     enviar('posicionar_estrutura', {
       id: impressora,
       tipo: posicionando,
-      x: d[0],
-      y: d[1],
-      z: d[2],
+      x: seg.centro[0],
+      y: seg.centro[1],
+      z: seg.centro[2],
+      rumo: seg.rumo,
     });
     if (!manter) sairDaProducao();
   };

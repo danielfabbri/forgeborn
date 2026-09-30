@@ -105,6 +105,47 @@ function segmentoNoPlano(
   return { a: noPlano(R, d, p0), b: noPlano(R, d, p1) };
 }
 
+/** Cantos (m, no plano em `d`) do retângulo com centro 3D `c`, eixos e meios-lados. */
+function cantosRetangulo(
+  R: number,
+  d: Vec3,
+  c: Vec3,
+  eixoA: Vec3,
+  eixoB: Vec3,
+  meioA: number,
+  meioB: number,
+): [number, number][] {
+  const cantos: [number, number][] = [];
+  for (const sa of [-1, 1]) {
+    for (const sb of [-1, 1]) {
+      const p = normalizar(
+        soma(c, soma(escalar(eixoA, (sa * meioA) / R), escalar(eixoB, (sb * meioB) / R))),
+      );
+      cantos.push(noPlano(R, d, p));
+    }
+  }
+  return cantos;
+}
+
+/** SAT: os dois retângulos (4 cantos cada, no mesmo plano 2D) se sobrepõem? */
+function retangulosSeSobrepoem(a: [number, number][], b: [number, number][]): boolean {
+  const eixosDe = (pts: [number, number][]): [number, number][] => [
+    [pts[1]![0] - pts[0]![0], pts[1]![1] - pts[0]![1]],
+    [pts[2]![0] - pts[0]![0], pts[2]![1] - pts[0]![1]],
+  ];
+  for (const [ex, ey] of [...eixosDe(a), ...eixosDe(b)]) {
+    const n = Math.hypot(ex, ey);
+    if (n < 1e-9) continue;
+    const nx = ex / n;
+    const ny = ey / n;
+    const projetar = (pts: [number, number][]) => pts.map(([x, y]) => x * nx + y * ny);
+    const pa = projetar(a);
+    const pb = projetar(b);
+    if (Math.max(...pa) < Math.min(...pb) || Math.max(...pb) < Math.min(...pa)) return false;
+  }
+  return true;
+}
+
 /**
  * PRD-10: valida o local da estrutura `tipo` com centro em `d` (para `nacao`, se dada). Muro e
  * Portão são segmentos com `rumo` (D-56): encostam em outros segmentos só pelas pontas.
@@ -121,12 +162,12 @@ export function validarPosicionamento(
   const h = meiaPegada(tipo);
   const segmento = ehSegmento(tipo);
   const esp = param('muro_espessura_m');
-  const direcao = segmento
-    ? (tangente(d, soma(d, escalar(rumo ?? norteEm(d), 1e-3))) ?? norteEm(d))
-    : null;
+  // PRD-10 (D-96): o rumo (giro livre pelo arrasto) vale para qualquer estrutura, não só Muro
+  // e Portão (D-56); sem rumo, a pegada fica alinhada ao norte local.
+  const direcao = tangente(d, soma(d, escalar(rumo ?? norteEm(d), 1e-3))) ?? norteEm(d);
   // Eixos da área a conferir: a pegada quadrada, ou o retângulo do segmento.
-  const eixoA = direcao ?? baseLocal(d).leste;
-  const eixoB = direcao ? produtoVetorial(direcao, d) : baseLocal(d).norte;
+  const eixoA = direcao;
+  const eixoB = produtoVetorial(direcao, d);
   const meioA = h;
   const meioB = segmento ? esp / 2 : h;
   if (ctx.mundo) {
@@ -158,7 +199,7 @@ export function validarPosicionamento(
   if (tipo === 'port' && ctx.mundo) {
     if (!terraPerto(ctx.mundo.mapa, d, param('porto_distancia_borda_m'))) return 'longe_da_borda';
   }
-  const nosso = direcao ? segmentoNoPlano(R, d, tipo, d, direcao) : null;
+  const nosso = segmento ? segmentoNoPlano(R, d, tipo, d, direcao) : null;
   // Pegadas (prontas, em obra ou reservadas) não se sobrepõem.
   for (const id of entitiesWith(state, 'structure', 'position')) {
     const outra = getComponent(state, id, 'structure')!.tipo;
@@ -166,15 +207,26 @@ export function validarPosicionamento(
     const limite = h + meiaPegada(outra);
     if (distanciaM(ctx, d, dc) > limite * Math.SQRT2 + 1) continue;
     const outroSegmento = ehSegmento(outra);
+    const rumoOutro = rumoDoSegmento(state, id, dc);
     if (!segmento && !outroSegmento) {
-      const [e, s] = noPlano(R, d, dc);
-      if (Math.abs(e) < limite && Math.abs(s) < limite) return 'ocupado';
+      // D-96: giro livre, então o teste de sobreposição é entre dois retângulos girados (SAT).
+      const nossosCantos = cantosRetangulo(R, d, d, eixoA, eixoB, meioA, meioB);
+      const outraMeia = meiaPegada(outra);
+      const outrosCantos = cantosRetangulo(
+        R,
+        d,
+        dc,
+        rumoOutro,
+        produtoVetorial(rumoOutro, dc),
+        outraMeia,
+        outraMeia,
+      );
+      if (retangulosSeSobrepoem(nossosCantos, outrosCantos)) return 'ocupado';
       continue;
     }
-    const rumoOutro = rumoDoSegmento(state, id, dc);
     if (segmento && outroSegmento) {
       // D-56: só se tocam pelas pontas (aparadas, as partes de dentro não podem se encostar).
-      const a = segmentoNoPlano(R, d, tipo, d, direcao!, esp);
+      const a = segmentoNoPlano(R, d, tipo, d, direcao, esp);
       const b = segmentoNoPlano(R, d, outra, dc, rumoOutro, esp);
       if (distanciaSegmentos2d(a.a, a.b, b.a, b.b) < esp / 2) return 'ocupado';
       continue;
@@ -428,8 +480,8 @@ export const comandosDeObra: Record<string, CommandHandler> = {
     }
     const obra = reservarEstrutura(ctx, comando.nacao, d.tipo, alvo);
     if (obra === null) return;
-    // D-56: Muro e Portão guardam o rumo do segmento.
-    if (rumo && ehSegmento(d.tipo)) getComponent(ctx.state, obra, 'structure')!.rumo = rumo;
+    // D-56/D-96: toda estrutura guarda o rumo do giro (arrasto ao posicionar).
+    if (rumo) getComponent(ctx.state, obra, 'structure')!.rumo = rumo;
     const pago = pagar(ctx, comando.nacao, d.tipo);
     if (!pago) {
       destroyEntity(ctx.state, obra);

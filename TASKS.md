@@ -445,3 +445,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: de Marte, o céu mostra Fobos e Deimos, pequenos, em direções fixas no mundo.
 - [x] **T-198 — Céu noturno em Marte e Titã** · M · Spec: ART-11, §14.6, §14.7, D-95 · Dep: T-194 · Feito: 2026-09-30
   - Aceite: em Marte e Titã, o céu muda de cor ao caminhar do lado iluminado para o lado sem Sol direto (e volta, ao caminhar de volta); em Marte o céu noturno mostra estrelas, em Titã não; a Lua, Shackleton e o Campo de testes não mudam.
+
+## M23 — Giro livre ao posicionar, generalizado (D-96)
+
+- [x] **T-199 — Giro livre ao posicionar toda estrutura, inclusive o Porto** · G · Spec: PRD-10, UI-08, CEN-15, D-56, D-96 · Dep: T-181 · Feito: 2026-09-30
+  - Aceite: ao posicionar qualquer estrutura (não só Muro/Portão), apertar fixa o centro no ponto clicado e arrastar (com o botão apertado) gira a pegada para apontar ao cursor, em qualquer ângulo; soltar confirma nessa direção; clicar sem arrastar mantém a última direção usada; o Porto segue girando e validando normalmente sobre o líquido (D-90); duas pegadas quadradas giradas em ângulos diferentes não se sobrepõem (checagem por retângulos reais, SAT), mesmo quando o simples teste por caixa alinhada ao norte deixaria passar ou recusaria por engano.

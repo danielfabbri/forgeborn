@@ -20,6 +20,7 @@ import {
 import { dados, type EstruturasId, param } from '../sim/data';
 import { geometriaDoModelo } from './modelos';
 import { avancar, girar, norteEm, produtoVetorial, type Vec3 } from '../sim/map/esfera';
+import { ehSegmento } from '../sim/units/segmentos';
 
 const VERDE = new Color('#46e08a');
 const VERMELHO = new Color('#ff4d4d');
@@ -78,7 +79,7 @@ export class HologramaRender {
     scene.add(this.grupo);
   }
 
-  /** `rumo`: frente de Muro e Portão (D-56); as demais seguem o norte local. */
+  /** `rumo`: frente da estrutura (D-56/D-96), pelo giro no arrasto; sem rumo, segue o norte local. */
   mostrar(tipo: EstruturasId, d: Vec3, valido: boolean, rumo: Vec3 | null = null): void {
     const estrutura = dados.estruturas.find((e) => e.id === tipo)!;
     const cor = valido ? VERDE : VERMELHO;
@@ -86,8 +87,8 @@ export class HologramaRender {
     this.materialBorda.color.copy(cor);
     this.materialSilhueta.color.copy(cor);
 
-    // Base local: +x = norte (a pegada se alinha ao norte local, PRD-10) ou o rumo do segmento
-    // (D-56), +y = vertical.
+    // Base local: +x = norte (a pegada se alinha ao norte local, PRD-10) ou o rumo do giro
+    // (D-56/D-96), +y = vertical.
     const frente = rumo ?? norteEm(d);
     const lado = produtoVetorial(frente, d);
     const r = this.raio + this.chao(d) + ELEVACAO_M;
@@ -98,7 +99,7 @@ export class HologramaRender {
       this.silhueta.geometry = geometriaDoModelo(tipo);
       this.tipoDaSilhueta = tipo;
     }
-    const largura = rumo ? param('muro_espessura_m') : estrutura.pegada_m;
+    const largura = ehSegmento(tipo) ? param('muro_espessura_m') : estrutura.pegada_m;
     this.matriz.scale(new Vector3(estrutura.pegada_m, 1, largura));
     const base = this.grupo.children[0]!;
     base.matrix.copy(this.matriz);

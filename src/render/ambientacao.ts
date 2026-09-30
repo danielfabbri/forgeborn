@@ -13,8 +13,10 @@ export interface Ambientacao {
   estrelas: boolean;
   /** A Terra escura no céu (ART-11). */
   terraNoCeu: boolean;
-  /** §14.7/D-93: Saturno (com anéis) e outras luas no céu de Titã. */
-  saturnoNoCeu: boolean;
+  /** §14.7/D-93: direção local de Saturno (com anéis) no céu, ou null se o cenário não o mostra. */
+  direcaoSaturno: Vector3 | null;
+  /** §14.6/§14.7/D-94: luas menores no céu (direção local, raio e cor de cada uma). */
+  luasNoCeu: Array<{ direcao: Vector3; raio: number; cor: Color }>;
   /** Sol no referencial local (x = leste, y = cima, z = sul). */
   sol: Vector3;
   intensidadeSol: number;
@@ -66,12 +68,14 @@ const LUA: Ambientacao = {
   horizonte: null,
   estrelas: true,
   terraNoCeu: true,
-  saturnoNoCeu: false,
+  direcaoSaturno: null,
+  luasNoCeu: [],
   sol: direcao(24, -35),
   intensidadeSol: 3.4,
-  // D-93: sol fixo revela um lado escuro de verdade; a ambiente mantém uma leitura mínima nele
-  // (nunca preto puro, ART-11), um pouco mais forte do que quando o sol seguia a câmera.
-  ambiente: { cor: new Color(0x8899aa), intensidade: 0.2 },
+  // D-93/D-94: sol fixo revela um lado escuro de verdade; a ambiente garante que ele continue
+  // jogável (nunca preto puro, ART-11) — o produto reportou D-93 escuro demais, então o valor
+  // subiu bem mais que o ajuste inicial.
+  ambiente: { cor: new Color(0x8899aa), intensidade: 2.5 },
   secundaria: { cor: new Color(0x7090ff), intensidade: 0.35 },
   tinta: [1, 1, 1],
   marcacoes: false,
@@ -95,7 +99,7 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     ...LUA,
     sol: direcao(11, -60),
     intensidadeSol: 3.0,
-    ambiente: { cor: new Color(0x7a88a0), intensidade: 0.24 },
+    ambiente: { cor: new Color(0x7a88a0), intensidade: 2.2 },
     tinta: [0.92, 0.95, 1.0],
     gelo: true,
   },
@@ -105,7 +109,8 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     horizonte: new Color('#7fb3e6'),
     estrelas: false,
     terraNoCeu: false,
-    saturnoNoCeu: false,
+    direcaoSaturno: null,
+    luasNoCeu: [],
     sol: direcao(58, -30),
     intensidadeSol: 3.0,
     ambiente: { cor: new Color('#b7cde6'), intensidade: 0.4 },
@@ -131,10 +136,16 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     horizonte: new Color('#d4a377'),
     estrelas: false,
     terraNoCeu: false,
-    saturnoNoCeu: false,
+    direcaoSaturno: null,
+    // §14.6/D-94: Fobos (mais perto e maior) e Deimos (menor e mais fraco), pequenos no céu.
+    luasNoCeu: [
+      { direcao: direcao(20, 60), raio: 6, cor: new Color(0x9a8f82) },
+      { direcao: direcao(50, 95), raio: 3.5, cor: new Color(0x8a8378) },
+    ],
     sol: direcao(34, -40),
     intensidadeSol: 2.4,
-    ambiente: { cor: new Color('#e0b08a'), intensidade: 0.34 },
+    // D-94: idem Lua — o lado escuro precisa ficar jogável.
+    ambiente: { cor: new Color('#e0b08a'), intensidade: 1.8 },
     secundaria: { cor: new Color('#d69a6a'), intensidade: 0.3 },
     tinta: [1.9, 1.05, 0.66],
     neblina: { perto: 90, longe: 420 },
@@ -151,7 +162,13 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     horizonte: new Color('#7e5028'),
     estrelas: false,
     terraNoCeu: false,
-    saturnoNoCeu: true,
+    // §14.7/D-93: Saturno, enorme, e três de suas outras luas, em direções fixas.
+    direcaoSaturno: direcao(32, 130),
+    luasNoCeu: [
+      { direcao: direcao(18, 152), raio: 9, cor: new Color(0xcac2b4) },
+      { direcao: direcao(48, 108), raio: 12, cor: new Color(0xcac2b4) },
+      { direcao: direcao(8, 172), raio: 15, cor: new Color(0xcac2b4) },
+    ],
     sol: direcao(42, -25),
     intensidadeSol: 1.1,
     ambiente: { cor: new Color('#e0a060'), intensidade: 0.5 },

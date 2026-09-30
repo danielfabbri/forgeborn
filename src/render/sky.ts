@@ -40,9 +40,6 @@ function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
  */
 export const DIRECAO_SOL = direcao(24, -35);
 export const DIRECAO_TERRA = direcao(13, 12);
-/** §14.7/D-93: Saturno e duas de suas outras luas, no céu de Titã. */
-export const DIRECAO_SATURNO = direcao(32, 130);
-export const DIRECOES_LUAS_DE_SATURNO = [direcao(18, 152), direcao(48, 108), direcao(8, 172)];
 
 /** Leva uma direção do referencial local do foco (leste, cima, sul) para o mundo. */
 export function paraOMundo(local: Vector3, foco: Vec3, norte: Vec3): Vector3 {
@@ -110,13 +107,31 @@ export function estrelas(): Points<BufferGeometry, PointsMaterial> {
 }
 
 /**
+ * D-94: uniformes e trecho de fragment shader comuns a todo corpo celeste fixo — a névoa de uma
+ * atmosfera (só nos cenários com cúpula, ART-11) deixa o corpo um pouco menos nítido visto de
+ * dentro dela do que na visão do espaço (CTL-16), que fica sempre nítida.
+ */
+function uniformesDeNevoa(): Record<string, { value: number | Color }> {
+  return { uNevoa: { value: 0 }, uCorNevoa: { value: new Color(0, 0, 0) } };
+}
+const GLSL_NEVOA_ATMOSFERICA = `
+  uniform float uNevoa;
+  uniform vec3 uCorNevoa;
+  vec3 comNevoa(vec3 cor) {
+    float cinza = dot(cor, vec3(0.299, 0.587, 0.114));
+    cor = mix(cor, vec3(cinza), uNevoa * 0.35);
+    return mix(cor, uCorNevoa, uNevoa * 0.4);
+  }
+`;
+
+/**
  * A Terra depois do Silêncio: oceano com continentes e nuvens (D-93), sem luzes de cidades
  * (FLX-02 também a usa). Continentes e nuvens são procedurais (ondas sobre longitude/latitude
  * da normal), no estilo das cadeias de montanha do panorama (§14.5) — sem textura externa.
  */
 export function terra(raio = 170): Mesh<SphereGeometry, ShaderMaterial> {
   const material = new ShaderMaterial({
-    uniforms: { uSol: { value: DIRECAO_SOL.clone() } },
+    uniforms: { uSol: { value: DIRECAO_SOL.clone() }, ...uniformesDeNevoa() },
     vertexShader: /* glsl */ `
       varying vec3 vNormal;
       varying vec3 vVista;
@@ -131,6 +146,7 @@ export function terra(raio = 170): Mesh<SphereGeometry, ShaderMaterial> {
       uniform vec3 uSol;
       varying vec3 vNormal;
       varying vec3 vVista;
+      ${GLSL_NEVOA_ATMOSFERICA}
       void main() {
         vec3 n = normalize(vNormal);
         float luz = dot(n, uSol);
@@ -150,7 +166,7 @@ export function terra(raio = 170): Mesh<SphereGeometry, ShaderMaterial> {
         diurno = mix(diurno, vec3(0.92, 0.94, 0.97), nuvem * 0.7);
         vec3 cor = mix(noite, diurno, dia);
         cor += vec3(0.30, 0.55, 1.0) * borda * (0.12 + 0.88 * smoothstep(-0.25, 0.25, luz));
-        gl_FragColor = vec4(cor, 1.0);
+        gl_FragColor = vec4(comNevoa(cor), 1.0);
       }
     `,
   });
@@ -159,10 +175,35 @@ export function terra(raio = 170): Mesh<SphereGeometry, ShaderMaterial> {
   return malha;
 }
 
-/** §14.7/D-93: bolinha de luz simples para uma lua distante de Saturno, sem detalhe de relevo. */
+/**
+ * §14.4/D-94: o Sol, visível como um disco distante e brilhante (não só uma direção de luz),
+ * igual em todos os cenários — inclusive sem cúpula (Lua) e na visão do espaço (CTL-16), onde
+ * antes sumia junto com o céu. `toneMapped: false` deixa a cor estourar para o bloom (ART-08).
+ */
+function sol(): Mesh<SphereGeometry, ShaderMaterial> {
+  // Sem chunk de tone mapping (shader cru): o valor alto (>1) chega intacto ao bloom (ART-08),
+  // que acontece antes do tone mapping final do composer.
+  const material = new ShaderMaterial({
+    uniforms: uniformesDeNevoa(),
+    vertexShader: /* glsl */ `
+      void main() {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      ${GLSL_NEVOA_ATMOSFERICA}
+      void main() {
+        gl_FragColor = vec4(comNevoa(vec3(4.5, 4.2, 3.8)), 1.0);
+      }
+    `,
+  });
+  return new Mesh(new SphereGeometry(150, 16, 10), material);
+}
+
+/** §14.6/§14.7/D-94: bolinha de luz simples para uma lua distante, sem detalhe de relevo. */
 function luaDistante(raio: number, cor: Color): Mesh<SphereGeometry, ShaderMaterial> {
   const material = new ShaderMaterial({
-    uniforms: { uSol: { value: DIRECAO_SOL.clone() }, uCor: { value: cor } },
+    uniforms: { uSol: { value: DIRECAO_SOL.clone() }, uCor: { value: cor }, ...uniformesDeNevoa() },
     vertexShader: /* glsl */ `
       varying vec3 vNormal;
       void main() {
@@ -174,9 +215,10 @@ function luaDistante(raio: number, cor: Color): Mesh<SphereGeometry, ShaderMater
       uniform vec3 uSol;
       uniform vec3 uCor;
       varying vec3 vNormal;
+      ${GLSL_NEVOA_ATMOSFERICA}
       void main() {
         float luz = max(dot(normalize(vNormal), uSol), 0.0);
-        gl_FragColor = vec4(uCor * (0.08 + 0.92 * luz), 1.0);
+        gl_FragColor = vec4(comNevoa(uCor * (0.08 + 0.92 * luz)), 1.0);
       }
     `,
   });
@@ -185,13 +227,14 @@ function luaDistante(raio: number, cor: Color): Mesh<SphereGeometry, ShaderMater
 
 /**
  * §14.7/D-93: Saturno visto de Titã — disco grande com faixas (como um gigante gasoso) e anéis
- * inclinados; licença de ambientação (a neblina real de Titã o esconderia).
+ * inclinados; licença de ambientação (a neblina real de Titã o esconderia, D-94 o deixa menos
+ * nítido de dentro da atmosfera, mas não invisível).
  */
-function saturno(): Group {
+function saturno(direcaoFixaMundo: Vector3): Group {
   const grupo = new Group();
   const raio = 260;
   const corpo = new ShaderMaterial({
-    uniforms: { uSol: { value: DIRECAO_SOL.clone() } },
+    uniforms: { uSol: { value: DIRECAO_SOL.clone() }, ...uniformesDeNevoa() },
     vertexShader: /* glsl */ `
       varying vec3 vNormal;
       void main() {
@@ -202,6 +245,7 @@ function saturno(): Group {
     fragmentShader: /* glsl */ `
       uniform vec3 uSol;
       varying vec3 vNormal;
+      ${GLSL_NEVOA_ATMOSFERICA}
       void main() {
         vec3 n = normalize(vNormal);
         float luz = dot(n, uSol);
@@ -211,7 +255,7 @@ function saturno(): Group {
         vec3 escura = vec3(0.78, 0.66, 0.48);
         vec3 diurno = mix(escura, clara, faixa);
         vec3 noite = diurno * 0.05;
-        gl_FragColor = vec4(mix(noite, diurno, dia), 1.0);
+        gl_FragColor = vec4(comNevoa(mix(noite, diurno, dia)), 1.0);
       }
     `,
   });
@@ -220,7 +264,7 @@ function saturno(): Group {
   const anel = new Mesh(
     new RingGeometry(raio * 1.35, raio * 2.3, 64, 1),
     new ShaderMaterial({
-      uniforms: { uSol: { value: DIRECAO_SOL.clone() } },
+      uniforms: { uSol: { value: DIRECAO_SOL.clone() }, ...uniformesDeNevoa() },
       vertexShader: /* glsl */ `
         varying vec2 vLocal;
         varying vec3 vNormal;
@@ -234,6 +278,7 @@ function saturno(): Group {
         uniform vec3 uSol;
         varying vec2 vLocal;
         varying vec3 vNormal;
+        ${GLSL_NEVOA_ATMOSFERICA}
         void main() {
           float r = length(vLocal) / ${raio.toFixed(1)};
           float faixas = sin(r * 40.0) * 0.5 + 0.5;
@@ -241,7 +286,7 @@ function saturno(): Group {
           vec3 cor = mix(vec3(0.55, 0.48, 0.38), vec3(0.82, 0.76, 0.62), faixas);
           float luz = max(dot(normalize(vNormal), uSol), 0.0);
           float alfa = (0.75 - vazio * 0.6) * (0.35 + 0.65 * luz);
-          gl_FragColor = vec4(cor, alfa);
+          gl_FragColor = vec4(comNevoa(cor), alfa);
         }
       `,
       side: DoubleSide,
@@ -251,7 +296,7 @@ function saturno(): Group {
   );
   anel.rotation.x = Math.PI / 2 - 0.45;
   grupo.add(anel);
-  grupo.position.copy(direcaoFixaNoMundo(DIRECAO_SATURNO)).multiplyScalar(DISTANCIA_CEU * 0.85);
+  grupo.position.copy(direcaoFixaMundo).multiplyScalar(DISTANCIA_CEU * 0.85);
   grupo.lookAt(0, 0, 0);
   return grupo;
 }
@@ -395,15 +440,29 @@ function panorama(horizonte: Color): Mesh<CylinderGeometry, ShaderMaterial> {
 export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   const objeto = new Group();
   objeto.name = 'ceu';
+  const corpoDoSol = sol();
   const astro = ambientacao.terraNoCeu ? terra() : null;
-  const corpoDeSaturno = ambientacao.saturnoNoCeu ? saturno() : null;
-  const dirSaturnoFixa = direcaoFixaNoMundo(DIRECAO_SATURNO);
-  const luas = ambientacao.saturnoNoCeu
-    ? DIRECOES_LUAS_DE_SATURNO.map((d, k) => ({
-        malha: luaDistante(9 + k * 3, new Color(0xcac2b4)),
-        direcaoFixa: direcaoFixaNoMundo(d),
-      }))
-    : [];
+  const dirSaturnoFixa = ambientacao.direcaoSaturno
+    ? direcaoFixaNoMundo(ambientacao.direcaoSaturno)
+    : null;
+  const corpoDeSaturno = dirSaturnoFixa ? saturno(dirSaturnoFixa) : null;
+  const luas = ambientacao.luasNoCeu.map((l) => ({
+    malha: luaDistante(l.raio, l.cor),
+    direcaoFixa: direcaoFixaNoMundo(l.direcao),
+  }));
+  // D-94: dentro de uma atmosfera (cúpula), os corpos do céu ficam um pouco menos nítidos que
+  // na visão do espaço (CTL-16); sem cúpula (Lua), sempre nítidos — não há neblina no vácuo.
+  const nevoaAtiva = ambientacao.ceu !== null && ambientacao.horizonte !== null;
+  const corNevoa = ambientacao.horizonte ?? new Color(0, 0, 0);
+  const materiaisComNevoa: ShaderMaterial[] = [
+    corpoDoSol.material,
+    ...(astro ? [astro.material] : []),
+    ...(corpoDeSaturno
+      ? (corpoDeSaturno.children as Mesh<never, ShaderMaterial>[]).map((p) => p.material)
+      : []),
+    ...luas.map((l) => l.malha.material),
+  ];
+  for (const m of materiaisComNevoa) (m.uniforms.uCorNevoa!.value as Color).copy(corNevoa);
   // Com céu (atmosfera), as estrelas só aparecem ao afastar (CTL-16).
   const pontos = ambientacao.estrelas || ambientacao.ceu ? estrelas() : null;
   if (pontos) {
@@ -414,6 +473,7 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
     }
     objeto.add(pontos);
   }
+  objeto.add(corpoDoSol);
   if (astro) objeto.add(astro);
   if (corpoDeSaturno) objeto.add(corpoDeSaturno);
   for (const lua of luas) objeto.add(lua.malha);
@@ -448,13 +508,16 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
         pontos.visible = t > 0.01;
         pontos.material.opacity = t;
       }
+      const nevoa = nevoaAtiva ? 1 - t : 0;
+      for (const m of materiaisComNevoa) m.uniforms.uNevoa!.value = nevoa;
     },
     atualizar(foco, pontoFocal, olho) {
+      corpoDoSol.position.copy(pontoFocal).addScaledVector(ceu.sol, DISTANCIA_CEU * 0.8);
       if (astro) {
         astro.position.copy(pontoFocal).addScaledVector(ceu.terra, DISTANCIA_CEU * 0.9);
         astro.material.uniforms.uSol!.value.copy(ceu.sol);
       }
-      if (corpoDeSaturno) {
+      if (corpoDeSaturno && dirSaturnoFixa) {
         corpoDeSaturno.position
           .copy(pontoFocal)
           .addScaledVector(dirSaturnoFixa, DISTANCIA_CEU * 0.85);

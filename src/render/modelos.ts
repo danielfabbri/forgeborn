@@ -663,31 +663,67 @@ const CONSTRUTORES: Record<TipoDeModelo, () => BufferGeometry> = {
     }
     return m.pronta();
   },
-  // UNI-21/D-91: hangar baixo e alongado, com o portão de saída (na cor da nação) voltado para
-  // a rampa da Nave; trilhos curtos marcam a saída dos drones.
+  // UNI-21/D-91 (revisão de personalidade visual): hangar de aeronaves — teto em arco (meio-
+  // cilindro) bem baixo, boca escura e recuada voltada para a rampa da Nave, farol de baliza
+  // piscando num canto e a pista pintada no chão. Silhueta curva, bem diferente da Fábrica.
   hangar: () => {
     const m = new Montagem();
-    m.caixa(7.0, 0.15, 5.0, GRAFITE, { y: -0.05 });
-    m.caixa(6.6, 1.7, 4.6, METAL, { y: 0.05 });
-    m.caixa(6.8, 0.2, 4.8, PAINEL, { y: 1.75 });
-    m.caixa(0.15, 1.5, 3.4, 'nacao', { x: 3.35, y: 0.1 });
-    for (const z of [-1.2, 1.2]) m.caixa(1.0, 0.06, 0.22, METAL, { x: 3.9, y: -0.02, z });
-    m.caixa(6.4, 0.08, 0.5, 'nacao', { y: 1.85 });
-    for (const x of [-2.2, 2.2]) antena(m, x, 1.85, -1.6, 0.6);
-    return m.pronta();
+    const r = 2.3;
+    const c = 6.2;
+    m.caixa(7.2, 0.15, 5.2, GRAFITE, { y: -0.05 });
+    // Teto em arco: meio-cilindro deitado (aberto embaixo), comprido no eixo x. (thetaStart de
+    // three.js conta a partir de +Z girando para -X; Math.PI/-Math.PI cobre só o topo, cosθ≥0.)
+    m.add(new CylinderGeometry(r, r, c, 16, 1, true, Math.PI, -Math.PI), METAL, {
+      rz: Math.PI / 2,
+    });
+    // Friso ao longo da cumeeira.
+    m.caixa(c, 0.06, 0.3, PAINEL, { y: r });
+    // Parede de fundo, fechando o arco.
+    m.caixa(0.15, r, 4.4, GRAFITE, { x: -c / 2, y: r / 2 });
+    // Boca escura e recuada.
+    m.caixa(0.1, r * 0.95, 4.1, VIDRO, { x: c / 2 - 0.35, y: (r * 0.95) / 2 });
+    // Moldura da boca na cor da nação (verga e ombreiras).
+    m.caixa(0.12, 0.16, 4.4, 'nacao', { x: c / 2 - 0.05, y: r * 0.9 });
+    for (const z of [-2.05, 2.05])
+      m.caixa(0.12, r * 0.9, 0.16, 'nacao', { x: c / 2 - 0.05, y: (r * 0.9) / 2, z });
+    // Farol de baliza piscando num canto da boca.
+    antena(m, c / 2 - 0.7, r * 0.9, -2.5, 0.4);
+    // Pista pintada no chão, em seta, apontando para fora da boca.
+    for (const z of [-1, 1])
+      m.caixa(1.3, 0.03, 0.3, 'nacao', { x: c / 2 + 1.4, y: 0.02, z: z * 0.85, ry: z * 0.45 });
+    return olho(m, c / 2 - 0.3, r * 0.5, 0, 0.12).pronta();
   },
-  // UNI-22/D-92: fábrica robusta e baixa, portão largo (na cor da nação) voltado para a rampa
-  // da Nave, com pilares reforçados e trilhos largos para a saída dos veículos pesados.
+  // UNI-22/D-92 (revisão de personalidade visual): fundição pesada — corpo anguloso e alto,
+  // telhado plano, duas chaminés com brasa no topo, portão reforçado com moldura em risco
+  // zebrado e guindaste no telhado. Silhueta reta e industrial, bem diferente do Hangar.
   arsenal: () => {
     const m = new Montagem();
     m.caixa(7.6, 0.16, 5.6, GRAFITE, { y: -0.05 });
-    m.caixa(7.2, 2.2, 5.2, METAL, { y: 0.1 });
-    m.caixa(7.4, 0.22, 5.4, PAINEL, { y: 2.25 });
-    m.caixa(0.18, 1.9, 3.8, 'nacao', { x: 3.65, y: 0.15 });
-    for (const z of [-1.4, 1.4]) m.caixa(1.2, 0.08, 0.28, METAL, { x: 4.2, y: -0.02, z });
-    m.caixa(6.9, 0.1, 0.6, 'nacao', { y: 2.36 });
-    for (const x of [-2.6, 2.6]) m.caixa(0.5, 2.3, 0.5, GRAFITE, { x, y: 0.05 });
-    return m.pronta();
+    m.caixa(7.0, 2.6, 5.0, METAL, { y: 0.1 });
+    m.caixa(7.2, 0.2, 5.2, PAINEL, { y: 2.55 });
+    // Chaminés atrás, com brasa no topo (fundição).
+    for (const z of [-1.4, 1.4]) {
+      m.cilindro(0.45, 2.2, GRAFITE, { x: -2.6, y: 2.65, z }, 10, 0.35);
+      m.esfera(0.28, { brilho: BRASA }, { x: -2.6, y: 4.8, z });
+    }
+    // Portão reforçado, recuado e escuro.
+    m.caixa(0.15, 1.8, 3.6, VIDRO, { x: 3.55, y: 0.95 });
+    // Moldura em risco zebrado (a cor da nação alternada com grafite).
+    for (let k = -4; k <= 4; k++)
+      m.caixa(0.1, 0.22, 0.42, k % 2 === 0 ? 'nacao' : GRAFITE, {
+        x: 3.62,
+        y: 1.9,
+        z: k * 0.42,
+      });
+    // Escoras diagonais de cada lado do portão.
+    for (const z of [-2.0, 2.0])
+      m.caixa(1.5, 0.3, 0.3, METAL, { x: 2.85, y: 0.3, z, ry: -z * 0.2 });
+    // Guindaste no telhado: torre, viga e cabo com gancho.
+    m.caixa(0.4, 1.0, 0.4, METAL, { x: -1.0, y: 3.15 });
+    m.caixa(4.4, 0.25, 0.3, PAINEL, { x: 0.4, y: 3.65 });
+    m.cilindro(0.03, 1.4, METAL, { x: 2.3, y: 2.95 });
+    m.caixa(0.3, 0.2, 0.3, GRAFITE, { x: 2.3, y: 2.25 });
+    return olho(m, 3.6, 1.0, 0, 0.14).pronta();
   },
   // UNI-16 (D-90): Porto flutuante: plataforma sobre o líquido, cais com defensas, guindaste e
   // o berço de impressão das embarcações.

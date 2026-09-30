@@ -432,3 +432,14 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: a Terra no céu da Lua mostra continentes e nuvens no lado iluminado, além do oceano e do halo azul já existentes; continua fixa no mundo (T-191).
 - [x] **T-193 — Saturno e outras luas no céu de Titã** · M · Spec: §14.7, §18.2, D-93 · Dep: T-191 · Feito: 2026-09-30
   - Aceite: de Titã, o céu mostra Saturno grande com anéis e ao menos 2 outras luas menores, todos em direções fixas no mundo, junto do Sol.
+
+## M22 — Correções de D-93: ambiente, Sol visível e Marte (D-94)
+
+- [x] **T-194 — Luz ambiente jogável no lado escuro (Lua, Shackleton, Marte)** · P · Spec: ART-11, D-94 · Dep: T-191 · Feito: 2026-09-30
+  - Aceite: no lado sem Sol direto, o chão e as estruturas continuam legíveis a olho nu (não preto puro) na Lua, em Shackleton e em Marte.
+- [x] **T-195 — Sol como corpo visível no céu, inclusive na visão do espaço** · M · Spec: ART-11, D-94 · Dep: T-191 · Feito: 2026-09-30
+  - Aceite: o Sol aparece como um disco brilhante numa direção fixa do céu, em todos os cenários; continua visível na visão planetária/do espaço (CTL-16), sem sumir quando o céu dá lugar às estrelas.
+- [x] **T-196 — Corpos do céu menos nítidos dentro da atmosfera** · P · Spec: ART-11, D-94 · Dep: T-193 · Feito: 2026-09-30
+  - Aceite: em Titã, Saturno (e as outras luas) ficam com menos nitidez/contraste olhando de dentro da atmosfera do que na visão do espaço (CTL-16), onde ficam nítidos.
+- [x] **T-197 — Fobos e Deimos no céu de Marte** · P · Spec: §14.6, §18.2, D-94 · Dep: T-191 · Feito: 2026-09-30
+  - Aceite: de Marte, o céu mostra Fobos e Deimos, pequenos, em direções fixas no mundo.

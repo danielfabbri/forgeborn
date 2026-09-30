@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.11.0 — rascunho para aprovação |
+| Versão do SPEC | 1.11.1 — rascunho para aprovação |
 | Data | 2026-09-30 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -850,11 +850,11 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 
 #### Hangar de Drones — `hangar`
 - **UNI-21** — **Hangar de Drones** (`hangar`, D-91): estrutura fixa que a Impressora constrói (menu B, tecla H) e que, pronta e ligada à rede, imprime os drones (item `drone_bomber`, `drone_laser` ou `drone_kamikaze`, menu próprio B/L/K) com a energia da rede (PRD-06), como a Base de Lançamento imprime Satélites. A Impressora deixa de imprimir os três (PRD-01).
-- **Visual:** hangar baixo e alongado, com o portão de saída voltado para a rampa da Nave.
+- **Visual:** hangar de aeronaves, teto em arco (meio-cilindro) bem baixo, boca escura e recuada voltada para a rampa da Nave, farol de baliza piscando num canto e a pista pintada no chão na frente da boca — silhueta curva, bem diferente da Fábrica de Artilharia.
 
 #### Fábrica de Artilharia — `arsenal`
 - **UNI-22** — **Fábrica de Artilharia** (`arsenal`, D-92): estrutura fixa que a Impressora constrói (menu B, tecla B) e que, pronta e ligada à rede, imprime o Hover de Defesa EX1, o Hover de Defesa OPQ e o Tanque de Cerco (item `hover_ex1`, `hover_opq` ou `siege_tank`, menu próprio 1/2/3) com a energia da rede (PRD-06), como a Base de Lançamento imprime Satélites e o Hangar imprime os drones. A Impressora deixa de imprimir o EX1 e o OPQ (PRD-01).
-- **Visual:** galpão robusto e baixo, com portão largo voltado para a rampa da Nave e trilhos reforçados para a saída dos veículos pesados.
+- **Visual:** fundição pesada, corpo anguloso e alto com telhado plano, duas chaminés com brasa no topo, portão reforçado com moldura em risco zebrado (a cor da nação alternada com grafite) e guindaste no telhado — silhueta reta e industrial, bem diferente do Hangar de Drones.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1888,3 +1888,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.9.2 | 2026-09-28 | D-90 (proposta): `ia_porto_distancia_m` 250 (com a terra firme de `mar_folga_zona_m` em volta das zonas, o mar mais perto fica além de 130 m). |
 | 1.10.0 | 2026-09-30 | D-91: PRD-01, UNI-21 (`hangar`), CMB-30 (`kamikaze`), IA-15, `dados:moveis` (`drone_kamikaze`), `dados:armas` (`kamikaze_blast`), `dados:custos` e `dados:estruturas` (`hangar`; `drone_bomber`/`drone_laser` mudam produzido_por para `hangar`), `dados:ia_plano`, `dados:personalidades` (coluna `kamikaze`), `dados:missoes` (m04), atalhos. |
 | 1.11.0 | 2026-09-30 | D-92: PRD-01, UNI-22 (`arsenal`), IA-16, `dados:moveis` e `dados:armas` (`siege_tank`, `siege_ram`), `dados:custos` e `dados:estruturas` (`arsenal`; `hover_ex1`/`hover_opq` mudam produzido_por para `arsenal`), `dados:ia_plano`, `dados:personalidades` (coluna `siege`), `dados:missoes` (m00 libera `arsenal` no lugar do EX1; m02 libera o Tanque de Cerco), IA-03, CAM-07 (10 passos, novo passo 9), atalhos. |
+| 1.11.1 | 2026-09-30 | Visual do Hangar de Drones (UNI-21) e da Fábrica de Artilharia (UNI-22): silhuetas distintas (teto em arco vs. corpo anguloso com chaminés), pedido do produto ("os edifícios estão sem personalidade e parecidos um com o outro"). |

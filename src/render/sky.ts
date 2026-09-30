@@ -28,6 +28,12 @@ import {
 import { norteEm, type Vec3 } from '../sim/map/esfera';
 import { type Ambientacao, ambientacaoDe } from './ambientacao';
 
+/** GLSL-like smoothstep, para o fator dia/noite calculado no lado JS (D-95). */
+function smoothstep(borda0: number, borda1: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - borda0) / (borda1 - borda0)));
+  return t * t * (3 - 2 * t);
+}
+
 function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
   const el = (elevacaoGraus * Math.PI) / 180;
   const az = (azimuteGraus * Math.PI) / 180;
@@ -329,6 +335,7 @@ function cupula(
   horizonte: Color,
   sol: Ambientacao['solNoCeu'],
   poeira: Color | null,
+  noite: Ambientacao['noite'],
 ): Mesh<SphereGeometry, ShaderMaterial> {
   return new Mesh(
     new SphereGeometry(DISTANCIA_CEU * 0.95, 32, 16),
@@ -344,6 +351,11 @@ function cupula(
         uPoeira: { value: poeira?.clone() ?? new Color(0, 0, 0) },
         uForca: { value: 0 },
         uEspaco: { value: 0 },
+        // D-95: céu noturno do lado sem Sol direto (só em cenários com atmosfera/cúpula).
+        uTemNoite: { value: noite ? 1 : 0 },
+        uCeuNoite: { value: noite?.ceu.clone() ?? new Color(0, 0, 0) },
+        uHorizonteNoite: { value: noite?.horizonte.clone() ?? new Color(0, 0, 0) },
+        uDia: { value: 1 },
       },
       vertexShader: `varying vec3 vDir;
         void main() {
@@ -353,15 +365,22 @@ function cupula(
       fragmentShader: `uniform vec3 uCeu; uniform vec3 uHorizonte; uniform vec3 uCima;
         uniform vec3 uSol; uniform float uTemSol; uniform vec3 uCorSol; uniform vec3 uHalo;
         uniform vec3 uPoeira; uniform float uForca; uniform float uEspaco; varying vec3 vDir;
+        uniform float uTemNoite; uniform vec3 uCeuNoite; uniform vec3 uHorizonteNoite;
+        uniform float uDia;
         void main() {
           vec3 dir = normalize(vDir);
           float h = clamp(dot(dir, uCima), 0.0, 1.0);
           vec3 cor = mix(uHorizonte, uCeu, pow(h, 0.45));
+          if (uTemNoite > 0.5) {
+            // D-95: o lado do planeta sem Sol direto vê um céu noturno, não o mesmo céu de dia.
+            vec3 corNoite = mix(uHorizonteNoite, uCeuNoite, pow(h, 0.45));
+            cor = mix(corNoite, cor, uDia);
+          }
           if (uTemSol > 0.5) {
             float c = max(dot(dir, normalize(uSol)), 0.0);
-            // Halo azulado largo e o disco pequeno e claro.
-            cor = mix(cor, uHalo, pow(c, 40.0) * 0.75 * (1.0 - uForca));
-            cor = mix(cor, uCorSol, smoothstep(0.9993, 0.9997, c) * (1.0 - 0.8 * uForca));
+            // Halo azulado largo e o disco pequeno e claro; somem de noite (uDia).
+            cor = mix(cor, uHalo, pow(c, 40.0) * 0.75 * (1.0 - uForca) * uDia);
+            cor = mix(cor, uCorSol, smoothstep(0.9993, 0.9997, c) * (1.0 - 0.8 * uForca) * uDia);
           }
           cor = mix(cor, uPoeira, uForca * 0.75);
           // CTL-16 (D-83): na visão planetária o céu some e fica o espaço.
@@ -484,6 +503,7 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
           ambientacao.horizonte,
           ambientacao.solNoCeu,
           ambientacao.tempestade?.cor ?? null,
+          ambientacao.noite,
         )
       : null;
   if (domo) objeto.add(domo);
@@ -493,6 +513,20 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   const girar = new Quaternion();
   const acima = new Vector3(0, 1, 0);
   const cimaLocal = new Vector3();
+  const focoVec = new Vector3();
+  let tAtual = 0;
+  let diaAtual = 1;
+  /**
+   * D-95: as estrelas aparecem ao afastar (CTL-16, `t`) e, nos cenários cuja noite as mostra
+   * (Marte), também do lado sem Sol direto (`diaAtual` baixo) — o que for maior vale. `espaco`
+   * roda depois de `atualizar` a cada quadro (partida.ts), então é aqui que os dois se somam.
+   */
+  const atualizarEstrelas = (): void => {
+    if (!pontos || ambientacao.estrelas) return;
+    const visivel = Math.max(tAtual, ambientacao.noite?.estrelas ? 1 - diaAtual : 0);
+    pontos.visible = visivel > 0.01;
+    pontos.material.opacity = visivel;
+  };
   // D-93: Sol, Terra e Saturno ficam numa única direção do mundo pela partida inteira (ART-11).
   const ceu: Ceu = {
     objeto,
@@ -502,16 +536,18 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
       if (domo) domo.material.uniforms.uForca!.value = forca;
     },
     espaco(t) {
+      tAtual = t;
       if (domo) domo.material.uniforms.uEspaco!.value = t;
       if (fundo) fundo.visible = t < 0.99;
-      if (pontos && !ambientacao.estrelas) {
-        pontos.visible = t > 0.01;
-        pontos.material.opacity = t;
-      }
+      atualizarEstrelas();
       const nevoa = nevoaAtiva ? 1 - t : 0;
       for (const m of materiaisComNevoa) m.uniforms.uNevoa!.value = nevoa;
     },
     atualizar(foco, pontoFocal, olho) {
+      // D-95: o lado do planeta sem Sol direto (dia < 0) vê o céu noturno do cenário.
+      diaAtual = domo ? smoothstep(-0.15, 0.08, focoVec.set(...foco).dot(ceu.sol)) : 1;
+      if (domo) domo.material.uniforms.uDia!.value = diaAtual;
+      atualizarEstrelas();
       corpoDoSol.position.copy(pontoFocal).addScaledVector(ceu.sol, DISTANCIA_CEU * 0.8);
       if (astro) {
         astro.position.copy(pontoFocal).addScaledVector(ceu.terra, DISTANCIA_CEU * 0.9);

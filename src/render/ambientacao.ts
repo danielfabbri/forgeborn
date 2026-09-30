@@ -49,6 +49,11 @@ export interface Ambientacao {
   /** §14.6: disco do Sol no céu, com halo (o "pôr do sol azul" de Marte), ou null. */
   solNoCeu: { cor: Color; halo: Color } | null;
   /**
+   * D-95: céu noturno do lado do planeta sem Sol direto (cenários com atmosfera/cúpula), ou
+   * null nos que não têm cúpula (Lua) ou ainda não ganharam noite (Terra — Campo de testes).
+   */
+  noite: { ceu: Color; horizonte: Color; estrelas: boolean } | null;
+  /**
    * §14.6/CEN-03: como fica o ar na tempestade de poeira (cor da poeira, névoa densa e quanto
    * da luz direta passa), ou null se o cenário não tem tempestade.
    */
@@ -88,6 +93,8 @@ const LUA: Ambientacao = {
   desvanecer: null,
   detalhe: 1,
   solNoCeu: null,
+  // D-95: sem cúpula, o céu da Lua já é sempre o espaço preto estrelado — não muda com o Sol.
+  noite: null,
   tempestade: null,
   vento: 0,
 };
@@ -126,6 +133,9 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     desvanecer: { perto: 40, longe: 80, cor: new Color('#5f7d4a') },
     detalhe: 0,
     solNoCeu: null,
+    // D-95: Campo de testes não ganha noite por enquanto (pedido do produto restringe a Marte
+    // e Titã); a câmera também não costuma sair da área do tutorial.
+    noite: null,
     tempestade: null,
     vento: 0,
   },
@@ -152,6 +162,9 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     escuroBrilho: 0.2,
     detalhe: 0.8,
     solNoCeu: { cor: new Color('#fff4e0'), halo: new Color('#8fb4e8') },
+    // D-95: do lado sem Sol direto, o céu fica noturno — atmosfera fina, quase preto, com
+    // estrelas (ao contrário de Titã, cuja neblina espessa as esconde mesmo de noite).
+    noite: { ceu: new Color('#0a0503'), horizonte: new Color('#1c0f08'), estrelas: true },
     tempestade: { cor: new Color('#a8683e'), neblina: { perto: 30, longe: 170 }, luz: 0.55 },
     vento: 0.3,
   },
@@ -178,6 +191,9 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     escuroBrilho: 0.2,
     detalhe: 0.6,
     solNoCeu: { cor: new Color('#e9b77a'), halo: new Color('#dfa05c') },
+    // D-95: do lado sem Sol direto, a neblina espessa de Titã escurece bem mais, mas não some
+    // — continua sem estrelas (a neblina as esconde de dia e de noite).
+    noite: { ceu: new Color('#180d05'), horizonte: new Color('#2a180d'), estrelas: false },
     vento: 0.25,
   },
 };

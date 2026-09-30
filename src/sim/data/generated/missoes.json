@@ -84,8 +84,7 @@
     ],
     "objetivo": "Sobreviver 12 min; depois destruir a Nave inimiga",
     "libera": [
-      "drone_laser",
-      "drone_bomber"
+      "hangar"
     ],
     "tempo_par_min": 60,
     "versao": "v1.x"

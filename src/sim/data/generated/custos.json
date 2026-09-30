@@ -113,7 +113,7 @@
     "nome": "Drone Bombardeiro",
     "categoria": "movel",
     "produzido_por": [
-      "printer"
+      "hangar"
     ],
     "fe": 20,
     "si": 16,
@@ -131,7 +131,7 @@
     "nome": "Drone Laser",
     "categoria": "movel",
     "produzido_por": [
-      "printer"
+      "hangar"
     ],
     "fe": 15,
     "si": 15,
@@ -143,6 +143,24 @@
     "ref_x": 12,
     "en_impressao": 70,
     "tempo_s": 15
+  },
+  {
+    "id": "drone_kamikaze",
+    "nome": "Drone Kamikaze",
+    "categoria": "movel",
+    "produzido_por": [
+      "hangar"
+    ],
+    "fe": 12,
+    "si": 8,
+    "cu": 10,
+    "li": 6,
+    "ti": 10,
+    "u": 0,
+    "vr": 77,
+    "ref_x": null,
+    "en_impressao": 45,
+    "tempo_s": 9
   },
   {
     "id": "mobile_silo",
@@ -376,6 +394,24 @@
     "vr": 183.5,
     "ref_x": null,
     "en_impressao": 120,
+    "tempo_s": 24
+  },
+  {
+    "id": "hangar",
+    "nome": "Hangar de Drones",
+    "categoria": "estrutura",
+    "produzido_por": [
+      "printer"
+    ],
+    "fe": 49,
+    "si": 21,
+    "cu": 21,
+    "li": 7,
+    "ti": 14,
+    "u": 0,
+    "vr": 157.5,
+    "ref_x": null,
+    "en_impressao": 140,
     "tempo_s": 24
   },
   {

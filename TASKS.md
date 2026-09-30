@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Derivado de | `SPEC.md` v1.9.2 |
+| Derivado de | `SPEC.md` v1.10.0 |
 | Data | 2026-09-23 |
 | Próximo marco | MVP — Free Battle Lua |
 
@@ -405,3 +405,12 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - Aceite: modelos do Porto e das embarcações; cartões, fotos e atalhos (B → O; T/A/N no Porto; D no Transporte); ordem de embarque pelo clique direito.
 - [x] **T-184 — IA naval** · G · Spec: IA-14, D-90 · Dep: T-182 · Feito: 2026-09-28
   - Aceite: com líquido perto da base, a IA constrói o Porto e mantém as embarcações; leva a onda e a expansão pelo mar quando não há caminho por terra (headless em Titã).
+
+## M19 — Hangar de Drones (D-91)
+
+- [ ] **T-185 — Hangar: estrutura, produção e Impressora sem drones** · G · Spec: PRD-01, UNI-21, `dados:custos`, `dados:estruturas`, atalhos, D-91 · Dep: T-170
+  - Aceite: a Impressora constrói o Hangar (B → H) e deixa de imprimir Bombardeiro e Laser; pronto e na rede, o Hangar imprime os 3 drones pela própria fila (menu B/L/K), pagos com a energia da rede; sem rede, a impressão não avança.
+- [ ] **T-186 — Drone Kamikaze: unidade e explosão ao colidir** · G · Spec: `dados:moveis`, `dados:armas` (`kamikaze_blast`), CMB-30, UNI-12, D-91 · Dep: T-185
+  - Aceite: o Kamikaze persegue o alvo, explode ao alcançar o contato com dano em área (CMB-10/CMB-11) e se destrói sempre no ato; a Antiaérea o abate como qualquer drone no ar; modelo e foto do cartão.
+- [ ] **T-187 — IA: Hangar e composição com Kamikaze** · M · Spec: IA-15, `dados:ia_plano`, `dados:personalidades`, `dados:missoes`, D-91 · Dep: T-186
+  - Aceite: a IA constrói 1 Hangar pelo plano e imprime bomb/dlaser/kamikaze nele conforme o peso da personalidade; sem Hangar pronto, essas categorias esperam sem travar as outras; Missão 4 libera "hangar" (e os 3 drones com ele).

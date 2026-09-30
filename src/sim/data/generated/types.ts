@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.9.2.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.10.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -39,6 +39,7 @@ export type ArmasId =
   | 'opq_torpedo'
   | 'drone_laser_gun'
   | 'bomb'
+  | 'kamikaze_blast'
   | 'tower_laser'
   | 'boat_laser'
   | 'ship_pd'
@@ -110,6 +111,7 @@ export type CustosId =
   | 'hover_scout'
   | 'drone_bomber'
   | 'drone_laser'
+  | 'drone_kamikaze'
   | 'mobile_silo'
   | 'mobile_battery'
   | 'laser_tower'
@@ -123,6 +125,7 @@ export type CustosId =
   | 'missile_silo'
   | 'aa_battery'
   | 'mag_tower'
+  | 'hangar'
   | 'antenna'
   | 'power_hub'
   | 'port'
@@ -198,6 +201,7 @@ export type EstruturasId =
   | 'missile_silo'
   | 'aa_battery'
   | 'mag_tower'
+  | 'hangar'
   | 'antenna'
   | 'power_hub'
   | 'port';
@@ -243,6 +247,7 @@ export type IaPlanoItem =
   | 'nuclear_plant'
   | 'aa_battery'
   | 'satellite_uplink'
+  | 'hangar'
   | 'mag_tower'
   | 'missile_silo'
   | 'mobile_silo'
@@ -292,6 +297,7 @@ export type MoveisId =
   | 'hover_scout'
   | 'drone_bomber'
   | 'drone_laser'
+  | 'drone_kamikaze'
   | 'mobile_silo'
   | 'mobile_battery'
   | 'boat_transport'
@@ -560,6 +566,7 @@ export interface PersonalidadesRow {
   obs: number;
   bomb: number;
   dlaser: number;
+  kamikaze: number;
   torres: number;
   tracos: string;
 }

@@ -44,6 +44,17 @@
     "min_brutal": 6
   },
   {
+    "item": "hangar",
+    "facil": 1,
+    "normal": 1,
+    "dificil": 1,
+    "brutal": 1,
+    "min_facil": 14,
+    "min_normal": 10,
+    "min_dificil": 8,
+    "min_brutal": 6
+  },
+  {
     "item": "mag_tower",
     "facil": 1,
     "normal": 1,

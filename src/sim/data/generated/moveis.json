@@ -120,6 +120,21 @@
     "arma": "drone_laser_gun"
   },
   {
+    "id": "drone_kamikaze",
+    "hp": 60,
+    "blindagem": "leve",
+    "camada": "ar",
+    "vel_m_s": 13,
+    "giro_graus_s": 320,
+    "raio_m": 0.9,
+    "visao_m": 16,
+    "deteccao_m": 0,
+    "bateria_en": 260,
+    "mov_en_s": 1.6,
+    "pairar_en_s": 0.4,
+    "arma": "kamikaze_blast"
+  },
+  {
     "id": "mobile_silo",
     "hp": 320,
     "blindagem": "blindada",

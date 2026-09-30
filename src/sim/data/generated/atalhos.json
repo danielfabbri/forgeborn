@@ -102,7 +102,7 @@
   {
     "contexto": "printer",
     "tecla": "B",
-    "acao": "Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição, O Porto"
+    "acao": "Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição, O Porto, H Hangar de Drones"
   },
   {
     "contexto": "missile_silo",
@@ -112,7 +112,12 @@
   {
     "contexto": "printer",
     "tecla": "U",
-    "acao": "Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, B Bombardeiro, L Drone Laser, V Silo, C Bateria"
+    "acao": "Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, V Silo, C Bateria"
+  },
+  {
+    "contexto": "hangar",
+    "tecla": "B / L / K",
+    "acao": "Fabricar Drone Bombardeiro / Drone Laser / Drone Kamikaze (UNI-21)"
   },
   {
     "contexto": "hover_explorer",

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.9.2 — rascunho para aprovação |
+| Versão do SPEC | 1.10.0 — rascunho para aprovação |
 | Data | 2026-09-23 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
@@ -538,9 +538,10 @@ flowchart LR
 
 - **PRD-01** — Matriz de produção (coluna `produzido_por` em `dados:custos`):
   - **Nave Inicial:** Hover de Exploração e Impressora 3D Móvel, e nada mais (regra do briefing).
-  - **Impressora 3D Móvel:** todas as demais unidades móveis, inclusive o Hover de Exploração, e todas as estruturas. **Não** imprime Impressoras nem Naves.
+  - **Impressora 3D Móvel:** todas as demais unidades móveis, inclusive o Hover de Exploração, e todas as estruturas. **Não** imprime Impressoras, Naves nem os drones (Bombardeiro, Laser, Kamikaze).
   - **Hover de Plantio de Minas:** fabrica as próprias minas.
   - **Base de Lançamento:** imprime Satélites, quantos a nação quiser, um de cada vez na fila (UNI-04, D-83).
+  - **Hangar de Drones:** imprime os drones (Bombardeiro, Laser, Kamikaze), quantos a nação quiser, um de cada vez na fila (UNI-21, D-91).
 - **PRD-02** — Só a Nave gera novas Impressoras. Perder a Nave não é derrota imediata, mas deixa a nação dependente das Impressoras que restam (REG-09).
 
 ### 7.2 Fila e pagamento
@@ -611,8 +612,9 @@ flowchart LR
 | hover_opq | Hover de Defesa OPQ | movel | printer | 35 | 10 | 12 | 6 | 15 | 0 | 120 | 12 | 70 | 15 |
 | hover_minelayer | Hover de Plantio de Minas | movel | printer | 30 | 15 | 10 | 10 | 10 | 0 | 110 | 11 | 65 | 13,2 |
 | hover_scout | Hover de Observação | movel | printer | 10 | 15 | 6 | 3 | 0 | 0 | 40 | 4 | 25 | 7,2 |
-| drone_bomber | Drone Bombardeiro | movel | printer | 20 | 16 | 16 | 15 | 20 | 0 | 150 | 15 | 90 | 18 |
-| drone_laser | Drone Laser | movel | printer | 15 | 15 | 20 | 12 | 12 | 0 | 120 | 12 | 70 | 15 |
+| drone_bomber | Drone Bombardeiro | movel | hangar | 20 | 16 | 16 | 15 | 20 | 0 | 150 | 15 | 90 | 18 |
+| drone_laser | Drone Laser | movel | hangar | 15 | 15 | 20 | 12 | 12 | 0 | 120 | 12 | 70 | 15 |
+| drone_kamikaze | Drone Kamikaze | movel | hangar | 12 | 8 | 10 | 6 | 10 | 0 | 77 | — | 45 | 9 |
 | mobile_silo | Silo Móvel | movel | printer | 50 | 15 | 14 | 7 | 0 | 0 | 100 | — | 60 | 12 |
 | mobile_battery | Bateria Móvel | movel | printer | 30 | 10 | 20 | 35 | 0 | 0 | 140 | 14 | 80 | 15 |
 | laser_tower | Torre de Defesa | estrutura | printer | 25 | 7 | 13 | 3 | 0 | 0 | 57,5 | 8 | 50 | 12 |
@@ -626,6 +628,7 @@ flowchart LR
 | missile_silo | Base de Lança-Mísseis | estrutura | printer | 63 | 28 | 28 | 14 | 21 | 0 | 224 | — | 200 | 36 |
 | aa_battery | Bateria Antiaérea | estrutura | printer | 35 | 14 | 18 | 7 | 7 | 0 | 111 | — | 80 | 18 |
 | mag_tower | Torre Magnética | estrutura | printer | 49 | 21 | 35 | 14 | 11 | 0 | 183,5 | — | 120 | 24 |
+| hangar | Hangar de Drones | estrutura | printer | 49 | 21 | 21 | 7 | 14 | 0 | 157,5 | — | 140 | 24 |
 | antenna | Antena | estrutura | printer | 30 | 50 | 30 | 0 | 0 | 0 | 125 | — | 50 | 12 |
 | power_hub | Central de Distribuição | estrutura | printer | 8 | 5 | 12 | 0 | 0 | 0 | 31 | — | 20 | 9 |
 | port | Porto | estrutura | printer | 70 | 20 | 20 | 0 | 0 | 0 | 120 | — | 100 | 21 |
@@ -653,6 +656,7 @@ Tiers resultantes: **T1** = Hover de Exploração, Impressora, EX1, Observação
 | hover_scout | 70 | leve | solo | 11,25 | 360 | 1,0 | 28 | 14 | 240 | 0,3 | 0 | — |
 | drone_bomber | 90 | leve | ar | 11,0 | 240 | 1,2 | 18 | 0 | 400 | 1,6 | 0,4 | bomb |
 | drone_laser | 130 | blindada | ar | 12,0 | 300 | 1,0 | 22 | 0 | 360 | 1,4 | 0,4 | drone_laser_gun |
+| drone_kamikaze | 60 | leve | ar | 13,0 | 320 | 0,9 | 16 | 0 | 260 | 1,6 | 0,4 | kamikaze_blast |
 | mobile_silo | 320 | blindada | solo | 4,0 | 150 | 2,2 | 14 | 0 | 500 | 1,0 | 0 | — |
 | mobile_battery | 200 | blindada | solo | 4,5 | 180 | 1,8 | 14 | 0 | 2000 | 0,6 | 0 | — |
 | boat_transport | 400 | blindada | agua | 6,0 | 90 | 3,0 | 18 | 0 | 800 | 0,8 | 0 | — |
@@ -677,6 +681,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | missile_silo | Base de Lança-Mísseis | 700 | 8 | 14 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | aa_battery | Bateria Antiaérea | 500 | 4 | 24 | 0 | 0 | 0 | 0 | 0 | 0 | nao | aa_missil |
 | mag_tower | Torre Magnética | 600 | 5 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
+| hangar | Hangar de Drones | 650 | 8 | 14 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | antenna | Antena | 250 | 3 | 100 | 0 | 0 | 0 | 0 | 0 | 1 | nao | — |
 | power_hub | Central de Distribuição | 250 | 3 | 8 | 0 | 0 | 0 | 0 | 0 | 0 | nao | — |
 | port | Porto | 900 | 10 | 16 | 0 | 0 | 0 | 2 | 10 | 0 | nao | — |
@@ -692,6 +697,7 @@ Todas as estruturas têm blindagem `estrutura`. `pegada_m` = lado da pegada quad
 | opq_torpedo | explosivo | 30 | 2,5 | 18 | 3 | 2,5 | 50 | solo | 5 | bateria | guiado | 18 |
 | drone_laser_gun | laser | 11 | 0,6 | 9 | 0 | 0 | — | solo+ar | 1 | bateria | hitscan | — |
 | bomb | explosivo | 60 | 3,0 | 3 | 0 | 3,5 | 50 | solo | 8 | bateria | balistico | — |
+| kamikaze_blast | explosivo | 90 | — | 2 | 0 | 4 | 40 | solo+ar | 0 | bateria | kamikaze | — |
 | tower_laser | laser | 15 | 1,0 | 13 | 0 | 0 | — | solo+ar | 2 | rede | hitscan | — |
 | boat_laser | laser | 16 | 1,0 | 16 | 0 | 0 | — | solo+ar | 2 | bateria | hitscan | — |
 | ship_pd | laser | 10 | 1,0 | 14 | 0 | 0 | — | solo+ar | 1 | rede | hitscan | — |
@@ -755,6 +761,12 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **Papel:** superioridade aérea e assédio. Blindado para um drone; ataca solo e ar.
 - **Forte contra:** OPQ (que não revida), Drone Bombardeiro, hovers de coleta. **Fraco contra:** EX1 em número, Torres.
 - **Visual:** quadrirrotor carenado com canhão ventral.
+
+#### Drone Kamikaze — `drone_kamikaze`
+- **Papel:** ataque suicida (CMB-30). Leve e barato; voa até o alvo e explode ao encostar, se destruindo junto (D-91).
+- **Restrição:** um golpe só; sem recarga.
+- **Forte contra:** OPQ, Torres, estruturas isoladas. **Fraco contra:** EX1 em número, Antiaérea, Drone Laser.
+- **Visual:** corpo em forma de seta, sem compartimento de armas visível; pisca antes do impacto.
 
 #### Silo Móvel — `mobile_silo` ("Unidade móvel de armazenamento de materiais")
 - **Papel:** depósito avançado e móvel (§5.6). Lento e blindado.
@@ -824,6 +836,10 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **UNI-19** — **Embarcação Antena** (`boat_antenna`): desarmada; `visao_m` e `deteccao_m` grandes, para abrir a visão do mar.
 - **UNI-20** — **Embarque e desembarque** (D-90): com unidades de solo próprias selecionadas, o clique direito num Transporte próprio as manda embarcar (Comando "embarcar"): o Transporte encosta na borda mais perto delas, cada uma vai até a borda mais perto do Transporte e embarca quando o casco fica a até `embarque_distancia_m` do casco dele, se houver vaga; embarcada, sai do mapa (não é vista nem atingida). Com o Transporte selecionado, o clique direito na terra (ou a tecla D) o manda desembarcar ali (Comando "desembarcar"): ele vai até o ponto de líquido mais perto e põe todos em terra em volta do ponto de terra mais perto. Drones não embarcam. Se o Transporte é destruído, as unidades embarcadas também são.
 
+#### Hangar de Drones — `hangar`
+- **UNI-21** — **Hangar de Drones** (`hangar`, D-91): estrutura fixa que a Impressora constrói (menu B, tecla H) e que, pronta e ligada à rede, imprime os drones (item `drone_bomber`, `drone_laser` ou `drone_kamikaze`, menu próprio B/L/K) com a energia da rede (PRD-06), como a Base de Lançamento imprime Satélites. A Impressora deixa de imprimir os três (PRD-01).
+- **Visual:** hangar baixo e alongado, com o portão de saída voltado para a rampa da Nave.
+
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
 |---|---|---|---|
@@ -875,6 +891,7 @@ Números nas tabelas acima; aqui ficam papel, comportamento e contra-jogo.
 - **CMB-07** — `guiado` (torpedo): persegue o alvo a `vel_projetil_m_s`. Se o alvo morrer, detona na última posição dele. Ao chegar a `torpedo_tempo_max_voo_s` de voo, detona onde estiver, com o splash normal (D-31).
 - **CMB-08** — `balistico` (bomba): liberada quando o drone está a até `alcance_m` (na horizontal) do ponto previsto do alvo. Cai em `bomba_tempo_queda_s`. O ponto de impacto é a posição prevista do alvo no momento da liberação (mira preditiva), então alvos que mudam de direção podem escapar.
 - **CMB-09** — `gatilho` (mina): detona quando um hover inimigo entra no raio `alcance_m`.
+- **CMB-30** — `kamikaze` (drone suicida, D-91): a unidade persegue o alvo até o contato (`alcance_m` da arma) e detona ali, com o dano em área de CMB-10/CMB-11; o próprio atirador é destruído no ato, sempre, mesmo sem mais ninguém por perto.
 
 ### 9.4 Dano em área (splash)
 
@@ -1069,9 +1086,10 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 | ship | E | Imprimir Hover de Exploração |
 | ship | I | Imprimir Impressora 3D |
 | ship | Q | Recolher ou liberar os mineradores (CMB-28) |
-| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição, O Porto |
+| printer | B | Menu de estruturas: T Torre, A Armazém, S Solar, N Nuclear, L Base de Lançamento, M Muro, P Portão, F Lança-Mísseis, R Antiaérea, G Torre Magnética, E Antena, D Central de Distribuição, O Porto, H Hangar de Drones |
 | missile_silo | C / L | Fabricar míssil curto / longo |
-| printer | U | Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, B Bombardeiro, L Drone Laser, V Silo, C Bateria |
+| printer | U | Menu de unidades: E Exploração, 1 EX1, 2 OPQ, M Minas, O Observação, V Silo, C Bateria |
+| hangar | B / L / K | Fabricar Drone Bombardeiro / Drone Laser / Drone Kamikaze (UNI-21) |
 | hover_explorer | C | Coletar |
 | hover_explorer | G | Reparar |
 | hover_explorer | F | Reciclar |
@@ -1138,6 +1156,7 @@ Teclas de comando são mnemônicas e aparecem no canto de cada botão do cartão
 - **IA-12** — Provocação (D-82): sem nenhuma guerra, quando a onda estaria pronta (IA-04), a IA escolhe um alvo e manda a onda para o domínio dele, ignorando o aviso; contra outra IA, a guerra começa pelo prazo de REG-26; contra o jogador, quando o prazo do aviso acaba com a onda no domínio, a IA declara guerra (REG-29, D-88). Fácil nunca provoca. Normal só provoca a nação conhecida mais fraca (menos estruturas conhecidas) e só se ela tiver menos estruturas que a própria IA. Difícil provoca a mais próxima; Brutal, a mais fraca.
 - **IA-13** — Cabos da IA (D-85, D-87): a IA pluga cada estrutura pronta que precisa de energia (e as Centrais) na Nave ou Central mais próxima da rede da Nave ao alcance e com saída livre; se não há saída livre ao alcance, ela planta uma Central ao lado da estrutura. Ela só posiciona essas estruturas onde algum ponto dessa rede alcança. Para uma expansão fora do alcance, ela primeiro planta uma Central de Distribuição no caminho (D-86).
 - **IA-14** — **IA naval** (D-90): em mapa com líquido a até `ia_porto_distancia_m` da base, a IA constrói um Porto e mantém `ia_barcos_artilharia` Embarcações de Artilharia e `ia_barcos_antena` Embarcação Antena. Quando o alvo da onda (IA-04) ou a expansão (IA-07) não tem caminho por terra, ela imprime Transportes e leva a onda (ou uma Impressora com escolta) pelo mar, desembarcando no litoral mais perto do alvo.
+- **IA-15** — **Drones do Hangar** (D-91): a IA constrói um Hangar pelo plano (`dados:ia_plano`) e, conforme a composição de §13.3, imprime `drone_bomber`, `drone_laser` e `drone_kamikaze` nele, em vez da Impressora.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1196,6 +1215,7 @@ Quantidades por nível e o minuto a partir do qual a IA busca cada item (IA-08).
 | nuclear_plant | 1 | 1 | 1 | 1 | 12 | 8 | 6 | 5 |
 | aa_battery | 1 | 2 | 2 | 3 | 12 | 9 | 7 | 6 |
 | satellite_uplink | 1 | 1 | 1 | 1 | 14 | 10 | 8 | 6 |
+| hangar | 1 | 1 | 1 | 1 | 14 | 10 | 8 | 6 |
 | mag_tower | 1 | 1 | 2 | 2 | 15 | 11 | 9 | 7 |
 | missile_silo | 1 | 1 | 1 | 2 | 16 | 12 | 9 | 7 |
 | mobile_silo | 1 | 1 | 2 | 2 | 0 | 0 | 0 | 0 |
@@ -1207,12 +1227,12 @@ Quantidades por nível e o minuto a partir do qual a IA busca cada item (IA-08).
 Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos proporcionalmente entre os permitidos.
 
 <!-- dados:personalidades -->
-| nacao | estilo | ex1 | opq | minas | obs | bomb | dlaser | torres | tracos |
-|---|---|---|---|---|---|---|---|---|---|
-| usa | Supremacia aérea | 25 | 10 | 0 | 5 | 25 | 30 | 5 | Satélite cedo; ataques aéreos às linhas de coleta |
-| chn | Maré | 50 | 20 | 0 | 5 | 10 | 10 | 5 | Meta de hovers; expande cedo; ondas grandes |
-| rus | Muralha e martelo | 20 | 40 | 15 | 5 | 10 | 0 | 10 | Nuclear cedo; Torres e minas nas entradas; avanços lentos com OPQ |
-| bra | Guerrilha logística | 25 | 15 | 15 | 10 | 5 | 25 | 5 | Sentinelas nas rotas; silos e baterias; assédio à mineração; ataca quem já está em combate |
+| nacao | estilo | ex1 | opq | minas | obs | bomb | dlaser | kamikaze | torres | tracos |
+|---|---|---|---|---|---|---|---|---|---|---|
+| usa | Supremacia aérea | 25 | 10 | 0 | 5 | 20 | 20 | 15 | 5 | Satélite cedo; ataques aéreos às linhas de coleta |
+| chn | Maré | 50 | 20 | 0 | 5 | 8 | 7 | 5 | 5 | Meta de hovers; expande cedo; ondas grandes |
+| rus | Muralha e martelo | 20 | 40 | 15 | 5 | 5 | 0 | 5 | 10 | Nuclear cedo; Torres e minas nas entradas; avanços lentos com OPQ |
+| bra | Guerrilha logística | 25 | 15 | 15 | 10 | 5 | 15 | 10 | 5 | Sentinelas nas rotas; silos e baterias; assédio à mineração; ataca quem já está em combate |
 
 ---
 
@@ -1322,7 +1342,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | 1 | m01 | lua | Primeira Forja | posto_passivo | Destruir o posto avançado inimigo | antenna | 40 | v1.0 |
 | 2 | m02 | lua_shackleton | Sombra Eterna | normal | Eliminar a nação rival | mobile_silo+mobile_battery+hover_opq+aa_battery+mag_tower | 60 | v1.0 |
 | 3 | m03 | marte | Poeira Vermelha | normal+normal | Eliminar as nações rivais | nuclear_plant+hover_minelayer | 80 | v1.0 |
-| 4 | m04 | fobos | Cerco em Fobos | dificil | Sobreviver 12 min; depois destruir a Nave inimiga | drone_laser+drone_bomber | 60 | v1.x |
+| 4 | m04 | fobos | Cerco em Fobos | dificil | Sobreviver 12 min; depois destruir a Nave inimiga | hangar | 60 | v1.x |
 | 5 | m05 | ceres | Veios de Ceres | normal+dificil | Eliminar as nações rivais | satellite_uplink+missile_silo | 90 | v1.x |
 | 6 | m06 | venus | Inferno Ácido | dificil+dificil | Eliminar as nações rivais | — | 90 | v1.x |
 | 7 | m07 | europa | Sob o Gelo | normal+dificil+dificil | Eliminar as nações rivais | — | 110 | v1.x |
@@ -1736,6 +1756,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-88 | Só unidades móveis invadem domínio (estruturas não saem do lugar), e o domínio de uma unidade não vale dentro da base (domínio de estruturas) de outra nação. No domínio de uma IA, o aviso tem prazo de 30 s e vira guerra; no domínio do jogador, não há guerra automática: AL-22 avisa que uma unidade externa está na base, pede que ela saia e traz o botão Declarar guerra (também no temperamento da barra). A IA só declara guerra ao jogador na provocação (IA-12). | Pedido do produto: "quero aumentar pra 30s"; "o inimigo cria uma unidade de observação… acha a minha base… me pede pra me retirar (o que é impossível) e vira minha inimiga. Isso está errado"; "eu que tenho que chamá-lo de inimigo"; respostas: a onda provocadora declara guerra; botão no aviso e na barra. | Aprovada |
 | D-89 | Jazidas com cara de pedra (rocha com veios e cristais na cor do recurso, ECO-04); Ferro mais laranja (#E0661C) e Cobre mais amarelo (#E8C02A); jazidas a pelo menos 25 m umas das outras (ECO-07); o dobro de recurso em cada jazida (`dados:jazidas`); nova camada de jazidas espalhadas de Fe, Si, Cu e Li pelo planeta, 1 a cada 20.000 m² (ECO-30). | Pedido do produto: "jazidas mais parecidas com as pedras… reconhecer visualmente que não é uma pedra"; "ferro mais laranja e o cobre mais amarelo"; "mais espalhadas"; "2x mais recursos… passe mais tempo ali"; respostas: mínimo de 25 m, "quero mais jazidas pelo cenário", nova camada espalhada, cores recomendadas. | Aprovada |
 | D-90 | Mares (CEN-04): líquido em `mar_cobertura_pct` 25% da superfície, formas orgânicas com ilhas, terra firme a `mar_folga_zona_m` das zonas; unidades de solo param na borda; zonas podem depender de barco (CEN-11 conta o mar). Camada de água (MOV-08). Porto (UNI-16) e embarcações de Transporte (10 unidades), Artilharia (laser) e Antena (UNI-17 a UNI-20), com os números aprovados (HP, velocidade, raio, visão, custo, bateria, `boat_laser`, `porto_distancia_borda_m`). IA naval completa (IA-14). **Proposta:** giro, `mov_en_s`, `en_impressao` das embarcações e do Porto, `mar_folga_zona_m` 100, `embarque_distancia_m` 3, portas do Porto (2 × 10 EN/s) e os parâmetros `ia_porto_distancia_m`, `ia_barcos_artilharia`, `ia_barcos_antena`. Retira "lagos_por_setor", "lago_raio_min_m", "lago_raio_max_m" e "lago_folga_zona_m" (GOV-03). | Pedido do produto: "mares de metano de Titã com formas mais orgânicas… lagos ou mares enormes, inclusive com ilhas… as unidades não podem entrar no mar… Porto… embarcação de transporte (até 10 unidades), de artilharia (laser), antena… também para outros planetas com líquido"; respostas: ~25% da superfície, pode exigir barco, IA usa tudo, números da proposta aprovados. | Aprovada |
+| D-91 | Hangar de Drones (`hangar`, UNI-21): estrutura que a Impressora constrói e que imprime os drones (Bombardeiro, Laser e o novo Kamikaze), com energia da rede, como a Base de Lançamento imprime Satélites; a Impressora deixa de imprimir os três (PRD-01). Kamikaze (`drone_kamikaze`, CMB-30): drone aéreo, leve, que persegue o alvo, explode ao encostar (dano em área) e sempre se destrói no ato; como qualquer drone, é alvo da Antiaérea (UNI-12). IA-15: a IA constrói o Hangar pelo plano e reparte o peso de bomb/dlaser com o kamikaze. Missão 4 passa a liberar "hangar" (deriva os 3 drones). | Pedido do produto: "quero que o hover de impressão 3d possa construir uma unidade estrutura fixa que funcionaria como uma oficina de drones… quem vai construir os drones é uma unidade de Hangar… drone laser, o drone bombardeiro e um outro drone que será o kamikaze… ele voa e se projeta contra unidades ou estruturas inimigas e explode ao colidir… se mata atingindo o inimigo… todos os drones podem ser destruídos por baterias antiaéreas"; números propostos (Hangar e Kamikaze com base nas unidades e estruturas parecidas) aprovados. | Aprovada |
 
 ---
 
@@ -1845,3 +1866,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.9.0 | 2026-09-28 | D-90: CEN-04 (mares; `mar_cobertura_pct`, `mar_folga_zona_m`; retira lagos_por_setor, lago_raio_min_m, lago_raio_max_m, lago_folga_zona_m), CEN-11, MOV-01, MOV-08, CMB-04, PRD-10, UNI-16 a UNI-20 (`port`, `boat_transport`, `boat_artillery`, `boat_antenna`, `boat_laser`, `porto_distancia_borda_m`, `transporte_capacidade`, `embarque_distancia_m`), IA-14 (`ia_porto_distancia_m`, `ia_barcos_artilharia`, `ia_barcos_antena`), atalhos, §14.7. |
 | 1.9.1 | 2026-09-28 | D-90: UNI-20 (o Transporte encosta na borda mais perto das unidades que embarcam). |
 | 1.9.2 | 2026-09-28 | D-90 (proposta): `ia_porto_distancia_m` 250 (com a terra firme de `mar_folga_zona_m` em volta das zonas, o mar mais perto fica além de 130 m). |
+| 1.10.0 | 2026-09-30 | D-91: PRD-01, UNI-21 (`hangar`), CMB-30 (`kamikaze`), IA-15, `dados:moveis` (`drone_kamikaze`), `dados:armas` (`kamikaze_blast`), `dados:custos` e `dados:estruturas` (`hangar`; `drone_bomber`/`drone_laser` mudam produzido_por para `hangar`), `dados:ia_plano`, `dados:personalidades` (coluna `kamikaze`), `dados:missoes` (m04), atalhos. |

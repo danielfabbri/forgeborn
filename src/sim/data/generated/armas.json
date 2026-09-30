@@ -70,6 +70,24 @@
     "vel_projetil_m_s": null
   },
   {
+    "id": "kamikaze_blast",
+    "tipo_dano": "explosivo",
+    "dano": 90,
+    "recarga_s": null,
+    "alcance_m": 2,
+    "alcance_min_m": 0,
+    "splash_m": 4,
+    "splash_borda_pct": 40,
+    "alvos": [
+      "solo",
+      "ar"
+    ],
+    "en_disparo": 0,
+    "fonte_en": "bateria",
+    "projetil": "kamikaze",
+    "vel_projetil_m_s": null
+  },
+  {
     "id": "tower_laser",
     "tipo_dano": "laser",
     "dano": 15,

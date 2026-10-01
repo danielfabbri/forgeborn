@@ -62,4 +62,8 @@ export const PRESETS_DE_MAPA: readonly PresetDeMapa[] = [
   { id: 'occator', cenario: 'ceres', zonas: 2, jogadores: [2, 2], seed: 2 },
   { id: 'kerwan', cenario: 'ceres', zonas: 4, jogadores: [2, 4], seed: 4 },
   { id: 'yalode', cenario: 'ceres', zonas: 4, jogadores: [3, 4], seed: 5 },
+  // §14.10 (D-104): Europa, Free Battle só por enquanto, com gêiseres e neve decorativos.
+  { id: 'conamara_chaos', cenario: 'europa', zonas: 2, jogadores: [2, 2], seed: 1 },
+  { id: 'thera_macula', cenario: 'europa', zonas: 4, jogadores: [2, 4], seed: 2 },
+  { id: 'pwyll', cenario: 'europa', zonas: 4, jogadores: [3, 4], seed: 3 },
 ];

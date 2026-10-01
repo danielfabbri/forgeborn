@@ -394,6 +394,44 @@ function saturno(direcaoFixaMundo: Vector3): Group {
   return grupo;
 }
 
+/**
+ * §14.10/D-104: Júpiter visto de Europa — disco enorme, faixas alaranjadas e uma mancha escura
+ * simples (a Grande Mancha Vermelha); sem anéis (os reais são finos demais pra ver daqui).
+ */
+function jupiter(direcaoFixaMundo: Vector3): Mesh<SphereGeometry, ShaderMaterial> {
+  const material = new ShaderMaterial({
+    uniforms: { uSol: { value: DIRECAO_SOL.clone() }, ...uniformesDeNevoa() },
+    vertexShader: /* glsl */ `
+      varying vec3 vNormal;
+      void main() {
+        vNormal = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uSol;
+      varying vec3 vNormal;
+      ${GLSL_NEVOA_ATMOSFERICA}
+      void main() {
+        vec3 n = normalize(vNormal);
+        float luz = dot(n, uSol);
+        float dia = smoothstep(-0.05, 0.4, luz);
+        float faixa = sin(n.y * 18.0 + sin(n.x * 3.0) * 0.6) * 0.5 + 0.5;
+        vec3 clara = vec3(0.86, 0.72, 0.56);
+        vec3 escura = vec3(0.62, 0.46, 0.34);
+        vec3 diurno = mix(escura, clara, faixa);
+        float mancha = smoothstep(0.22, 0.05, distance(n, normalize(vec3(0.3, -0.35, 0.9))));
+        diurno = mix(diurno, vec3(0.5, 0.26, 0.18), mancha * 0.75);
+        vec3 noite = diurno * 0.05;
+        gl_FragColor = vec4(comNevoa(mix(noite, diurno, dia)), 1.0);
+      }
+    `,
+  });
+  const malha = new Mesh(new SphereGeometry(340, 48, 24), material);
+  malha.position.copy(direcaoFixaMundo).multiplyScalar(DISTANCIA_CEU * 0.85);
+  return malha;
+}
+
 export interface Ceu {
   objeto: Group;
   /** CEN-03: força da tempestade de poeira (0 a 1) no céu. */
@@ -552,6 +590,10 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
     ? direcaoFixaNoMundo(ambientacao.direcaoSaturno)
     : null;
   const corpoDeSaturno = dirSaturnoFixa ? saturno(dirSaturnoFixa) : null;
+  const dirJupiterFixa = ambientacao.direcaoJupiter
+    ? direcaoFixaNoMundo(ambientacao.direcaoJupiter)
+    : null;
+  const corpoDeJupiter = dirJupiterFixa ? jupiter(dirJupiterFixa) : null;
   const luas = ambientacao.luasNoCeu.map((l) => ({
     malha:
       l.tipo === 'rocha'
@@ -575,6 +617,7 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
     ...(corpoDeSaturno
       ? (corpoDeSaturno.children as Mesh<never, ShaderMaterial>[]).map((p) => p.material)
       : []),
+    ...(corpoDeJupiter ? [corpoDeJupiter.material] : []),
     ...luas
       .filter((l): l is typeof l & { malha: Mesh<SphereGeometry, ShaderMaterial> } => !l.sprite)
       .map((l) => l.malha.material),
@@ -593,6 +636,7 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   objeto.add(corpoDoSol);
   if (astro) objeto.add(astro);
   if (corpoDeSaturno) objeto.add(corpoDeSaturno);
+  if (corpoDeJupiter) objeto.add(corpoDeJupiter);
   for (const lua of luas) objeto.add(lua.malha);
   const domo =
     ambientacao.ceu && ambientacao.horizonte
@@ -659,6 +703,12 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
         for (const parte of corpoDeSaturno.children as Mesh<never, ShaderMaterial>[]) {
           parte.material.uniforms.uSol!.value.copy(ceu.sol);
         }
+      }
+      if (corpoDeJupiter && dirJupiterFixa) {
+        corpoDeJupiter.position
+          .copy(pontoFocal)
+          .addScaledVector(dirJupiterFixa, DISTANCIA_CEU * 0.85);
+        corpoDeJupiter.material.uniforms.uSol!.value.copy(ceu.sol);
       }
       for (const lua of luas) {
         lua.malha.position

@@ -1,6 +1,8 @@
 /**
  * §14.6/CEN-03: poeira da tempestade de Marte: partículas numa caixa em volta do ponto focal,
- * levadas pelo vento; a opacidade segue a força da tempestade. Só apresentação.
+ * levadas pelo vento; a opacidade segue a força da tempestade. Também reaproveitada (D-104) pra
+ * partículas de gelo sempre caindo em Europa, com vento quase nenhum e queda mais forte. Só
+ * apresentação.
  */
 import {
   AdditiveBlending,
@@ -41,7 +43,12 @@ export class Poeira {
   private readonly giro = new Quaternion();
   private readonly acima = new Vector3(0, 1, 0);
 
-  constructor(cor: Color) {
+  /** `vento`: deriva horizontal (m/s); `queda`: queda vertical (m/s), D-104. */
+  constructor(
+    cor: Color,
+    private readonly vento = VENTO_M_S,
+    private readonly queda = VENTO_M_S * 0.05,
+  ) {
     this.posicoes = new Float32Array(QUANTIDADE * 3);
     let s = 91;
     const sorte = () => {
@@ -83,10 +90,11 @@ export class Poeira {
     this.objeto.position.copy(pontoFocal);
     this.objeto.quaternion.copy(this.giro.setFromUnitVectors(this.acima, new Vector3(...foco)));
     const p = this.posicoes;
-    const passo = VENTO_M_S * dt;
+    const passoVento = this.vento * dt;
+    const passoQueda = this.queda * dt;
     for (let k = 0; k < QUANTIDADE; k++) {
-      let x = p[k * 3]! + passo * (0.7 + (k % 7) * 0.08);
-      let y = p[k * 3 + 1]! - passo * 0.05;
+      let x = p[k * 3]! + passoVento * (0.7 + (k % 7) * 0.08);
+      let y = p[k * 3 + 1]! - passoQueda;
       if (x > MEIA_CAIXA_M) x -= 2 * MEIA_CAIXA_M;
       if (y < 0) y += ALTURA_M;
       p[k * 3] = x;

@@ -130,7 +130,7 @@ import { comandosDeMacete, MACETE_COMMAND } from '../sim/debug/macete';
 import { interpretarMacete } from './macetes';
 import { emTransito, estoque, SEMEAR_JAZIDAS_COMMAND } from '../sim/economia';
 import { DEBUG_ENCHER_BANCO_COMMAND, leituraDaRede } from '../sim/energia';
-import { avancar, normalizar, norteEm, tangente, type Vec3 } from '../sim/map/esfera';
+import { avancar, girar, normalizar, norteEm, tangente, type Vec3 } from '../sim/map/esfera';
 import { alturaDaSuperficie, alturaEm } from '../sim/map/heightmap';
 import { emLiquido } from '../sim/map/lagos';
 import { PRESETS_DE_MAPA } from '../sim/map/presets';
@@ -351,6 +351,9 @@ export function iniciarPartida(): void {
   // CEN-03/§14.6: a tempestade de poeira (força 0 a 1, suavizada) no céu, na névoa, na luz e no ar.
   const poeira = ambientacao.tempestade ? new Poeira(ambientacao.tempestade.cor) : null;
   if (poeira) view.scene.add(poeira.objeto);
+  // §14.10/D-104: gelo de Europa sempre caindo (não é um evento): vento quase nenhum, queda lenta.
+  const neve = ambientacao.neve ? new Poeira(ambientacao.neve, 2, 4) : null;
+  if (neve) view.scene.add(neve.objeto);
   let forcaDaTempestade = 0;
   const atmosferaDeFora =
     ambientacao.ceu && ambientacao.horizonte && ambientacao.tetoCamera === null
@@ -358,6 +361,8 @@ export function iniciarPartida(): void {
       : null;
   if (atmosferaDeFora) view.scene.add(atmosferaDeFora.objeto);
   const atualizarClima = (dt: number): void => {
+    // §14.10/D-104: a neve de Europa não depende de evento nenhum, então roda sempre (força 1).
+    neve?.atualizar(1, camera.foco, pontoFocal, dt);
     if (!poeira) return;
     // CEN-18: a chuva ácida de Vênus usa o mesmo campo/pipeline visual da tempestade (CEN-03).
     const alvo = tempestadeAtiva(sim.state) || chuvaAtiva(sim.state) ? 1 : 0;
@@ -365,6 +370,33 @@ export function iniciarPartida(): void {
     view.clima(forcaDaTempestade);
     ceu.clima(forcaDaTempestade);
     poeira.atualizar(forcaDaTempestade, camera.foco, pontoFocal, dt);
+  };
+  // §14.10/D-104: gêiseres de água decorativos, sorteados perto da câmera de vez em quando.
+  let proximoGeiser = 2;
+  const atualizarGeiseres = (dt: number): void => {
+    if (!ambientacao.geiseres) return;
+    proximoGeiser -= dt;
+    if (proximoGeiser > 0) return;
+    proximoGeiser = 2.5 + Math.random() * 3.5;
+    const dist = 15 + Math.random() * 45;
+    const rumo = girar(norteEm(camera.foco), camera.foco, Math.random() * Math.PI * 2);
+    const origem = avancar(camera.foco, rumo, dist / R).p;
+    const chao = alturaEm(pronto.mapa, origem);
+    const r = R + chao + 0.3;
+    particulas.emitir(
+      {
+        origem: [origem[0] * r, origem[1] * r, origem[2] * r],
+        cima: origem,
+        n: 18,
+        velocidade: [6, 16],
+        espalhamento: 0.35,
+        vida_s: [1.8, 3.2],
+        cor: [0.85, 0.92, 1],
+        tamanho: 1.1,
+        gravidade: 1.3,
+      },
+      'poeira',
+    );
   };
   if (cenarioDaPartida === 'terra_lab') {
     view.scene.add(
@@ -1385,6 +1417,7 @@ export function iniciarPartida(): void {
       posicionarCamera(dtDoQuadro);
       terreno.focar(camera.foco);
       atualizarClima(dtDoQuadro);
+      atualizarGeiseres(dtDoQuadro);
       // CTL-16 (D-83): ao afastar, o céu dá lugar ao espaço e a atmosfera vira uma esfera.
       const planetario = direto?.ativo != null ? 0 : fatorPlanetario(camera);
       view.espaco(planetario);

@@ -348,14 +348,15 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
   - O cenário Ceres (Free Battle) sai daqui e vira T-202 (M25, D-99): só a Missão 5 da campanha fica nesta tarefa, à espera da Missão 4 (mesma ordem de T-153/T-160 para Vênus/Titã).
 - [ ] **T-153 — Missão 6 em Vênus** · M · Spec: §15, D-97 · Dep: T-151, T-152, T-200
   - O cenário Vênus (Free Battle) sai daqui e vira T-200 (M24, D-97): só a Missão 6 da campanha fica nesta tarefa, à espera das Missões 4 e 5 (mesma ordem de T-160 para a Missão 8/Titã).
-- [ ] **T-154 — Europa e Missão 7** · M · Spec: CEN-05, §15
+- [ ] **T-154 — Missão 7 em Europa** · M · Spec: §15, D-104 · Dep: T-151, T-152, T-203
+  - O cenário Europa (Free Battle) sai daqui e vira T-203 (M27, D-104): só a Missão 7 da campanha fica nesta tarefa, à espera das Missões 4 a 6 (mesma ordem de T-153/T-152 para Vênus/Ceres).
 - [x] **T-155 — Titã e lagos de metano (Free Battle)** · G · Spec: CEN-02, CEN-04, PRD-10, §14.7, §18.2, AUD-02, D-78 · Dep: T-150 · Feito: 2026-09-27
   - Aceite: lagos de metano gerados pela seed nas quantidades e raios de CEN-04, simétricos, longe das zonas e sem jazidas; posicionar estrutura, muro ou mina num lago é recusado (motivo `lago`); hovers atravessam; `mult_en_drone` aplicado aos drones; 3 presets de Titã válidos; ambientação de Titã (céu laranja nebuloso, penumbra, lagos espelhados) e vento.
 - [ ] **T-156 — Salvar e carregar partida** · M · Spec: TEC-08
 - [ ] **T-157 — Remapeamento de teclas** · P · Spec: §22
 - [ ] **T-158 — Inglês (en-US)** · M · Spec: TEC-23, Q-04
 - [ ] **T-159 — Simulação em Web Worker** · M · Spec: TEC-10
-- [ ] **T-160 — Missão 8 "Trono Único" na campanha** · M · Spec: §15, D-78 · Dep: T-154, T-155
+- [ ] **T-160 — Missão 8 "Trono Único" na campanha** · M · Spec: §15, D-78 · Dep: T-203, T-155
 
 ## M16 — Vastidão (D-79)
 
@@ -462,3 +463,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-202 — Ceres, veios de sal e Free Battle** · G · Spec: CEN-19, §14.9, §18.2, `dados:cenarios` (`perfil_li`, evento), `dados:parametros` (`ceres_sal_*`), D-99 a D-103 · Dep: T-176 · Feito: 2026-10-01
   - Aceite: cenário Ceres jogável no Free Battle (3 presets: Occator N=2, Kerwan N=4, Yalode N=4), cientificamente fiel — sem céu colorido nem de dia (atmosfera tênue demais pra espalhar luz), regolito bem mais escuro que o da Lua, Sol mais fraco e distante, cheio de crateras como a Lua, com o cinturão de asteroides visível no céu (pedras de tamanhos variados, sprite simples, mais uma "fogzinha", D-100 a D-103); o Lítio deixa de nascer pela distribuição normal (`perfil_li` 0) e só existe dentro da maior cratera do mapa (e das réplicas simétricas dela, uma por zona de pouso) — fora dela, nenhuma jazida de Lítio nasce.
+
+## M27 — Europa, Free Battle (D-104)
+
+- [x] **T-203 — Europa, gêiseres e neve, Free Battle** · G · Spec: CEN-05, §14.10, §18.2, `dados:cenarios` (`mult_cratera`, `mult_relevo` de Europa), D-104 · Dep: T-176 · Feito: 2026-10-01
+  - Aceite: cenário Europa jogável no Free Battle (3 presets: Conamara Chaos N=2, Thera Macula N=4, Pwyll N=4), sem céu colorido nem de dia (atmosfera rarefeita demais, como Ceres), solo de gelo rachado em placas (reaproveita o shader de Vênus), relevo quase sem crateras mas com cristas de gelo altas; Júpiter (faixas e Mancha Vermelha, sem anéis) e as três outras luas galileanas fixos no céu como o Sol; gêiseres de água decorativos sorteados perto de onde o jogador olha, e partículas de gelo sempre caindo devagar (baixa gravidade) — nenhum dos dois muda números de jogo; a Missão 7 (T-154) fica de fora por enquanto.

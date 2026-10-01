@@ -15,6 +15,8 @@ export interface Ambientacao {
   terraNoCeu: boolean;
   /** §14.7/D-93: direção local de Saturno (com anéis) no céu, ou null se o cenário não o mostra. */
   direcaoSaturno: Vector3 | null;
+  /** §14.10/D-104: direção local de Júpiter (sem anéis) no céu, ou null se o cenário não o mostra. */
+  direcaoJupiter: Vector3 | null;
   /** §14.6/§14.7/D-94: luas menores no céu (direção local, raio e cor de cada uma). */
   luasNoCeu: Array<{
     direcao: Vector3;
@@ -70,6 +72,10 @@ export interface Ambientacao {
   tempestade: { cor: Color; neblina: { perto: number; longe: number }; luz: number } | null;
   /** AUD-02: força do vento de fundo (0 = sem atmosfera). */
   vento: number;
+  /** §14.10/D-104: partículas de gelo sempre caindo (não um evento), ou null se o cenário não tem. */
+  neve: Color | null;
+  /** §14.10/D-104: gêiseres de água decorativos, sorteados perto da câmera de vez em quando. */
+  geiseres: boolean;
 }
 
 function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
@@ -122,6 +128,7 @@ const LUA: Ambientacao = {
   estrelas: true,
   terraNoCeu: true,
   direcaoSaturno: null,
+  direcaoJupiter: null,
   luasNoCeu: [],
   sol: direcao(24, -35),
   intensidadeSol: 3.4,
@@ -146,6 +153,8 @@ const LUA: Ambientacao = {
   noite: null,
   tempestade: null,
   vento: 0,
+  neve: null,
+  geiseres: false,
 };
 
 const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
@@ -166,6 +175,7 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     estrelas: false,
     terraNoCeu: false,
     direcaoSaturno: null,
+    direcaoJupiter: null,
     luasNoCeu: [],
     sol: direcao(58, -30),
     intensidadeSol: 3.0,
@@ -188,6 +198,8 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     noite: null,
     tempestade: null,
     vento: 0,
+    neve: null,
+    geiseres: false,
   },
   // §14.6: céu caramelo, Sol menor com halo azulado, solo ferrugem, luz quente e difusa.
   marte: {
@@ -290,6 +302,31 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     secundaria: { cor: new Color(0x6878a0), intensidade: 0.08 },
     tinta: [0.55, 0.52, 0.5],
     vento: 0,
+  },
+  // §14.10/D-104: gelo rachado em placas, atmosfera rarefeita demais pra um céu colorido (como
+  // Ceres, preto mesmo com o Sol); Júpiter enorme no céu, outras luas galileanas, gêiseres de
+  // água e partículas de gelo sempre caindo (baixa gravidade: mais devagar que poeira comum).
+  europa: {
+    ...LUA,
+    terraNoCeu: false,
+    direcaoJupiter: direcao(26, -55),
+    luasNoCeu: [
+      { direcao: direcao(14, 20), raio: 6.5, cor: new Color(0xcfae6a) }, // Io (vulcânica).
+      { direcao: direcao(40, 95), raio: 7.5, cor: new Color(0x8a7f70) }, // Ganimedes.
+      { direcao: direcao(8, 150), raio: 6, cor: new Color(0x5a564e) }, // Calisto.
+    ],
+    sol: direcao(30, -35),
+    intensidadeSol: 1.6,
+    ambiente: { cor: new Color(0x9ab0c8), intensidade: 2.3 },
+    // Júpiter, enorme e claro no céu, devolve um pouco de luz.
+    secundaria: { cor: new Color(0xd8c8a8), intensidade: 0.15 },
+    tinta: [0.78, 0.86, 1.0],
+    placas: true,
+    detalhe: 0.6,
+    vento: 0,
+    // D-104: gelo sempre caindo (baixa gravidade: vento quase nenhum, queda bem devagar).
+    neve: new Color(0xe8f3ff),
+    geiseres: true,
   },
 };
 

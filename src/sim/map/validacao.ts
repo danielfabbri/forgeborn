@@ -42,6 +42,8 @@ export function gerarPrevia(
     zonas,
     c.mult_cratera,
     c.mult_relevo,
+    c.mult_colinas,
+    c.mult_fendas,
     temLiquido(cenario),
     texel,
   );
@@ -202,14 +204,16 @@ export function gerarMapaValido(
   const c = cenarioOuFalha(cenario);
   for (let tentativa = 0; tentativa < VALIDACAO.maxTentativas; tentativa++) {
     const atual = seed + tentativa;
-    // CEN-09 (D-98): mult_cratera/mult_relevo do cenário (plano na Terra, quase sem crateras em
-    // Vênus); CEN-04: Titã tem mares de metano.
+    // CEN-09 (D-98/D-106): mult_cratera/mult_relevo/mult_colinas/mult_fendas do cenário (plano na
+    // Terra, quase sem crateras em Vênus, fendas e cristas em Europa); CEN-04: Titã tem mares.
     const mapa = gerarMapaLunar(
       atual,
       c.raio_m,
       zonas,
       c.mult_cratera,
       c.mult_relevo,
+      c.mult_colinas,
+      c.mult_fendas,
       temLiquido(cenario),
     );
     const grades = derivarGrades(mapa);

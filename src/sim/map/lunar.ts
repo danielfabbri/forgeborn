@@ -67,6 +67,17 @@ export const GERADOR_LUA = {
   ombroBrecha: 5,
   colinas: { densidade: 0.5, altura: [2, 6], sigma: [15, 40] },
   sulcos: { porSetor: [0, 1], comprimento: [60, 140], largura: [10, 14], profundidade: [1, 2] },
+  /**
+   * CEN-09 (D-106): fendas de verdade — fundo estreito e fundo, paredes íngremes demais pra
+   * atravessar (como a borda de uma cratera), ao contrário dos sulcos rasos de sempre.
+   */
+  fendas: {
+    porSetor: [2, 4],
+    comprimento: [30, 70],
+    meiaLargura: [1, 1.5],
+    paredeLargura: [1, 1.5],
+    profundidade: [10, 16],
+  },
   ruido: { amplitude: 2.4, oitavas: 4, frequencia: 1 / 80 },
   /** Folga entre obstáculos e o penhasco do platô ou o corredor de uma rampa. */
   folgaZona: 8,
@@ -142,6 +153,20 @@ interface Sulco {
   profundidade: number;
 }
 
+/** CEN-09 (D-106): fenda de verdade — fundo estreito e plano, paredes íngremes intransponíveis. */
+export interface Fenda {
+  /** Pontos da linha, já na superfície (m). */
+  pontos: Vec3[];
+  /** Centro e alcance angular, para descartar rápido. */
+  centro: Vec3;
+  cosAlcance: number;
+  /** Meia largura (m) do fundo plano, na profundidade máxima. */
+  meiaLargura: number;
+  /** Largura (m) da parede, do fundo até o nível do chão ao redor. */
+  paredeLargura: number;
+  profundidade: number;
+}
+
 export interface MapaLunar extends Heightmap {
   seed: number;
   /** Raio do planeta (m): o `raio_m` do cenário (CEN-16). */
@@ -152,6 +177,8 @@ export interface MapaLunar extends Heightmap {
   centrais: PontoMedio[];
   /** Todas as crateras, já replicadas. */
   crateras: Cratera[];
+  /** Todas as fendas, já replicadas (D-106). */
+  fendas: Fenda[];
 }
 
 /** CEN-07 e ECO-08: zonas de pouso e pontos médios de cada simetria. */
@@ -311,6 +338,24 @@ function alturaSulco(s: Sulco, p: Vec3, raioPlaneta: number): number {
   return -s.profundidade * q * q;
 }
 
+/**
+ * CEN-09 (D-106): fundo plano na profundidade máxima até `meiaLargura`; dali até
+ * `meiaLargura + paredeLargura` a parede sobe em rampa reta até o nível do chão — íngreme o
+ * bastante (profundidade grande, parede estreita) pra passar de `inclinacao_max_hover_graus`.
+ */
+export function alturaFenda(f: Fenda, p: Vec3, raioPlaneta: number): number {
+  if (produtoEscalar(f.centro, p) < f.cosAlcance) return 0;
+  const P: Vec3 = [p[0] * raioPlaneta, p[1] * raioPlaneta, p[2] * raioPlaneta];
+  let menor = Infinity;
+  for (let k = 0; k < f.pontos.length - 1; k++) {
+    menor = Math.min(menor, distanciaAoSegmento3(P, f.pontos[k]!, f.pontos[k + 1]!));
+  }
+  if (menor >= f.meiaLargura + f.paredeLargura) return 0;
+  if (menor <= f.meiaLargura) return -f.profundidade;
+  const t = (menor - f.meiaLargura) / f.paredeLargura;
+  return -f.profundidade * (1 - t);
+}
+
 export function gerarMapaLunar(
   seed: number,
   raio: number,
@@ -319,6 +364,10 @@ export function gerarMapaLunar(
   multCratera = 1,
   /** CEN-09 (D-98): multiplica a altura das colinas e do ruído fino do cenário (CEN-02). */
   multRelevo = 1,
+  /** CEN-09 (D-106): multiplica a quantidade de colinas do cenário (relevo mais acidentado). */
+  multColinas = 1,
+  /** CEN-09 (D-106): multiplica a quantidade de fendas do cenário; 0 (padrão) é sem fendas. */
+  multFendas = 0,
   /** CEN-04 (D-90): o cenário tem líquido na superfície (mares). */
   comMar = false,
   /** Metros entre vértices: 1 no jogo (CEN-13); maior só para prévias. */
@@ -420,7 +469,9 @@ export function gerarMapaLunar(
 
   // Colinas suaves.
   const colinas: Colina[] = [];
-  const quantidadeColinas = Math.floor((G.colinas.densidade * area) / n / 10000 + nextFloat(rng));
+  const quantidadeColinas = Math.floor(
+    (G.colinas.densidade * multColinas * area) / n / 10000 + nextFloat(rng),
+  );
   for (let c = 0; c < quantidadeColinas; c++) {
     for (let tentativa = 0; tentativa < G.tentativas; tentativa++) {
       const sigma = entre(rng, G.colinas.sigma);
@@ -472,13 +523,58 @@ export function gerarMapaLunar(
     }
   }
 
+  // Fendas de verdade (D-106): mesmo traçado dos sulcos, mas estreitas e fundas o bastante pra
+  // intransponíveis (como a borda de uma cratera) — não um canal raso de atravessar.
+  const fendas: Fenda[] = [];
+  const quantidadeFendas =
+    multFendas > 0 ? Math.round(inteiroEntre(rng, G.fendas.porSetor) * multFendas) : 0;
+  for (let c = 0; c < quantidadeFendas; c++) {
+    for (let tentativa = 0; tentativa < 20; tentativa++) {
+      const meiaLargura = entre(rng, G.fendas.meiaLargura);
+      const paredeLargura = entre(rng, G.fendas.paredeLargura);
+      const profundidade = entre(rng, G.fendas.profundidade);
+      const comprimento = entre(rng, G.fendas.comprimento);
+      const curva = entre(rng, [-0.9, 0.9]);
+      const inicio = direcaoSorteada(rng);
+      let estado = { p: inicio, rumo: rumoSorteado(rng, inicio) };
+      const pontos: Vec3[] = [estado.p];
+      for (let s = 0; s < 16; s++) {
+        estado = avancar(estado.p, estado.rumo, comprimento / 16 / R);
+        estado.rumo = normalizar(girar(estado.rumo, estado.p, curva / 16));
+        pontos.push(estado.p);
+      }
+      const alcanceTotal = meiaLargura + paredeLargura;
+      const valido = pontos.every(
+        (p) => longeDosCentrais(p, alcanceTotal) && respeitaZonas(p, alcanceTotal),
+      );
+      if (!valido) continue;
+      const meio = pontos[8]!;
+      const alcance = comprimento / 2 + alcanceTotal + 2;
+      for (const sigma of grupo) {
+        fendas.push({
+          pontos: pontos.map((p) => {
+            const q = aplicarRotacao(sigma, p);
+            return [q[0] * R, q[1] * R, q[2] * R] as Vec3;
+          }),
+          centro: aplicarRotacao(sigma, meio),
+          cosAlcance: Math.cos(Math.min(Math.PI, alcance / R)),
+          meiaLargura,
+          paredeLargura,
+          profundidade,
+        });
+      }
+      break;
+    }
+  }
+
   /** As feições que podem alcançar um trecho do mapa (todas, ou as de um bloco de vértices). */
   interface Feicoes {
     colinas: Colina[];
     crateras: Cratera[];
     sulcos: Sulco[];
+    fendas: Fenda[];
   }
-  const todas: Feicoes = { colinas, crateras, sulcos };
+  const todas: Feicoes = { colinas, crateras, sulcos, fendas };
   const alturaSemLagos = (p: Vec3, f: Feicoes = todas): number => {
     let ruido = 0;
     for (const sigma of grupo) {
@@ -492,6 +588,7 @@ export function gerarMapaLunar(
     }
     for (const c of f.crateras) h += alturaCratera(c, p, R);
     for (const s of f.sulcos) h += alturaSulco(s, p, R);
+    for (const fd of f.fendas) h += alturaFenda(fd, p, R);
     return h;
   };
   /**
@@ -505,6 +602,9 @@ export function gerarMapaLunar(
       crateras: crateras.filter((c) => perto(c.d, Math.min(Math.PI, (c.raio * 1.6 + 8) / R))),
       sulcos: sulcos.filter((s) =>
         perto(s.centro, Math.acos(Math.max(-1, Math.min(1, s.cosAlcance)))),
+      ),
+      fendas: fendas.filter((fd) =>
+        perto(fd.centro, Math.acos(Math.max(-1, Math.min(1, fd.cosAlcance)))),
       ),
     };
   };
@@ -689,6 +789,7 @@ export function gerarMapaLunar(
     contestados: geo.contestados,
     centrais: geo.centrais,
     crateras,
+    fendas,
     ...(comMar ? { mar: { nivel } } : {}),
     pedras,
   };

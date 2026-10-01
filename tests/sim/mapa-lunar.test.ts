@@ -19,7 +19,9 @@ import {
 } from '../../src/sim/map/heightmap';
 import {
   alturaCratera,
+  alturaFenda,
   type Cratera,
+  type Fenda,
   GERADOR_LUA,
   gerarMapaLunar,
   type MapaLunar,
@@ -267,5 +269,70 @@ describe('CEN-09, D-98: mult_cratera e mult_relevo do cenário', () => {
     expect(hashNumeros(gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4).alturas)).toBe(
       hashNumeros(gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4, 1, 1).alturas),
     );
+  });
+
+  it('mult_colinas multiplica a quantidade de colinas, sem mudar crateras', () => {
+    const base = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4, 1, 1, 1, 0);
+    const triplo = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4, 1, 1, 3, 0);
+    expect(triplo.crateras).toEqual(base.crateras);
+    expect(variancia(triplo.alturas)).toBeGreaterThan(variancia(base.alturas));
+  });
+
+  it('mult_fendas 0 (padrão) não gera fendas', () => {
+    expect(gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4).fendas).toHaveLength(0);
+  });
+});
+
+describe('CEN-20, D-106: fenda de verdade', () => {
+  it('fendas (mult_fendas > 0): comprimento 30–70 m, meia largura 1–1,5 m, parede 1–1,5 m, profundidade 10–16 m, replicadas pela simetria', () => {
+    const mapa = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4, 1, 1, 1, 1);
+    expect(mapa.fendas.length).toBeGreaterThan(0);
+    expect(mapa.fendas.length % 4).toBe(0);
+    for (const fenda of mapa.fendas) {
+      expect(fenda.meiaLargura).toBeGreaterThanOrEqual(1);
+      expect(fenda.meiaLargura).toBeLessThanOrEqual(1.5);
+      expect(fenda.paredeLargura).toBeGreaterThanOrEqual(1);
+      expect(fenda.paredeLargura).toBeLessThanOrEqual(1.5);
+      expect(fenda.profundidade).toBeGreaterThanOrEqual(10);
+      expect(fenda.profundidade).toBeLessThanOrEqual(16);
+      let comprimento = 0;
+      for (let k = 0; k < fenda.pontos.length - 1; k++) {
+        const [ax, ay, az] = fenda.pontos[k]!;
+        const [bx, by, bz] = fenda.pontos[k + 1]!;
+        comprimento += Math.hypot(bx - ax, by - ay, bz - az);
+      }
+      expect(comprimento).toBeGreaterThanOrEqual(29);
+      expect(comprimento).toBeLessThanOrEqual(71);
+    }
+  });
+
+  it('atravessar a fenda passa de 30°; andar pelo fundo plano, não', () => {
+    const RAIO = 1000;
+    const falso = { raio_m: RAIO } as MapaLunar;
+    const centro: Vec3 = [0, 1, 0];
+    const paraMetros = (d: Vec3): Vec3 => [d[0] * RAIO, d[1] * RAIO, d[2] * RAIO];
+    const fenda: Fenda = {
+      pontos: [em(falso, centro, [1, 0, 0], -50), em(falso, centro, [1, 0, 0], 50)].map(paraMetros),
+      centro,
+      cosAlcance: Math.cos(100 / RAIO),
+      meiaLargura: 1,
+      paredeLargura: 1.25,
+      profundidade: 13,
+    };
+    const altura = (p: Vec3) => alturaFenda(fenda, p, RAIO);
+    const atravessando = inclinacaoMaxima(
+      falso,
+      altura,
+      em(falso, centro, [0, 0, 1], -10),
+      em(falso, centro, [0, 0, 1], 10),
+    );
+    const peloFundo = inclinacaoMaxima(
+      falso,
+      altura,
+      em(falso, centro, [1, 0, 0], -20),
+      em(falso, centro, [1, 0, 0], 20),
+    );
+    expect(atravessando).toBeGreaterThan(LIMITE_HOVER);
+    expect(peloFundo).toBeLessThan(LIMITE_HOVER);
   });
 });

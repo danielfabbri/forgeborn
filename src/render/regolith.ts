@@ -14,9 +14,9 @@ import {
   UnsignedByteType,
 } from 'three';
 
-const TAM = 256;
+export const TAM = 256;
 
-function hash(ix: number, iz: number, seed: number): number {
+export function hash(ix: number, iz: number, seed: number): number {
   let h = Math.imul(ix, 0x27d4eb2d) ^ Math.imul(iz, 0x165667b1) ^ Math.imul(seed, 0x9e3779b1);
   h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
   h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
@@ -24,7 +24,7 @@ function hash(ix: number, iz: number, seed: number): number {
 }
 
 /** Ruído de valor periódico (período `periodo` células). */
-function ruidoPeriodico(x: number, z: number, periodo: number, seed: number): number {
+export function ruidoPeriodico(x: number, z: number, periodo: number, seed: number): number {
   const x0 = Math.floor(x);
   const z0 = Math.floor(z);
   const fx = x - x0;
@@ -91,8 +91,15 @@ export interface TexturasRegolito {
   normais: Texture;
 }
 
-export function criarTexturasRegolito(): TexturasRegolito {
-  const altura = relevoFino();
+/**
+ * Empacota um campo de altura (0..1-ish, periódico em `TAM`) nas texturas de albedo e normais.
+ * Compartilhado pelo regolito (`criarTexturasRegolito`) e pelas placas de Vênus (`placas.ts`).
+ */
+export function empacotarTexturas(
+  altura: Float32Array,
+  tomBase = 0.72,
+  tomGanho = 0.4,
+): TexturasRegolito {
   const at = (i: number, j: number) =>
     altura[(((j % TAM) + TAM) % TAM) * TAM + (((i % TAM) + TAM) % TAM)]!;
   const detalhe = new Uint8Array(TAM * TAM * 4);
@@ -101,7 +108,7 @@ export function criarTexturasRegolito(): TexturasRegolito {
     for (let i = 0; i < TAM; i++) {
       const o = (j * TAM + i) * 4;
       // Albedo de detalhe em torno de 0,9 (o terreno compensa na cor por vértice).
-      const tom = Math.min(255, Math.max(0, Math.round((0.72 + 0.4 * at(i, j)) * 230)));
+      const tom = Math.min(255, Math.max(0, Math.round((tomBase + tomGanho * at(i, j)) * 230)));
       detalhe[o] = tom;
       detalhe[o + 1] = tom;
       detalhe[o + 2] = tom;
@@ -116,4 +123,8 @@ export function criarTexturasRegolito(): TexturasRegolito {
     }
   }
   return { detalhe: textura(detalhe, true), normais: textura(normais, false) };
+}
+
+export function criarTexturasRegolito(): TexturasRegolito {
+  return empacotarTexturas(relevoFino());
 }

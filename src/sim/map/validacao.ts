@@ -14,11 +14,15 @@ import { type DistribuicaoDeJazidas, distribuirJazidas } from './jazidas';
 import { GERADOR_LUA, gerarMapaLunar, type MapaLunar, type Simetria } from './lunar';
 import { dados } from '../data';
 
-/** CEN-16 (D-79): o raio do planeta é o do cenário. */
-export function raioDoCenario(cenario: CenariosId): number {
+function cenarioOuFalha(cenario: CenariosId) {
   const c = dados.cenarios.find((x) => x.id === cenario);
   if (!c) throw new Error(`Cenário desconhecido: ${cenario}`);
-  return c.raio_m;
+  return c;
+}
+
+/** CEN-16 (D-79): o raio do planeta é o do cenário. */
+export function raioDoCenario(cenario: CenariosId): number {
+  return cenarioOuFalha(cenario).raio_m;
 }
 
 /**
@@ -31,11 +35,13 @@ export function gerarPrevia(
   cenario: CenariosId,
   texel = 4,
 ): MapaLunar {
+  const c = cenarioOuFalha(cenario);
   return gerarMapaLunar(
     seed,
     raioDoCenario(cenario),
     zonas,
-    cenario === 'terra_lab',
+    c.mult_cratera,
+    c.mult_relevo,
     temLiquido(cenario),
     texel,
   );
@@ -193,14 +199,17 @@ export function gerarMapaValido(
   validar: typeof validarMapa = validarMapa,
 ): MapaPronto {
   const rejeitadas: MapaPronto['rejeitadas'] = [];
+  const c = cenarioOuFalha(cenario);
   for (let tentativa = 0; tentativa < VALIDACAO.maxTentativas; tentativa++) {
     const atual = seed + tentativa;
-    // §14.5: o Campo de testes da Terra é quase plano; CEN-04: Titã tem mares de metano.
+    // CEN-09 (D-98): mult_cratera/mult_relevo do cenário (plano na Terra, quase sem crateras em
+    // Vênus); CEN-04: Titã tem mares de metano.
     const mapa = gerarMapaLunar(
       atual,
-      raioDoCenario(cenario),
+      c.raio_m,
       zonas,
-      cenario === 'terra_lab',
+      c.mult_cratera,
+      c.mult_relevo,
       temLiquido(cenario),
     );
     const grades = derivarGrades(mapa);

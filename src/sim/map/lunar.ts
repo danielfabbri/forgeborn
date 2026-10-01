@@ -311,14 +311,14 @@ function alturaSulco(s: Sulco, p: Vec3, raioPlaneta: number): number {
   return -s.profundidade * q * q;
 }
 
-/** §14.5: relevo quase plano, sem crateras nem sulcos (Terra — Campo de testes). */
-const FATOR_RELEVO_PLANO = 0.3;
-
 export function gerarMapaLunar(
   seed: number,
   raio: number,
   n: Simetria,
-  plano = false,
+  /** CEN-09 (D-98): multiplica a quantidade de crateras e sulcos do cenário (CEN-02). */
+  multCratera = 1,
+  /** CEN-09 (D-98): multiplica a altura das colinas e do ruído fino do cenário (CEN-02). */
+  multRelevo = 1,
   /** CEN-04 (D-90): o cenário tem líquido na superfície (mares). */
   comMar = false,
   /** Metros entre vértices: 1 no jogo (CEN-13); maior só para prévias. */
@@ -375,10 +375,13 @@ export function gerarMapaLunar(
     pontosMedios.every((m) => R * arco(m.d, p) >= G.raioLivreCentro + raio);
   const replicas = (p: Vec3): Vec3[] => grupo.map((sigma) => aplicarRotacao(sigma, p));
 
-  // Crateras (CEN-09).
+  // Crateras (CEN-09). Sem crateras (`multCratera` 0), nem o sorteio da quantidade roda: mantém a
+  // sequência do RNG (e as seeds curadas) idêntica à de antes do multiplicador existir.
   const crateras: Cratera[] = [];
-  for (const classe of plano ? [] : G.classesCratera) {
-    const quantidade = Math.floor((classe.densidade * area) / n / 10000 + nextFloat(rng));
+  for (const classe of multCratera > 0 ? G.classesCratera : []) {
+    const quantidade = Math.floor(
+      (classe.densidade * multCratera * area) / n / 10000 + nextFloat(rng),
+    );
     for (let c = 0; c < quantidade; c++) {
       for (let tentativa = 0; tentativa < G.tentativas; tentativa++) {
         const raio = entre(rng, classe.raio);
@@ -425,7 +428,7 @@ export function gerarMapaLunar(
       const p = direcaoSorteada(rng);
       if (!longeDosCentrais(p, sigma)) continue;
       if (!respeitaZonas(p, 2 * sigma)) continue;
-      const h = plano ? altura * FATOR_RELEVO_PLANO : altura;
+      const h = altura * multRelevo;
       for (const q of replicas(p)) colinas.push({ d: q, altura: h, sigma });
       break;
     }
@@ -433,7 +436,8 @@ export function gerarMapaLunar(
 
   // Sulcos (canais rasos e sinuosos), andando pela superfície com o rumo girando aos poucos.
   const sulcos: Sulco[] = [];
-  const quantidadeSulcos = plano ? 0 : inteiroEntre(rng, G.sulcos.porSetor);
+  const quantidadeSulcos =
+    multCratera > 0 ? Math.round(inteiroEntre(rng, G.sulcos.porSetor) * multCratera) : 0;
   for (let c = 0; c < quantidadeSulcos; c++) {
     for (let tentativa = 0; tentativa < 20; tentativa++) {
       const largura = entre(rng, G.sulcos.largura);
@@ -481,7 +485,7 @@ export function gerarMapaLunar(
       const q = aplicarRotacao(sigma, p);
       ruido += fbm3(q[0] * R, q[1] * R, q[2] * R, seedRuido, G.ruido.oitavas, G.ruido.frequencia);
     }
-    let h = (ruido / Math.sqrt(n)) * G.ruido.amplitude * (plano ? FATOR_RELEVO_PLANO : 1);
+    let h = (ruido / Math.sqrt(n)) * G.ruido.amplitude * multRelevo;
     for (const c of f.colinas) {
       const d = R * arco(c.d, p);
       if (d < 3 * c.sigma) h += c.altura * Math.exp(-(d * d) / (c.sigma * c.sigma));

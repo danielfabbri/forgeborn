@@ -119,10 +119,10 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     xanadu: '81c48de8b2982d24',
     ligeia_mare: '61f4c2e8ebe02ad5',
     kraken_mare: '2ff1eb666568fdfd',
-    // §14.8 (D-97): Vênus.
-    maxwell_montes: 'bee0f137556ad946',
-    aphrodite_terra: 'cc87adf23704c524',
-    lakshmi_planum: 'be9bfedc8d241cb2',
+    // §14.8 (D-98): Vênus, quase sem crateras (mult_cratera 0, mult_relevo 0,5).
+    maxwell_montes: '02b7ea44780cf4bf',
+    aphrodite_terra: '5d73e612c37ec023',
+    lakshmi_planum: '317661d4ab18c8a9',
   };
   const porCenario = (cenario: string) =>
     PRESETS_DE_MAPA.filter((p) => p.cenario === cenario).map((p) => [p.id, p.zonas, p.jogadores]);

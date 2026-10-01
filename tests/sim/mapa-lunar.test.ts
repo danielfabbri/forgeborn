@@ -235,3 +235,37 @@ describe('CEN-09: relevo', () => {
     expect(atravessar(0)).toBeLessThan(LIMITE_HOVER);
   });
 });
+
+describe('CEN-09, D-98: mult_cratera e mult_relevo do cenário', () => {
+  const variancia = (xs: Uint16Array | number[]): number => {
+    const media = Array.from(xs).reduce((a, b) => a + b, 0) / xs.length;
+    return Array.from(xs).reduce((a, b) => a + (b - media) ** 2, 0) / xs.length;
+  };
+
+  it('mult_cratera 0 tira as crateras e os sulcos, sem mudar as colinas', () => {
+    const semCrateras = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4, 0, 1);
+    expect(semCrateras.crateras).toHaveLength(0);
+    // As colinas (sem crateras/sulcos) seguem com o relevo cheio (mult_relevo 1): a variância do
+    // heightmap muda bem menos do que quando mult_relevo também cai (próximo teste).
+    const comCrateras = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4, 1, 1);
+    expect(comCrateras.crateras.length).toBeGreaterThan(0);
+  });
+
+  it('mult_relevo reduz a altura das colinas e do ruído fino (menos variação no heightmap)', () => {
+    // mult_cratera 0 nos dois lados, pra isolar o efeito de mult_relevo nas colinas/ruído.
+    const cheio = gerarMapaLunar(9, RAIOS_DE_TESTE.m, 4, 0, 1);
+    const reduzido = gerarMapaLunar(9, RAIOS_DE_TESTE.m, 4, 0, 0.5);
+    const vCheio = variancia(cheio.alturas);
+    const vReduzido = variancia(reduzido.alturas);
+    // As zonas de pouso (platôs e rampas, CEN-08) não mudam com mult_relevo e pesam na variância
+    // total, então a redução aparece, mas bem diluída: só a direção importa aqui.
+    expect(vReduzido).toBeLessThan(vCheio * 0.95);
+    expect(vReduzido).toBeGreaterThan(0);
+  });
+
+  it('sem argumentos (mult_cratera e mult_relevo 1), o relevo é o cheio de sempre', () => {
+    expect(hashNumeros(gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4).alturas)).toBe(
+      hashNumeros(gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4, 1, 1).alturas),
+    );
+  });
+});

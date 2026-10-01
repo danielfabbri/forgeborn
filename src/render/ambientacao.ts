@@ -29,6 +29,8 @@ export interface Ambientacao {
   marcacoes: boolean;
   /** Gelo nas baixadas sombreadas (Shackleton). */
   gelo: boolean;
+  /** §14.8/D-98: placas de basalto rachadas no lugar do regolito (Vênus). */
+  placas: boolean;
   /** §14.5: grama no chão, com concreto só nas plataformas e pistas. */
   grama: boolean;
   /** §14.5: campos e montanhas ao fundo, até o horizonte. */
@@ -85,6 +87,7 @@ const LUA: Ambientacao = {
   tinta: [1, 1, 1],
   marcacoes: false,
   gelo: false,
+  placas: false,
   grama: false,
   panorama: false,
   neblina: null,
@@ -125,6 +128,7 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     tinta: [1.75, 1.72, 1.66],
     marcacoes: true,
     gelo: false,
+    placas: false,
     grama: true,
     panorama: true,
     neblina: { perto: 140, longe: 700 },
@@ -196,31 +200,33 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     noite: { ceu: new Color('#180d05'), horizonte: new Color('#2a180d'), estrelas: false },
     vento: 0.25,
   },
-  // §14.8/D-97: céu laranja opaco, sol difuso e avermelhado, solo de basalto, névoa mais densa
-  // que Marte e Titã; nuvens espessas o tempo todo (sem noite por enquanto, D-95 não a cobre).
+  // §14.8/D-98: céu amarelo opaco (como nas fotos da Venera), sol difuso, solo de basalto
+  // rachado em placas, névoa mais densa que Marte e Titã; nuvens espessas o tempo todo, de dia
+  // e de noite (sem estrelas nunca, D-98 estende D-95 sem mudar isso).
   venus: {
     ...LUA,
-    ceu: new Color('#b8763f'),
-    horizonte: new Color('#d9a768'),
+    ceu: new Color('#cbaa3a'),
+    horizonte: new Color('#e9d268'),
     estrelas: false,
     terraNoCeu: false,
     direcaoSaturno: null,
     luasNoCeu: [],
     sol: direcao(38, -30),
     intensidadeSol: 1.3,
-    ambiente: { cor: new Color('#e0a878'), intensidade: 2.0 },
-    secundaria: { cor: new Color('#c88a52'), intensidade: 0.35 },
-    tinta: [0.75, 0.68, 0.65],
+    ambiente: { cor: new Color('#cdb258'), intensidade: 2.0 },
+    secundaria: { cor: new Color('#b2922e'), intensidade: 0.35 },
+    tinta: [0.85, 0.76, 0.52],
+    placas: true,
     neblina: { perto: 60, longe: 260 },
     escuroBrilho: 0.2,
     detalhe: 0.7,
-    solNoCeu: { cor: new Color('#ffb37a'), halo: new Color('#e8935a') },
-    // D-95: fora de escopo por enquanto — as nuvens de Vênus já escondem o espaço o tempo
-    // todo, de dia e de noite, então o céu noturno não muda nada visível ainda.
-    noite: null,
+    solNoCeu: { cor: new Color('#fff0ba'), halo: new Color('#e8c850') },
+    // D-98: do lado sem Sol direto, fica escuro (mas não preto) — a neblina espessa de Vênus
+    // esconde o espaço de dia e de noite, então, ao contrário de Marte, nunca aparecem estrelas.
+    noite: { ceu: new Color('#1c1808'), horizonte: new Color('#2e2710'), estrelas: false },
     // CEN-18: chuva ácida (reaproveita o mesmo campo/pipeline da tempestade de poeira, CEN-03),
-    // com névoa mais fechada e um tom esverdeado doentio.
-    tempestade: { cor: new Color('#8a9c3a'), neblina: { perto: 25, longe: 140 }, luz: 0.5 },
+    // com névoa mais fechada e um tom esverdeado doentio, distinto do amarelo do dia comum.
+    tempestade: { cor: new Color('#7a9c2a'), neblina: { perto: 25, longe: 140 }, luz: 0.5 },
     vento: 0.35,
   },
 };

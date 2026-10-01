@@ -21,6 +21,7 @@ import { normalizar, produtoVetorial, tangente, type Vec3 } from '../sim/map/esf
 import { alturaEm, direcaoDoVertice, type Heightmap, indiceDoVertice } from '../sim/map/heightmap';
 import { fbm3 } from '../sim/map/noise';
 import { criarTexturasRegolito } from './regolith';
+import { criarTexturasPlacas } from './placas';
 
 /** Tamanho aproximado de um tile (m). */
 export const TAMANHO_TILE_M = 52;
@@ -265,7 +266,8 @@ export function criarMaterialRegolito(
   raio = 0,
   pistas: Pistas | null = null,
 ): MeshStandardMaterial & { texturas: Texture[] } {
-  const texturas = criarTexturasRegolito();
+  // §14.8/D-98: Vênus troca o regolito poeirento por placas de basalto rachadas.
+  const texturas = ambientacao.placas ? criarTexturasPlacas() : criarTexturasRegolito();
   const material = new MeshStandardMaterial({
     vertexColors: true,
     roughness: 0.96,

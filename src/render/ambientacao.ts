@@ -22,6 +22,8 @@ export interface Ambientacao {
     cor: Color;
     /** Fração de `DISTANCIA_CEU` (padrão 0,92); menor = mais perto (D-101, cinturão de Ceres). */
     distancia?: number;
+    /** Sprite simples (sem esfera iluminada): pedra irregular ou brilho aditivo (D-103). */
+    tipo?: 'rocha' | 'brilho';
   }>;
   /** Sol no referencial local (x = leste, y = cima, z = sul). */
   sol: Vector3;
@@ -85,20 +87,31 @@ const frac = (x: number): number => x - Math.floor(x);
  * precisam cobrir a esfera toda (Fibonacci), não só uma faixa "perto do horizonte" (que só faria
  * sentido perto daquele ponto de referência).
  */
-function cinturaoDeAsteroides(
-  n: number,
-): Array<{ direcao: Vector3; raio: number; cor: Color; distancia: number }> {
-  const tons = [0xa89c88, 0x8f8270, 0xb0a48f, 0x9a8c78, 0xc2b6a0];
+function cinturaoDeAsteroides(n: number): Array<{
+  direcao: Vector3;
+  raio: number;
+  cor: Color;
+  distancia: number;
+  tipo: 'rocha' | 'brilho';
+}> {
+  const tons = [0x8a8072, 0x6e6459, 0xa89c88, 0x5c544a, 0x766c5e];
   return Array.from({ length: n }, (_, i) => {
     const y = 1 - (2 * (i + 0.5)) / n;
     const raioXZ = Math.sqrt(Math.max(0, 1 - y * y));
     const theta = i * 2.399963; // ângulo áureo (rad): espalhamento uniforme e sem padrão visível.
+    const direcao = new Vector3(raioXZ * Math.cos(theta), y, raioXZ * Math.sin(theta));
+    // D-103: a 1ª pedra vira a "fogzinha" do cinturão — um brilho distante, não uma rocha.
+    if (i === 0) {
+      return { direcao, raio: 10, cor: new Color(0xfff4d8), distancia: 0.42, tipo: 'brilho' };
+    }
+    // D-103: pedras bem maiores e bem menores (não só uma faixa estreita de tamanho).
+    const t = frac(i * 0.732051);
     return {
-      direcao: new Vector3(raioXZ * Math.cos(theta), y, raioXZ * Math.sin(theta)),
-      // Bem maiores e mais perto que um corpo distante do céu (pedido do produto).
-      raio: 22 + frac(i * 0.732051) * 28,
+      direcao,
+      raio: 3 + t * t * 34,
       cor: new Color(tons[i % tons.length]!),
-      distancia: 0.08 + frac(i * 0.539346) * 0.12,
+      distancia: 0.22 + frac(i * 0.539346) * 0.25,
+      tipo: 'rocha' as const,
     };
   });
 }

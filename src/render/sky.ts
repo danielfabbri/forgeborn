@@ -9,11 +9,13 @@
  * distantes) e a orientação da cúpula (`uCima`) acompanham a câmera.
  */
 import {
+  AdditiveBlending,
   BackSide,
   CylinderGeometry,
   DoubleSide,
   Quaternion,
   BufferAttribute,
+  CanvasTexture,
   Color,
   BufferGeometry,
   Group,
@@ -23,6 +25,8 @@ import {
   RingGeometry,
   ShaderMaterial,
   SphereGeometry,
+  Sprite,
+  SpriteMaterial,
   Vector3,
 } from 'three';
 import { norteEm, type Vec3 } from '../sim/map/esfera';
@@ -229,6 +233,89 @@ function luaDistante(raio: number, cor: Color): Mesh<SphereGeometry, ShaderMater
     `,
   });
   return new Mesh(new SphereGeometry(raio, 16, 10), material);
+}
+
+/** §14.9/D-103: textura simples da pedra do cinturão (silhueta irregular), feita só uma vez. */
+let texturaRocha: CanvasTexture | null = null;
+function textoDaRocha(): CanvasTexture {
+  if (texturaRocha) return texturaRocha;
+  const c = document.createElement('canvas');
+  c.width = 48;
+  c.height = 48;
+  const g = c.getContext('2d')!;
+  const cx = 24;
+  const cy = 24;
+  g.beginPath();
+  const pontas = 10;
+  for (let k = 0; k <= pontas; k++) {
+    const a = (k / pontas) * Math.PI * 2;
+    const r = 16 + 6 * Math.sin(a * 3.1 + 1.3) + 4 * Math.sin(a * 5.7);
+    const x = cx + r * Math.cos(a);
+    const y = cy + r * Math.sin(a);
+    if (k === 0) g.moveTo(x, y);
+    else g.lineTo(x, y);
+  }
+  g.closePath();
+  const sombra = g.createRadialGradient(cx - 7, cy - 7, 2, cx, cy, 22);
+  sombra.addColorStop(0, 'rgba(232,226,216,1)');
+  sombra.addColorStop(0.6, 'rgba(164,152,138,1)');
+  sombra.addColorStop(1, 'rgba(82,76,68,1)');
+  g.fillStyle = sombra;
+  g.fill();
+  texturaRocha = new CanvasTexture(c);
+  return texturaRocha;
+}
+
+/** §14.9/D-103: textura simples de um brilho distante (a "fogzinha" do cinturão). */
+let texturaBrilho: CanvasTexture | null = null;
+function textoDoBrilho(): CanvasTexture {
+  if (texturaBrilho) return texturaBrilho;
+  const c = document.createElement('canvas');
+  c.width = 32;
+  c.height = 32;
+  const g = c.getContext('2d')!;
+  const brilho = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+  brilho.addColorStop(0, 'rgba(255,255,255,1)');
+  brilho.addColorStop(0.3, 'rgba(255,248,230,0.9)');
+  brilho.addColorStop(1, 'rgba(255,240,200,0)');
+  g.fillStyle = brilho;
+  g.fillRect(0, 0, 32, 32);
+  texturaBrilho = new CanvasTexture(c);
+  return texturaBrilho;
+}
+
+/**
+ * §14.9/D-103: pedra do cinturão — um sprite simples (sempre de frente pra câmera, sem
+ * iluminação nem geometria 3D), bem mais barato que uma esfera com shader próprio.
+ */
+function rocha(raio: number, cor: Color): Sprite {
+  const material = new SpriteMaterial({
+    map: textoDaRocha(),
+    color: cor,
+    transparent: true,
+    depthWrite: false,
+    fog: false,
+  });
+  const sprite = new Sprite(material);
+  sprite.scale.set(raio * 2, raio * 2, 1);
+  sprite.frustumCulled = false;
+  return sprite;
+}
+
+/** §14.9/D-103: a "fogzinha" do cinturão — um ponto brilhante distante, aditivo. */
+function brilhoDistante(raio: number, cor: Color): Sprite {
+  const material = new SpriteMaterial({
+    map: textoDoBrilho(),
+    color: cor,
+    transparent: true,
+    depthWrite: false,
+    fog: false,
+    blending: AdditiveBlending,
+  });
+  const sprite = new Sprite(material);
+  sprite.scale.set(raio, raio, 1);
+  sprite.frustumCulled = false;
+  return sprite;
 }
 
 /**
@@ -466,10 +553,17 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
     : null;
   const corpoDeSaturno = dirSaturnoFixa ? saturno(dirSaturnoFixa) : null;
   const luas = ambientacao.luasNoCeu.map((l) => ({
-    malha: luaDistante(l.raio, l.cor),
+    malha:
+      l.tipo === 'rocha'
+        ? rocha(l.raio, l.cor)
+        : l.tipo === 'brilho'
+          ? brilhoDistante(l.raio, l.cor)
+          : luaDistante(l.raio, l.cor),
     direcaoFixa: direcaoFixaNoMundo(l.direcao),
     // D-101: o cinturão de asteroides de Ceres fica bem mais perto que o céu fixo de sempre.
     distancia: l.distancia ?? 0.92,
+    // D-103: pedra/brilho são sprites simples, sem uniforms de sol/neblina (sem iluminação própria).
+    sprite: l.tipo !== undefined,
   }));
   // D-94: dentro de uma atmosfera (cúpula), os corpos do céu ficam um pouco menos nítidos que
   // na visão do espaço (CTL-16); sem cúpula (Lua), sempre nítidos — não há neblina no vácuo.
@@ -481,7 +575,9 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
     ...(corpoDeSaturno
       ? (corpoDeSaturno.children as Mesh<never, ShaderMaterial>[]).map((p) => p.material)
       : []),
-    ...luas.map((l) => l.malha.material),
+    ...luas
+      .filter((l): l is typeof l & { malha: Mesh<SphereGeometry, ShaderMaterial> } => !l.sprite)
+      .map((l) => l.malha.material),
   ];
   for (const m of materiaisComNevoa) (m.uniforms.uCorNevoa!.value as Color).copy(corNevoa);
   // Com céu (atmosfera), as estrelas só aparecem ao afastar (CTL-16).
@@ -568,7 +664,11 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
         lua.malha.position
           .copy(pontoFocal)
           .addScaledVector(lua.direcaoFixa, DISTANCIA_CEU * lua.distancia);
-        lua.malha.material.uniforms.uSol!.value.copy(ceu.sol);
+        // D-103: pedra/brilho (sprite) não têm iluminação própria, então não levam uSol.
+        if (!lua.sprite)
+          (lua.malha as Mesh<SphereGeometry, ShaderMaterial>).material.uniforms.uSol!.value.copy(
+            ceu.sol,
+          );
       }
       if (domo) {
         domo.position.copy(pontoFocal);

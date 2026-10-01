@@ -351,13 +351,14 @@ export function iniciarPartida(): void {
   // CEN-03/§14.6: a tempestade de poeira (força 0 a 1, suavizada) no céu, na névoa, na luz e no ar.
   const poeira = ambientacao.tempestade ? new Poeira(ambientacao.tempestade.cor) : null;
   if (poeira) view.scene.add(poeira.objeto);
-  // §14.10/D-104: gelo de Europa sempre caindo (não é um evento): vento quase nenhum, queda lenta.
+  // §14.10/D-104/D-107: gelo de Europa sempre caindo (não é um evento): vento quase nenhum, queda
+  // lenta, caixa baixa — só perto do chão, não flutuando alto contra o céu negro sem atmosfera.
   const neve = ambientacao.neve
     ? new Poeira(ambientacao.neve, {
         vento: 2,
         queda: 4,
         meiaCaixa: 140,
-        altura: 90,
+        altura: 9,
         atenuarPorDistancia: false,
       })
     : null;

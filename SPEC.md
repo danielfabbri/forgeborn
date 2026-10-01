@@ -4,8 +4,8 @@
 
 | Campo | Valor |
 |---|---|
-| Versão do SPEC | 1.17.0 — rascunho para aprovação |
-| Data | 2026-09-30 |
+| Versão do SPEC | 1.18.0 — rascunho para aprovação |
+| Data | 2026-10-01 |
 | Briefing de origem | `doc.txt` |
 | Plataforma | Navegador desktop (teclado + mouse), WebGL2 |
 | Idioma | pt-BR |
@@ -344,6 +344,8 @@ flowchart LR
 |---|---|---|---|
 | jazida_espacamento_min_m | 25 | m | Distância mínima entre duas jazidas (ECO-07) |
 | jazidas_espalhadas_por_10k_m2 | 0,5 | jazidas | Densidade das jazidas espalhadas (ECO-30) |
+| ceres_sal_jazidas_por_cratera | 1 | jazidas | Jazidas de Lítio na cratera dos veios de sal, por réplica (CEN-19) |
+| ceres_sal_quantidade_u | 6000 | u | Quantidade de cada jazida dos veios de sal (CEN-19) |
 
 ### 5.3 Ciclo de coleta
 
@@ -1270,7 +1272,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | lua_shackleton | Lua — Cratera Shackleton | 400 | 0,7 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 0,8 | 0,8 | 1,0 | 1,2 | — | v1.0 |
 | marte | Marte | 500 | 0,6 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,4 | 1,0 | 1,0 | 0,9 | 0,8 | 1,0 | tempestade_poeira | v1.0 |
 | fobos | Fobos | 150 | 0,6 | 1,1 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 1,0 | 1,0 | 0,8 | — | v1.x |
-| ceres | Ceres | 260 | 0,35 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 0,8 | 1,0 | 1,3 | 1,5 | 1,5 | — | v1.x |
+| ceres | Ceres | 260 | 0,35 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 1,0 | 0,8 | 1,0 | 0 | 1,5 | 1,5 | veios_de_sal | v1.x |
 | venus | Vênus | 610 | 0,25 | 1,0 | 1,0 | 1,5 | 0,9 | 0 | 0,5 | 1,2 | 1,2 | 1,0 | 0,8 | 1,0 | 1,2 | chuva_acida | v1.x |
 | europa | Europa | 385 | 0,15 | 1,15 | 0,75 | 1,0 | 1,0 | 1,0 | 1,0 | 0,8 | 1,0 | 1,0 | 1,2 | 1,0 | 1,5 | — | v1.x |
 | tita | Titã | 455 | 0,1 | 1,0 | 1,0 | 0,75 | 0,85 | 1,0 | 1,0 | 1,0 | 1,0 | 1,2 | 1,0 | 1,2 | 1,2 | lagos_metano | v1.0 |
@@ -1279,6 +1281,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **CEN-04** — **Mares** (D-90): cenário com evento de líquido (hoje `lagos_metano`, Titã; vale para qualquer corpo com água ou outro líquido na superfície) tem mares e lagos de formas orgânicas, com ilhas: toda a superfície abaixo do nível do líquido é mar, cobrindo `mar_cobertura_pct`% da área, com a mesma simetria de CEN-06. O terreno a até `mar_folga_zona_m` de cada zona de pouso é terra firme. Unidades de solo não entram no líquido: param na borda (MOV-01); drones sobrevoam; embarcações só andam nele (MOV-08). Nenhuma estrutura, mina, pedra ou jazida fica no líquido, exceto o Porto (UNI-16, PRD-10).
 - **CEN-05** — Europa: `mult_vel_hover` e `mult_giro_hover` representam o gelo (mais rápido, gira pior).
 - **CEN-18** — Evento `chuva_acida` (Vênus, D-97): ocorre em intervalos sorteados pela seed entre `venus_chuva_intervalo_min_s` e `venus_chuva_intervalo_max_s` e dura `venus_chuva_duracao_s`. Durante o evento a visão de todos os corpos é multiplicada por `venus_chuva_mult_visao`, a geração solar por `venus_chuva_mult_solar` (mesmo formato de CEN-03) e, além disso, toda unidade e estrutura (de qualquer nação, sem exceção de camada) sofre `venus_chuva_dano_hp_s` de dano contínuo (CMB-01, multiplicador `ambiental`), sem bônus nem mínimo de 1 por acerto — uniforme pelo planeta inteiro, sem centro nem borda (ao contrário da área de CMB-26). O aviso AL-24 sai `venus_chuva_aviso_s` antes.
+- **CEN-19** — Evento `veios_de_sal` (Ceres, D-99): o Lítio não segue a distribuição normal de jazidas (`perfil_li` do cenário é 0, ECO-07) — em vez disso, nasce só dentro da maior cratera do mapa (a de maior raio, CEN-09; com as réplicas simétricas dela, CEN-06, uma por zona de pouso), bem afastado da borda. Cada cratera-réplica ganha `ceres_sal_jazidas_por_cratera` jazidas de Lítio, de `ceres_sal_quantidade_u` cada, com a folga de sempre (`jazida_espacamento_min_m`, ECO-07). Fora dessas crateras, não há Lítio em Ceres.
 
 <!-- dados:parametros -->
 | chave | valor | unidade | descricao |
@@ -1354,6 +1357,13 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 - **Presets:** *Maxwell Montes* (N = 2, 2 jogadores), *Aphrodite Terra* (N = 4, 2–4), *Lakshmi Planum* (N = 4, 3–4).
 - **Eventos:** `chuva_acida` (CEN-18).
 - **Uso:** Free Battle só por enquanto; a Missão 6 entra na campanha quando as Missões 4 e 5 existirem (D-97, mesmo padrão de D-78 para Titã).
+
+### 14.9 Ceres
+
+- **Ambientação:** um corpo bem menor que a Lua, sem atmosfera significativa pra espalhar luz: nada de céu colorido, nem de dia — o Sol aparece num céu preto estrelado o tempo todo, como visto do espaço (fiel à ciência: a atmosfera de Ceres é tênue demais até pra formar uma névoa com o pouco vapor de água que existe). Regolito escuro (um dos solos menos refletivos do Sistema Solar, bem mais escuro que o da Lua), cheio de crateras (`mult_cratera`/`mult_relevo` 1, CEN-09, igual à Lua); o Sol, bem mais fraco (quase 3× mais longe que a Lua); sem Terra nem outro corpo grande por perto no céu. **Veios de sal** (`veios_de_sal`, CEN-19, D-99): o Lítio só existe dentro da maior cratera do mapa — fora dela, nenhuma jazida de Lítio nasce. É a mesma ciência por trás das manchas brilhantes reais da cratera Occator (sal, carbonato de sódio hidratado, erguido por criovulcanismo).
+- **Presets:** *Occator* (N = 2, 2 jogadores), *Kerwan* (N = 4, 2–4), *Yalode* (N = 4, 3–4).
+- **Eventos:** `veios_de_sal` (CEN-19).
+- **Uso:** Free Battle só por enquanto; a Missão 5 entra na campanha quando a Missão 4 existir (D-99, mesmo padrão de D-78/D-97 para Titã/Vênus).
 
 ---
 
@@ -1519,7 +1529,7 @@ Pesos = % do VR militar desejado. Pesos de tiers bloqueados são redistribuídos
 | Lua — Shackleton | Preto; sol rente ao horizonte | Regolito com gelo nas sombras | Baixa; sombras eternas | Bordas da cratera iluminadas |
 | Marte | Caramelo; pôr do sol azul | Ferrugem | Quente e difusa | Tempestades de poeira; Fobos e Deimos no céu |
 | Fobos | Preto, com Marte gigante | Poeira escura | Dura | Marte ocupando meio céu |
-| Ceres | Preto | Regolito escuro | Fraca | Manchas de sal brilhantes (cratera Occator) |
+| Ceres | Preto estrelado, mesmo de dia | Regolito muito escuro | Fraca (Sol distante) | Veios de sal só numa cratera (Lítio); sem céu colorido (atmosfera tênue demais) |
 | Vênus | Amarelo opaco | Basalto rachado em placas | Difusa | Relâmpagos nas nuvens; chuva ácida periódica; relevo quase sem crateras |
 | Europa | Preto, com Júpiter enorme | Gelo azul-branco rachado | Fria | Júpiter e suas faixas |
 | Titã | Laranja nebuloso | Gelo e sedimentos | Penumbra | Lagos de metano espelhados; Saturno e outras luas no céu |
@@ -1799,6 +1809,7 @@ Decisões tomadas para fechar o briefing. Status "Proposta" = aguarda aprovaçã
 | D-96 | Giro livre ao posicionar generalizado para toda estrutura (antes só Muro e Portão, D-56): apertar fixa o centro no ponto clicado e arrastar (com o botão ainda apertado) aponta a pegada para o cursor, em qualquer ângulo; soltar confirma, e clicar sem arrastar mantém a última direção usada. Inclui o Porto, com as mesmas regras de posicionamento sobre o líquido (D-90). A checagem de sobreposição entre pegadas passa a comparar os retângulos reais (SAT), não mais uma caixa alinhada ao norte — necessário porque duas pegadas quadradas giradas em ângulos diferentes podem se sobrepor sem que seus centros estejam "dentro" uma da outra no eixo norte-leste. | Pedido do produto: "Sempre que eu for criar uma unidade física, quando eu clicar e posicionar ela, com o mouse ainda clicado, eu rotaciono ela pra enxaixar na melhor posição."; respostas: giro livre em qualquer ângulo (não só passos de 90°), e o Porto entra na mudança. | Aprovada |
 | D-97 | Vênus entra só no Free Battle (a Missão 6 segue na v1.x, depois das Missões 4 e 5, para manter a ordem da campanha, mesmo padrão de D-78 para Titã): céu laranja opaco, sol difuso avermelhado, solo de basalto, relâmpagos decorativos nas nuvens, 3 presets; evento próprio `chuva_acida` (CEN-18), sorteado pela seed como a tempestade de poeira de Marte (intervalo, duração, aviso AL-24, visão e geração solar reduzidas), mais um dano contínuo leve a toda unidade e estrutura expostas, planeta inteiro, sem centro nem borda. **Proposta:** os números de `venus_chuva_*` (intervalo 300–420 s, duração 45 s, visão ×0,7, solar ×0,5, dano 0,5 HP/s, aviso 20 s). | Pedido do produto: "agora faça Vênus"; escopo (Free Battle primeiro, como Titã) e evento de risco (visão/solar reduzidos e dano leve, à escolha do produto) respondidos por perguntas de esclarecimento; números propostos com base na tempestade de poeira (CEN-03) e na radiação da Usina Nuclear (CMB-24), à espera de ajuste do produto. | Aprovada |
 | D-98 | Correções de D-97 a partir de fotos reais da sonda Venera: (1) céu amarelo (não laranja), sem o viés avermelhado da luz; (2) relevo quase sem crateras, só colinas suaves e baixas (`mult_cratera` 0, `mult_relevo` 0,5 — generaliza CEN-09, antes só o Campo de testes tinha relevo reduzido, por um booleano embutido no código); (3) solo de basalto rachado em placas largas e planas, com shader próprio (sem o aspecto de poeira/regolito compartilhado com os outros corpos rochosos); (4) do lado sem Sol direto, Vênus agora também escurece (D-95), mas sem nunca revelar estrelas — a neblina é espessa demais, de dia e de noite. | Pedido do produto, com duas fotos da Venera 13/14 como referência: "O chão não é tipo a lua, com crateras. Temos que mudar o modelo 3d do cenário. A textura do chão não é tipo o da lua... as cores da atmosfera e chão também são diferentes. Além disso, quando vou para o lado não iluminado pelo sol, deve ficar escuro, mas sem ver claramente as estrelas, pois a atmosfera de vênus é muito densa." | Aprovada |
+| D-99 | Ceres entra só no Free Battle (a Missão 5 segue na v1.x, depois da Missão 4, mesmo padrão de D-78/D-97): sem céu colorido nem de dia (atmosfera tênue demais pra espalhar luz, cientificamente correto), regolito bem mais escuro que o da Lua, Sol mais fraco e distante, cheio de crateras (`mult_cratera`/`mult_relevo` 1, como a Lua), 3 presets. Desafio novo: o Lítio deixa de nascer pela distribuição normal (`perfil_li` 0) e só existe nos "veios de sal" (`veios_de_sal`, CEN-19) da maior cratera do mapa (e das réplicas simétricas dela) — ciência real por trás das manchas brilhantes da cratera Occator (sal/carbonato de sódio). **Proposta:** os números de `ceres_sal_*` (1 jazida por cratera-réplica, 6000 u cada). | Pedido do produto: "quero um cenário baseado em evidências científicas, Ceres é bem menor que a lua. Tem atmosfera, mas é muito tênue... a olho nu seria essencialmente transparente/preta, sem um céu colorido... Podemos colocar um desafio diferente que pode ser encontrar sal ou um mineral relacionado a isso apenas em uma ou algumas crateras."; respostas a perguntas de esclarecimento: reaproveita o Lítio (não um recurso novo) e uma única cratera, a maior, por mapa. | Aprovada |
 
 ---
 
@@ -1917,3 +1928,4 @@ Cada questão tem um padrão adotado até a resposta, para não bloquear o desen
 | 1.15.0 | 2026-09-30 | D-96: PRD-10, UI-08 e CEN-15 (giro livre ao posicionar generalizado de Muro/Portão para toda estrutura, inclusive o Porto; sobreposição de pegadas por SAT entre retângulos girados). |
 | 1.16.0 | 2026-09-30 | D-97: Vênus no Free Battle (CEN-18, `chuva_acida`, `dados:parametros` `venus_chuva_*`, AL-24, §14.8, §18.2, `dados:cenarios` evento de Vênus); Missão 6 adiada para quando as Missões 4 e 5 existirem. |
 | 1.17.0 | 2026-09-30 | D-98: CEN-09 (`mult_cratera`/`mult_relevo` por cenário, generaliza o relevo reduzido do Campo de testes), `dados:cenarios` com as duas colunas novas; §14.8 e §18.2 (céu amarelo, relevo quase sem crateras, solo em placas, noite sem estrelas); ambientação de Vênus corrigida a partir de fotos da Venera. |
+| 1.18.0 | 2026-10-01 | D-99: Ceres no Free Battle (CEN-19, `veios_de_sal`, `dados:parametros` `ceres_sal_*`, §14.9, §18.2, `dados:cenarios` `perfil_li` 0 e evento de Ceres); Missão 5 adiada para quando a Missão 4 existir. |

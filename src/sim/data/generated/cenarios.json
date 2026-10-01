@@ -113,10 +113,10 @@
     "perfil_fe": 1,
     "perfil_si": 0.8,
     "perfil_cu": 1,
-    "perfil_li": 1.3,
+    "perfil_li": 0,
     "perfil_ti": 1.5,
     "perfil_u": 1.5,
-    "evento": null,
+    "evento": "veios_de_sal",
     "versao": "v1.x"
   },
   {

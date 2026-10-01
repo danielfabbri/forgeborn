@@ -102,6 +102,18 @@
     "descricao": "Densidade das jazidas espalhadas (ECO-30)"
   },
   {
+    "chave": "ceres_sal_jazidas_por_cratera",
+    "valor": 1,
+    "unidade": "jazidas",
+    "descricao": "Jazidas de Lítio na cratera dos veios de sal, por réplica (CEN-19)"
+  },
+  {
+    "chave": "ceres_sal_quantidade_u",
+    "valor": 6000,
+    "unidade": "u",
+    "descricao": "Quantidade de cada jazida dos veios de sal (CEN-19)"
+  },
+  {
     "chave": "valor_x_vr",
     "valor": 10,
     "unidade": "VR",

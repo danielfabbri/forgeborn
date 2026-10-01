@@ -123,11 +123,15 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     maxwell_montes: '02b7ea44780cf4bf',
     aphrodite_terra: '5d73e612c37ec023',
     lakshmi_planum: '317661d4ab18c8a9',
+    // §14.9 (D-99): Ceres.
+    occator: '14c714cf9a10812a',
+    kerwan: '2014445c66631087',
+    yalode: 'f1678d7863189d0f',
   };
   const porCenario = (cenario: string) =>
     PRESETS_DE_MAPA.filter((p) => p.cenario === cenario).map((p) => [p.id, p.zonas, p.jogadores]);
 
-  it('§14.4/§14.6/§14.7/§14.8: 3 presets por cenário com as simetrias e os jogadores do SPEC', () => {
+  it('§14.4/§14.6/§14.7/§14.8/§14.9: 3 presets por cenário com as simetrias e os jogadores do SPEC', () => {
     const tres = (a: string, b: string, c: string) => [
       [a, 2, [2, 2]],
       [b, 4, [2, 4]],
@@ -143,6 +147,7 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     expect(porCenario('venus')).toEqual(
       tres('maxwell_montes', 'aphrodite_terra', 'lakshmi_planum'),
     );
+    expect(porCenario('ceres')).toEqual(tres('occator', 'kerwan', 'yalode'));
     expect(PRESETS_DE_MAPA.find((p) => p.id === 'campo_de_testes')?.soCampanha).toBe(true);
     for (const preset of PRESETS_DE_MAPA) {
       // CEN-16: 2 a 4 jogadores em qualquer corpo, cabendo nas zonas do preset.

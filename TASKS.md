@@ -344,7 +344,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 - [x] **T-150 — Marte, tempestade de poeira e Missão 3** · G · Spec: CEN-02, CEN-03, §14.6, §15, §18.2, AUD-02, D-77 · Dep: T-135 · Feito: 2026-09-27
   - Aceite: tempestade de poeira sorteada pela seed entre os intervalos, com duração, visão e geração solar reduzidas e o AL-15 antes; `mult_visao` do cenário aplicado; 3 presets de Marte válidos (Free Battle); Missão 3 jogável na campanha depois da 2, contra duas IAs Normais; ambientação de Marte (céu caramelo, halo azul no Sol, solo ferrugem) e da tempestade; vento em Marte.
 - [ ] **T-151 — Fobos e Missão 4 (ondas)** · M · Spec: §15
-- [ ] **T-152 — Ceres e Missão 5** · M · Spec: §15
+- [ ] **T-152 — Missão 5 em Ceres** · M · Spec: §15, D-99 · Dep: T-151, T-202
+  - O cenário Ceres (Free Battle) sai daqui e vira T-202 (M25, D-99): só a Missão 5 da campanha fica nesta tarefa, à espera da Missão 4 (mesma ordem de T-153/T-160 para Vênus/Titã).
 - [ ] **T-153 — Missão 6 em Vênus** · M · Spec: §15, D-97 · Dep: T-151, T-152, T-200
   - O cenário Vênus (Free Battle) sai daqui e vira T-200 (M24, D-97): só a Missão 6 da campanha fica nesta tarefa, à espera das Missões 4 e 5 (mesma ordem de T-160 para a Missão 8/Titã).
 - [ ] **T-154 — Europa e Missão 7** · M · Spec: CEN-05, §15
@@ -456,3 +457,8 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 - [x] **T-200 — Vênus, chuva ácida e Free Battle** · G · Spec: CEN-09, CEN-18, §14.8, §18.2, AUD-02, `dados:cenarios` (`mult_cratera`, `mult_relevo`, `venus_chuva_*`), AL-24, D-97, D-98 · Dep: T-155 · Feito: 2026-09-30
   - Aceite: cenário Vênus jogável no Free Battle (3 presets: Maxwell Montes N=2, Aphrodite Terra N=4, Lakshmi Planum N=4), com ambientação própria a partir de fotos da Venera (céu amarelo opaco, sol difuso, solo de basalto rachado em placas em vez do regolito poeirento dos outros corpos, relâmpagos decorativos, relevo quase sem crateras via `mult_cratera`/`mult_relevo`, D-98); do lado sem Sol direto fica escuro mas sem estrelas (neblina densa demais, D-95 estendido); a chuva ácida (`chuva_acida`) ocorre em intervalos sorteados pela seed, com aviso AL-24 antes, reduz a visão e a geração solar durante a duração, e aplica dano contínuo leve a toda unidade e estrutura do planeta (sem exceção de camada ou nação); fora do evento, nada disso se aplica; a Missão 6 (T-153) fica de fora por enquanto.
+
+## M25 — Ceres, Free Battle (D-99)
+
+- [x] **T-202 — Ceres, veios de sal e Free Battle** · G · Spec: CEN-19, §14.9, §18.2, `dados:cenarios` (`perfil_li`, evento), `dados:parametros` (`ceres_sal_*`), D-99 · Dep: T-176 · Feito: 2026-10-01
+  - Aceite: cenário Ceres jogável no Free Battle (3 presets: Occator N=2, Kerwan N=4, Yalode N=4), cientificamente fiel — sem céu colorido nem de dia (atmosfera tênue demais pra espalhar luz), regolito bem mais escuro que o da Lua, Sol mais fraco e distante, cheio de crateras como a Lua; o Lítio deixa de nascer pela distribuição normal (`perfil_li` 0) e só existe dentro da maior cratera do mapa (e das réplicas simétricas dela, uma por zona de pouso) — fora dela, nenhuma jazida de Lítio nasce.

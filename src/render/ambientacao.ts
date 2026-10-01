@@ -229,6 +229,20 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     tempestade: { cor: new Color('#7a9c2a'), neblina: { perto: 25, longe: 140 }, luz: 0.5 },
     vento: 0.35,
   },
+  // §14.9/D-99: atmosfera tênue demais pra espalhar luz — sem céu colorido, o Sol aparece num
+  // céu preto estrelado mesmo "de dia" (como a Lua), mas o solo é bem mais escuro (regolito
+  // carbonáceo) e o Sol, bem mais fraco (Ceres orbita quase 3× mais longe que a Lua).
+  ceres: {
+    ...LUA,
+    terraNoCeu: false,
+    sol: direcao(28, -40),
+    intensidadeSol: 2.0,
+    ambiente: { cor: new Color(0x8892a0), intensidade: 2.2 },
+    // Sem corpo próximo e brilhante por perto (nem Terra, nem Saturno): a luz secundária é fraca.
+    secundaria: { cor: new Color(0x6878a0), intensidade: 0.08 },
+    tinta: [0.55, 0.52, 0.5],
+    vento: 0,
+  },
 };
 
 export function ambientacaoDe(cenario: CenariosId): Ambientacao {

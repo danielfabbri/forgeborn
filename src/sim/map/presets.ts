@@ -58,4 +58,8 @@ export const PRESETS_DE_MAPA: readonly PresetDeMapa[] = [
   { id: 'maxwell_montes', cenario: 'venus', zonas: 2, jogadores: [2, 2], seed: 1 },
   { id: 'aphrodite_terra', cenario: 'venus', zonas: 4, jogadores: [2, 4], seed: 2 },
   { id: 'lakshmi_planum', cenario: 'venus', zonas: 4, jogadores: [3, 4], seed: 3 },
+  // §14.9 (D-99): Ceres, Free Battle só por enquanto, com os veios de sal (CEN-19).
+  { id: 'occator', cenario: 'ceres', zonas: 2, jogadores: [2, 2], seed: 2 },
+  { id: 'kerwan', cenario: 'ceres', zonas: 4, jogadores: [2, 4], seed: 4 },
+  { id: 'yalode', cenario: 'ceres', zonas: 4, jogadores: [3, 4], seed: 5 },
 ];

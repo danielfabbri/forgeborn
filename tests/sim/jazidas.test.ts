@@ -192,3 +192,47 @@ describe('T-176 — ECO-07, ECO-30, D-89: jazidas espalhadas', () => {
     },
   );
 });
+
+describe('CEN-19, D-99: veios de sal (Lítio só na maior cratera de Ceres)', () => {
+  const RAIO_CERES = dados.cenarios.find((c) => c.id === 'ceres')!.raio_m;
+
+  it.each([
+    [2, 2],
+    [4, 4],
+  ] as const)(
+    'n=%i (seed %i): Lítio só dentro da maior cratera, uma réplica por zona',
+    (n, seed) => {
+      const mapa = gerarMapaLunar(seed, RAIO_CERES, n);
+      const dist = distribuirJazidas(mapa, derivarGrades(mapa), 'ceres');
+      const R = mapa.raio_m;
+
+      let melhorBloco = 0;
+      let melhorRaio = -1;
+      for (let i = 0; i < mapa.crateras.length; i += n) {
+        if (mapa.crateras[i]!.raio > melhorRaio) {
+          melhorRaio = mapa.crateras[i]!.raio;
+          melhorBloco = i;
+        }
+      }
+      const familia = mapa.crateras.slice(melhorBloco, melhorBloco + n);
+
+      const porCratera = Math.round(param('ceres_sal_jazidas_por_cratera'));
+      const quantidadeSal = Math.round(param('ceres_sal_quantidade_u'));
+      const deLitio = dist.jazidas.filter((j) => j.recurso === 'li');
+      // Nada de Lítio fora dos veios de sal: a contagem bate exatamente com as réplicas da cratera.
+      expect(deLitio).toHaveLength(n * porCratera);
+      for (const j of deLitio) {
+        expect(j.quantidade).toBe(quantidadeSal);
+        // Cada jazida de Lítio cai dentro do raio de alguma cratera da família (bem longe da borda).
+        const dentroDeAlguma = familia.some((c) => R * arco(j.d, c.d) <= c.raio * 0.6);
+        expect(dentroDeAlguma).toBe(true);
+      }
+    },
+  );
+
+  it('cenários sem o evento (Lua) mantêm o Lítio na distribuição normal', () => {
+    const mapa = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 2);
+    const dist = distribuirJazidas(mapa, derivarGrades(mapa), 'lua');
+    expect(dist.jazidas.some((j) => j.recurso === 'li' && j.zona !== 'espalhada')).toBe(true);
+  });
+});

@@ -25,7 +25,7 @@ import {
   type Vec3,
 } from './esfera';
 import { celulaDe, type GradesDoMapa } from './grids';
-import { GERADOR_LUA, type MapaLunar, type PontoMedio, rumoSemRampa } from './lunar';
+import { alturaCratera, GERADOR_LUA, type MapaLunar, type PontoMedio, rumoSemRampa } from './lunar';
 import { emLiquido } from './lagos';
 import { emPedra } from './pedras';
 
@@ -111,6 +111,10 @@ export function distribuirJazidas(
     Math.round(
       linha.quantidade_u * (perfil[`perfil_${linha.recurso}` as keyof typeof perfil] as number),
     );
+  // CEN-19/D-99: em Ceres, o Lítio não nasce pela distribuição normal — só nos veios de sal,
+  // dentro da maior cratera do mapa (mais abaixo).
+  const linhasDaZonaDoCenario = (zona: ZonaDeJazida): JazidasRow[] =>
+    linhasDaZona(zona).filter((linha) => cenario !== 'ceres' || linha.recurso !== 'li');
 
   const R = mapa.raio_m;
   // ECO-07 (D-89): distância mínima entre duas jazidas quaisquer.
@@ -200,7 +204,7 @@ export function distribuirJazidas(
 
   // Inicial: arco no fundo do platô, no maior vão entre as rampas.
   const fundo = rumoSemRampa(zona0);
-  const iniciais = expandir(linhasDaZona('inicial'));
+  const iniciais = expandir(linhasDaZonaDoCenario('inicial'));
   /** A jazida inicial em p não fica no eixo de uma rampa da zona 0. */
   const foraDasRampas = (p: Vec3) => {
     const rumo = tangente(zona0.d, p);
@@ -373,11 +377,11 @@ export function distribuirJazidas(
 
   const contestadas = resolverPontosMedios(
     mapa.contestados,
-    expandir(linhasDaZona('contestada')),
+    expandir(linhasDaZonaDoCenario('contestada')),
     'contestada',
   );
   // ECO-08: as jazidas `por_mapa` da zona central se dividem igualmente entre os pontos centrais.
-  const porPontoCentral = linhasDaZona('central').flatMap((linha) => {
+  const porPontoCentral = linhasDaZonaDoCenario('central').flatMap((linha) => {
     const cada = linha.jazidas / mapa.centrais.length;
     if (!Number.isInteger(cada)) {
       throw new Error(`jazidas centrais de ${linha.recurso} não se dividem entre os pontos`);
@@ -387,7 +391,7 @@ export function distribuirJazidas(
   const centrais = resolverPontosMedios(mapa.centrais, porPontoCentral, 'central');
 
   // Expansão: a posição a 90–130 m mais afastada dos pontos médios e das outras expansões.
-  const linhasExpansao = expandir(linhasDaZona('expansao'));
+  const linhasExpansao = expandir(linhasDaZonaDoCenario('expansao'));
   const naFaixaDaZona0 = (p: Vec3, linha: JazidasRow) => {
     const d = distancia(p, zona0.d);
     return d >= (linha.dist_min_m ?? 0) && d <= (linha.dist_max_m ?? Infinity);
@@ -433,7 +437,7 @@ export function distribuirJazidas(
   }));
 
   // ECO-30 (D-89): jazidas espalhadas pelo planeta, sorteadas pela seed e replicadas pela simetria.
-  const espalhadas = expandir(linhasDaZona('espalhada'));
+  const espalhadas = expandir(linhasDaZonaDoCenario('espalhada'));
   if (espalhadas.length > 0) {
     const rng = seedRng((mapa.seed ^ 0x6a2d) >>> 0);
     const sortear = (): Vec3 => {
@@ -457,6 +461,55 @@ export function distribuirJazidas(
         if (!replicas.every((q, k) => valida(q, [p, ...replicas.slice(0, k)]))) continue;
         registrar([{ linha, d: p }], 'espalhada', () => [], grupo);
         break;
+      }
+    }
+  }
+
+  // CEN-19/D-99: em Ceres, o Lítio só existe nos veios de sal da maior cratera do mapa (e das
+  // réplicas simétricas dela, uma por zona de pouso).
+  if (cenario === 'ceres') {
+    const n = mapa.simetria;
+    let melhorBloco = 0;
+    let melhorRaio = -1;
+    for (let i = 0; i < mapa.crateras.length; i += n) {
+      const raio = mapa.crateras[i]!.raio;
+      if (raio > melhorRaio) {
+        melhorRaio = raio;
+        melhorBloco = i;
+      }
+    }
+    if (melhorRaio < 0)
+      throw new Error(`Seed ${mapa.seed}: Ceres sem cratera para os veios de sal`);
+    const porCratera = Math.max(1, Math.round(param('ceres_sal_jazidas_por_cratera')));
+    const quantidadeSal = Math.round(param('ceres_sal_quantidade_u'));
+    for (let k = 0; k < n; k++) {
+      const cratera = mapa.crateras[melhorBloco + k]!;
+      // Bem dentro da bacia (longe da borda/brechas): metade do raio da cratera, no máximo.
+      const raioMax = cratera.raio * 0.55;
+      const colocadasNaCratera: Vec3[] = [];
+      for (let j = 0; j < porCratera; j++) {
+        let achou: Vec3 | null = null;
+        busca: for (let raioM = espacamento / 2; raioM <= raioMax; raioM += 6) {
+          for (let ang = (j * 360) / porCratera; ang < (j * 360) / porCratera + 360; ang += 20) {
+            const p = em(cratera.d, cratera.ref, ang, raioM);
+            if (alturaCratera(cratera, p, R) > -cratera.profundidade * 0.4) continue;
+            if (!valida(p, colocadasNaCratera)) continue;
+            achou = p;
+            break busca;
+          }
+        }
+        if (!achou) throw new Error(`Seed ${mapa.seed}: veios de sal sem lugar na cratera`);
+        colocadasNaCratera.push(achou);
+      }
+      for (const d of colocadasNaCratera) {
+        jazidas.push({
+          recurso: 'li',
+          quantidade: quantidadeSal,
+          d,
+          zona: 'espalhada',
+          zonasDePouso: [],
+        });
+        ocupadas.push(d);
       }
     }
   }

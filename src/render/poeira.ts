@@ -37,18 +37,45 @@ function grao(): CanvasTexture {
   return new CanvasTexture(c);
 }
 
+export interface OpcoesPoeira {
+  /** Deriva horizontal (m/s, padrão 22). */
+  vento?: number;
+  /** Queda vertical (m/s, padrão 5% do vento). */
+  queda?: number;
+  /** Meio-lado (m) da caixa ao redor do foco (padrão 70). */
+  meiaCaixa?: number;
+  /** Altura (m) da caixa (padrão 45). */
+  altura?: number;
+  /**
+   * D-105: o grão encolhe com a distância da câmera por padrão (true), igual à poeira de Marte —
+   * de longe, fica pequeno demais e o `alphaTest` o descarta. `false` (a neve de Europa) mantém
+   * um tamanho fixo em pixels, visível mesmo bem afastado.
+   */
+  atenuarPorDistancia?: boolean;
+}
+
 export class Poeira {
   readonly objeto: Points<BufferGeometry, PointsMaterial>;
   private readonly posicoes: Float32Array;
   private readonly giro = new Quaternion();
   private readonly acima = new Vector3(0, 1, 0);
+  private readonly vento: number;
+  private readonly queda: number;
+  private readonly meiaCaixa: number;
+  private readonly altura: number;
 
-  /** `vento`: deriva horizontal (m/s); `queda`: queda vertical (m/s), D-104. */
-  constructor(
-    cor: Color,
-    private readonly vento = VENTO_M_S,
-    private readonly queda = VENTO_M_S * 0.05,
-  ) {
+  constructor(cor: Color, opcoes: OpcoesPoeira = {}) {
+    const {
+      vento = VENTO_M_S,
+      queda = VENTO_M_S * 0.05,
+      meiaCaixa = MEIA_CAIXA_M,
+      altura = ALTURA_M,
+      atenuarPorDistancia = true,
+    } = opcoes;
+    this.vento = vento;
+    this.queda = queda;
+    this.meiaCaixa = meiaCaixa;
+    this.altura = altura;
     this.posicoes = new Float32Array(QUANTIDADE * 3);
     let s = 91;
     const sorte = () => {
@@ -56,9 +83,9 @@ export class Poeira {
       return s / 4294967296;
     };
     for (let k = 0; k < QUANTIDADE; k++) {
-      this.posicoes[k * 3] = (sorte() * 2 - 1) * MEIA_CAIXA_M;
-      this.posicoes[k * 3 + 1] = sorte() * ALTURA_M;
-      this.posicoes[k * 3 + 2] = (sorte() * 2 - 1) * MEIA_CAIXA_M;
+      this.posicoes[k * 3] = (sorte() * 2 - 1) * meiaCaixa;
+      this.posicoes[k * 3 + 1] = sorte() * altura;
+      this.posicoes[k * 3 + 2] = (sorte() * 2 - 1) * meiaCaixa;
     }
     const geo = new BufferGeometry();
     geo.setAttribute('position', new BufferAttribute(this.posicoes, 3));
@@ -66,10 +93,10 @@ export class Poeira {
       geo,
       new PointsMaterial({
         color: cor.clone().multiplyScalar(1.4),
-        size: 0.55,
+        size: atenuarPorDistancia ? 0.55 : 3.5,
         map: grao(),
         alphaTest: 0.01,
-        sizeAttenuation: true,
+        sizeAttenuation: atenuarPorDistancia,
         transparent: true,
         opacity: 0,
         depthWrite: false,
@@ -95,8 +122,8 @@ export class Poeira {
     for (let k = 0; k < QUANTIDADE; k++) {
       let x = p[k * 3]! + passoVento * (0.7 + (k % 7) * 0.08);
       let y = p[k * 3 + 1]! - passoQueda;
-      if (x > MEIA_CAIXA_M) x -= 2 * MEIA_CAIXA_M;
-      if (y < 0) y += ALTURA_M;
+      if (x > this.meiaCaixa) x -= 2 * this.meiaCaixa;
+      if (y < 0) y += this.altura;
       p[k * 3] = x;
       p[k * 3 + 1] = y;
     }

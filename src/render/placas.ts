@@ -5,8 +5,6 @@
  */
 import { empacotarTexturas, hash, ruidoPeriodico, TAM, type TexturasRegolito } from './regolith';
 
-/** Células de placa por período (ladrilho sem emenda). */
-const CELULAS = 7;
 /** Jitter do centro de cada célula (0 = grade regular, 1 = célula inteira de folga). */
 const JITTER = 0.7;
 
@@ -53,24 +51,32 @@ function worleyPeriodico(
 }
 
 /** Altura (0..1-ish, periódica): placas quase planas (leve variação por placa) com fenda nas bordas. */
-function relevoDePlacas(): Float32Array {
+function relevoDePlacas(celulas: number): Float32Array {
   const altura = new Float32Array(TAM * TAM);
   for (let j = 0; j < TAM; j++) {
     for (let i = 0; i < TAM; i++) {
-      const x = (i / TAM) * CELULAS;
-      const z = (j / TAM) * CELULAS;
-      const { f1, f2, idX, idZ } = worleyPeriodico(x, z, CELULAS);
+      const x = (i / TAM) * celulas;
+      const z = (j / TAM) * celulas;
+      const { f1, f2, idX, idZ } = worleyPeriodico(x, z, celulas);
       const alturaPlaca = (hash(idX, idZ, 73) - 0.5) * 0.5;
       // 0 bem na fenda, 1 longe dela: a borda da célula vira um sulco escuro e baixo.
       const longeDaFenda = Math.min(1, (f2 - f1) / 0.1);
-      const fino = (ruidoPeriodico(x * 5, z * 5, CELULAS * 5, 74) - 0.5) * 0.12;
+      const fino = (ruidoPeriodico(x * 5, z * 5, celulas * 5, 74) - 0.5) * 0.12;
       altura[j * TAM + i] = alturaPlaca * longeDaFenda + fino - (1 - longeDaFenda) * 0.55;
     }
   }
   return altura;
 }
 
-export function criarTexturasPlacas(): TexturasRegolito {
-  // Base um pouco mais escura e com mais contraste que o regolito: as fendas leem como rachaduras.
-  return empacotarTexturas(relevoDePlacas(), 0.62, 0.45);
+/**
+ * `celulas`: quantas placas por período (padrão 7, como o basalto de Vênus); menos células dá
+ * placas maiores com fendas mais compridas, mais parecidas com as fissuras reais de Europa
+ * (D-105). `tomBase`/`tomGanho`: claridade do albedo (gelo bem mais claro que basalto).
+ */
+export function criarTexturasPlacas(
+  celulas = 7,
+  tomBase = 0.62,
+  tomGanho = 0.45,
+): TexturasRegolito {
+  return empacotarTexturas(relevoDePlacas(celulas), tomBase, tomGanho);
 }

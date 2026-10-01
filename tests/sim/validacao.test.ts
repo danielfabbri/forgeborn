@@ -127,10 +127,10 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     occator: '14c714cf9a10812a',
     kerwan: '2014445c66631087',
     yalode: 'f1678d7863189d0f',
-    // §14.10 (D-104): Europa, quase sem crateras mas com cristas altas (mult_relevo 1,4).
-    conamara_chaos: '26bd227c82d97462',
-    thera_macula: '796b394ef5bdc488',
-    pwyll: '568e6be884b82653',
+    // §14.10 (D-105): Europa, sem crateras (mult_cratera 0) e cristas bem altas (mult_relevo 1,9).
+    conamara_chaos: '91958159e2628eea',
+    thera_macula: 'a08aaffbb9448498',
+    pwyll: '9ecf54ea6e16b791',
   };
   const porCenario = (cenario: string) =>
     PRESETS_DE_MAPA.filter((p) => p.cenario === cenario).map((p) => [p.id, p.zonas, p.jogadores]);

@@ -39,8 +39,14 @@ export interface Ambientacao {
   marcacoes: boolean;
   /** Gelo nas baixadas sombreadas (Shackleton). */
   gelo: boolean;
-  /** §14.8/D-98: placas de basalto rachadas no lugar do regolito (Vênus). */
+  /** §14.8/D-98: placas rachadas (basalto ou gelo) no lugar do regolito (Vênus, Europa). */
   placas: boolean;
+  /** Células de `placas` por período (padrão 7); menos = placas maiores, fendas mais compridas
+   * (D-105, fissuras de Europa). */
+  placasCelulas?: number;
+  /** Metros por ladrilho do detalhe (padrão `ESCALA_DETALHE_M`, 32); maior = repete menos vezes,
+   * então as fendas/placas parecem maiores e menos repetitivas (D-105). */
+  detalheEscalaM?: number;
   /** §14.5: grama no chão, com concreto só nas plataformas e pistas. */
   grama: boolean;
   /** §14.5: campos e montanhas ao fundo, até o horizonte. */
@@ -320,8 +326,13 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
     ambiente: { cor: new Color(0x9ab0c8), intensidade: 2.3 },
     // Júpiter, enorme e claro no céu, devolve um pouco de luz.
     secundaria: { cor: new Color(0xd8c8a8), intensidade: 0.15 },
-    tinta: [0.78, 0.86, 1.0],
+    // D-105: bem mais claro (gelo), não azul-acinzentado.
+    tinta: [1.3, 1.34, 1.42],
     placas: true,
+    // D-105: menos células, placas maiores — fendas mais compridas, mais fissura que ladrilho.
+    placasCelulas: 3,
+    // D-105: ladrilho maior (menos vezes repetido) — fendas parecem maiores, menos repetitivas.
+    detalheEscalaM: 70,
     detalhe: 0.6,
     vento: 0,
     // D-104: gelo sempre caindo (baixa gravidade: vento quase nenhum, queda bem devagar).

@@ -267,7 +267,9 @@ export function criarMaterialRegolito(
   pistas: Pistas | null = null,
 ): MeshStandardMaterial & { texturas: Texture[] } {
   // §14.8/D-98: Vênus troca o regolito poeirento por placas de basalto rachadas.
-  const texturas = ambientacao.placas ? criarTexturasPlacas() : criarTexturasRegolito();
+  const texturas = ambientacao.placas
+    ? criarTexturasPlacas(ambientacao.placasCelulas ?? 7)
+    : criarTexturasRegolito();
   const material = new MeshStandardMaterial({
     vertexColors: true,
     roughness: 0.96,
@@ -277,7 +279,7 @@ export function criarMaterialRegolito(
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uDetalhe = { value: texturas.detalhe };
     shader.uniforms.uNormais = { value: texturas.normais };
-    shader.uniforms.uEscala = { value: 1 / ESCALA_DETALHE_M };
+    shader.uniforms.uEscala = { value: 1 / (ambientacao.detalheEscalaM ?? ESCALA_DETALHE_M) };
     // VIS-01/TEC-17: névoa do jogador amostrada no terreno.
     shader.uniforms.uNevoa = { value: nevoa?.textura ?? null };
     shader.uniforms.uNevoaN = { value: nevoa?.n ?? 1 };

@@ -352,7 +352,15 @@ export function iniciarPartida(): void {
   const poeira = ambientacao.tempestade ? new Poeira(ambientacao.tempestade.cor) : null;
   if (poeira) view.scene.add(poeira.objeto);
   // §14.10/D-104: gelo de Europa sempre caindo (não é um evento): vento quase nenhum, queda lenta.
-  const neve = ambientacao.neve ? new Poeira(ambientacao.neve, 2, 4) : null;
+  const neve = ambientacao.neve
+    ? new Poeira(ambientacao.neve, {
+        vento: 2,
+        queda: 4,
+        meiaCaixa: 140,
+        altura: 90,
+        atenuarPorDistancia: false,
+      })
+    : null;
   if (neve) view.scene.add(neve.objeto);
   let forcaDaTempestade = 0;
   const atmosferaDeFora =

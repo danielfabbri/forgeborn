@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.19.1.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.20.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -96,6 +96,8 @@ export interface CenariosRow {
   mult_visao: number;
   mult_cratera: number;
   mult_relevo: number;
+  mult_colinas: number;
+  mult_fendas: number;
   perfil_fe: number;
   perfil_si: number;
   perfil_cu: number;

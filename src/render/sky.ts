@@ -468,6 +468,8 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
   const luas = ambientacao.luasNoCeu.map((l) => ({
     malha: luaDistante(l.raio, l.cor),
     direcaoFixa: direcaoFixaNoMundo(l.direcao),
+    // D-101: o cinturão de asteroides de Ceres fica bem mais perto que o céu fixo de sempre.
+    distancia: l.distancia ?? 0.92,
   }));
   // D-94: dentro de uma atmosfera (cúpula), os corpos do céu ficam um pouco menos nítidos que
   // na visão do espaço (CTL-16); sem cúpula (Lua), sempre nítidos — não há neblina no vácuo.
@@ -563,7 +565,9 @@ export function criarCeu(ambientacao: Ambientacao = ambientacaoDe('lua')): Ceu {
         }
       }
       for (const lua of luas) {
-        lua.malha.position.copy(pontoFocal).addScaledVector(lua.direcaoFixa, DISTANCIA_CEU * 0.92);
+        lua.malha.position
+          .copy(pontoFocal)
+          .addScaledVector(lua.direcaoFixa, DISTANCIA_CEU * lua.distancia);
         lua.malha.material.uniforms.uSol!.value.copy(ceu.sol);
       }
       if (domo) {

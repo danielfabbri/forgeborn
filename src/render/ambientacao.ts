@@ -16,7 +16,13 @@ export interface Ambientacao {
   /** §14.7/D-93: direção local de Saturno (com anéis) no céu, ou null se o cenário não o mostra. */
   direcaoSaturno: Vector3 | null;
   /** §14.6/§14.7/D-94: luas menores no céu (direção local, raio e cor de cada uma). */
-  luasNoCeu: Array<{ direcao: Vector3; raio: number; cor: Color }>;
+  luasNoCeu: Array<{
+    direcao: Vector3;
+    raio: number;
+    cor: Color;
+    /** Fração de `DISTANCIA_CEU` (padrão 0,92); menor = mais perto (D-101, cinturão de Ceres). */
+    distancia?: number;
+  }>;
   /** Sol no referencial local (x = leste, y = cima, z = sul). */
   sol: Vector3;
   intensidadeSol: number;
@@ -73,14 +79,28 @@ function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
 const frac = (x: number): number => x - Math.floor(x);
 
 /** §14.9/D-100: cinturão de asteroides no céu de Ceres — `n` pedras pequenas e espalhadas. */
-function cinturaoDeAsteroides(n: number): Array<{ direcao: Vector3; raio: number; cor: Color }> {
+/**
+ * D-101: cada direção é fixa num ponto de referência único (`direcaoFixaNoMundo`), não na
+ * câmera atual — então, pra ter sempre algumas visíveis não importa de onde o jogador olhe, elas
+ * precisam cobrir a esfera toda (Fibonacci), não só uma faixa "perto do horizonte" (que só faria
+ * sentido perto daquele ponto de referência).
+ */
+function cinturaoDeAsteroides(
+  n: number,
+): Array<{ direcao: Vector3; raio: number; cor: Color; distancia: number }> {
   const tons = [0xa89c88, 0x8f8270, 0xb0a48f, 0x9a8c78, 0xc2b6a0];
-  return Array.from({ length: n }, (_, i) => ({
-    // Perto do horizonte (o cinturão fica perto do plano da eclíptica, visto da superfície).
-    direcao: direcao(5 + 45 * frac(i * 0.618034), 360 * frac(i * 0.414214) - 180),
-    raio: 2.2 + frac(i * 0.732051) * 2.6,
-    cor: new Color(tons[i % tons.length]!),
-  }));
+  return Array.from({ length: n }, (_, i) => {
+    const y = 1 - (2 * (i + 0.5)) / n;
+    const raioXZ = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = i * 2.399963; // ângulo áureo (rad): espalhamento uniforme e sem padrão visível.
+    return {
+      direcao: new Vector3(raioXZ * Math.cos(theta), y, raioXZ * Math.sin(theta)),
+      // Bem maiores e mais perto que um corpo distante do céu (pedido do produto).
+      raio: 22 + frac(i * 0.732051) * 28,
+      cor: new Color(tons[i % tons.length]!),
+      distancia: 0.08 + frac(i * 0.539346) * 0.12,
+    };
+  });
 }
 
 const LUA: Ambientacao = {

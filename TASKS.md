@@ -460,5 +460,5 @@ Podem andar em paralelo ao caminho crítico: T-000 (produto), render (T-008, T-0
 
 ## M25 — Ceres, Free Battle (D-99)
 
-- [x] **T-202 — Ceres, veios de sal e Free Battle** · G · Spec: CEN-19, §14.9, §18.2, `dados:cenarios` (`perfil_li`, evento), `dados:parametros` (`ceres_sal_*`), D-99 · Dep: T-176 · Feito: 2026-10-01
-  - Aceite: cenário Ceres jogável no Free Battle (3 presets: Occator N=2, Kerwan N=4, Yalode N=4), cientificamente fiel — sem céu colorido nem de dia (atmosfera tênue demais pra espalhar luz), regolito bem mais escuro que o da Lua, Sol mais fraco e distante, cheio de crateras como a Lua; o Lítio deixa de nascer pela distribuição normal (`perfil_li` 0) e só existe dentro da maior cratera do mapa (e das réplicas simétricas dela, uma por zona de pouso) — fora dela, nenhuma jazida de Lítio nasce.
+- [x] **T-202 — Ceres, veios de sal e Free Battle** · G · Spec: CEN-19, §14.9, §18.2, `dados:cenarios` (`perfil_li`, evento), `dados:parametros` (`ceres_sal_*`), D-99, D-100 · Dep: T-176 · Feito: 2026-10-01
+  - Aceite: cenário Ceres jogável no Free Battle (3 presets: Occator N=2, Kerwan N=4, Yalode N=4), cientificamente fiel — sem céu colorido nem de dia (atmosfera tênue demais pra espalhar luz), regolito bem mais escuro que o da Lua, Sol mais fraco e distante, cheio de crateras como a Lua, com o cinturão de asteroides visível no céu (D-100); o Lítio deixa de nascer pela distribuição normal (`perfil_li` 0) e só existe dentro da maior cratera do mapa (e das réplicas simétricas dela, uma por zona de pouso) — fora dela, nenhuma jazida de Lítio nasce.

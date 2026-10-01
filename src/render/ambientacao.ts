@@ -70,6 +70,19 @@ function direcao(elevacaoGraus: number, azimuteGraus: number): Vector3 {
   return new Vector3(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az));
 }
 
+const frac = (x: number): number => x - Math.floor(x);
+
+/** §14.9/D-100: cinturão de asteroides no céu de Ceres — `n` pedras pequenas e espalhadas. */
+function cinturaoDeAsteroides(n: number): Array<{ direcao: Vector3; raio: number; cor: Color }> {
+  const tons = [0xa89c88, 0x8f8270, 0xb0a48f, 0x9a8c78, 0xc2b6a0];
+  return Array.from({ length: n }, (_, i) => ({
+    // Perto do horizonte (o cinturão fica perto do plano da eclíptica, visto da superfície).
+    direcao: direcao(5 + 45 * frac(i * 0.618034), 360 * frac(i * 0.414214) - 180),
+    raio: 2.2 + frac(i * 0.732051) * 2.6,
+    cor: new Color(tons[i % tons.length]!),
+  }));
+}
+
 const LUA: Ambientacao = {
   ceu: null,
   horizonte: null,
@@ -235,6 +248,8 @@ const AMBIENTACOES: Partial<Record<CenariosId, Ambientacao>> = {
   ceres: {
     ...LUA,
     terraNoCeu: false,
+    // D-100: o cinturão de asteroides, visível no céu (~30 pedras pequenas e espalhadas).
+    luasNoCeu: cinturaoDeAsteroides(30),
     sol: direcao(28, -40),
     intensidadeSol: 2.0,
     ambiente: { cor: new Color(0x8892a0), intensidade: 2.2 },

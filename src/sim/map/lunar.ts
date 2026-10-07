@@ -68,15 +68,19 @@ export const GERADOR_LUA = {
   colinas: { densidade: 0.5, altura: [2, 6], sigma: [15, 40] },
   sulcos: { porSetor: [0, 1], comprimento: [60, 140], largura: [10, 14], profundidade: [1, 2] },
   /**
-   * CEN-09 (D-106): fendas de verdade — fundo estreito e fundo, paredes íngremes demais pra
-   * atravessar (como a borda de uma cratera), ao contrário dos sulcos rasos de sempre.
+   * CEN-20 (D-108): placas tectônicas — o planeta inteiro dividido em células (diagrama de
+   * Voronoi dos centros sorteados); a fronteira entre duas células vira uma fenda de verdade
+   * (fundo estreito, paredes íngremes demais pra atravessar). `aberturaFrequencia`/`aberturaLimiar`
+   * abrem vãos (pontes) ao longo da fronteira, por um ruído separado do relevo.
    */
-  fendas: {
-    porSetor: [2, 4],
-    comprimento: [30, 70],
-    meiaLargura: [1, 1.5],
-    paredeLargura: [1, 1.5],
-    profundidade: [10, 16],
+  placas: {
+    porSetor: [2, 3],
+    meiaLargura: [2, 3],
+    paredeLargura: [2, 3],
+    profundidade: [14, 20],
+    aberturaOitavas: 1,
+    aberturaFrequencia: 1 / 120,
+    aberturaLimiar: 0.12,
   },
   ruido: { amplitude: 2.4, oitavas: 4, frequencia: 1 / 80 },
   /** Folga entre obstáculos e o penhasco do platô ou o corredor de uma rampa. */
@@ -153,18 +157,10 @@ interface Sulco {
   profundidade: number;
 }
 
-/** CEN-09 (D-106): fenda de verdade — fundo estreito e plano, paredes íngremes intransponíveis. */
-export interface Fenda {
-  /** Pontos da linha, já na superfície (m). */
-  pontos: Vec3[];
-  /** Centro e alcance angular, para descartar rápido. */
-  centro: Vec3;
-  cosAlcance: number;
-  /** Meia largura (m) do fundo plano, na profundidade máxima. */
-  meiaLargura: number;
-  /** Largura (m) da parede, do fundo até o nível do chão ao redor. */
-  paredeLargura: number;
-  profundidade: number;
+/** CEN-20 (D-108): centro de uma placa tectônica — só a direção; a fronteira é implícita (a
+ * fenda nasce onde duas placas ficam equidistantes, não num traçado próprio). */
+export interface Placa {
+  d: Vec3;
 }
 
 export interface MapaLunar extends Heightmap {
@@ -177,8 +173,12 @@ export interface MapaLunar extends Heightmap {
   centrais: PontoMedio[];
   /** Todas as crateras, já replicadas. */
   crateras: Cratera[];
-  /** Todas as fendas, já replicadas (D-106). */
-  fendas: Fenda[];
+  /** Centros das placas tectônicas, já replicados (D-108); a rede de fendas entre elas é
+   * calculada por ponto, não guardada aqui (ver `alturaPlacas`). */
+  placas: Placa[];
+  /** Pontos fixos pra efeitos de jogo (gêiseres, D-106/D-108): no fundo da fenda, longe das
+   * pontes/vãos. */
+  pontosDeFenda: Vec3[];
 }
 
 /** CEN-07 e ECO-08: zonas de pouso e pontos médios de cada simetria. */
@@ -338,22 +338,51 @@ function alturaSulco(s: Sulco, p: Vec3, raioPlaneta: number): number {
   return -s.profundidade * q * q;
 }
 
+export interface OpcoesPlaca {
+  /** Meia largura (m) do fundo plano, na profundidade máxima. */
+  meiaLargura: number;
+  /** Largura (m) da parede, do fundo até o nível do chão ao redor. */
+  paredeLargura: number;
+  profundidade: number;
+}
+
 /**
- * CEN-09 (D-106): fundo plano na profundidade máxima até `meiaLargura`; dali até
- * `meiaLargura + paredeLargura` a parede sobe em rampa reta até o nível do chão — íngreme o
- * bastante (profundidade grande, parede estreita) pra passar de `inclinacao_max_hover_graus`.
+ * CEN-20 (D-108): distância (m) de p até a fronteira mais próxima entre placas tectônicas
+ * (diagrama de Voronoi dos centros). Perto do centro mais próximo (`d1`) e bem longe do segundo
+ * mais próximo (`d2`), p está fundo na célula, longe de qualquer fronteira. A fronteira (onde os
+ * dois empatam) fica a uma distância local ≈ raio × (d2 − d1) / 2 do ponto (aproximação de plano
+ * tangente, boa na escala de uma fenda). Barata (só arcos): é o que decide, por vértice, se vale a
+ * pena chamar `alturaPlacas` (que amostra ruído, mais caro) — evita pagar o ruído longe de toda
+ * fronteira, que é a vasta maioria da esfera.
  */
-export function alturaFenda(f: Fenda, p: Vec3, raioPlaneta: number): number {
-  if (produtoEscalar(f.centro, p) < f.cosAlcance) return 0;
-  const P: Vec3 = [p[0] * raioPlaneta, p[1] * raioPlaneta, p[2] * raioPlaneta];
-  let menor = Infinity;
-  for (let k = 0; k < f.pontos.length - 1; k++) {
-    menor = Math.min(menor, distanciaAoSegmento3(P, f.pontos[k]!, f.pontos[k + 1]!));
+export function distanciaDaFronteira(placas: Placa[], p: Vec3, raioPlaneta: number): number {
+  let d1 = Infinity;
+  let d2 = Infinity;
+  for (const placa of placas) {
+    const d = arco(placa.d, p);
+    if (d < d1) {
+      d2 = d1;
+      d1 = d;
+    } else if (d < d2) {
+      d2 = d;
+    }
   }
-  if (menor >= f.meiaLargura + f.paredeLargura) return 0;
-  if (menor <= f.meiaLargura) return -f.profundidade;
-  const t = (menor - f.meiaLargura) / f.paredeLargura;
-  return -f.profundidade * (1 - t);
+  return (raioPlaneta * (d2 - d1)) / 2;
+}
+
+/**
+ * Altura da fronteira a `distancia_m` dela (ver `distanciaDaFronteira`): fundo plano até
+ * `meiaLargura`, parede reta até `meiaLargura + paredeLargura`, íngreme o bastante (profundidade
+ * grande, parede estreita) pra passar de `inclinacao_max_hover_graus`. `fechamento` (0 a 1,
+ * D-108) abre vãos: 0 fecha a fenda por completo (vira uma ponte).
+ */
+export function alturaPlacas(distancia_m: number, o: OpcoesPlaca, fechamento: number): number {
+  if (fechamento <= 0) return 0;
+  if (distancia_m >= o.meiaLargura + o.paredeLargura) return 0;
+  const profundidade = o.profundidade * fechamento;
+  if (distancia_m <= o.meiaLargura) return -profundidade;
+  const t = (distancia_m - o.meiaLargura) / o.paredeLargura;
+  return -profundidade * (1 - t);
 }
 
 export function gerarMapaLunar(
@@ -523,47 +552,95 @@ export function gerarMapaLunar(
     }
   }
 
-  // Fendas de verdade (D-106): mesmo traçado dos sulcos, mas estreitas e fundas o bastante pra
-  // intransponíveis (como a borda de uma cratera) — não um canal raso de atravessar.
-  const fendas: Fenda[] = [];
-  const quantidadeFendas =
-    multFendas > 0 ? Math.round(inteiroEntre(rng, G.fendas.porSetor) * multFendas) : 0;
-  for (let c = 0; c < quantidadeFendas; c++) {
-    for (let tentativa = 0; tentativa < 20; tentativa++) {
-      const meiaLargura = entre(rng, G.fendas.meiaLargura);
-      const paredeLargura = entre(rng, G.fendas.paredeLargura);
-      const profundidade = entre(rng, G.fendas.profundidade);
-      const comprimento = entre(rng, G.fendas.comprimento);
-      const curva = entre(rng, [-0.9, 0.9]);
-      const inicio = direcaoSorteada(rng);
-      let estado = { p: inicio, rumo: rumoSorteado(rng, inicio) };
-      const pontos: Vec3[] = [estado.p];
-      for (let s = 0; s < 16; s++) {
-        estado = avancar(estado.p, estado.rumo, comprimento / 16 / R);
-        estado.rumo = normalizar(girar(estado.rumo, estado.p, curva / 16));
-        pontos.push(estado.p);
+  // Placas tectônicas (CEN-20, D-108): centros sorteados pelo planeta e replicados pela simetria;
+  // a fenda nasce na fronteira entre duas placas vizinhas (diagrama de Voronoi, ver `alturaPlacas`
+  // e `fechamentoEm` abaixo) — não um traçado próprio por placa. `multFendas` 0 (padrão) pula o
+  // sorteio inteiro, mantendo a sequência do RNG igual a antes da feição existir.
+  const placas: Placa[] = [];
+  const opcoesPlacas = { meiaLargura: 0, paredeLargura: 0, profundidade: 0 };
+  let seedAbertura = 0;
+  let alcanceTotalPlacas = 0;
+  if (multFendas > 0) {
+    opcoesPlacas.meiaLargura = entre(rng, G.placas.meiaLargura);
+    opcoesPlacas.paredeLargura = entre(rng, G.placas.paredeLargura);
+    opcoesPlacas.profundidade = entre(rng, G.placas.profundidade);
+    seedAbertura = nextU32(rng) | 0;
+    alcanceTotalPlacas = opcoesPlacas.meiaLargura + opcoesPlacas.paredeLargura;
+    // Separação mínima entre dois centros (rad): evita células degeneradas (fronteiras coladas).
+    const separacaoMinima = 0.3;
+    const quantidadePlacas = Math.round(inteiroEntre(rng, G.placas.porSetor) * multFendas);
+    for (let c = 0; c < quantidadePlacas; c++) {
+      for (let tentativa = 0; tentativa < 30; tentativa++) {
+        const p = direcaoSorteada(rng);
+        if (!longeDosCentrais(p, alcanceTotalPlacas)) continue;
+        if (!respeitaZonas(p, alcanceTotalPlacas)) continue;
+        if (placas.some((o) => arco(p, o.d) < separacaoMinima)) continue;
+        const copias = replicas(p);
+        if (copias.slice(1).some((q) => arco(p, q) < separacaoMinima)) continue;
+        for (const q of copias) placas.push({ d: q });
+        break;
       }
-      const alcanceTotal = meiaLargura + paredeLargura;
-      const valido = pontos.every(
-        (p) => longeDosCentrais(p, alcanceTotal) && respeitaZonas(p, alcanceTotal),
-      );
-      if (!valido) continue;
-      const meio = pontos[8]!;
-      const alcance = comprimento / 2 + alcanceTotal + 2;
-      for (const sigma of grupo) {
-        fendas.push({
-          pontos: pontos.map((p) => {
-            const q = aplicarRotacao(sigma, p);
-            return [q[0] * R, q[1] * R, q[2] * R] as Vec3;
-          }),
-          centro: aplicarRotacao(sigma, meio),
-          cosAlcance: Math.cos(Math.min(Math.PI, alcance / R)),
-          meiaLargura,
-          paredeLargura,
-          profundidade,
-        });
+    }
+  }
+  /** O representante canônico da órbita de p (o maior em x, depois y, depois z): mesmo ponto para
+   * p e qualquer g·p, então qualquer função dele sai simétrica sem achatar sua distribuição (ao
+   * contrário de somar/tirar a média das rotações, que concentraria o ruído perto de 0). */
+  const canonico = (p: Vec3): Vec3 => {
+    let melhor = p;
+    for (const sigma of grupo) {
+      const q = aplicarRotacao(sigma, p);
+      if (
+        q[0] > melhor[0] ||
+        (q[0] === melhor[0] && (q[1] > melhor[1] || (q[1] === melhor[1] && q[2] > melhor[2])))
+      ) {
+        melhor = q;
       }
-      break;
+    }
+    return melhor;
+  };
+  /**
+   * Quanto a fronteira de placas fica fechada em p (1 = fenda cheia, 0 = ponte/vão): um ruído à
+   * parte do relevo (D-108), amostrado no representante canônico da órbita de p pra não quebrar
+   * CEN-06. Sem isso a rede seria contínua e separaria o planeta em ilhas incomunicáveis.
+   */
+  const fechamentoEm = (p: Vec3): number => {
+    if (placas.length === 0) return 1;
+    const q = canonico(p);
+    const valor = fbm3(
+      q[0] * R,
+      q[1] * R,
+      q[2] * R,
+      seedAbertura,
+      G.placas.aberturaOitavas,
+      G.placas.aberturaFrequencia,
+    );
+    return smoothstep(0, G.placas.aberturaLimiar, Math.abs(valor));
+  };
+  // Pontos fixos pro jogo (gêiseres, D-106/D-108): no fundo bem fechado de alguma fronteira, longe
+  // das pontes e das zonas. A fronteira é uma curva (medida quase nula na esfera), então amostrar
+  // a esfera toda à toa quase nunca acerta; em vez disso, testa pontos ao longo do caminho entre
+  // cada par de placas prováveis de vizinhas (perto o bastante uma da outra).
+  const pontosDeFenda: Vec3[] = [];
+  if (placas.length > 1) {
+    // A fronteira é uma curva (medida quase nula na esfera): amostrar direto por Fibonacci precisa
+    // de bastante gente pra achar alguma, mas é barato (sem RNG, só arco/ruído) e roda uma vez só.
+    const CANDIDATOS = 4000;
+    for (let k = 0; k < CANDIDATOS && pontosDeFenda.length < 24; k++) {
+      const z = 1 - (2 * k + 1) / CANDIDATOS;
+      const r = Math.sqrt(Math.max(0, 1 - z * z));
+      const phi = k * 2.399963229728653; // ângulo de ouro
+      const p: Vec3 = [r * Math.cos(phi), z, r * Math.sin(phi)];
+      if (!longeDosCentrais(p, alcanceTotalPlacas) || !respeitaZonas(p, alcanceTotalPlacas)) {
+        continue;
+      }
+      const distancia = distanciaDaFronteira(placas, p, R);
+      if (distancia >= alcanceTotalPlacas) continue;
+      const fechamento = fechamentoEm(p);
+      if (fechamento < 0.9) continue;
+      const h = alturaPlacas(distancia, opcoesPlacas, fechamento);
+      if (h > -opcoesPlacas.profundidade * 0.6) continue;
+      if (pontosDeFenda.some((q) => R * arco(p, q) < 40)) continue;
+      pontosDeFenda.push(p);
     }
   }
 
@@ -572,9 +649,8 @@ export function gerarMapaLunar(
     colinas: Colina[];
     crateras: Cratera[];
     sulcos: Sulco[];
-    fendas: Fenda[];
   }
-  const todas: Feicoes = { colinas, crateras, sulcos, fendas };
+  const todas: Feicoes = { colinas, crateras, sulcos };
   const alturaSemLagos = (p: Vec3, f: Feicoes = todas): number => {
     let ruido = 0;
     for (const sigma of grupo) {
@@ -588,12 +664,22 @@ export function gerarMapaLunar(
     }
     for (const c of f.crateras) h += alturaCratera(c, p, R);
     for (const s of f.sulcos) h += alturaSulco(s, p, R);
-    for (const fd of f.fendas) h += alturaFenda(fd, p, R);
+    if (placas.length > 0) {
+      // A fronteira é rara (medida quase nula na esfera): só paga o ruído de `fechamentoEm`
+      // (rotações + fbm3) nos vértices realmente perto de alguma — a distância é barata (só
+      // arcos) e descarta a vasta maioria sem nunca chamar a parte cara.
+      const distancia = distanciaDaFronteira(placas, p, R);
+      if (distancia < alcanceTotalPlacas) {
+        h += alturaPlacas(distancia, opcoesPlacas, fechamentoEm(p));
+      }
+    }
     return h;
   };
   /**
    * Feições que alcançam o círculo de centro `centro` e raio angular `raioAng`. O filtro só
-   * descarta quem soma exatamente 0 ali, então a altura sai idêntica à da lista completa.
+   * descarta quem soma exatamente 0 ali, então a altura sai idêntica à da lista completa. As
+   * placas ficam de fora: a fronteira de Voronoi precisa do centro mais perto em toda a esfera, e
+   * a lista é pequena (poucas por setor) — sempre entram inteiras em `alturaSemLagos`.
    */
   const feicoesPerto = (centro: Vec3, raioAng: number): Feicoes => {
     const perto = (d: Vec3, alcanceAng: number) => arco(d, centro) <= alcanceAng + raioAng + 1e-9;
@@ -602,9 +688,6 @@ export function gerarMapaLunar(
       crateras: crateras.filter((c) => perto(c.d, Math.min(Math.PI, (c.raio * 1.6 + 8) / R))),
       sulcos: sulcos.filter((s) =>
         perto(s.centro, Math.acos(Math.max(-1, Math.min(1, s.cosAlcance)))),
-      ),
-      fendas: fendas.filter((fd) =>
-        perto(fd.centro, Math.acos(Math.max(-1, Math.min(1, fd.cosAlcance)))),
       ),
     };
   };
@@ -789,7 +872,8 @@ export function gerarMapaLunar(
     contestados: geo.contestados,
     centrais: geo.centrais,
     crateras,
-    fendas,
+    placas,
+    pontosDeFenda,
     ...(comMar ? { mar: { nivel } } : {}),
     pedras,
   };

@@ -63,7 +63,8 @@ export const PRESETS_DE_MAPA: readonly PresetDeMapa[] = [
   { id: 'kerwan', cenario: 'ceres', zonas: 4, jogadores: [2, 4], seed: 4 },
   { id: 'yalode', cenario: 'ceres', zonas: 4, jogadores: [3, 4], seed: 5 },
   // §14.10 (D-104): Europa, Free Battle só por enquanto, com gêiseres e neve decorativos.
-  { id: 'conamara_chaos', cenario: 'europa', zonas: 2, jogadores: [2, 2], seed: 1 },
-  { id: 'thera_macula', cenario: 'europa', zonas: 4, jogadores: [2, 4], seed: 2 },
+  // Seeds re-sorteadas em D-108 (placas tectônicas mudou o relevo e a validação de CEN-11).
+  { id: 'conamara_chaos', cenario: 'europa', zonas: 2, jogadores: [2, 2], seed: 5 },
+  { id: 'thera_macula', cenario: 'europa', zonas: 4, jogadores: [2, 4], seed: 4 },
   { id: 'pwyll', cenario: 'europa', zonas: 4, jogadores: [3, 4], seed: 3 },
 ];

@@ -127,11 +127,11 @@ describe('CEN-12 / §14.4: presets da Lua', () => {
     occator: '14c714cf9a10812a',
     kerwan: '2014445c66631087',
     yalode: 'f1678d7863189d0f',
-    // §14.10 (D-106): Europa, relevo mais acidentado (mult_relevo 2,6, mult_colinas 3,0) e fendas
-    // de verdade (mult_fendas 1,0).
-    conamara_chaos: 'f6b33666bc8f7bdf',
-    thera_macula: 'b15bbc074bb09cd2',
-    pwyll: '735689adc16ba5a6',
+    // §14.10 (D-108): Europa vira placas tectônicas (CEN-20); seeds re-sorteadas (D-108) pra
+    // validar de primeira com o novo relevo.
+    conamara_chaos: 'f83d8a21166c4206',
+    thera_macula: '4488924f5a173244',
+    pwyll: '1431d7322febc782',
   };
   const porCenario = (cenario: string) =>
     PRESETS_DE_MAPA.filter((p) => p.cenario === cenario).map((p) => [p.id, p.zonas, p.jogadores]);

@@ -381,11 +381,10 @@ export function iniciarPartida(): void {
     ceu.clima(forcaDaTempestade);
     poeira.atualizar(forcaDaTempestade, camera.foco, pontoFocal, dt);
   };
-  // §14.10/D-106: gêiseres de água fixos, nascendo de dentro de cada fenda (CEN-09), contínuos e
-  // sem pausa — não mais sorteados perto da câmera (D-104/D-105).
-  const pontosDeGeiser: Vec3[] = ambientacao.geiseres
-    ? pronto.mapa.fendas.map((f) => f.centro)
-    : [];
+  // §14.10/D-106/D-108: gêiseres de água fixos, nascendo de dentro das fendas (fundo bem fechado
+  // da fronteira entre placas, CEN-20), contínuos e sem pausa — não mais sorteados perto da
+  // câmera (D-104/D-105).
+  const pontosDeGeiser: Vec3[] = ambientacao.geiseres ? pronto.mapa.pontosDeFenda : [];
   // Acumulador fracionário por gêiser: garante a taxa certa (partículas/s) não importa o
   // quadro/segundo da máquina, em vez de arredondar `dt * taxa` (quase sempre < 1 a 60 fps).
   const acumuladoDoGeiser = pontosDeGeiser.map(() => 0);

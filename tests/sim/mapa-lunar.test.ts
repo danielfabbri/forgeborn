@@ -19,12 +19,13 @@ import {
 } from '../../src/sim/map/heightmap';
 import {
   alturaCratera,
-  alturaFenda,
+  alturaPlacas,
   type Cratera,
-  type Fenda,
+  distanciaDaFronteira,
   GERADOR_LUA,
   gerarMapaLunar,
   type MapaLunar,
+  type Placa,
   rumoSemRampa,
   type Simetria,
 } from '../../src/sim/map/lunar';
@@ -278,61 +279,65 @@ describe('CEN-09, D-98: mult_cratera e mult_relevo do cenário', () => {
     expect(variancia(triplo.alturas)).toBeGreaterThan(variancia(base.alturas));
   });
 
-  it('mult_fendas 0 (padrão) não gera fendas', () => {
-    expect(gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4).fendas).toHaveLength(0);
+  it('mult_fendas 0 (padrão) não gera placas', () => {
+    const mapa = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4);
+    expect(mapa.placas).toHaveLength(0);
+    expect(mapa.pontosDeFenda).toHaveLength(0);
   });
 });
 
-describe('CEN-20, D-106: fenda de verdade', () => {
-  it('fendas (mult_fendas > 0): comprimento 30–70 m, meia largura 1–1,5 m, parede 1–1,5 m, profundidade 10–16 m, replicadas pela simetria', () => {
+describe('CEN-20, D-108: placas tectônicas', () => {
+  it('placas (mult_fendas > 0): bem espaçadas, replicadas pela simetria; há pontos de fenda', () => {
     const mapa = gerarMapaLunar(7, RAIOS_DE_TESTE.m, 4, 1, 1, 1, 1);
-    expect(mapa.fendas.length).toBeGreaterThan(0);
-    expect(mapa.fendas.length % 4).toBe(0);
-    for (const fenda of mapa.fendas) {
-      expect(fenda.meiaLargura).toBeGreaterThanOrEqual(1);
-      expect(fenda.meiaLargura).toBeLessThanOrEqual(1.5);
-      expect(fenda.paredeLargura).toBeGreaterThanOrEqual(1);
-      expect(fenda.paredeLargura).toBeLessThanOrEqual(1.5);
-      expect(fenda.profundidade).toBeGreaterThanOrEqual(10);
-      expect(fenda.profundidade).toBeLessThanOrEqual(16);
-      let comprimento = 0;
-      for (let k = 0; k < fenda.pontos.length - 1; k++) {
-        const [ax, ay, az] = fenda.pontos[k]!;
-        const [bx, by, bz] = fenda.pontos[k + 1]!;
-        comprimento += Math.hypot(bx - ax, by - ay, bz - az);
+    expect(mapa.placas.length).toBeGreaterThan(0);
+    expect(mapa.placas.length % 4).toBe(0);
+    for (let i = 0; i < mapa.placas.length; i++) {
+      for (let j = i + 1; j < mapa.placas.length; j++) {
+        expect(arco(mapa.placas[i]!.d, mapa.placas[j]!.d)).toBeGreaterThanOrEqual(0.3 - 1e-9);
       }
-      expect(comprimento).toBeGreaterThanOrEqual(29);
-      expect(comprimento).toBeLessThanOrEqual(71);
     }
+    expect(mapa.pontosDeFenda.length).toBeGreaterThan(0);
   });
 
-  it('atravessar a fenda passa de 30°; andar pelo fundo plano, não', () => {
+  it('atravessar a fronteira entre duas placas passa de 30°; andar pelo fundo (a fronteira), não', () => {
     const RAIO = 1000;
     const falso = { raio_m: RAIO } as MapaLunar;
     const centro: Vec3 = [0, 1, 0];
-    const paraMetros = (d: Vec3): Vec3 => [d[0] * RAIO, d[1] * RAIO, d[2] * RAIO];
-    const fenda: Fenda = {
-      pontos: [em(falso, centro, [1, 0, 0], -50), em(falso, centro, [1, 0, 0], 50)].map(paraMetros),
-      centro,
-      cosAlcance: Math.cos(100 / RAIO),
-      meiaLargura: 1,
-      paredeLargura: 1.25,
-      profundidade: 13,
-    };
-    const altura = (p: Vec3) => alturaFenda(fenda, p, RAIO);
+    const placas: Placa[] = [
+      { d: em(falso, centro, [1, 0, 0], -60) },
+      { d: em(falso, centro, [1, 0, 0], 60) },
+    ];
+    const opcoes = { meiaLargura: 2, paredeLargura: 2, profundidade: 15 };
+    const altura = (p: Vec3) => alturaPlacas(distanciaDaFronteira(placas, p, RAIO), opcoes, 1);
+    // Cruza a fronteira (mesmo eixo das duas placas, passando pelo meio-de-caminho entre elas).
     const atravessando = inclinacaoMaxima(
       falso,
       altura,
-      em(falso, centro, [0, 0, 1], -10),
-      em(falso, centro, [0, 0, 1], 10),
+      em(falso, centro, [1, 0, 0], -10),
+      em(falso, centro, [1, 0, 0], 10),
     );
+    // Anda pela fronteira (eixo perpendicular): toda ela é equidistante das duas placas, logo
+    // plana, como o fundo de uma fenda de verdade.
     const peloFundo = inclinacaoMaxima(
       falso,
       altura,
-      em(falso, centro, [1, 0, 0], -20),
-      em(falso, centro, [1, 0, 0], 20),
+      em(falso, centro, [0, 0, 1], -20),
+      em(falso, centro, [0, 0, 1], 20),
     );
     expect(atravessando).toBeGreaterThan(LIMITE_HOVER);
     expect(peloFundo).toBeLessThan(LIMITE_HOVER);
+  });
+
+  it('fechamento 0 abre uma ponte: a fronteira some (altura 0) mesmo bem no meio dela', () => {
+    const RAIO = 1000;
+    const falso = { raio_m: RAIO } as MapaLunar;
+    const centro: Vec3 = [0, 1, 0];
+    const placas: Placa[] = [
+      { d: em(falso, centro, [1, 0, 0], -60) },
+      { d: em(falso, centro, [1, 0, 0], 60) },
+    ];
+    const opcoes = { meiaLargura: 2, paredeLargura: 2, profundidade: 15 };
+    const distancia = distanciaDaFronteira(placas, centro, RAIO);
+    expect(alturaPlacas(distancia, opcoes, 0)).toBe(0);
   });
 });

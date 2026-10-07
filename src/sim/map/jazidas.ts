@@ -112,9 +112,14 @@ export function distribuirJazidas(
       linha.quantidade_u * (perfil[`perfil_${linha.recurso}` as keyof typeof perfil] as number),
     );
   // CEN-19/D-99: em Ceres, o Lítio não nasce pela distribuição normal — só nos veios de sal,
-  // dentro da maior cratera do mapa (mais abaixo).
+  // dentro da maior cratera do mapa. CEN-21/D-108: em Europa, o Titânio só na falha mais
+  // profunda (mais abaixo, nos dois casos).
   const linhasDaZonaDoCenario = (zona: ZonaDeJazida): JazidasRow[] =>
-    linhasDaZona(zona).filter((linha) => cenario !== 'ceres' || linha.recurso !== 'li');
+    linhasDaZona(zona).filter(
+      (linha) =>
+        (cenario !== 'ceres' || linha.recurso !== 'li') &&
+        (cenario !== 'europa' || linha.recurso !== 'ti'),
+    );
 
   const R = mapa.raio_m;
   // ECO-07 (D-89): distância mínima entre duas jazidas quaisquer.
@@ -505,6 +510,70 @@ export function distribuirJazidas(
         jazidas.push({
           recurso: 'li',
           quantidade: quantidadeSal,
+          d,
+          zona: 'espalhada',
+          zonasDePouso: [],
+        });
+        ocupadas.push(d);
+      }
+    }
+  }
+
+  // CEN-21/D-108: em Europa, o Titânio não existe pela distribuição normal — só na falha mais
+  // profunda do mapa (a placa mais distante de toda zona de pouso, com as réplicas simétricas
+  // dela, uma por zona de pouso): a recompensa de atravessar a rede de placas tectônicas.
+  if (cenario === 'europa' && mapa.placas.length > 0) {
+    const n = mapa.simetria;
+    const maisPertoDeQual = (p: Vec3): number => {
+      let melhor = 0;
+      let menorArco = Infinity;
+      mapa.placas.forEach((placa, i) => {
+        const d = arco(placa.d, p);
+        if (d < menorArco) {
+          menorArco = d;
+          melhor = i;
+        }
+      });
+      return melhor;
+    };
+    let melhorBloco = 0;
+    let melhorDistancia = -1;
+    for (let i = 0; i < mapa.placas.length; i += n) {
+      const d = Math.min(...zonas.map((z) => distancia(mapa.placas[i]!.d, z.d)));
+      if (d > melhorDistancia) {
+        melhorDistancia = d;
+        melhorBloco = i;
+      }
+    }
+    if (melhorDistancia < 0) {
+      throw new Error(`Seed ${mapa.seed}: Europa sem placa pra falha profunda`);
+    }
+    const porPlaca = Math.max(1, Math.round(param('europa_falhas_jazidas_por_placa')));
+    const quantidadeTi = Math.round(param('europa_falhas_quantidade_u'));
+    for (let k = 0; k < n; k++) {
+      const indice = melhorBloco + k;
+      const placa = mapa.placas[indice]!;
+      const ref = tangente(placa.d, [0, 1, 0]) ?? tangente(placa.d, [1, 0, 0])!;
+      const colocadasNaPlaca: Vec3[] = [];
+      for (let j = 0; j < porPlaca; j++) {
+        let achou: Vec3 | null = null;
+        busca: for (let raioM = espacamento / 2; raioM <= 100; raioM += 6) {
+          for (let ang = (j * 360) / porPlaca; ang < (j * 360) / porPlaca + 360; ang += 20) {
+            const p = em(placa.d, ref, ang, raioM);
+            // Bem dentro da célula (não perto da fronteira/ponte com a vizinha).
+            if (maisPertoDeQual(p) !== indice) continue;
+            if (!valida(p, colocadasNaPlaca)) continue;
+            achou = p;
+            break busca;
+          }
+        }
+        if (!achou) throw new Error(`Seed ${mapa.seed}: falha profunda sem lugar na placa`);
+        colocadasNaPlaca.push(achou);
+      }
+      for (const d of colocadasNaPlaca) {
+        jazidas.push({
+          recurso: 'ti',
+          quantidade: quantidadeTi,
           d,
           zona: 'espalhada',
           zonasDePouso: [],

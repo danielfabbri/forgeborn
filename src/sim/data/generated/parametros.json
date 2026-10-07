@@ -114,6 +114,18 @@
     "descricao": "Quantidade de cada jazida dos veios de sal (CEN-19)"
   },
   {
+    "chave": "europa_falhas_jazidas_por_placa",
+    "valor": 3,
+    "unidade": "jazidas",
+    "descricao": "Jazidas de Titânio na placa da falha profunda, por réplica (CEN-21)"
+  },
+  {
+    "chave": "europa_falhas_quantidade_u",
+    "valor": 3000,
+    "unidade": "u",
+    "descricao": "Quantidade de cada jazida da falha profunda (CEN-21)"
+  },
+  {
     "chave": "valor_x_vr",
     "valor": 10,
     "unidade": "VR",

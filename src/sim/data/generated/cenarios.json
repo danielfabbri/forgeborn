@@ -170,9 +170,9 @@
     "perfil_si": 1,
     "perfil_cu": 1,
     "perfil_li": 1.2,
-    "perfil_ti": 1,
+    "perfil_ti": 0,
     "perfil_u": 1.5,
-    "evento": null,
+    "evento": "falhas_profundas",
     "versao": "v1.x"
   },
   {

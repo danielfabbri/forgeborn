@@ -1,4 +1,4 @@
-// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.20.1.
+// ARQUIVO GERADO por `npm run spec:sync` a partir de SPEC.md v1.21.0.
 // Não edite à mão: altere o SPEC e rode o spec:sync (GOV-05).
 
 export type AlertasId =
@@ -378,6 +378,8 @@ export type ParametrosChave =
   | 'jazidas_espalhadas_por_10k_m2'
   | 'ceres_sal_jazidas_por_cratera'
   | 'ceres_sal_quantidade_u'
+  | 'europa_falhas_jazidas_por_placa'
+  | 'europa_falhas_quantidade_u'
   | 'valor_x_vr'
   | 'carga_hover_u'
   | 'tempo_descarga_hover_s'
